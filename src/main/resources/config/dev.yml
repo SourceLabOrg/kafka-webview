@@ -1,0 +1,9 @@
+security:
+  require-ssl: false
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/wai"
+    username: root
+    password:
+

@@ -1,0 +1,27 @@
+## This are the required ENV variables for startup
+
+## Define what configs to load on start
+SPRING_CONFIG_LOCATION=classpath:/config/base.yml,classpath:/config/dev.yml
+
+## What port to listen on
+PORT=8080
+
+## Outgoing SMTP Server if using that
+SMTP_USERNAME=username
+SMTP_PASSWORD=password
+
+## Pardot connection, if using that
+PARDOT_USERNAME=pardotuser
+PARDOT_PASSWORD=pardotpass
+PARDOT_USERTOKEN=usertoken
+
+## Optional DB Url
+JAWSDB_URL=mysql://user:password@hostname:3306/dbname
+
+## OAUTH
+FACEBOOK_CLIENT_ID=token
+FACEBOOK_SECRET=
+GOOGLE_CLIENT_ID=token
+GOOGLE_SECRET=
+TWITTER_CLIENT_ID=token
+TWITTER_SECRET=

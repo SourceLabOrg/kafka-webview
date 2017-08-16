@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    xmlns:th="http://www.thymeleaf.org">
+
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Layout page</title>
+
+        <!-- font awesome -->
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+        <!-- css -->
+        <link href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" media="screen"/>
+        <link href="/css/main.css" rel="stylesheet" media="screen"/>
+
+        <!-- JQuery + Bootstrap -->
+        <script src="http://code.jquery.com/jquery.js"></script>
+        <script src="/webjars/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <!-- start header -->
+        <header>
+            <h1>My website</h1>
+            <div sec:authorize="isAuthenticated()">
+                Logged user: <span sec:authentication="name">Not Logged In</span>
+                <a href="/logout">logout</a>
+            </div>
+            <div sec:authorize="isAnonymous()">
+                <a href="/login">Login</a>
+            </div>
+
+        </header>
+        <!-- Include Flash Attribute Messages -->
+        <div th:replace="fragments/alert :: alert (message=${FlashMessage})"></div>
+
+        <!-- Start main content -->
+        <section layout:fragment="content">
+            <p>Page content goes here</p>
+        </section>
+
+        <!-- Start footer -->
+        <footer>
+            <p>My footer</p>
+            <p layout:fragment="custom-footer">Custom footer here</p>
+        </footer>
+
+        <script type="text/javascript">
+            piAId = '140321';
+            piCId = '1423';
+
+            (function() {
+                function async_load(){
+                    var s = document.createElement('script'); s.type = 'text/javascript';
+                    s.src = ('https:' == document.location.protocol ? 'https://pi' : 'http://cdn') + '.pardot.com/pd.js';
+                    var c = document.getElementsByTagName('script')[0]; c.parentNode.insertBefore(s, c);
+                }
+                if(window.attachEvent) { window.attachEvent('onload', async_load); }
+                else { window.addEventListener('load', async_load, false); }
+            })();
+        </script>
+    </body>
+</html>

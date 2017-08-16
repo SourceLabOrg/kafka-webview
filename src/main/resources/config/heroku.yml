@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: ${JAWSDB_URL}
+
+app:
+  baseUrl: https://www.fightjudge.com

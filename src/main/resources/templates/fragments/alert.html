@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head/>
+    <body>
+
+        <!-- Handles showing Alerts -->
+        <div th:if="${FlashMessage != null}" class="alert alert-dismissable" th:fragment="alert (message)" th:classappend="'alert-' + ${message.getType()}">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <span th:text="${message.getMessage()}"></span>
+        </div>
+
+    </body>
+</html>
