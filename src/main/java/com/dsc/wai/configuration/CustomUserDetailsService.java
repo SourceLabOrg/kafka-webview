@@ -21,7 +21,7 @@ public class CustomUserDetailsService implements org.springframework.security.co
     public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email);
         if (user == null) {
-            return null;
+            throw new UsernameNotFoundException("User not found.");
         }
         return new CustomUserDetails(user);
     }
