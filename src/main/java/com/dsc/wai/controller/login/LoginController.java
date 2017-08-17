@@ -19,6 +19,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
@@ -40,11 +41,22 @@ public class LoginController extends BaseController {
      * GET Displays the Login Form.
      */
     @RequestMapping(path = "/login", method = RequestMethod.GET)
-    public String loginForm(final LoginForm loginForm) {
+    public String loginForm(
+        final LoginForm loginForm,
+        final Model model,
+        final @RequestParam(value = "error", required = false) String isError) {
+
         // Redirect to home
         if (isLoggedIn()) {
             return "redirect:/";
         }
+
+        // If we don't have an error
+        if (isError != null) {
+            // Display error string
+            model.addAttribute("FlashMessage", FlashMessage.newWarning("Invalid Username or Password!"));
+        }
+
         return "login/loginForm";
     }
 
