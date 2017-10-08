@@ -15,6 +15,7 @@ public abstract class BaseController {
      * @return True if so, false if not.
      */
     protected boolean isLoggedIn() {
+        // For now bypass auth
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth instanceof AnonymousAuthenticationToken) {
             return false;

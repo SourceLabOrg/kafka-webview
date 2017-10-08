@@ -16,7 +16,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <bootstrap.version>3.3.7</bootstrap.version>
+        <bootstrap.version>4.0.0-beta</bootstrap.version>
     </properties>
 
     <dependencies>
