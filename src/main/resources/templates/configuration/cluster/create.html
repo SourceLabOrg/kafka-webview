@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.thymeleaf.org"
+        layout:decorate="~{layout}">
+
+<head>
+    <title>Clusters</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Create</strong>
+                        New Cluster
+                    </div>
+                    <form th:action="@{/configuration/cluster/create}" th:object="${clusterForm}" method="post" class="form-horizontal">
+                        <div class="card-body">
+                            <!-- Name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="name">
+                                    Cluster Name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="name" name="name" class="form-control" type="text"
+                                        placeholder="A unique name to identify this cluster"
+                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                                        th:field="*{name}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"/>
+                                </div>
+                            </div>
+
+                            <!-- Brokers -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="brokers">
+                                    Brokers
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="brokers" name="brokers" class="form-control" type="text"
+                                        placeholder="Comma separated list of brokers.  hostname1:9092,hostname2:9092"
+                                        th:classappend="${#fields.hasErrors('brokerHosts')} ? 'is-invalid' : ''"
+                                        th:field="*{brokerHosts}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('brokerHosts')}" th:errors="*{brokerHosts}"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa fa-dot-circle-o"></i>
+                                Submit
+                            </button>
+                            <button type="reset" class="btn btn-sm btn-danger">
+                                <i class="fa fa-ban"></i>
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>
