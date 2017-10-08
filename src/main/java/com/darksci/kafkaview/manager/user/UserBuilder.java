@@ -2,7 +2,6 @@ package com.darksci.kafkaview.manager.user;
 
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;
-import com.darksci.kafkaview.model.UserSource;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +15,6 @@ public final class UserBuilder {
     private String password;
     private UserRole role = UserRole.ROLE_USER;
     private String resetPasswordHash = null;
-    private UserSource source = UserSource.SOURCE_WEBSITE;
     private boolean isActive = true;
     private boolean hasPassword = false;
 
@@ -55,11 +53,6 @@ public final class UserBuilder {
         return this;
     }
 
-    public UserBuilder withSource(UserSource source) {
-        this.source = source;
-        return this;
-    }
-
     public UserBuilder withIsActive(Boolean isActive) {
         this.isActive = isActive;
         return this;
@@ -78,7 +71,6 @@ public final class UserBuilder {
         user.setRole(role);
         user.setResetPasswordHash(resetPasswordHash);
         user.setActive(isActive);
-        user.setSource(source);
         user.setHasPassword(hasPassword);
         return user;
     }

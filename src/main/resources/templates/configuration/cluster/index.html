@@ -31,30 +31,43 @@
                                 <th>Cluster Name</th>
                                 <th>Brokers</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th class="text-right">Action</th>
                             </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Cluster 1</td>
-                                    <td>Broker1:9092, broker2:9092, broker3:9092</td>
+                                <tr th:each="cluster : ${clusterList}">
+                                    <td th:text="${cluster.name}"></td>
+                                    <td th:text="${cluster.brokerHosts}"></td>
                                     <td>
-                                        <span class="badge badge-success">On-line</span>
+                                        <span
+                                            th:if="${cluster.isValid()}"
+                                            class="badge badge-success">On-line
+                                        </span>
+                                        <span
+                                            th:if="!${cluster.isValid()}"
+                                            class="badge badge-danger">Off-line
+                                        </span>
                                     </td>
-                                    <td>
-                                        <a href="#"><i class="fa fa-edit"></i></a>
-                                        <a href="#"><i class="fa fa-remove"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Cluster 1</td>
-                                    <td>Broker1:9092, broker2:9092, broker3:9092</td>
-                                    <td>
-                                        <span class="badge danger">Off-line</span>
-                                    </td>
-                                    <td>
-                                        <a href="#"><i class="fa fa-edit"></i></a>
-                                        <a href="#"><i class="fa fa-remove"></i></a>
+                                    <td class="text-right">
+                                        <div class="dropdown">
+                                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                <a th:if="!${cluster.isValid()}" class="dropdown-item" th:href="@{/configuration/cluster/test/{id}(id=${cluster.id})}">
+                                                    <i class="fa fa-edit"></i>
+                                                    Validate
+                                                </a>
+                                                <a class="dropdown-item" th:href="@{/configuration/cluster/edit/{id}(id=${cluster.id})}">
+                                                    <i class="fa fa-edit"></i>
+                                                    Edit
+                                                </a>
+                                                <a class="dropdown-item" th:href="@{/configuration/cluster/delete/{id}(id=${cluster.id})}">
+                                                    <i class="fa fa-remove"></i>
+                                                    Delete
+                                                </a>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>

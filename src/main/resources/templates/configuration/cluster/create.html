@@ -15,9 +15,13 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" th:if="${!clusterForm.exists()}">
                         <strong>Create</strong>
                         New Cluster
+                    </div>
+                    <div class="card-header" th:if="${clusterForm.exists()}">
+                        <strong>Edit</strong>
+                        Name here
                     </div>
                     <form th:action="@{/configuration/cluster/create}" th:object="${clusterForm}" method="post" class="form-horizontal">
                         <div class="card-body">
