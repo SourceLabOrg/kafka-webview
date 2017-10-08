@@ -3,7 +3,7 @@ security:
 
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/wai"
+    url: "jdbc:mysql://localhost:3306/kafkaviewer"
     username: root
     password:
 

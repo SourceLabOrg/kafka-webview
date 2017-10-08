@@ -11,7 +11,7 @@ security:
 
 spring:
   application:
-    name: FightJudge
+    name: KafkaViewer
   datasource:
     schema: "classpath:/schema/schema.sql"
 #    data: "classpath:/schema/data.sql"
@@ -105,8 +105,8 @@ twitter:
 
 ## Various App Configs
 app:
-  name: FightJudge.com
-  companyName: FightJudge
+  name: KafkaViewer.com
+  companyName: KafkaViewer
   companyAddress: "123 Main Street, Atlanta, GA 30060"
-  baseUrl: http://dev.fightjudge.com:8080
-  systemEmail: admin@fightjudge.com
+  baseUrl: http://kafka.localhost.com:8080
+  systemEmail: admin@example.com
