@@ -19,5 +19,20 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         registry
             .addResourceHandler("/css/**")
             .addResourceLocations("classpath:/static/css/");
+
+        // js resource
+        registry
+            .addResourceHandler("/js/**")
+            .addResourceLocations("classpath:/static/js/");
+
+        // js resource
+        registry
+            .addResourceHandler("/node_modules/**")
+            .addResourceLocations("classpath:/static/node_modules/");
+
+        // img resource
+        registry
+            .addResourceHandler("/img/**")
+            .addResourceLocations("classpath:/static/img/");
     }
 }
