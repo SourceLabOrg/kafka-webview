@@ -4,6 +4,7 @@ import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
 import com.darksci.kafkaview.manager.kafka.filter.FilterInterceptor;
 import com.darksci.kafkaview.model.View;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,7 @@ public class KafkaConsumerFactory {
         // Determine which partitions to subscribe to, for now do all
         final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
 
-        // Pull out partitions, convert to view partitions
+        // Pull out partitions, convert to browser partitions
         final List<TopicPartition> topicPartitions = new ArrayList<>();
         for (final PartitionInfo partitionInfo: partitionInfos) {
             topicPartitions.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
@@ -45,7 +47,22 @@ public class KafkaConsumerFactory {
         kafkaConsumer.assign(topicPartitions);
 
         // TODO: Seek somewhere?
-        kafkaConsumer.seekToBeginning(topicPartitions);
+        //kafkaConsumer.seekToBeginning(topicPartitions);
+
+
+//        final ArrayList<String> topics = new ArrayList<>();
+//        topics.add(clientConfig.getTopicConfig().getTopicName());
+//        kafkaConsumer.subscribe(topics, new ConsumerRebalanceListener() {
+//            @Override
+//            public void onPartitionsRevoked(final Collection<TopicPartition> partitions) {
+//
+//            }
+//
+//            @Override
+//            public void onPartitionsAssigned(final Collection<TopicPartition> partitions) {
+//
+//            }
+//        });
 
         // Return the kafka consumer.
         return kafkaConsumer;
@@ -59,11 +76,15 @@ public class KafkaConsumerFactory {
         configMap.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, clientConfig.getTopicConfig().getDeserializerConfig().getKeyDeserializerClass());
         configMap.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, clientConfig.getTopicConfig().getDeserializerConfig().getValueDeserializerClass());
 
-        // TODO ? Auto commit?
+        // Enable auto commit
+        configMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, clientConfig.isAutoCommitEnabled());
+
+        // How many records to pull
+        configMap.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, clientConfig.getMaxRecords());
 
         // If we have any filters
         if (!clientConfig.getFilterConfig().getFilters().isEmpty()) {
-            // Create intercepter
+            // Create interceptor
             configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, FilterInterceptor.class.getName());
             configMap.put(FilterInterceptor.CONFIG_KEY, clientConfig.getFilterConfig().getFilters());
         }

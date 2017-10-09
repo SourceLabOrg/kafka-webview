@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Browser</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Kafka Data
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th>Partition</th>
+                                <th>Offset</th>
+                                <th>Key</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="result : ${results}">
+                                <td th:text="${result.partition}"></td>
+                                <td th:text="${result.offset}"></td>
+                                <td th:text="${result.key}"></td>
+                                <td th:text="${result.value}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <a th:href="@{/browser/{id}/p(id=${view.id})}">prev</a>
+                        <a th:href="@{/browser/{id}/a(id=${view.id})}">next</a>
+                        <a th:href="@{/browser/{id}/r(id=${view.id})}">reset</a>
+                    </div>
+                </div>
+            </div>
+            <!--/.col-->
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

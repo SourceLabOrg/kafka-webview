@@ -69,13 +69,12 @@ public class ApiController extends BaseController {
         final KafkaConsumer kafkaConsumer = new KafkaConsumerFactory(clientConfig).createAndSubscribe();
 
         // Create consumer
-        final TransactionalKafkaClient transactionalKafkaClient = new TransactionalKafkaClient(kafkaConsumer);
+        final KafkaResults results;
+        try (final TransactionalKafkaClient transactionalKafkaClient = new TransactionalKafkaClient(kafkaConsumer, clientConfig)) {
 
-        // Poll
-        final KafkaResults results = transactionalKafkaClient.consume();
-
-        // and close
-        transactionalKafkaClient.close();
+            // Poll
+            results = transactionalKafkaClient.consume();
+        }
 
         // Debug log
         logger.info("Consumed records: {}", results);

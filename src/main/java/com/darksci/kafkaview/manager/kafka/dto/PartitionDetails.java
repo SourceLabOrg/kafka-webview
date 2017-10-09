@@ -20,7 +20,7 @@ public class PartitionDetails {
     @Override
     public String toString() {
         return "PartitionDetails{" +
-            "view='" + topic + '\'' +
+            "browser='" + topic + '\'' +
             ", partition=" + partition +
             '}';
     }
