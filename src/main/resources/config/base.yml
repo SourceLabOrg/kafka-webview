@@ -16,6 +16,11 @@ spring:
     schema: "classpath:/schema/schema.sql"
 #    data: "classpath:/schema/data.sql"
 
+  http:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   ## Outbound email settings
   mail:
     protocol: smtps
@@ -52,57 +57,6 @@ spring:
       ddl-auto: none
     show-sql: true
 
-## Pardot configuration
-pardot:
-  username: ${PARDOT_USERNAME}
-  password: ${PARDOT_PASSWORD}
-  user_token: ${PARDOT_USERTOKEN}
-  default_campaign_id: 14885
-
-facebook:
-  client:
-    clientId: ${FACEBOOK_CLIENT_ID}
-    clientSecret: ${FACEBOOK_SECRET}
-    accessTokenUri: https://graph.facebook.com/oauth/access_token
-    userAuthorizationUri: https://www.facebook.com/dialog/oauth
-    tokenName: oauth_token
-    authenticationScheme: query
-    clientAuthenticationScheme: form
-    scope: public_profile,email
-    useCurrentUri: false
-    preEstablishedRedirectUri: ${app.baseUrl}/login/facebook
-  resource:
-    userInfoUri: https://graph.facebook.com/me?fields=id,name,email
-
-google:
-  client:
-    clientId: ${GOOGLE_CLIENT_ID}
-    clientSecret: ${GOOGLE_SECRET}
-    accessTokenUri: https://www.googleapis.com/oauth2/v4/token
-    userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
-    tokenName: access_token
-    authenticationScheme: query
-    clientAuthenticationScheme: form
-    scope: profile,email
-    useCurrentUri: false
-    preEstablishedRedirectUri: ${app.baseUrl}/login/google
-  resource:
-    userInfoUri: https://www.googleapis.com/oauth2/v1/userinfo
-
-twitter:
-  client:
-    clientId: ${TWITTER_CLIENT_ID}
-    clientSecret: ${TWITTER_SECRET}
-    accessTokenUri: https://api.twitter.com/oauth/access_token
-    userAuthorizationUri:  https://api.twitter.com/oauth/authorize
-    tokenName: oauth_token
-    authenticationScheme: query
-    clientAuthenticationScheme: form
-    useCurrentUri: false
-    preEstablishedRedirectUri: ${app.baseUrl}/login/twitter
-  resource:
-    userInfoUri: https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true
-
 ## Various App Configs
 app:
   name: KafkaViewer.com
@@ -110,3 +64,4 @@ app:
   companyAddress: "123 Main Street, Atlanta, GA 30060"
   baseUrl: http://kafka.localhost.com:8080
   systemEmail: admin@example.com
+  jarUploadPath: "./uploads"

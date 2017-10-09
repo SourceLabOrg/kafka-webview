@@ -1,4 +1,4 @@
-package com.darksci.kafkaview.controller.configuration.forms;
+package com.darksci.kafkaview.controller.configuration.cluster.forms;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;

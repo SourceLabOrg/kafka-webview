@@ -1,13 +1,10 @@
-package com.darksci.kafkaview.controller.configuration;
+package com.darksci.kafkaview.controller.configuration.cluster;
 
 import com.darksci.kafkaview.controller.BaseController;
-import com.darksci.kafkaview.controller.configuration.forms.ClusterForm;
-import com.darksci.kafkaview.controller.login.forms.LoginForm;
+import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
-import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.repository.ClusterRepository;
-import com.darksci.kafkaview.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +18,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @Controller
-@RequestMapping("/configuration")
-public class ConfigurationController extends BaseController {
-    private final static Logger logger = LoggerFactory.getLogger(ConfigurationController.class);
+@RequestMapping("/configuration/cluster")
+public class ClusterController extends BaseController {
+    private final static Logger logger = LoggerFactory.getLogger(ClusterController.class);
 
     @Autowired
     private ClusterRepository clusterRepository;
@@ -34,7 +30,7 @@ public class ConfigurationController extends BaseController {
     /**
      * GET Displays main configuration index.
      */
-    @RequestMapping(path = "/cluster", method = RequestMethod.GET)
+    @RequestMapping(path = "", method = RequestMethod.GET)
     public String index(final Model model) {
         // Retrieve all clusters
         final Iterable<Cluster> clusterList = clusterRepository.findAll();
@@ -46,7 +42,7 @@ public class ConfigurationController extends BaseController {
     /**
      * GET Displays create cluster form.
      */
-    @RequestMapping(path = "/cluster/create", method = RequestMethod.GET)
+    @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createClusterForm(final ClusterForm clusterForm) {
         return "configuration/cluster/create";
     }
@@ -54,7 +50,7 @@ public class ConfigurationController extends BaseController {
     /**
      * GET Displays edit cluster form.
      */
-    @RequestMapping(path = "/cluster/edit/{id}", method = RequestMethod.GET)
+    @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
     public String editClusterForm(
         final @PathVariable Long id,
         final ClusterForm clusterForm,
@@ -84,7 +80,7 @@ public class ConfigurationController extends BaseController {
     /**
      * Handles both Update and Creating clusters.
      */
-    @RequestMapping(path = "/cluster/update", method = RequestMethod.POST)
+    @RequestMapping(path = "/update", method = RequestMethod.POST)
     public String clusterUpdate(
         @Valid final ClusterForm clusterForm,
         final BindingResult bindingResult,
@@ -99,7 +95,7 @@ public class ConfigurationController extends BaseController {
             if (!updateExisting ||
                 (updateExisting && !clusterForm.getId().equals(existingCluster.getId()))) {
                 bindingResult.addError(new FieldError(
-                "clusterForm", "name", clusterForm.getName(), true, null, null, "Name is already used")
+                    "clusterForm", "name", clusterForm.getName(), true, null, null, "Name is already used")
                 );
             }
         }
@@ -149,7 +145,7 @@ public class ConfigurationController extends BaseController {
     /**
      * POST deletes the selected cluster
      */
-    @RequestMapping(path = "/cluster/delete/{id}", method = RequestMethod.POST)
+    @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String deleteCluster(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final Cluster cluster = clusterRepository.findOne(id);
@@ -166,6 +162,4 @@ public class ConfigurationController extends BaseController {
         // redirect to cluster index
         return "redirect:/configuration/cluster";
     }
-
-
 }
