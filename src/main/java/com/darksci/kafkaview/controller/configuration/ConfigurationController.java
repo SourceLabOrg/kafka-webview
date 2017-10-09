@@ -81,16 +81,27 @@ public class ConfigurationController extends BaseController {
         return "configuration/cluster/create";
     }
 
-    @RequestMapping(path = "/cluster/create", method = RequestMethod.POST)
-    public String createClusterSubmit(
+    /**
+     * Handles both Update and Creating clusters.
+     */
+    @RequestMapping(path = "/cluster/update", method = RequestMethod.POST)
+    public String clusterUpdate(
         @Valid final ClusterForm clusterForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes) {
 
+        final boolean updateExisting = clusterForm.exists();
+
         // Ensure that cluster name is not already used.
         final Cluster existingCluster = clusterRepository.findByName(clusterForm.getName());
         if (existingCluster != null) {
-            bindingResult.addError(new FieldError("clusterForm", "name", "Name is already used"));
+            // If we're updating, exclude our own id.
+            if (!updateExisting ||
+                (updateExisting && !clusterForm.getId().equals(existingCluster.getId()))) {
+                bindingResult.addError(new FieldError(
+                "clusterForm", "name", clusterForm.getName(), true, null, null, "Name is already used")
+                );
+            }
         }
 
         // If we have errors
@@ -99,17 +110,62 @@ public class ConfigurationController extends BaseController {
             return "configuration/cluster/create";
         }
 
-        // Create cluster
-        final Cluster cluster = new Cluster();
+        // If we're updating
+        final Cluster cluster;
+        final String successMessage;
+        if (updateExisting) {
+            // Retrieve it
+            cluster = clusterRepository.findOne(clusterForm.getId());
+            if (cluster == null) {
+                // redirect
+                // Set flash message
+                final FlashMessage flashMessage = FlashMessage.newWarning("Unable to find cluster!");
+                redirectAttributes.addFlashAttribute("FlashMessage", flashMessage);
+
+                // redirect to cluster index
+                return "redirect:/configuration/cluster";
+            }
+
+            successMessage = "Updated cluster successfully!";
+        } else {
+            cluster = new Cluster();
+            successMessage = "Created new cluster!";
+        }
+
+        // Update properties
         cluster.setName(clusterForm.getName());
         cluster.setBrokerHosts(clusterForm.getBrokerHosts());
+        cluster.setValid(false);
         clusterRepository.save(cluster);
 
         // Set flash message
-        final FlashMessage flashMessage = FlashMessage.newSuccess("Created new cluster!");
+        final FlashMessage flashMessage = FlashMessage.newSuccess(successMessage);
         redirectAttributes.addFlashAttribute("FlashMessage", flashMessage);
 
         // redirect to cluster index
         return "redirect:/configuration/cluster";
     }
+
+    /**
+     * POST deletes the selected cluster
+     */
+    @RequestMapping(path = "/cluster/delete/{id}", method = RequestMethod.POST)
+    public String deleteCluster(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+        // Retrieve it
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
+        } else {
+            // Delete it
+            clusterRepository.delete(id);
+
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted cluster!"));
+        }
+
+        // redirect to cluster index
+        return "redirect:/configuration/cluster";
+    }
+
+
 }

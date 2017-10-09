@@ -62,10 +62,12 @@
                                                     <i class="fa fa-edit"></i>
                                                     Edit
                                                 </a>
-                                                <a class="dropdown-item" th:href="@{/configuration/cluster/delete/{id}(id=${cluster.id})}">
-                                                    <i class="fa fa-remove"></i>
-                                                    Delete
-                                                </a>
+                                                <form th:action="@{/configuration/cluster/delete/{id}(id=${cluster.id})}" method="post">
+                                                    <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
+                                                        <i class="fa fa-remove"></i>
+                                                        Delete
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     </td>

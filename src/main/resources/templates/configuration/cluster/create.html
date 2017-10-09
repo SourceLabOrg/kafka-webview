@@ -15,15 +15,11 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header" th:if="${!clusterForm.exists()}">
-                        <strong>Create</strong>
-                        New Cluster
+                    <div class="card-header">
+                        <strong th:text="${clusterForm.exists()} ? 'Edit' : 'Create'">Create</strong>
+                        <span th:text="${clusterForm.exists()} ? ${clusterForm.name} : 'New Cluster'"></span>
                     </div>
-                    <div class="card-header" th:if="${clusterForm.exists()}">
-                        <strong>Edit</strong>
-                        Name here
-                    </div>
-                    <form th:action="@{/configuration/cluster/create}" th:object="${clusterForm}" method="post" class="form-horizontal">
+                    <form th:action="@{/configuration/cluster/update}" th:object="${clusterForm}" method="post" class="form-horizontal">
                         <div class="card-body">
                             <!-- Name -->
                             <div class="form-group row">
@@ -34,8 +30,8 @@
                                     <input
                                         id="name" name="name" class="form-control" type="text"
                                         placeholder="A unique name to identify this cluster"
-                                        th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
-                                        th:field="*{name}">
+                                        th:errorclass="is-invalid"
+                                        th:value="*{name}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"/>
                                 </div>
                             </div>
@@ -49,21 +45,22 @@
                                     <input
                                         id="brokers" name="brokers" class="form-control" type="text"
                                         placeholder="Comma separated list of brokers.  hostname1:9092,hostname2:9092"
-                                        th:classappend="${#fields.hasErrors('brokerHosts')} ? 'is-invalid' : ''"
+                                        th:errorclass="is-invalid"
                                         th:field="*{brokerHosts}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('brokerHosts')}" th:errors="*{brokerHosts}"/>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer">
+                            <input type="hidden" name="id" th:if="${clusterForm.exists()}" th:field="*{id}"></input>
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="fa fa-dot-circle-o"></i>
                                 Submit
                             </button>
-                            <button type="reset" class="btn btn-sm btn-danger">
+                            <a class="btn btn-sm btn-danger" href="/configuration/cluster" role="button">
                                 <i class="fa fa-ban"></i>
                                 Cancel
-                            </button>
+                            </a>
                         </div>
                     </form>
                 </div>
