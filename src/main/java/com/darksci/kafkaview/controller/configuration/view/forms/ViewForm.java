@@ -20,7 +20,10 @@ public class ViewForm {
     private Long clusterId;
 
     @NotNull(message = "Select a message format")
-    private Long messageFormatId;
+    private Long keyMessageFormatId;
+
+    @NotNull(message = "Select a message format")
+    private Long valueMessageFormatId;
 
     @NotNull(message = "Select a topic")
     @Size(min = 1, max = 255)
@@ -50,12 +53,20 @@ public class ViewForm {
         this.clusterId = clusterId;
     }
 
-    public Long getMessageFormatId() {
-        return messageFormatId;
+    public Long getKeyMessageFormatId() {
+        return keyMessageFormatId;
     }
 
-    public void setMessageFormatId(final Long messageFormatId) {
-        this.messageFormatId = messageFormatId;
+    public void setKeyMessageFormatId(final Long keyMessageFormatId) {
+        this.keyMessageFormatId = keyMessageFormatId;
+    }
+
+    public Long getValueMessageFormatId() {
+        return valueMessageFormatId;
+    }
+
+    public void setValueMessageFormatId(final Long valueMessageFormatId) {
+        this.valueMessageFormatId = valueMessageFormatId;
     }
 
     public String getTopic() {
@@ -76,7 +87,8 @@ public class ViewForm {
             "id=" + id +
             ", name='" + name + '\'' +
             ", clusterId=" + clusterId +
-            ", messageFormatId=" + messageFormatId +
+            ", keyMessageFormatId=" + keyMessageFormatId +
+            ", valueMessageFormatId=" + valueMessageFormatId +
             ", topic='" + topic + '\'' +
             '}';
     }

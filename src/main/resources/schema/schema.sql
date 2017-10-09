@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS `view` (
   id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) UNIQUE NOT NULL,
   cluster_id INT(11) UNSIGNED NOT NULL,
-  message_format_id INT(11) UNSIGNED NOT NULL,
+  key_message_format_id INT(11) UNSIGNED NOT NULL,
+  value_message_format_id INT(11) UNSIGNED NOT NULL,
   topic TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_by INT(11) UNSIGNED DEFAULT NULL,
@@ -49,5 +50,6 @@ CREATE TABLE IF NOT EXISTS `view` (
   updated_by INT(11) UNSIGNED DEFAULT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (cluster_id) REFERENCES cluster(id),
-  FOREIGN KEY (message_format_id) REFERENCES message_format(id)
+  FOREIGN KEY (key_message_format_id) REFERENCES message_format(id),
+  FOREIGN KEY (value_message_format_id) REFERENCES message_format(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

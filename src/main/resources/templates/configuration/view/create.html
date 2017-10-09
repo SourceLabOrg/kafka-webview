@@ -93,16 +93,16 @@
                                     </div>
                                 </div>
 
-                                <!-- Message Formats -->
+                                <!-- Key Message Formats -->
                                 <div class="form-group row">
-                                    <label class="col-md-3 form-control-label" for="messageFormatId">
-                                        Message Format
+                                    <label class="col-md-3 form-control-label" for="keyMessageFormatId">
+                                        Message Format for Keys
                                     </label>
                                     <div class="col-md-9">
                                         <select
-                                                id="messageFormatId" name="messageFormatId" class="form-control"
+                                                id="keyMessageFormatId" name="keyMessageFormatId" class="form-control"
                                                 th:errorclass="is-invalid"
-                                                th:field="*{messageFormatId}">
+                                                th:field="*{keyMessageFormatId}">
                                             <option value="">Please select a message format</option>
                                             <optgroup label="Default Formats">
                                                 <option th:each="messageFormat : ${defaultMessageFormats}"
@@ -113,10 +113,35 @@
                                                         th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
                                             </optgroup>
                                         </select>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('messageFormatId')}" th:errors="*{messageFormatId}"/>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('keyMessageFormatId')}" th:errors="*{keyMessageFormatId}"/>
+                                    </div>
+                                </div>
+
+                                <!-- Key Message Formats -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="valueMessageFormatId">
+                                        Message Format for Values
+                                    </label>
+                                    <div class="col-md-9">
+                                        <select
+                                                id="valueMessageFormatId" name="valueMessageFormatId" class="form-control"
+                                                th:errorclass="is-invalid"
+                                                th:field="*{valueMessageFormatId}">
+                                            <option value="">Please select a message format</option>
+                                            <optgroup label="Default Formats">
+                                                <option th:each="messageFormat : ${defaultMessageFormats}"
+                                                        th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
+                                            </optgroup>
+                                            <optgroup label="Custom Formats">
+                                                <option th:each="messageFormat : ${customMessageFormats}"
+                                                        th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
+                                            </optgroup>
+                                        </select>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('valueMessageFormatId')}" th:errors="*{valueMessageFormatId}"/>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="card-footer">
                                 <input type="hidden" name="id" th:if="${viewForm.exists()}" th:field="*{id}"></input>
                                 <button type="submit" class="btn btn-sm btn-primary">

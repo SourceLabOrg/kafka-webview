@@ -22,7 +22,10 @@ public class View {
     private Cluster cluster;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private MessageFormat messageFormat;
+    private MessageFormat keyMessageFormat;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MessageFormat valueMessageFormat;
 
     @Column(nullable = false)
     private String topic;
@@ -57,12 +60,20 @@ public class View {
         this.cluster = cluster;
     }
 
-    public MessageFormat getMessageFormat() {
-        return messageFormat;
+    public MessageFormat getKeyMessageFormat() {
+        return keyMessageFormat;
     }
 
-    public void setMessageFormat(final MessageFormat messageFormat) {
-        this.messageFormat = messageFormat;
+    public void setKeyMessageFormat(final MessageFormat keyMessageFormat) {
+        this.keyMessageFormat = keyMessageFormat;
+    }
+
+    public MessageFormat getValueMessageFormat() {
+        return valueMessageFormat;
+    }
+
+    public void setValueMessageFormat(final MessageFormat valueMessageFormat) {
+        this.valueMessageFormat = valueMessageFormat;
     }
 
     public String getTopic() {

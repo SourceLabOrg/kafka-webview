@@ -94,7 +94,6 @@ public class ViewController extends BaseController {
         // Retrieve by id
         final View view = viewRepository.findOne(id);
         if (view == null) {
-            // redirect
             // Set flash message
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
 
@@ -106,7 +105,8 @@ public class ViewController extends BaseController {
         viewForm.setId(view.getId());
         viewForm.setName(view.getName());
         viewForm.setClusterId(view.getCluster().getId());
-        viewForm.setMessageFormatId(view.getMessageFormat().getId());
+        viewForm.setKeyMessageFormatId(view.getKeyMessageFormat().getId());
+        viewForm.setValueMessageFormatId(view.getValueMessageFormat().getId());
         viewForm.setTopic(view.getTopic());
 
         return createViewForm(viewForm, model);
@@ -163,12 +163,14 @@ public class ViewController extends BaseController {
         }
 
         // Update properties
-        final MessageFormat messageFormat = messageFormatRepository.findOne(viewForm.getMessageFormatId());
+        final MessageFormat keyMessageFormat = messageFormatRepository.findOne(viewForm.getKeyMessageFormatId());
+        final MessageFormat valueMessageFormat = messageFormatRepository.findOne(viewForm.getValueMessageFormatId());
         final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
 
         view.setName(viewForm.getName());
         view.setTopic(viewForm.getTopic());
-        view.setMessageFormat(messageFormat);
+        view.setKeyMessageFormat(keyMessageFormat);
+        view.setValueMessageFormat(valueMessageFormat);
         view.setCluster(cluster);
         viewRepository.save(view);
 
