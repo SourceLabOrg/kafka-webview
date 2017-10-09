@@ -7,18 +7,26 @@ import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
 import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResults;
+import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
 import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
 import com.darksci.kafkaview.manager.kafka.filter.AFilter;
+import com.darksci.kafkaview.model.Cluster;
+import com.darksci.kafkaview.repository.ClusterRepository;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handles API requests.
@@ -27,6 +35,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/api")
 public class ApiController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
+
+    @Autowired
+    private ClusterRepository clusterRepository;
 
     /**
      * GET kafka results
@@ -73,19 +84,22 @@ public class ApiController extends BaseController {
     }
 
     /**
-     * GET kafka results
+     * GET kafka topics for a requested cluster.
      */
-    @RequestMapping(path = "/getTopics", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public TopicList getTopics() {
-        final ClusterConfig clusterConfig = getClusterConfig();
-        final DeserializerConfig deserializerConfig = DeserializerConfig.defaultConfig();
-        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, "NotUsed");
+    public List<TopicDetails> getTopics(final @PathVariable Long id) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            new ArrayList<>();
+        }
 
-        final ClientConfig clientConfig = new ClientConfig(topicConfig, FilterConfig.withNoFilters(), "BobsYerAunty");
-        final KafkaOperations operations = new KafkaOperations(new KafkaConsumerFactory(clientConfig).create());
-
-        return operations.getAvailableTopics();
+        try (final KafkaOperations operations = KafkaOperations.newKafkaOperationalInstance(cluster.getBrokerHosts())) {
+            final TopicList topics = operations.getAvailableTopics();
+            return topics.getAllTopics();
+        }
     }
 
     private ClusterConfig getClusterConfig() {
