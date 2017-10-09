@@ -1,5 +1,10 @@
 package com.darksci.kafkaview.manager.kafka;
 
+import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
+import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
+import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
+import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
+import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
 import com.darksci.kafkaview.manager.kafka.dto.PartitionDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
@@ -12,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class KafkaOperations {
+public class KafkaOperations implements AutoCloseable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaOperations.class);
     private final static long TIMEOUT = 5000L;
 
@@ -41,6 +46,19 @@ public class KafkaOperations {
         }
 
         return new TopicList(topicDetails);
+    }
+
+    public void close() {
+        kafkaConsumer.close();
+    }
+
+    public static KafkaOperations newKafkaOperationalInstance(final String kafkaBrokers) {
+        final ClusterConfig clusterConfig = new ClusterConfig(kafkaBrokers);
+        final DeserializerConfig deserializerConfig = DeserializerConfig.defaultConfig();
+        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, "NotUsed");
+
+        final ClientConfig clientConfig = new ClientConfig(topicConfig, FilterConfig.withNoFilters(), "BobsYerAunty");
+        return new KafkaOperations(new KafkaConsumerFactory(clientConfig).create());
     }
 
 }

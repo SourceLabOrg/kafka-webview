@@ -2,9 +2,18 @@ package com.darksci.kafkaview.controller.configuration.cluster;
 
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
+import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
+import com.darksci.kafkaview.manager.kafka.KafkaOperations;
+import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
+import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
+import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
+import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
+import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
+import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.repository.ClusterRepository;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

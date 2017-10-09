@@ -34,7 +34,7 @@ public class KafkaConsumerFactory {
         // Determine which partitions to subscribe to, for now do all
         final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
 
-        // Pull out partitions, convert to topic partitions
+        // Pull out partitions, convert to view partitions
         final List<TopicPartition> topicPartitions = new ArrayList<>();
         for (final PartitionInfo partitionInfo: partitionInfos) {
             topicPartitions.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
