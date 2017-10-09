@@ -82,6 +82,37 @@ public class ViewController extends BaseController {
     }
 
     /**
+     * GET Displays edit view form.
+     */
+    @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
+    public String editViewForm(
+        final @PathVariable Long id,
+        final ViewForm viewForm,
+        final RedirectAttributes redirectAttributes,
+        final Model model) {
+
+        // Retrieve by id
+        final View view = viewRepository.findOne(id);
+        if (view == null) {
+            // redirect
+            // Set flash message
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
+
+            // redirect to view index
+            return "redirect:/configuration/view";
+        }
+
+        // Build form
+        viewForm.setId(view.getId());
+        viewForm.setName(view.getName());
+        viewForm.setClusterId(view.getCluster().getId());
+        viewForm.setMessageFormatId(view.getMessageFormat().getId());
+        viewForm.setTopic(view.getTopic());
+
+        return createViewForm(viewForm, model);
+    }
+
+    /**
      * Handles both Update and Creating views.
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
