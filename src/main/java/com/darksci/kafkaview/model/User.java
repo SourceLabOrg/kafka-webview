@@ -30,9 +30,6 @@ public class User {
     @Column(nullable = true, name = "reset_password_hash")
     private String resetPasswordHash;
 
-    @Column(nullable = false, name = "source")
-    private UserSource source;
-
     @Column(nullable = false, name = "has_password")
     private Boolean hasPassword;
 
@@ -95,14 +92,6 @@ public class User {
         this.resetPasswordHash = resetPasswordHash;
     }
 
-    public UserSource getSource() {
-        return source;
-    }
-
-    public void setSource(final UserSource source) {
-        this.source = source;
-    }
-
     public Boolean getHasPassword() {
         return hasPassword;
     }
@@ -120,7 +109,6 @@ public class User {
             ", password='" + password + '\'' +
             ", role=" + role +
             ", resetPasswordHash='" + resetPasswordHash + '\'' +
-            ", source=" + source +
             ", isActive=" + isActive +
             '}';
     }

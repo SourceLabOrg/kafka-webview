@@ -25,6 +25,9 @@ public class AppProperties {
     @Value("${app.companyAddress}")
     private String companyAddress;
 
+    @Value("${app.jarUploadPath}")
+    private String jarUploadPath;
+
     private Map<String, String> globalProperties;
 
     public String getName() {
@@ -45,6 +48,10 @@ public class AppProperties {
 
     public String getCompanyName() {
         return companyName;
+    }
+
+    public String getJarUploadPath() {
+        return jarUploadPath;
     }
 
     public Map<String, String> getGlobalProperties() {
