@@ -39,7 +39,7 @@
                             <tbody>
                             <tr th:each="view : ${views}">
                                 <td>
-                                    <a th:href="@{/browser/{id}/r(id=${view.id})}" th:text="${view.name}"/>
+                                    <a th:href="@{/browser/{id}(id=${view.id})}" th:text="${view.name}"/>
                                 </td>
                                 <td th:text="${view.cluster.name}"></td>
                                 <td th:text="${view.topic}"></td>
