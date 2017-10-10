@@ -3,20 +3,20 @@ package com.darksci.kafkaview.manager.kafka.dto;
 import java.util.List;
 
 public class TopicList {
-    private final List<TopicDetails> topicDetailsList;
+    private final List<TopicListing> topics;
 
-    public TopicList(final List<TopicDetails> topicDetailsList) {
-        this.topicDetailsList = topicDetailsList;
+    public TopicList(final List<TopicListing> topics) {
+        this.topics = topics;
     }
 
-    public List<TopicDetails> getAllTopics() {
-        return topicDetailsList;
+    public List<TopicListing> getTopics() {
+        return topics;
     }
 
     @Override
     public String toString() {
         return "TopicList{" +
-            "topicDetailsList=" + topicDetailsList +
+            "topics=" + topics +
             '}';
     }
 }

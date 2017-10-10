@@ -1,17 +1,21 @@
 package com.darksci.kafkaview.controller.api;
 
 import com.darksci.kafkaview.controller.BaseController;
+import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
 import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
 import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResults;
+import com.darksci.kafkaview.manager.kafka.dto.NodeDetails;
+import com.darksci.kafkaview.manager.kafka.dto.NodeList;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
 import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
+import com.darksci.kafkaview.manager.kafka.dto.TopicListing;
 import com.darksci.kafkaview.manager.kafka.filter.AFilter;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
@@ -21,6 +25,7 @@ import com.darksci.kafkaview.model.MessageFormat;
 import com.darksci.kafkaview.model.View;
 import com.darksci.kafkaview.repository.ClusterRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +98,7 @@ public class ApiController extends BaseController {
      */
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public List<TopicDetails> getTopics(final @PathVariable Long id) {
+    public List<TopicListing> getTopics(final @PathVariable Long id) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -101,18 +106,22 @@ public class ApiController extends BaseController {
             new ArrayList<>();
         }
 
-        try (final KafkaOperations operations = KafkaOperations.newKafkaOperationalInstance(cluster.getBrokerHosts())) {
+        // Create new Operational Client
+        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+        final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+
+        try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
             final TopicList topics = operations.getAvailableTopics();
-            return topics.getAllTopics();
+            return topics.getTopics();
         }
     }
 
     /**
-     * GET Details about a cluster.
+     * GET Topic Details
      */
-    @RequestMapping(path = "/cluster/{id}/info", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public List<TopicDetails> getClusterInfomration(final @PathVariable Long id) {
+    public TopicDetails getTopicDetails(final @PathVariable Long id, final @PathVariable String topic) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -120,13 +129,38 @@ public class ApiController extends BaseController {
             new ArrayList<>();
         }
 
-        try (final KafkaOperations operations = KafkaOperations.newKafkaOperationalInstance(cluster.getBrokerHosts())) {
-            final TopicList topics = operations.getAvailableTopics();
-            return topics.getAllTopics();
+        // Create new Operational Client
+        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+        final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+
+        try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
+            final TopicDetails topicDetails = operations.getTopicDetails(topic);
+            return topicDetails;
         }
     }
 
+    /**
+     * GET Nodes within a cluster.
+     */
+    @RequestMapping(path = "/cluster/{id}/nodes", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public List<NodeDetails> getClusterNodes(final @PathVariable Long id) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            new ArrayList<>();
+        }
 
+        // Create new Operational Client
+        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+        final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+
+        try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
+            final NodeList nodes = operations.getClusterNodes();
+            return nodes.getNodes();
+        }
+    }
 
     private TransactionalKafkaClient setup(final View view) {
         // Construct a consumerId based on user

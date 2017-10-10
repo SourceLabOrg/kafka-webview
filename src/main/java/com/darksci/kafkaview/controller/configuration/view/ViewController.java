@@ -1,10 +1,10 @@
 package com.darksci.kafkaview.controller.configuration.view;
 
 import com.darksci.kafkaview.controller.BaseController;
-import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
-import com.darksci.kafkaview.controller.configuration.messageFormat.forms.MessageFormatForm;
 import com.darksci.kafkaview.controller.configuration.view.forms.ViewForm;
+import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
+import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
@@ -13,6 +13,7 @@ import com.darksci.kafkaview.model.View;
 import com.darksci.kafkaview.repository.ClusterRepository;
 import com.darksci.kafkaview.repository.MessageFormatRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -71,9 +72,13 @@ public class ViewController extends BaseController {
             // Retrieve cluster
             final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
             if (cluster != null) {
-                try (final KafkaOperations operations = KafkaOperations.newKafkaOperationalInstance(cluster.getBrokerHosts())) {
+                // Create a new Operational Client
+                final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+                final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+
+                try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
                     final TopicList topics = operations.getAvailableTopics();
-                    model.addAttribute("topics", topics.getAllTopics());
+                    model.addAttribute("topics", topics.getTopics());
                 }
             }
         }
