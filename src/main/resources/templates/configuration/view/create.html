@@ -5,13 +5,72 @@
         layout:decorate="~{layout}">
 
 <head>
-    <title>Message Format</title>
+    <title>View</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 
 <body>
 <section layout:fragment="content">
     <div class="container">
+        <script type="application/javascript">
+            // On ready register handlers
+            jQuery(document).ready(function() {
+
+                // Handle selecting a cluster.
+                jQuery('#clusterId').change(function() {
+                    var clusterId = jQuery('#clusterId').val();
+                    ApiClient.getTopics(clusterId, function(topicList) {
+                        var topicSelector = jQuery('#topic');
+                        jQuery(topicSelector).empty();
+                        jQuery(topicSelector).removeAttr('disabled');
+                        jQuery(topicSelector).append(jQuery('<option></option>')
+                            .attr('value', '!')
+                            .text('Please select a topic')
+                        );
+                        jQuery.each(topicList, function (index, topic) {
+                            jQuery(topicSelector)
+                                .append(
+                                    jQuery('<option></option>')
+                                        .attr('value', topic.name)
+                                        .text(topic.name)
+                                );
+                        });
+                    });
+                });
+
+                // Handle selecting a topic
+                jQuery('#topic').change(function() {
+                    var topic = jQuery(this).val();
+                    if (topic === '!') {
+                        // Clear partitions
+                        return
+                    }
+                    var clusterId = jQuery('#clusterId').val();
+                    var topic = jQuery('#topic').val();
+
+                    ApiClient.getTopicDetails(clusterId, topic, function(results) {
+                        var partitionSelector = jQuery('#partitions');
+                        jQuery(partitionSelector).empty();
+                        jQuery(partitionSelector).removeAttr('disabled');
+                        jQuery(partitionSelector).append(jQuery('<option></option>')
+                            .attr('value', '')
+                            .text('View all partitions')
+                            .attr('selected', 'selected')
+                        );
+
+                        jQuery.each(results.partitions, function(index, result) {
+                            jQuery(partitionSelector)
+                                .append(
+                                    jQuery('<option></option>')
+                                        .attr('value', result.partition)
+                                        .text(result.partition)
+                                );
+                        });
+                    });
+                });
+            });
+        </script>
+
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
@@ -48,25 +107,7 @@
                                     <select
                                         id="clusterId" name="clusterId" class="form-control"
                                         th:errorclass="is-invalid"
-                                        th:field="*{clusterId}"
-                                        onchange="jQuery.get(
-                                            '/api/cluster/' + jQuery('#clusterId').val() + '/topics/list',
-                                            function(topicList) {
-                                                jQuery('#topic').empty();
-                                                jQuery('#topic').removeAttr('disabled');
-                                                jQuery('#topic').append($('<option></option>')
-                                                                .attr('value', '!')
-                                                                .text('Please select a topic')
-                                                            );
-                                                jQuery.each(topicList, function (index, topic) {
-                                                    jQuery('#topic')
-                                                        .append(
-                                                            $('<option></option>')
-                                                                .attr('value', topic.name)
-                                                                .text(topic.name)
-                                                            );
-                                                });
-                                            });">
+                                        th:field="*{clusterId}">
                                         <option value="">Please select a cluster</option>
                                         <option th:each="cluster : ${clusters}"
                                                 th:value="${cluster.id}" th:text="${cluster.name}">Cluster Name</option>
@@ -90,6 +131,25 @@
                                                     th:value="${topic.name}" th:text="${topic.name}">Topic Name</option>
                                         </select>
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('topic')}" th:errors="*{topic}"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Partition Selector -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="partitions">
+                                        Filter Partitions (Optional)
+                                    </label>
+                                    <div class="col-md-9">
+                                        <select
+                                            id="partitions" name="partitions" class="form-control" multiple="multiple"
+                                            th:attr="disabled=${partitions.isEmpty()}? 'disabled'"
+                                            th:errorclass="is-invalid"
+                                            th:field="*{partitions}">>
+                                            <option value="">View all partitions</option>
+                                            <option th:if="${partitions} != null" th:each="partition : ${partitions}"
+                                                    th:value="${partition.partition}" th:text="${partition.partition}">PartitionId</option>
+                                        </select>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('partitions')}" th:errors="*{partitions}"></div>
                                     </div>
                                 </div>
 

@@ -8,6 +8,8 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ViewForm {
     private Long id = null;
@@ -28,6 +30,12 @@ public class ViewForm {
     @NotNull(message = "Select a topic")
     @Size(min = 1, max = 255)
     private String topic;
+
+    /**
+     * Empty set means ALL partitions.
+     */
+    @NotNull
+    private Set<Integer> partitions = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -75,6 +83,14 @@ public class ViewForm {
 
     public void setTopic(final String topic) {
         this.topic = topic;
+    }
+
+    public Set<Integer> getPartitions() {
+        return partitions;
+    }
+
+    public void setPartitions(final Set<Integer> partitions) {
+        this.partitions = partitions;
     }
 
     public boolean exists() {

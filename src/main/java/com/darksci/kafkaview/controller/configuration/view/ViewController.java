@@ -1,10 +1,11 @@
 package com.darksci.kafkaview.controller.configuration.view;
 
 import com.darksci.kafkaview.controller.BaseController;
-import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
-import com.darksci.kafkaview.controller.configuration.messageFormat.forms.MessageFormatForm;
 import com.darksci.kafkaview.controller.configuration.view.forms.ViewForm;
+import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
+import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
+import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
@@ -13,6 +14,7 @@ import com.darksci.kafkaview.model.View;
 import com.darksci.kafkaview.repository.ClusterRepository;
 import com.darksci.kafkaview.repository.MessageFormatRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,6 +27,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/configuration/view")
@@ -66,14 +72,25 @@ public class ViewController extends BaseController {
 
         // If we have a cluster Id
         model.addAttribute("topics", new ArrayList<>());
+        model.addAttribute("partitions", new ArrayList<>());
         if (viewForm.getClusterId() != null) {
             // Lets load the topics now
             // Retrieve cluster
             final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
             if (cluster != null) {
-                try (final KafkaOperations operations = KafkaOperations.newKafkaOperationalInstance(cluster.getBrokerHosts())) {
+                // Create a new Operational Client
+                final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+                final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+
+                try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
                     final TopicList topics = operations.getAvailableTopics();
-                    model.addAttribute("topics", topics.getAllTopics());
+                    model.addAttribute("topics", topics.getTopics());
+
+                    // If we have a selected topic
+                    if (viewForm.getTopic() != null && !"!".equals(viewForm.getTopic())) {
+                        final TopicDetails topicDetails = operations.getTopicDetails(viewForm.getTopic());
+                        model.addAttribute("partitions", topicDetails.getPartitions());
+                    }
                 }
             }
         }
@@ -108,6 +125,7 @@ public class ViewController extends BaseController {
         viewForm.setKeyMessageFormatId(view.getKeyMessageFormat().getId());
         viewForm.setValueMessageFormatId(view.getValueMessageFormat().getId());
         viewForm.setTopic(view.getTopic());
+        viewForm.setPartitions(view.getPartitionsAsSet());
 
         return createViewForm(viewForm, model);
     }
@@ -167,11 +185,15 @@ public class ViewController extends BaseController {
         final MessageFormat valueMessageFormat = messageFormatRepository.findOne(viewForm.getValueMessageFormatId());
         final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
 
+        final Set<Integer> partitionIds = viewForm.getPartitions();
+        final String partitionsStr = partitionIds.stream().map(Object::toString).collect(Collectors.joining(","));
+
         view.setName(viewForm.getName());
         view.setTopic(viewForm.getTopic());
         view.setKeyMessageFormat(keyMessageFormat);
         view.setValueMessageFormat(valueMessageFormat);
         view.setCluster(cluster);
+        view.setPartitions(partitionsStr);
         viewRepository.save(view);
 
         // Set flash message

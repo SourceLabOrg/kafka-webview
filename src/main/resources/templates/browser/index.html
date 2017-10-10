@@ -11,43 +11,529 @@
 <body>
 <section layout:fragment="content">
     <div class="container">
+        <script type="application/javascript">
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                // Fire off initial request
+                executeConsume('previous');
+
+                // Request Cluster Information
+                ApiClient.getClusterNodes('[[${cluster.id}]]', handleClusterNodeResults);
+
+                // Request Topic Information
+                ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', handleTopicDetailResults);
+
+                // Request
+
+                // Control Events
+                jQuery('#control-head').click(function() {
+                    executeConsume('head');
+                });
+
+                jQuery('#control-previous').click(function() {
+                    executeConsume('previous');
+                });
+
+                jQuery('#control-next').click(function() {
+                    executeConsume('next');
+                });
+
+                jQuery('#control-tail').click(function() {
+                    executeConsume('tail');
+                });
+
+                jQuery('#dateFormatToggle').change(function() {
+                    DateTools.showPrettyDates = jQuery(this).is(":checked");
+
+                    // Reload results
+                    executeConsume('previous');
+                });
+
+                jQuery('#toggleStateEditor').click(function() {
+                    var rows = jQuery('#consumerState-details tr');
+                    var inputs = jQuery(rows).find('input');
+
+                    if (inputs.length > 0) {
+                        // Hide icon
+                        jQuery(this).find('i').attr('class', '');
+
+                        var partitionOffsetMap = {};
+                        jQuery.each(inputs, function() {
+                           var partition = jQuery(this).attr('name');
+                           var offset = jQuery(this).val();
+
+                           // Build map
+                           partitionOffsetMap[partition] = offset;
+                        });
+                        partitionOffsetMapJson = JSON.stringify(partitionOffsetMap);
+
+                        // Call api
+                        ApiClient.setConsumerState('[[${view.id}]]', partitionOffsetMapJson, function(results) {
+                            // Update consumer state UI
+                            updateConsumerState(results.offsets);
+
+                            // Update consume results
+                            executeConsume('next');
+                        });
+                    } else {
+                        // Change Icon to Save
+                        jQuery(this).find('i').attr('class', 'icon-check');
+
+                        jQuery.each(rows, function() {
+                            var partitionCell = this.childNodes[0];
+                            var offsetCell = this.childNodes[1];
+                            var partition = jQuery(partitionCell).html();
+
+                            // Convert to input
+                            var html = jQuery(offsetCell).html();
+                            var input = jQuery('<input type="text" size="5"/>');
+                            input.val(html);
+                            input.attr('name', partition);
+                            jQuery(offsetCell).html(input);
+                        });
+                    }
+                });
+            });
+
+            function executeConsume(action) {
+                // Hide table
+                jQuery('#results-table').toggle(false);
+                jQuery('#table-controls').toggle(false);
+
+                // Show loader
+                jQuery('#loader').toggle(true);
+
+                ApiClient.consume('[[${view.id}]]', action, handleConsumeResults);
+            }
+
+            function handleConsumeResults(results) {
+                // Get and compile template
+                var source   = jQuery('#results-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#results-tbody');
+
+                // Clear the results table
+                jQuery(table).empty();
+
+                // Loop over results
+                jQuery.each(results.results, function (index, result) {
+                    // Generate html from template
+                    var properties = {
+                        partition: result.partition,
+                        offset: result.offset,
+                        key: result.key,
+                        value: result.value,
+                        timestamp: result.timestamp,
+                        date: DateTools.displayTimestamp(result.timestamp),
+                        timezone: DateTools.localTimezone,
+                        showPrettyDates: DateTools.showPrettyDates
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
+                });
+
+                // Hide loader
+                jQuery('#loader').toggle(false);
+
+                // Show table
+                jQuery('#results-table').toggle(true);
+                jQuery('#table-controls').toggle(true);
+
+                // Update consumer state
+                updateConsumerState(results.endOffsets);
+            }
+
+            // Updates the consumer state UI
+            function updateConsumerState(consumerStateMap) {
+                // Change Icon to Edit
+                jQuery('#toggleStateEditor i').attr('class', 'icon-pencil');
+
+                // Update consumer state table
+                var consumerState = jQuery('#consumerState-details');
+
+                // Wipe Consumer State table
+                jQuery(consumerState).empty();
+
+                jQuery.each(consumerStateMap, function(index, result) {
+                    jQuery(consumerState).append('<tr><td>' + index + '</td><td>' + result + '</td></tr>');
+                });
+            }
+
+            function handleClusterNodeResults(results) {
+                var brokerList = jQuery('#broker-list');
+                jQuery(brokerList).empty();
+                jQuery.each(results, function(index, result) {
+                    jQuery(brokerList).append('<tr><td>' + result.id + '</td><td>' + result.host + ':' + result.port + '</td></tr>');
+                });
+            }
+
+            function handleTopicDetailResults(results) {
+                // Remove existing
+                var partitionDetails = jQuery('#partition-details');
+                jQuery(partitionDetails).empty();
+
+                jQuery.each(results.partitions, function(index, result) {
+                    jQuery(partitionDetails).append('<tr><td>' + result.partition + '</td><td>' + result.replicas.length + '</td><td>' + result.isr.length + '</td></tr>');
+                });
+
+            }
+        </script>
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Kafka Data
+                        View <strong>[[${view.name}]]</strong> over topic <strong>[[${view.topic}]]</strong>
                     </div>
                     <div class="card-body">
-                        <table class="table table-bordered table-striped table-sm">
+                        <!-- Display Loader First -->
+                        <div class="progress" id="loader" style="display: block;">
+                            <div
+                                class="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                style="width: 100%">
+                            </div>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="results-table" style="display: none;">
                             <thead>
                             <tr>
                                 <th>Partition</th>
                                 <th>Offset</th>
+                                <th>Timestamp</th>
                                 <th>Key</th>
                                 <th>Value</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            <tr th:each="result : ${results}">
-                                <td th:text="${result.partition}"></td>
-                                <td th:text="${result.offset}"></td>
-                                <td th:text="${result.key}"></td>
-                                <td th:text="${result.value}"></td>
-                            </tr>
+                            <tbody id="results-tbody">
                             </tbody>
                         </table>
                     </div>
-                    <div class="card-footer">
-                        <a th:href="@{/browser/{id}/p(id=${view.id})}">prev</a>
-                        <a th:href="@{/browser/{id}/a(id=${view.id})}">next</a>
-                        <a th:href="@{/browser/{id}/r(id=${view.id})}">reset</a>
+                    <!-- Display Pager Controls -->
+                    <div class="card-footer" id="table-controls" style="display: none;">
+                        <ul class="pagination">
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-head">
+                                    <i class="fa fa-fast-backward" aria-hidden="true"></i>
+                                    Head
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-previous">
+                                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                                    Previous
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-next">
+                                    Next
+                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-tail">
+                                    Tail
+                                    <i class="fa fa-fast-forward" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
             <!--/.col-->
         </div>
+
+        <!-- Results Template -->
+        <script id="results-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{partition}}</td>
+                <td>{{offset}}</td>
+                <td>
+                    {{#if showPrettyDates}}
+                    <span class="date" title="{{timezone}}">{{date}}</span>
+                    {{else}}
+                    <span class="timestamp" title="{{date}}">{{timestamp}}</span>
+                    {{/if}}
+                </td>
+                <td>{{key}}</td>
+                <td>{{value}}</td>
+            </tr>
+        </script>
     </div>
+</section>
+
+<!-- Right Side Menu -->
+<aside layout:fragment="aside-menu">
+    <!-- Menu -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#viewInfo" role="tab"><i class="icon-list"></i></a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#consumerState" role="tab"><i class="icon-feed"></i></a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#search" role="tab"><i class="icon-magnifier"></i></a>
+        </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+
+        <!-- View Information -->
+        <div class="tab-pane active" id="viewInfo" role="tabpanel">
+            <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
+                <small>
+                    <b>View Details</b>
+                </small>
+            </div>
+            <hr class="transparent mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapseCluster"
+                        aria-expanded="false" aria-controls="collapseCluster">
+                        <strong th:text="'Cluster: ' + ${cluster.name}">Cluster</strong>
+                    </div>
+                    <div class="collapse" id="collapseCluster">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>id</th>
+                                    <th>host</th>
+                                </tr>
+                            </thead>
+                            <tbody id="broker-list">
+                                <tr>
+                                    <td colspan="2">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapseTopic"
+                        aria-expanded="false" aria-controls="collapseTopic">
+                        <strong th:text="'Topic: ' + ${view.topic}">Topic</strong>
+                    </div>
+                    <div class="collapse" id="collapseTopic">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th title="Partition Id">#</th>
+                                <th title="Replica Count">Replicas</th>
+                                <th title="In Sync Replica Count">ISRs</th>
+                            </tr>
+                            </thead>
+                            <tbody id="partition-details">
+                            <tr>
+                                <td colspan="3">Loading...</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapseView"
+                        aria-expanded="false" aria-controls="collapseView">
+                        <strong th:text="'View: ' + ${view.name}">View</strong>
+                    </div>
+                    <div class="collapse" id="collapseView">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tbody id="view-details">
+                                <tr>
+                                    <td>Partitions</td>
+                                    <td th:text="${view.partitions.isEmpty()}? 'All' : ${view.partitions}"></td>
+                                </tr>
+                                <tr th:title="${view.keyMessageFormat.classpath}">
+                                    <td>Key</td>
+                                    <td th:text="${view.keyMessageFormat.name}"></td>
+                                </tr>
+                                <tr th:title="${view.valueMessageFormat.classpath}">
+                                    <td>Value</td>
+                                    <td th:text="${view.valueMessageFormat.name}"></td>
+                                </tr>
+                                <tr>
+                                    <td>Format Dates</td>
+                                    <td>
+                                        <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                            <input class="switch-input" checked="" type="checkbox" id="dateFormatToggle" value="1">
+                                            <span class="switch-label" data-on="" data-off=""></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
+        </div>
+
+        <!-- Consumer State -->
+        <div class="tab-pane" id="consumerState" role="tabpanel">
+            <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
+                <small><b>Consumer State</b>
+                </small>
+            </div>
+            <hr class="transparent mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Partition</th>
+                        <th>
+                            Offset
+                            <a href="#" id="toggleStateEditor">
+                                <i class="icon-pencil"></i>
+                            </a>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody id="consumerState-details">
+                    <tr>
+                        <td colspan="2">Loading...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <hr class="mx-3 my-0">
+        </div>
+
+        <!-- Search & Filtering-->
+        <div class="tab-pane" id="search" role="tabpanel">
+            <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
+                <small><b>Search and Filtering</b>
+                </small>
+            </div>
+            <hr class="transparent mx-3 my-0">
+
+            <div class="aside-options">
+                <div class="clearfix mt-4">
+                    <small><b>Option 1</b>
+                    </small>
+                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
+                        <input type="checkbox" class="switch-input" checked="">
+                        <span class="switch-label" data-on="On" data-off="Off"></span>
+                        <span class="switch-handle"></span>
+                    </label>
+                </div>
+                <div>
+                    <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small>
+                </div>
+            </div>
+
+            <div class="aside-options">
+                <div class="clearfix mt-3">
+                    <small><b>Option 2</b>
+                    </small>
+                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
+                        <input type="checkbox" class="switch-input">
+                        <span class="switch-label" data-on="On" data-off="Off"></span>
+                        <span class="switch-handle"></span>
+                    </label>
+                </div>
+                <div>
+                    <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small>
+                </div>
+            </div>
+
+            <div class="aside-options">
+                <div class="clearfix mt-3">
+                    <small><b>Option 3</b>
+                    </small>
+                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
+                        <input type="checkbox" class="switch-input">
+                        <span class="switch-label" data-on="On" data-off="Off"></span>
+                        <span class="switch-handle"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="aside-options">
+                <div class="clearfix mt-3">
+                    <small><b>Option 4</b>
+                    </small>
+                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
+                        <input type="checkbox" class="switch-input" checked="">
+                        <span class="switch-label" data-on="On" data-off="Off"></span>
+                        <span class="switch-handle"></span>
+                    </label>
+                </div>
+            </div>
+
+            <hr>
+            <h6>System Utilization</h6>
+
+            <div class="text-uppercase mb-1 mt-4">
+                <small><b>CPU Usage</b>
+                </small>
+            </div>
+            <div class="progress progress-xs">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <small class="text-muted">348 Processes. 1/4 Cores.</small>
+
+            <div class="text-uppercase mb-1 mt-2">
+                <small><b>Memory Usage</b>
+                </small>
+            </div>
+            <div class="progress progress-xs">
+                <div class="progress-bar bg-warning" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <small class="text-muted">11444GB/16384MB</small>
+
+            <div class="text-uppercase mb-1 mt-2">
+                <small><b>SSD 1 Usage</b>
+                </small>
+            </div>
+            <div class="progress progress-xs">
+                <div class="progress-bar bg-danger" role="progressbar" style="width: 95%" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <small class="text-muted">243GB/256GB</small>
+
+            <div class="text-uppercase mb-1 mt-2">
+                <small><b>SSD 2 Usage</b>
+                </small>
+            </div>
+            <div class="progress progress-xs">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <small class="text-muted">25GB/256GB</small>
+        </div>
+    </div>
+</aside>
+
+<section layout:fragment="breadcrumb-menu">
+    <li class="breadcrumb-menu d-md-down-none">
+        <div class="btn-group" role="group" aria-label="Button group">
+            <a class="btn aside-menu-toggler" href="#"><i class="icon-settings"></i> &nbsp;Settings</a>
+        </div>
+    </li>
 </section>
 
 </body>

@@ -31,6 +31,7 @@
                                 <th>Name</th>
                                 <th>Cluster</th>
                                 <th>Topic</th>
+                                <th>Partitions</th>
                                 <th>Key Format</th>
                                 <th>Value Format</th>
                                 <th class="text-right">Action</th>
@@ -39,10 +40,11 @@
                             <tbody>
                             <tr th:each="view : ${views}">
                                 <td>
-                                    <a th:href="@{/browser/{id}/r(id=${view.id})}" th:text="${view.name}"/>
+                                    <a th:href="@{/browser/{id}(id=${view.id})}" th:text="${view.name}"/>
                                 </td>
                                 <td th:text="${view.cluster.name}"></td>
                                 <td th:text="${view.topic}"></td>
+                                <td th:text="${view.partitions.isEmpty()}? 'All' : ${view.partitions}"></td>
                                 <td th:text="${view.keyMessageFormat.name}"></td>
                                 <td th:text="${view.valueMessageFormat.name}"></td>
                                 <td class="text-right">

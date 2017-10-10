@@ -40,29 +40,14 @@ public class KafkaConsumerFactory {
         // Pull out partitions, convert to browser partitions
         final List<TopicPartition> topicPartitions = new ArrayList<>();
         for (final PartitionInfo partitionInfo: partitionInfos) {
-            topicPartitions.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
+            // Skip filtered partitions
+            if (!clientConfig.isPartitionFiltered(partitionInfo.partition())) {
+                topicPartitions.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
+            }
         }
 
         // Assign them.
         kafkaConsumer.assign(topicPartitions);
-
-        // TODO: Seek somewhere?
-        //kafkaConsumer.seekToBeginning(topicPartitions);
-
-
-//        final ArrayList<String> topics = new ArrayList<>();
-//        topics.add(clientConfig.getTopicConfig().getTopicName());
-//        kafkaConsumer.subscribe(topics, new ConsumerRebalanceListener() {
-//            @Override
-//            public void onPartitionsRevoked(final Collection<TopicPartition> partitions) {
-//
-//            }
-//
-//            @Override
-//            public void onPartitionsAssigned(final Collection<TopicPartition> partitions) {
-//
-//            }
-//        });
 
         // Return the kafka consumer.
         return kafkaConsumer;
