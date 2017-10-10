@@ -49,7 +49,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/api")
-public class ApiController extends BaseController {
+public class ApiController {
     private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
 
     @Autowired

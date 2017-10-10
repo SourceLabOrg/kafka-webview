@@ -110,8 +110,9 @@
         </li>
     </ul>
 
-    <!-- Toggles Right Pull Out -->
+    <!-- Toggles Right Pull Out
     <button class="navbar-toggler aside-menu-toggler" type="button">☰</button>
+    -->
 
 </header>
 
@@ -132,53 +133,66 @@
                 <!--<li class="nav-title">
                     Topics
                 </li>-->
+
+                <!-- Clusters -->
                 <li class="nav-item nav-dropdown">
                     <a class="nav-link nav-dropdown-toggle" href="#">
-                        <i class="icon-puzzle"></i> Views
+                        <i class="icon-layers"></i> Clusters
                     </a>
                     <ul class="nav-dropdown-items">
-                        <li class="nav-item">
+                        <li class="nav-item" th:each="cluster : ${MenuClusters}">
                             <a class="nav-link" href="#">
-                                <i class="icon-puzzle"></i>
-                                View 1
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="icon-puzzle"></i>
-                                View 2
+                                <i class="icon-layers"></i>
+                                [[${cluster.name}]]
                             </a>
                         </li>
                     </ul>
                 </li>
+
+                <!-- Views -->
+                <li class="nav-item nav-dropdown">
+                    <a class="nav-link nav-dropdown-toggle" href="#">
+                        <i class="icon-eye"></i> Views
+                    </a>
+                    <ul class="nav-dropdown-items">
+                        <li class="nav-item" th:each="view : ${MenuViews}">
+                            <a class="nav-link" th:href="@{/browser/{id}(id=${view.id})}">
+                                <i class="icon-eye"></i>
+                                [[${view.name}]]
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Setup -->
                 <li class="divider"></li>
                 <li class="nav-item nav-dropdown">
                     <a class="nav-link nav-dropdown-toggle" href="#">
-                        <i class="icon-star"></i>
+                        <i class="icon-settings"></i>
                         Configuration
                     </a>
                     <ul class="nav-dropdown-items">
                         <li class="nav-item">
                             <a class="nav-link" href="/configuration/cluster" target="_top">
-                                <i class="icon-star"></i>
+                                <i class="icon-layers"></i>
                                 Clusters
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/configuration/messageFormat" target="_top">
-                                <i class="icon-star"></i>
+                                <i class="icon-envelope-letter"></i>
                                 Message Formats
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" target="_top">
-                                <i class="icon-star"></i>
+                                <i class="icon-magnifier"></i>
                                 Filters
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/configuration/view" target="_top">
-                                <i class="icon-star"></i>
+                                <i class="icon-eye"></i>
                                 Views
                             </a>
                         </li>
@@ -200,6 +214,9 @@
             <li class="breadcrumb-item active">Dashboard</li>
 
             <!-- Breadcrumb Menu-->
+            <section layout:fragment="breadcrumb-menu">
+                <!-- empty by default -->
+            </section>
             <!--
             <li class="breadcrumb-menu d-md-down-none">
                 <div class="btn-group" role="group" aria-label="Button group">
@@ -209,6 +226,7 @@
                 </div>
             </li>
             -->
+
         </ol>
 
         <div class="container-fluid">
