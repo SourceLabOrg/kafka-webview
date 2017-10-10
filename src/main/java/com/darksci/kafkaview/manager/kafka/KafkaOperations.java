@@ -8,6 +8,8 @@ import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
 import com.darksci.kafkaview.manager.kafka.dto.PartitionDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.slf4j.Logger;
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class KafkaOperations implements AutoCloseable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaOperations.class);
@@ -27,6 +30,9 @@ public class KafkaOperations implements AutoCloseable {
         this.kafkaConsumer = kafkaConsumer;
     }
 
+    /**
+     * Retrieve all available topics within cluster.
+     */
     public TopicList getAvailableTopics() {
         final Map<String, List<PartitionInfo>> allTopics = kafkaConsumer.listTopics();
 
@@ -46,6 +52,10 @@ public class KafkaOperations implements AutoCloseable {
         }
 
         return new TopicList(topicDetails);
+    }
+
+    public void getClusterInfo() {
+        
     }
 
     public void close() {

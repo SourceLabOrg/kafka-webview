@@ -13,12 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
 
 public class TransactionalKafkaClient implements AutoCloseable {
@@ -52,7 +49,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
         }
         // Commit offsets
         commit();
-        return new KafkaResults(kafkaResultList);
+        return KafkaResults.newInstance(kafkaResultList);
     }
 
     public KafkaResults consumePerPartition() {
@@ -76,7 +73,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
             allResults.addAll(results);
         }
 
-        return new KafkaResults(allResults);
+        return KafkaResults.newInstance(allResults);
     }
 
     private List<TopicPartition> getAllPartitions() {

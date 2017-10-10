@@ -89,7 +89,7 @@ public class ApiController extends BaseController {
     }
 
     /**
-     * GET kafka topics for a requested cluster.
+     * GET listing of all available kafka topics for a requested cluster.
      */
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
@@ -106,6 +106,27 @@ public class ApiController extends BaseController {
             return topics.getAllTopics();
         }
     }
+
+    /**
+     * GET Details about a cluster.
+     */
+    @RequestMapping(path = "/cluster/{id}/info", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public List<TopicDetails> getClusterInfomration(final @PathVariable Long id) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            new ArrayList<>();
+        }
+
+        try (final KafkaOperations operations = KafkaOperations.newKafkaOperationalInstance(cluster.getBrokerHosts())) {
+            final TopicList topics = operations.getAvailableTopics();
+            return topics.getAllTopics();
+        }
+    }
+
+
 
     private TransactionalKafkaClient setup(final View view) {
         // Construct a consumerId based on user
