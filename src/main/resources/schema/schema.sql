@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `view` (
   key_message_format_id INT(11) UNSIGNED NOT NULL,
   value_message_format_id INT(11) UNSIGNED NOT NULL,
   topic TEXT NOT NULL,
+  partitions TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_by INT(11) UNSIGNED DEFAULT NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),

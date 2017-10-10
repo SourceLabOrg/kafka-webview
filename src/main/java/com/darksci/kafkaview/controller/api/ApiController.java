@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,8 @@ public class ApiController extends BaseController {
     @ResponseBody
     public KafkaResults consume(
         final @PathVariable Long id,
-        final @RequestParam(name = "action", required = false) String action) {
+        final @RequestParam(name = "action", required = false) String action,
+        final @RequestParam(name = "partitions", required = false) String partitions) {
 
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
@@ -87,7 +89,7 @@ public class ApiController extends BaseController {
             } else if ("head".equals(action)) {
                 transactionalKafkaClient.toHead();
             } else if ("tail".equals(action)) {
-                // todo - go to tail
+                transactionalKafkaClient.toTail();
             }
 
             // Poll
@@ -215,7 +217,13 @@ public class ApiController extends BaseController {
         final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
         final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
-        final ClientConfig clientConfig = new ClientConfig(topicConfig, FilterConfig.withNoFilters(), consumerId);
+
+        final ClientConfig clientConfig = ClientConfig.newBuilder()
+            .withTopicConfig(topicConfig)
+            .withNoFilters()
+            .withConsumerId(consumerId)
+            .withPartitions(view.getPartitionsAsSet())
+            .build();
 
         // Create the damn consumer
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(clientConfig);

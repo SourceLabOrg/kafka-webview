@@ -5,6 +5,7 @@ import com.darksci.kafkaview.controller.configuration.view.forms.ViewForm;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
 import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
+import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
@@ -26,6 +27,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/configuration/view")
@@ -67,6 +72,7 @@ public class ViewController extends BaseController {
 
         // If we have a cluster Id
         model.addAttribute("topics", new ArrayList<>());
+        model.addAttribute("partitions", new ArrayList<>());
         if (viewForm.getClusterId() != null) {
             // Lets load the topics now
             // Retrieve cluster
@@ -79,6 +85,12 @@ public class ViewController extends BaseController {
                 try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
                     final TopicList topics = operations.getAvailableTopics();
                     model.addAttribute("topics", topics.getTopics());
+
+                    // If we have a selected topic
+                    if (viewForm.getTopic() != null && !"!".equals(viewForm.getTopic())) {
+                        final TopicDetails topicDetails = operations.getTopicDetails(viewForm.getTopic());
+                        model.addAttribute("partitions", topicDetails.getPartitions());
+                    }
                 }
             }
         }
@@ -113,6 +125,7 @@ public class ViewController extends BaseController {
         viewForm.setKeyMessageFormatId(view.getKeyMessageFormat().getId());
         viewForm.setValueMessageFormatId(view.getValueMessageFormat().getId());
         viewForm.setTopic(view.getTopic());
+        viewForm.setPartitions(view.getPartitionsAsSet());
 
         return createViewForm(viewForm, model);
     }
@@ -172,11 +185,15 @@ public class ViewController extends BaseController {
         final MessageFormat valueMessageFormat = messageFormatRepository.findOne(viewForm.getValueMessageFormatId());
         final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
 
+        final Set<Integer> partitionIds = viewForm.getPartitions();
+        final String partitionsStr = partitionIds.stream().map(Object::toString).collect(Collectors.joining(","));
+
         view.setName(viewForm.getName());
         view.setTopic(viewForm.getTopic());
         view.setKeyMessageFormat(keyMessageFormat);
         view.setValueMessageFormat(valueMessageFormat);
         view.setCluster(cluster);
+        view.setPartitions(partitionsStr);
         viewRepository.save(view);
 
         // Set flash message

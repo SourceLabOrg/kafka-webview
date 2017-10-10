@@ -184,6 +184,18 @@ var ApiClient = {
   },
   getTopicDetails: function(clusterId, topic, callback) {
       jQuery.getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/details', '', callback);
+  },
+  getTopics: function(clusterId, callback) {
+      jQuery.getJSON('/api/cluster/' + clusterId + '/topics/list', '', callback);
+  }
+};
+
+var DateTools = {
+  localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  showPrettyDates: true,
+  displayTimestamp: function(timestampMs) {
+    // Adjusts timestamp into local timezone and locate
+    return new Date(timestampMs).toLocaleString();
   }
 };
 

@@ -42,6 +42,13 @@
                     executeConsume('tail');
                 });
 
+                jQuery('#dateFormatToggle').change(function() {
+                    DateTools.showPrettyDates = jQuery(this).is(":checked");
+
+                    // Reload results
+                    executeConsume('previous');
+                });
+
                 jQuery('#toggleStateEditor').click(function() {
                     var rows = jQuery('#consumerState-details tr');
                     var inputs = jQuery(rows).find('input');
@@ -111,7 +118,17 @@
                 // Loop over results
                 jQuery.each(results.results, function (index, result) {
                     // Generate html from template
-                    var resultHtml = template(result);
+                    var properties = {
+                        partition: result.partition,
+                        offset: result.offset,
+                        key: result.key,
+                        value: result.value,
+                        timestamp: result.timestamp,
+                        date: DateTools.displayTimestamp(result.timestamp),
+                        timezone: DateTools.localTimezone,
+                        showPrettyDates: DateTools.showPrettyDates
+                    };
+                    var resultHtml = template(properties);
 
                     // Append it to our table
                     jQuery(table).append(resultHtml);
@@ -186,6 +203,7 @@
                             <tr>
                                 <th>Partition</th>
                                 <th>Offset</th>
+                                <th>Timestamp</th>
                                 <th>Key</th>
                                 <th>Value</th>
                             </tr>
@@ -233,6 +251,13 @@
             <tr>
                 <td>{{partition}}</td>
                 <td>{{offset}}</td>
+                <td>
+                    {{#if showPrettyDates}}
+                    <span class="date" title="{{timezone}}">{{date}}</span>
+                    {{else}}
+                    <span class="timestamp" title="{{date}}">{{timestamp}}</span>
+                    {{/if}}
+                </td>
                 <td>{{key}}</td>
                 <td>{{value}}</td>
             </tr>
@@ -339,14 +364,28 @@
                             </tr>
                             </thead>
                             <tbody id="view-details">
-                            <tr th:title="${view.keyMessageFormat.classpath}">
-                                <td>Key</td>
-                                <td th:text="${view.keyMessageFormat.name}"></td>
-                            </tr>
-                            <tr th:title="${view.valueMessageFormat.classpath}">
-                                <td>Value</td>
-                                <td th:text="${view.valueMessageFormat.name}"></td>
-                            </tr>
+                                <tr>
+                                    <td>Partitions</td>
+                                    <td th:text="${view.partitions.isEmpty()}? 'All' : ${view.partitions}"></td>
+                                </tr>
+                                <tr th:title="${view.keyMessageFormat.classpath}">
+                                    <td>Key</td>
+                                    <td th:text="${view.keyMessageFormat.name}"></td>
+                                </tr>
+                                <tr th:title="${view.valueMessageFormat.classpath}">
+                                    <td>Value</td>
+                                    <td th:text="${view.valueMessageFormat.name}"></td>
+                                </tr>
+                                <tr>
+                                    <td>Format Dates</td>
+                                    <td>
+                                        <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                            <input class="switch-input" checked="" type="checkbox" id="dateFormatToggle" value="1">
+                                            <span class="switch-label" data-on="" data-off=""></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

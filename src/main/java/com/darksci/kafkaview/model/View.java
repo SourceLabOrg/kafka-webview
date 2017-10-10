@@ -7,7 +7,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class View {
@@ -29,6 +32,9 @@ public class View {
 
     @Column(nullable = false)
     private String topic;
+
+    @Column(nullable = false)
+    private String partitions;
 
     @Column(nullable = false)
     private Timestamp createdAt;
@@ -82,6 +88,29 @@ public class View {
 
     public void setTopic(final String topic) {
         this.topic = topic;
+    }
+
+    public String getPartitions() {
+        return partitions;
+    }
+
+    public void setPartitions(final String partitions) {
+        this.partitions = partitions;
+    }
+
+    @Transient
+    public Set<Integer> getPartitionsAsSet() {
+        final Set<Integer> partitionsSet = new HashSet<>();
+        final String[] partitions = getPartitions().split(",");
+
+        for (final String partitionStr: partitions) {
+            try {
+                partitionsSet.add(Integer.parseInt(partitionStr));
+            } catch (NumberFormatException e) {
+                // Ignore?
+            }
+        }
+        return partitionsSet;
     }
 
     public Timestamp getCreatedAt() {
