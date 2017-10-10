@@ -46,24 +46,6 @@ public class KafkaConsumerFactory {
         // Assign them.
         kafkaConsumer.assign(topicPartitions);
 
-        // TODO: Seek somewhere?
-        //kafkaConsumer.seekToBeginning(topicPartitions);
-
-
-//        final ArrayList<String> topics = new ArrayList<>();
-//        topics.add(clientConfig.getTopicConfig().getTopicName());
-//        kafkaConsumer.subscribe(topics, new ConsumerRebalanceListener() {
-//            @Override
-//            public void onPartitionsRevoked(final Collection<TopicPartition> partitions) {
-//
-//            }
-//
-//            @Override
-//            public void onPartitionsAssigned(final Collection<TopicPartition> partitions) {
-//
-//            }
-//        });
-
         // Return the kafka consumer.
         return kafkaConsumer;
     }

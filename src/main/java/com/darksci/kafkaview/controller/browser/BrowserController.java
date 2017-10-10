@@ -37,10 +37,9 @@ public class BrowserController extends BaseController {
     /**
      * GET Displays main configuration index.
      */
-    @RequestMapping(path = "/{id}/{direction}", method = RequestMethod.GET)
+    @RequestMapping(path = "/{id}", method = RequestMethod.GET)
     public String index(
         final @PathVariable Long id,
-        final @PathVariable String direction,
         final RedirectAttributes redirectAttributes,
         final Model model) {
 
@@ -54,68 +53,6 @@ public class BrowserController extends BaseController {
             return "redirect:/";
         }
         model.addAttribute("view", view);
-
-        // Create consumer
-        final KafkaResults results;
-        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view)) {
-            // move directions if needed
-            if ("n".equals(direction)) {
-                transactionalKafkaClient.next();
-            } else if ("p".equals(direction)) {
-                transactionalKafkaClient.previous();
-            } else if ("r".equals(direction)) {
-                transactionalKafkaClient.toHead();
-            }
-
-            // Poll
-            results = transactionalKafkaClient.consumePerPartition();
-        }
-        model.addAttribute("results", results.getResults());
         return "browser/index";
-    }
-
-    private TransactionalKafkaClient setup(final View view) {
-        // Construct a consumerId based on user
-        final String consumerId = "MyUserId1";
-
-        // Grab our relevant bits
-        final Cluster cluster = view.getCluster();
-        final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
-        final MessageFormat valueMessageFormat = view.getValueMessageFormat();
-
-        final Class keyDeserializerClass;
-        try {
-            if (keyMessageFormat.isDefaultFormat()) {
-                keyDeserializerClass = deserializerLoader.getDeserializerClass(keyMessageFormat.getClasspath());
-            } else {
-                keyDeserializerClass = deserializerLoader.getDeserializerClass(keyMessageFormat.getJar(), keyMessageFormat.getClasspath());
-            }
-        } catch (final LoaderException exception) {
-            throw new RuntimeException(exception.getMessage(), exception);
-        }
-
-        final Class valueDeserializerClass;
-        try {
-            if (valueMessageFormat.isDefaultFormat()) {
-                valueDeserializerClass = deserializerLoader.getDeserializerClass(valueMessageFormat.getClasspath());
-            } else {
-                valueDeserializerClass = deserializerLoader.getDeserializerClass(valueMessageFormat.getJar(), valueMessageFormat.getClasspath());
-            }
-        } catch (final LoaderException exception) {
-            throw new RuntimeException(exception.getMessage(), exception);
-        }
-
-        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
-        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
-        final ClientConfig clientConfig = new ClientConfig(topicConfig, FilterConfig.withNoFilters(), consumerId);
-
-        // Create the damn consumer
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(clientConfig);
-        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createAndSubscribe();
-
-        // Create consumer
-        final KafkaResults results;
-        return new TransactionalKafkaClient(kafkaConsumer, clientConfig);
     }
 }

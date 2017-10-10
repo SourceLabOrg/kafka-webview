@@ -11,6 +11,14 @@
 <body>
 <section layout:fragment="content">
     <div class="container">
+        <script type="application/javascript">
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                jQuery.getJSON('/api/consume/view/[[${view.id}]]', '', function(results) {
+                    console.log(results);
+                });
+            });
+        </script>
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -19,7 +27,14 @@
                         Kafka Data
                     </div>
                     <div class="card-body">
-                        <table class="table table-bordered table-striped table-sm">
+                        <div class="progress">
+                            <div
+                                class="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                style="width: 100%">
+                            </div>
+                        </div>
+                        <table class="table table-bordered table-striped table-sm" style="display: none;">
                             <thead>
                             <tr>
                                 <th>Partition</th>
@@ -38,7 +53,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="card-footer">
+                    <div class="card-footer" style="display: none;">
                         <a th:href="@{/browser/{id}/p(id=${view.id})}">prev</a>
                         <a th:href="@{/browser/{id}/a(id=${view.id})}">next</a>
                         <a th:href="@{/browser/{id}/r(id=${view.id})}">reset</a>
