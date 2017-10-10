@@ -17,6 +17,14 @@
                 // Fire off initial request
                 executeConsume('previous');
 
+                // Request Cluster Information
+                ApiClient.getClusterNodes('[[${cluster.id}]]', handleClusterNodeResults);
+
+                // Request Topic Information
+                ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', handleTopicDetailResults);
+
+                // Request
+
                 // Control Events
                 jQuery('#control-head').click(function() {
                     executeConsume('head');
@@ -33,6 +41,51 @@
                 jQuery('#control-tail').click(function() {
                     executeConsume('tail');
                 });
+
+                jQuery('#toggleStateEditor').click(function() {
+                    var rows = jQuery('#consumerState-details tr');
+                    var inputs = jQuery(rows).find('input');
+
+                    if (inputs.length > 0) {
+                        // Hide icon
+                        jQuery(this).find('i').attr('class', '');
+
+                        var partitionOffsetMap = {};
+                        jQuery.each(inputs, function() {
+                           var partition = jQuery(this).attr('name');
+                           var offset = jQuery(this).val();
+
+                           // Build map
+                           partitionOffsetMap[partition] = offset;
+                        });
+                        partitionOffsetMapJson = JSON.stringify(partitionOffsetMap);
+
+                        // Call api
+                        ApiClient.setConsumerState('[[${view.id}]]', partitionOffsetMapJson, function(results) {
+                            // Update consumer state UI
+                            updateConsumerState(results.offsets);
+
+                            // Update consume results
+                            executeConsume('next');
+                        });
+                    } else {
+                        // Change Icon to Save
+                        jQuery(this).find('i').attr('class', 'icon-check');
+
+                        jQuery.each(rows, function() {
+                            var partitionCell = this.childNodes[0];
+                            var offsetCell = this.childNodes[1];
+                            var partition = jQuery(partitionCell).html();
+
+                            // Convert to input
+                            var html = jQuery(offsetCell).html();
+                            var input = jQuery('<input type="text" size="5"/>');
+                            input.val(html);
+                            input.attr('name', partition);
+                            jQuery(offsetCell).html(input);
+                        });
+                    }
+                });
             });
 
             function executeConsume(action) {
@@ -43,20 +96,16 @@
                 // Show loader
                 jQuery('#loader').toggle(true);
 
-                var actionStr = '';
-                if (action != null) {
-                    actionStr = 'action=' + action;
-                }
-                jQuery.getJSON('/api/consume/view/[[${view.id}]]', actionStr, handleResults);
+                ApiClient.consume('[[${view.id}]]', action, handleConsumeResults);
             }
 
-            function handleResults(results) {
+            function handleConsumeResults(results) {
                 // Get and compile template
                 var source   = jQuery('#results-template').html();
                 var template = Handlebars.compile(source);
                 var table    = jQuery('#results-tbody');
 
-                // Clear the table
+                // Clear the results table
                 jQuery(table).empty();
 
                 // Loop over results
@@ -74,6 +123,44 @@
                 // Show table
                 jQuery('#results-table').toggle(true);
                 jQuery('#table-controls').toggle(true);
+
+                // Update consumer state
+                updateConsumerState(results.endOffsets);
+            }
+
+            // Updates the consumer state UI
+            function updateConsumerState(consumerStateMap) {
+                // Change Icon to Edit
+                jQuery('#toggleStateEditor i').attr('class', 'icon-pencil');
+
+                // Update consumer state table
+                var consumerState = jQuery('#consumerState-details');
+
+                // Wipe Consumer State table
+                jQuery(consumerState).empty();
+
+                jQuery.each(consumerStateMap, function(index, result) {
+                    jQuery(consumerState).append('<tr><td>' + index + '</td><td>' + result + '</td></tr>');
+                });
+            }
+
+            function handleClusterNodeResults(results) {
+                var brokerList = jQuery('#broker-list');
+                jQuery(brokerList).empty();
+                jQuery.each(results, function(index, result) {
+                    jQuery(brokerList).append('<tr><td>' + result.id + '</td><td>' + result.host + ':' + result.port + '</td></tr>');
+                });
+            }
+
+            function handleTopicDetailResults(results) {
+                // Remove existing
+                var partitionDetails = jQuery('#partition-details');
+                jQuery(partitionDetails).empty();
+
+                jQuery.each(results.partitions, function(index, result) {
+                    jQuery(partitionDetails).append('<tr><td>' + result.partition + '</td><td>' + result.replicas.length + '</td><td>' + result.isr.length + '</td></tr>');
+                });
+
             }
         </script>
         <div class="row">
@@ -109,10 +196,32 @@
                     </div>
                     <!-- Display Pager Controls -->
                     <div class="card-footer" id="table-controls" style="display: none;">
-                        <a href="#" id="control-head">Skip to Head</a>
-                        <a href="#" id="control-previous">Previous</a>
-                        <a href="#" id="control-next">Next</a>
-                        <a href="#" id="control-tail">Skip to Tail</a>
+                        <ul class="pagination">
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-head">
+                                    <i class="fa fa-fast-backward" aria-hidden="true"></i>
+                                    Head
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-previous">
+                                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                                    Previous
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-next">
+                                    Next
+                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" id="control-tail">
+                                    Tail
+                                    <i class="fa fa-fast-forward" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -136,13 +245,13 @@
     <!-- Menu -->
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" data-toggle="tab" href="#viewinfo" role="tab"><i class="icon-list"></i></a>
+            <a class="nav-link active" data-toggle="tab" href="#viewInfo" role="tab"><i class="icon-list"></i></a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-toggle="tab" href="#partitions" role="tab"><i class="icon-speech"></i></a>
+            <a class="nav-link" data-toggle="tab" href="#consumerState" role="tab"><i class="icon-feed"></i></a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-toggle="tab" href="#search" role="tab"><i class="icon-settings"></i></a>
+            <a class="nav-link" data-toggle="tab" href="#search" role="tab"><i class="icon-magnifier"></i></a>
         </li>
     </ul>
 
@@ -150,7 +259,7 @@
     <div class="tab-content">
 
         <!-- View Information -->
-        <div class="tab-pane active" id="viewinfo" role="tabpanel">
+        <div class="tab-pane active" id="viewInfo" role="tabpanel">
             <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
                 <small>
                     <b>View Details</b>
@@ -164,20 +273,22 @@
                         data-toggle="collapse"
                         href="#collapseCluster"
                         aria-expanded="false" aria-controls="collapseCluster">
-                        <strong>Cluster</strong>
+                        <strong th:text="'Cluster: ' + ${cluster.name}">Cluster</strong>
                     </div>
                     <div class="collapse" id="collapseCluster">
-                        <ul>
-                            <li>Name</li>
-                            <li>
-                                Brokers
-                                <ul>
-                                    <li>broker1</li>
-                                    <li>broker2</li>
-                                    <li>broker3</li>
-                                </ul>
-                            </li>
-                        </ul>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>id</th>
+                                    <th>host</th>
+                                </tr>
+                            </thead>
+                            <tbody id="broker-list">
+                                <tr>
+                                    <td colspan="2">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -189,39 +300,23 @@
                         data-toggle="collapse"
                         href="#collapseTopic"
                         aria-expanded="false" aria-controls="collapseTopic">
-                        <strong>Topic</strong>
+                        <strong th:text="'Topic: ' + ${view.topic}">Topic</strong>
                     </div>
                     <div class="collapse" id="collapseTopic">
-                        <ul>
-                            <li>name</li>
-                            <li>
-                                10 Partitions
-                            </li>
-                            <li>
-                                Partition 0
-                                <ul>
-                                    <li>Leader</li>
-                                    <li>Follower1</li>
-                                    <li>Follower2</li>
-                                </ul>
-                            </li>
-                            <li>
-                                Partition 1
-                                <ul>
-                                    <li>Leader</li>
-                                    <li>Follower1</li>
-                                    <li>Follower2</li>
-                                </ul>
-                            </li>
-                            <li>
-                                Partition 2
-                                <ul>
-                                    <li>Leader</li>
-                                    <li>Follower1</li>
-                                    <li>Follower2</li>
-                                </ul>
-                            </li>
-                        </ul>
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th title="Partition Id">#</th>
+                                <th title="Replica Count">Replicas</th>
+                                <th title="In Sync Replica Count">ISRs</th>
+                            </tr>
+                            </thead>
+                            <tbody id="partition-details">
+                            <tr>
+                                <td colspan="3">Loading...</td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -233,49 +328,59 @@
                         data-toggle="collapse"
                         href="#collapseView"
                         aria-expanded="false" aria-controls="collapseView">
-                        <strong>View</strong>
+                        <strong th:text="'View: ' + ${view.name}">View</strong>
                     </div>
                     <div class="collapse" id="collapseView">
-                        <ul>
-                            <li>
-                                Name
-                            </li>
-                            <li>
-                                Key Deserializer
-                            </li>
-                            <li>
-                                Value Deserializer
-                            </li>
-                        </ul>
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tbody id="view-details">
+                            <tr th:title="${view.keyMessageFormat.classpath}">
+                                <td>Key</td>
+                                <td th:text="${view.keyMessageFormat.name}"></td>
+                            </tr>
+                            <tr th:title="${view.valueMessageFormat.classpath}">
+                                <td>Value</td>
+                                <td th:text="${view.valueMessageFormat.name}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
             <hr class="mx-3 my-0">
         </div>
 
-        <!-- Partition Offsets -->
-        <div class="tab-pane" id="partitions" role="tabpanel">
+        <!-- Consumer State -->
+        <div class="tab-pane" id="consumerState" role="tabpanel">
             <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
-                <small><b>Partition Offsets</b>
+                <small><b>Consumer State</b>
                 </small>
             </div>
             <hr class="transparent mx-3 my-0">
             <div class="callout callout-info m-0 py-3">
-                <div>
-                    <strong>Partition 0</strong>
-                </div>
-            </div>
-            <hr class="transparent mx-3 my-0">
-            <div class="callout callout-info m-0 py-3">
-                <div>
-                    <strong>Partition 1</strong>
-                </div>
-            </div>
-            <hr class="transparent mx-3 my-0">
-            <div class="callout callout-info m-0 py-3">
-                <div>
-                    <strong>Partition 2</strong>
-                </div>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Partition</th>
+                        <th>
+                            Offset
+                            <a href="#" id="toggleStateEditor">
+                                <i class="icon-pencil"></i>
+                            </a>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody id="consumerState-details">
+                    <tr>
+                        <td colspan="2">Loading...</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
             <hr class="mx-3 my-0">
         </div>

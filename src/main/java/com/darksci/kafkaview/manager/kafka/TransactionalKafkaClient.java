@@ -1,6 +1,7 @@
 package com.darksci.kafkaview.manager.kafka;
 
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
+import com.darksci.kafkaview.manager.kafka.dto.ConsumerState;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResult;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResults;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -13,7 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -74,6 +77,28 @@ public class TransactionalKafkaClient implements AutoCloseable {
         }
 
         return KafkaResults.newInstance(allResults);
+    }
+
+    public ConsumerState seek(final Map<Integer, Long> partitionOffsetMap) {
+        for (final Map.Entry<Integer, Long> entry: partitionOffsetMap.entrySet()) {
+            kafkaConsumer.seek(
+                new TopicPartition(clientConfig.getTopicConfig().getTopicName(), entry.getKey()),
+                entry.getValue()
+            );
+        }
+        commit();
+        return getConsumerState();
+    }
+
+    public ConsumerState getConsumerState() {
+        final Map<Integer, Long> partitionOffsetMap = new LinkedHashMap<>();
+
+        for (final TopicPartition topicPartition: getAllPartitions()) {
+            final long offset = kafkaConsumer.position(topicPartition);
+            partitionOffsetMap.put(topicPartition.partition(), offset);
+        }
+
+        return new ConsumerState(clientConfig.getTopicConfig().getTopicName(), partitionOffsetMap);
     }
 
     private List<TopicPartition> getAllPartitions() {

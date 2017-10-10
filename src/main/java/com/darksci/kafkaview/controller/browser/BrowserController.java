@@ -53,6 +53,8 @@ public class BrowserController extends BaseController {
             return "redirect:/";
         }
         model.addAttribute("view", view);
+        model.addAttribute("cluster", view.getCluster());
+
         return "browser/index";
     }
 }

@@ -142,5 +142,48 @@ function init(url) {
 
   /* ---------- Popover ---------- */
   $('[rel="popover"],[data-rel="popover"],[data-toggle="popover"]').popover();
-
 }
+
+// Client Properties
+var ApiClient = {
+  consume: function(viewId, action, callback) {
+      var actionStr = '';
+      if (action != null) {
+          actionStr = 'action=' + action;
+      }
+      jQuery.getJSON('/api/consumer/view/' + viewId, actionStr, callback);
+  },
+  consumeNext: function(viewId, callback) {
+      ApiClient.consume(viewId, 'next', callback);
+  },
+  consumePrevious: function(viewId, callback) {
+      ApiClient.consume(viewId, 'previous', callback);
+  },
+  consumeTail: function(viewId, callback) {
+      ApiClient.consume(viewId, 'tail', callback);
+  },
+  consumeHead: function(viewId, callback) {
+      ApiClient.consume(viewId, 'head', callback);
+  },
+  setConsumerState: function(viewId, partitionOffsetJson, callback) {
+      //jQuery.post('/api/consumer/view/' + viewId + '/offsets', partitionOffsetMap, callback);
+      jQuery.ajax({
+          type: 'POST',
+          url: '/api/consumer/view/' + viewId + '/offsets',
+          data: partitionOffsetJson,
+          dataType: 'json',
+          success: callback,
+          beforeSend: function(xhr) {
+              xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+          }
+      });
+  },
+  // Retrieve cluster node info
+  getClusterNodes: function(clusterId, callback) {
+      jQuery.getJSON('/api/cluster/' + clusterId + '/nodes', '', callback);
+  },
+  getTopicDetails: function(clusterId, topic, callback) {
+      jQuery.getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/details', '', callback);
+  }
+};
+
