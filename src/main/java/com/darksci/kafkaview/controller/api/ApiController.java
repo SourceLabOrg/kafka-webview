@@ -71,12 +71,15 @@ public class ApiController extends BaseController {
         final KafkaResults results;
         try (final TransactionalKafkaClient transactionalKafkaClient = setup(view)) {
             // move directions if needed
-            if ("n".equals(action)) {
-                transactionalKafkaClient.next();
-            } else if ("p".equals(action)) {
+            if ("next".equals(action)) {
+                // Do nothing!
+                //transactionalKafkaClient.next();
+            } else if ("previous".equals(action)) {
                 transactionalKafkaClient.previous();
-            } else if ("r".equals(action)) {
+            } else if ("head".equals(action)) {
                 transactionalKafkaClient.toHead();
+            } else if ("tail".equals(action)) {
+                // todo - go to tail
             }
 
             // Poll
