@@ -43,7 +43,7 @@ public class MessageFormatController extends BaseController {
     @RequestMapping(path = "", method = RequestMethod.GET)
     public String index(final Model model) {
         // Retrieve all message formats
-        final Iterable<MessageFormat> messageFormatList = messageFormatRepository.findAll();
+        final Iterable<MessageFormat> messageFormatList = messageFormatRepository.findAllByOrderByNameAsc();
         model.addAttribute("messageFormats", messageFormatList);
 
         return "configuration/messageFormat/index";

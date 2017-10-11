@@ -1,6 +1,8 @@
 package com.darksci.kafkaview.configuration;
 
+import com.darksci.kafkaview.manager.kafka.filter.Filter;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
+import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.PluginSecurityPolicy;
 import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -30,6 +32,12 @@ public class PluginConfig implements ApplicationListener<ApplicationReadyEvent> 
     @Bean
     public DeserializerLoader getDeserializerLoader(final AppProperties appProperties) {
         return new DeserializerLoader(appProperties.getJarUploadPath() + "/deserializers");
+    }
+
+    @Bean
+    public PluginFactory<Filter> getFilterLoader(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getJarUploadPath() + "/filters";
+        return new PluginFactory<>(jarDirectory, Filter.class);
     }
 
     @Override
