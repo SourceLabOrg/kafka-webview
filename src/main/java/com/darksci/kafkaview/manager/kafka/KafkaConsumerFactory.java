@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 public class KafkaConsumerFactory {
-    private final static Logger logger = LoggerFactory.getLogger(KafkaConsumerFactory.class);
 
     private final ClientConfig clientConfig;
 
@@ -67,7 +66,7 @@ public class KafkaConsumerFactory {
         configMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, clientConfig.isAutoCommitEnabled());
 
         // How many records to pull
-        configMap.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, clientConfig.getMaxRecords());
+        configMap.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, clientConfig.getMaxResultsPerPartition());
 
         // If we have any filters
         if (!clientConfig.getFilterConfig().getFilters().isEmpty()) {

@@ -69,12 +69,19 @@ public class ApiController {
     public KafkaResults consume(
         final @PathVariable Long id,
         final @RequestParam(name = "action", required = false) String action,
-        final @RequestParam(name = "partitions", required = false) String partitions) {
+        final @RequestParam(name = "partitions", required = false) String partitions,
+        final @RequestParam(name = "results_per_partition", required = false) Integer resultsPerPartition) {
 
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
         if (view == null) {
             // TODO Return some kind of error.
+        }
+
+        // Determine how many results per partition
+        if (resultsPerPartition != null && resultsPerPartition > 0 && resultsPerPartition < 500) {
+            // Override in view
+            view.setResultsPerPartition(resultsPerPartition);
         }
 
         // Create consumer
@@ -176,9 +183,12 @@ public class ApiController {
     }
 
     private KafkaOperations createOperationsClient(final Cluster cluster) {
+        // TODO use a clientId unique to the client + cluster + topic
+        final String clientId = "MyUser on MyTopic at MyCluster";
+
         // Create new Operational Client
         final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-        final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+        final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, clientId).create();
 
         return new KafkaOperations(adminClient);
     }
@@ -223,6 +233,7 @@ public class ApiController {
             .withNoFilters()
             .withConsumerId(consumerId)
             .withPartitions(view.getPartitionsAsSet())
+            .withMaxResultsPerPartition(view.getResultsPerPartition())
             .build();
 
         // Create the damn consumer

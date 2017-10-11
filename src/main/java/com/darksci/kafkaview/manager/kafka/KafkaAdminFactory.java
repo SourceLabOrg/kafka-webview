@@ -14,7 +14,7 @@ public class KafkaAdminFactory {
 
     public KafkaAdminFactory(final ClusterConfig clusterConfig, final String clientId) {
         this.clusterConfig = clusterConfig;
-        this.clientId = clientId;
+        this.clientId = clientId + "as Admin";
     }
 
     public AdminClient create() {
