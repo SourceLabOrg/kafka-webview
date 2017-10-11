@@ -74,11 +74,6 @@ public class KafkaConsumerFactory {
             // Create interceptor
             configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, FilterInterceptor.class.getName());
             configMap.put(FilterInterceptor.CONFIG_KEY, clientConfig.getFilterConfig().getFilters());
-        } else {
-            // TODO Remove
-            // Create interceptor
-            configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, FilterInterceptor.class.getName());
-            configMap.put(FilterInterceptor.CONFIG_KEY, Collections.singletonList(EvenNumberFilter.class));
         }
 
         return configMap;

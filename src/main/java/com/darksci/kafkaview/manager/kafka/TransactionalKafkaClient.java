@@ -170,6 +170,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
             final long currentOffset = kafkaConsumer.position(topicPartition);
             long newOffset = currentOffset - (clientConfig.getMaxRecords() * 2);
 
+            // Can't go before the head position!
             if (newOffset < headOffset) {
                 newOffset = headOffset;
             }

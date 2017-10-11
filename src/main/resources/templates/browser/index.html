@@ -14,10 +14,14 @@
         <script type="application/javascript">
             // Maintains state of our consumer
             var ConsumerInfo = {
+                // Consumer State
                 direction: 'next',
+                searchQueryCount: 0,
+
+                // View Options
                 viewId: '[[${view.id}]]',
-                resultsPerPartition: 10,
-                searchQueryCount: 0
+                formatDates: true,
+                resultsPerPartition: 10
             };
 
             // On load, fire off ajax request to load results.
@@ -53,9 +57,10 @@
                 });
 
                 jQuery('#dateFormatToggle').change(function() {
-                    DateTools.showPrettyDates = jQuery(this).is(":checked");
+                    ConsumerInfo.formatDates = jQuery(this).is(":checked");
 
-                    // Reload results?
+                    // Reload results by calling previous + cancelSearch
+                    ConsumerInfo.cancelSearch = true;
                     executeConsume('previous');
                 });
 
@@ -152,7 +157,7 @@
                         timestamp: result.timestamp,
                         date: DateTools.displayTimestamp(result.timestamp),
                         timezone: DateTools.localTimezone,
-                        showPrettyDates: DateTools.showPrettyDates
+                        showPrettyDates: ConsumerInfo.formatDates
                     };
                     var resultHtml = template(properties);
 
@@ -512,6 +517,12 @@
                                             <span class="switch-label" data-on="" data-off=""></span>
                                             <span class="switch-handle"></span>
                                         </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Results per Partition</td>
+                                    <td>
+                                        10
                                     </td>
                                 </tr>
                             </tbody>

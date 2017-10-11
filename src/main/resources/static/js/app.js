@@ -192,7 +192,6 @@ var ApiClient = {
 
 var DateTools = {
   localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  showPrettyDates: true,
   displayTimestamp: function(timestampMs) {
     // Adjusts timestamp into local timezone and locate
     return new Date(timestampMs).toLocaleString();
