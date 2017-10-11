@@ -134,6 +134,21 @@
                                     </div>
                                 </div>
 
+                                <!-- Results Per Partition -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="resultsPerPartition">
+                                        Results per Partition
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            id="resultsPerPartition" name="resultsPerPartition" class="form-control" type="text"
+                                            placeholder="How many results to display per partition"
+                                            th:errorclass="is-invalid"
+                                            th:value="*{resultsPerPartition}">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('resultsPerPartition')}" th:errors="*{resultsPerPartition}"></div>
+                                    </div>
+                                </div>
+
                                 <!-- Partition Selector -->
                                 <div class="form-group row">
                                     <label class="col-md-3 form-control-label" for="partitions">

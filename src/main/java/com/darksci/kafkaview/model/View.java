@@ -37,6 +37,9 @@ public class View {
     private String partitions;
 
     @Column(nullable = false)
+    private Integer resultsPerPartition = 10;
+
+    @Column(nullable = false)
     private Timestamp createdAt;
 
     @Column(nullable = false)
@@ -96,6 +99,14 @@ public class View {
 
     public void setPartitions(final String partitions) {
         this.partitions = partitions;
+    }
+
+    public Integer getResultsPerPartition() {
+        return resultsPerPartition;
+    }
+
+    public void setResultsPerPartition(final Integer resultsPerPartition) {
+        this.resultsPerPartition = resultsPerPartition;
     }
 
     @Transient

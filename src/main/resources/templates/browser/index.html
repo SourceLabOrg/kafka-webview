@@ -21,7 +21,7 @@
                 // View Options
                 viewId: '[[${view.id}]]',
                 formatDates: true,
-                resultsPerPartition: 10
+                resultsPerPartition: '[[${view.resultsPerPartition}]]'
             };
 
             // On load, fire off ajax request to load results.
@@ -309,7 +309,7 @@
                                     style="width: 100%">
                                 </div>
                             </div>
-                            <div id="searchingAlert">
+                            <div id="searchingAlert" style="display: none;">
                                 <hr>
                                 <h3 class="mb-0" style="text-align: center;">
                                     All results filtered... Searching...
@@ -522,7 +522,7 @@
                                 <tr>
                                     <td>Results per Partition</td>
                                     <td>
-                                        10
+                                        [[${view.resultsPerPartition}]]
                                     </td>
                                 </tr>
                             </tbody>

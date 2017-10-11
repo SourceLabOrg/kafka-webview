@@ -126,6 +126,7 @@ public class ViewController extends BaseController {
         viewForm.setValueMessageFormatId(view.getValueMessageFormat().getId());
         viewForm.setTopic(view.getTopic());
         viewForm.setPartitions(view.getPartitionsAsSet());
+        viewForm.setResultsPerPartition(view.getResultsPerPartition());
 
         return createViewForm(viewForm, model);
     }
@@ -194,6 +195,7 @@ public class ViewController extends BaseController {
         view.setValueMessageFormat(valueMessageFormat);
         view.setCluster(cluster);
         view.setPartitions(partitionsStr);
+        view.setResultsPerPartition(viewForm.getResultsPerPartition());
         viewRepository.save(view);
 
         // Set flash message

@@ -2,6 +2,7 @@ package com.darksci.kafkaview.controller.configuration.view.forms;
 
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.model.MessageFormat;
+import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.Column;
 import javax.persistence.FetchType;
@@ -36,6 +37,10 @@ public class ViewForm {
      */
     @NotNull
     private Set<Integer> partitions = new HashSet<>();
+
+    @NotNull
+    @Range(min = 1, max = 500)
+    private Integer resultsPerPartition = 10;
 
     public Long getId() {
         return id;
@@ -85,6 +90,14 @@ public class ViewForm {
         this.topic = topic;
     }
 
+    public Integer getResultsPerPartition() {
+        return resultsPerPartition;
+    }
+
+    public void setResultsPerPartition(final Integer resultsPerPartition) {
+        this.resultsPerPartition = resultsPerPartition;
+    }
+
     public Set<Integer> getPartitions() {
         return partitions;
     }
@@ -106,6 +119,8 @@ public class ViewForm {
             ", keyMessageFormatId=" + keyMessageFormatId +
             ", valueMessageFormatId=" + valueMessageFormatId +
             ", topic='" + topic + '\'' +
+            ", partitions=" + partitions +
+            ", resultsPerPartition=" + resultsPerPartition +
             '}';
     }
 }

@@ -28,6 +28,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
+    private List<TopicPartition> cachedTopicsAndPartitions = null;
 
     public TransactionalKafkaClient(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
         this.kafkaConsumer = kafkaConsumer;
@@ -60,7 +61,6 @@ public class TransactionalKafkaClient implements AutoCloseable {
 
     public KafkaResults consumePerPartition() {
         final Map<Integer, List<KafkaResult>> resultsByPartition = new TreeMap<>();
-
         for (final TopicPartition topicPartition: getAllPartitions()) {
             // Subscribe to just that topic partition
             kafkaConsumer.assign(Collections.singleton(topicPartition));
@@ -71,6 +71,9 @@ public class TransactionalKafkaClient implements AutoCloseable {
             logger.info("Consumed Partition {} Records: {}", topicPartition.partition(), kafkaResults.size());
             resultsByPartition.put(topicPartition.partition(), kafkaResults);
         }
+
+        // Reassign all partitions
+        kafkaConsumer.assign(getAllPartitions());
 
         // Loop over results
         final List<KafkaResult> allResults = new ArrayList<>();
@@ -134,18 +137,21 @@ public class TransactionalKafkaClient implements AutoCloseable {
 
     // TODO we should probably cache this result.
     private List<TopicPartition> getAllPartitions() {
-        // Determine which partitions to subscribe to, for now do all
-        final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
+        // If we have not pulled this yet
+        if (cachedTopicsAndPartitions == null) {
+            // Determine which partitions to subscribe to, for now do all
+            final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
 
-        // Pull out partitions, convert to browser partitions
-        final List<TopicPartition> topicPartitions = new ArrayList<>();
-        for (final PartitionInfo partitionInfo: partitionInfos) {
-            // Skip filtered partitions
-            if (!clientConfig.isPartitionFiltered(partitionInfo.partition())) {
-                topicPartitions.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
+            // Pull out partitions, convert to browser partitions
+            cachedTopicsAndPartitions = new ArrayList<>();
+            for (final PartitionInfo partitionInfo : partitionInfos) {
+                // Skip filtered partitions
+                if (!clientConfig.isPartitionFiltered(partitionInfo.partition())) {
+                    cachedTopicsAndPartitions.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
+                }
             }
         }
-        return topicPartitions;
+        return cachedTopicsAndPartitions;
     }
 
     public void commit() {
@@ -168,7 +174,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
             // Calculate our previous offsets
             final long headOffset = headOffsets.get(topicPartition);
             final long currentOffset = kafkaConsumer.position(topicPartition);
-            long newOffset = currentOffset - (clientConfig.getMaxRecords() * 2);
+            long newOffset = currentOffset - (clientConfig.getMaxResultsPerPartition() * 2);
 
             // Can't go before the head position!
             if (newOffset < headOffset) {
@@ -195,7 +201,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
             // Calculate our previous offsets
             final long tailOffset = tailOffsets.get(topicPartition);
             final long currentOffset = kafkaConsumer.position(topicPartition);
-            long newOffset = currentOffset + clientConfig.getMaxRecords();
+            long newOffset = currentOffset + clientConfig.getMaxResultsPerPartition();
 
             if (newOffset < tailOffset) {
                 newOffset = tailOffset;

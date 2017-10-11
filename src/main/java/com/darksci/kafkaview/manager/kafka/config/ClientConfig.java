@@ -26,23 +26,29 @@ public class ClientConfig {
     private final Set<Integer> partitionIds;
 
     /**
-     * Defines how many records to retrieve.
+     * Defines how many records to retrieve, per partition.
      */
-    private int maxRecords = 10;
+    private final int maxResultsPerPartition;
 
     private boolean isAutoCommitEnabled = false;
 
     public ClientConfig(final TopicConfig topicConfig, final FilterConfig filterConfig, final String consumerId) {
-        this(topicConfig, filterConfig, consumerId, new ArrayList<>());
+        this(topicConfig, filterConfig, consumerId, new ArrayList<>(), 10);
     }
 
-    public ClientConfig(final TopicConfig topicConfig, final FilterConfig filterConfig, final String consumerId, final Collection<Integer> partitionIds) {
+    public ClientConfig(
+        final TopicConfig topicConfig,
+        final FilterConfig filterConfig,
+        final String consumerId,
+        final Collection<Integer> partitionIds,
+        final int maxResultsPerPartition) {
         this.topicConfig = topicConfig;
         this.filterConfig = filterConfig;
         this.consumerId = consumerId;
         final Set<Integer> tempSet = new HashSet<>();
         tempSet.addAll(partitionIds);
         this.partitionIds = Collections.unmodifiableSet(tempSet);
+        this.maxResultsPerPartition = maxResultsPerPartition;
     }
 
     public TopicConfig getTopicConfig() {
@@ -57,12 +63,12 @@ public class ClientConfig {
         return filterConfig;
     }
 
-    public int getMaxRecords() {
-        return maxRecords;
-    }
-
     public boolean isAutoCommitEnabled() {
         return isAutoCommitEnabled;
+    }
+
+    public int getMaxResultsPerPartition() {
+        return maxResultsPerPartition;
     }
 
     /**
@@ -98,6 +104,7 @@ public class ClientConfig {
         private FilterConfig filterConfig;
         private String consumerId;
         private Set<Integer> limitPartitions = new HashSet<>();
+        private int maxResultsPerPartition = 10;
 
         private Builder() {
 
@@ -132,8 +139,13 @@ public class ClientConfig {
             return this;
         }
 
+        public Builder withMaxResultsPerPartition(final int maxResultsPerPartition) {
+            this.maxResultsPerPartition = maxResultsPerPartition;
+            return this;
+        }
+
         public ClientConfig build() {
-            return new ClientConfig(topicConfig, filterConfig, consumerId, limitPartitions);
+            return new ClientConfig(topicConfig, filterConfig, consumerId, limitPartitions, maxResultsPerPartition);
         }
     }
 }
