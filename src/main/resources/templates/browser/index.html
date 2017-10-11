@@ -12,18 +12,28 @@
 <section layout:fragment="content">
     <div class="container">
         <script type="application/javascript">
+            // Maintains state of our consumer
+            var ConsumerInfo = {
+                // Consumer State
+                direction: 'next',
+                searchQueryCount: 0,
+
+                // View Options
+                viewId: '[[${view.id}]]',
+                formatDates: true,
+                resultsPerPartition: 10
+            };
+
             // On load, fire off ajax request to load results.
             jQuery(document).ready(function() {
                 // Fire off initial request
-                executeConsume('previous');
+                executeConsume('next');
 
                 // Request Cluster Information
                 ApiClient.getClusterNodes('[[${cluster.id}]]', handleClusterNodeResults);
 
                 // Request Topic Information
                 ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', handleTopicDetailResults);
-
-                // Request
 
                 // Control Events
                 jQuery('#control-head').click(function() {
@@ -42,10 +52,15 @@
                     executeConsume('tail');
                 });
 
-                jQuery('#dateFormatToggle').change(function() {
-                    DateTools.showPrettyDates = jQuery(this).is(":checked");
+                jQuery('#cancelSearch').click(function() {
+                    ConsumerInfo.cancelSearch = true;
+                });
 
-                    // Reload results
+                jQuery('#dateFormatToggle').change(function() {
+                    ConsumerInfo.formatDates = jQuery(this).is(":checked");
+
+                    // Reload results by calling previous + cancelSearch
+                    ConsumerInfo.cancelSearch = true;
                     executeConsume('previous');
                 });
 
@@ -68,7 +83,7 @@
                         partitionOffsetMapJson = JSON.stringify(partitionOffsetMap);
 
                         // Call api
-                        ApiClient.setConsumerState('[[${view.id}]]', partitionOffsetMapJson, function(results) {
+                        ApiClient.setConsumerState(ConsumerInfo.viewId, partitionOffsetMapJson, function(results) {
                             // Update consumer state UI
                             updateConsumerState(results.offsets);
 
@@ -103,7 +118,10 @@
                 // Show loader
                 jQuery('#loader').toggle(true);
 
-                ApiClient.consume('[[${view.id}]]', action, handleConsumeResults);
+                // Record state
+                ConsumerInfo.direction = action;
+
+                ApiClient.consume(ConsumerInfo.viewId, action, handleConsumeResults);
             }
 
             function handleConsumeResults(results) {
@@ -112,8 +130,21 @@
                 var template = Handlebars.compile(source);
                 var table    = jQuery('#results-tbody');
 
+                // Update consumer state
+                updateConsumerState(results.consumerOffsets);
+
                 // Clear the results table
                 jQuery(table).empty();
+
+                // If we have no results
+                if (results.numberOfRecords === 0) {
+                    // Determine if we should re-consume
+                    return reconsume(results);
+                }
+
+                // Reset counter
+                ConsumerInfo.searchQueryCount = 0;
+                ConsumerInfo.cancelSearch = false;
 
                 // Loop over results
                 jQuery.each(results.results, function (index, result) {
@@ -126,7 +157,7 @@
                         timestamp: result.timestamp,
                         date: DateTools.displayTimestamp(result.timestamp),
                         timezone: DateTools.localTimezone,
-                        showPrettyDates: DateTools.showPrettyDates
+                        showPrettyDates: ConsumerInfo.formatDates
                     };
                     var resultHtml = template(properties);
 
@@ -136,17 +167,96 @@
 
                 // Hide loader
                 jQuery('#loader').toggle(false);
+                jQuery('#searchingAlert').toggle(false);
+                jQuery('#noResultsFound').toggle(false);
 
                 // Show table
                 jQuery('#results-table').toggle(true);
                 jQuery('#table-controls').toggle(true);
+            }
 
-                // Update consumer state
-                updateConsumerState(results.endOffsets);
+            function reconsume(results) {
+                // Flag to determine if we should keep paging
+                var hasMore = false;
+
+                // Build a map
+                var consumerOffsetsMap = [];
+                jQuery.each(results.consumerOffsets, function(index, partitionOffset) {
+                    consumerOffsetsMap[partitionOffset.partition] = partitionOffset.offset;
+                });
+
+                if (ConsumerInfo.direction == 'next') {
+                    jQuery.each(results.tailOffsets, function(index, partitionOffset) {
+                        var consumerOffset = consumerOffsetsMap[partitionOffset.partition];
+                        var tailOffset = partitionOffset.offset;
+
+                        if (consumerOffset < tailOffset) {
+                            // Set flag to true
+                            hasMore = true;
+
+                            // break out of loop
+                            return false;
+                        }
+                    });
+                } else if (ConsumerInfo.direction == 'previous') {
+                    jQuery.each(results.headOffsets, function(index, partitionOffset) {
+                        var consumerOffset = consumerOffsetsMap[partitionOffset.partition] - ConsumerInfo.resultsPerPartition;
+                        var headOffset = partitionOffset.offset;
+
+                        if (consumerOffset > headOffset) {
+                            // Set flag to true
+                            hasMore = true;
+
+                            // break out of loop
+                            return false;
+                        }
+                    });
+                }
+
+                if (ConsumerInfo.cancelSearch) {
+                    // If they canceled the search.
+                    showNoResultsFound('Middle');
+                } else if (hasMore) {
+                    // If we have more offsets to page through
+                    // Show in UI that we're searching..
+                    showStillSearching();
+
+                    // Fire next api call
+                    ApiClient.consume(ConsumerInfo.viewId, ConsumerInfo.direction, handleConsumeResults);
+                } else {
+                    // Show in UI that no results found.
+                    var positionStr = 'Tail';
+                    if (ConsumerInfo.direction == 'previous' || ConsumerInfo.direction == 'head') {
+                        positionStr = 'Head';
+                    }
+                    showNoResultsFound(positionStr);
+                }
+            }
+
+            function showStillSearching() {
+                // Increment counter
+                ConsumerInfo.searchQueryCount++;
+                jQuery('#searchQueryCount').html(ConsumerInfo.searchQueryCount);
+                jQuery('#searchingAlert').toggle(true);
+                jQuery('#noResultsFound').toggle(false);
+            }
+
+            function showNoResultsFound(location) {
+                // Reset counter
+                ConsumerInfo.searchQueryCount = 0;
+                ConsumerInfo.cancelSearch = false;
+
+                // Hide loader
+                jQuery('#searchingAlert').toggle(false);
+                jQuery('#loader').toggle(false);
+
+                jQuery('#noResultsFoundDirection').html(location);
+                jQuery('#noResultsFound').toggle(true);
+                jQuery('#table-controls').toggle(true);
             }
 
             // Updates the consumer state UI
-            function updateConsumerState(consumerStateMap) {
+            function updateConsumerState(consumerOffsets) {
                 // Change Icon to Edit
                 jQuery('#toggleStateEditor i').attr('class', 'icon-pencil');
 
@@ -156,8 +266,9 @@
                 // Wipe Consumer State table
                 jQuery(consumerState).empty();
 
-                jQuery.each(consumerStateMap, function(index, result) {
-                    jQuery(consumerState).append('<tr><td>' + index + '</td><td>' + result + '</td></tr>');
+                // This assumes we're in order
+                jQuery.each(consumerOffsets, function(index, partitionOffset) {
+                    jQuery(consumerState).append('<tr><td>' + partitionOffset.partition + '</td><td>' + partitionOffset.offset + '</td></tr>');
                 });
             }
 
@@ -188,13 +299,35 @@
                         View <strong>[[${view.name}]]</strong> over topic <strong>[[${view.topic}]]</strong>
                     </div>
                     <div class="card-body">
+
                         <!-- Display Loader First -->
-                        <div class="progress" id="loader" style="display: block;">
-                            <div
-                                class="progress-bar progress-bar-striped progress-bar-animated"
-                                role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-                                style="width: 100%">
+                        <div class="alert alert-light" role="alert" id="loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
                             </div>
+                            <div id="searchingAlert">
+                                <hr>
+                                <h3 class="mb-0" style="text-align: center;">
+                                    All results filtered... Searching...
+                                </h3>
+                                <h4 style="text-align: center;">
+                                    Query #<strong><span id="searchQueryCount">1</span></strong>
+                                    ( <a href="#" id="cancelSearch">cancel</a> )
+                                </h4>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="noResultsFound" style="display: none;">
+                            <h4 class="alert-heading">No Results Found</h4>
+                            <p>Looks like we couldn't find any results!</p>
+                            <p>
+                                You're current at the <strong><span id="noResultsFoundDirection"></span></strong> of the topic.
+                            </p>
                         </div>
 
                         <!-- Hide Results Table -->
@@ -384,6 +517,12 @@
                                             <span class="switch-label" data-on="" data-off=""></span>
                                             <span class="switch-handle"></span>
                                         </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Results per Partition</td>
+                                    <td>
+                                        10
                                     </td>
                                 </tr>
                             </tbody>

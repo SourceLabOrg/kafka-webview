@@ -35,6 +35,7 @@ public class FilterInterceptor implements ConsumerInterceptor {
 
             // Iterate thru filters
             for (final Filter filter: filters) {
+                // Pass through filter
                 final boolean result = filter.filter(
                     record.topic(),
                     record.partition(),
@@ -43,14 +44,15 @@ public class FilterInterceptor implements ConsumerInterceptor {
                     record.value()
                 );
 
+                // If filter return true
                 if (result) {
+                    // Include it in the results
                     final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-                    filteredRecords.putIfAbsent(topicPartition, new ArrayList<ConsumerRecord>());
+                    filteredRecords.putIfAbsent(topicPartition, new ArrayList<>());
                     filteredRecords.get(topicPartition).add(record);
                 }
             }
         }
-
 
         // return filtered results
         return new ConsumerRecords(filteredRecords);

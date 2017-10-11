@@ -1,6 +1,7 @@
 package com.darksci.kafkaview.manager.kafka;
 
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
+import com.darksci.kafkaview.manager.kafka.filter.EvenNumberFilter;
 import com.darksci.kafkaview.manager.kafka.filter.FilterInterceptor;
 import com.darksci.kafkaview.model.View;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

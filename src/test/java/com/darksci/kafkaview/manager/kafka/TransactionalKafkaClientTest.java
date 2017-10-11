@@ -54,7 +54,7 @@ public class TransactionalKafkaClientTest {
         final TransactionalKafkaClient transactionalKafkaClient = new TransactionalKafkaClient(kafkaConsumer, clientConfig);
 
         // Poll
-        final KafkaResults results = transactionalKafkaClient.consume();
+        final KafkaResults results = transactionalKafkaClient.consumePerPartition();
 
         // and close
         transactionalKafkaClient.close();

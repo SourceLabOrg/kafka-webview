@@ -4,6 +4,7 @@ import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
 import com.darksci.kafkaview.manager.kafka.dto.ConsumerState;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResult;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResults;
+import com.darksci.kafkaview.manager.kafka.dto.PartitionOffset;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -33,7 +34,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
         this.clientConfig = clientConfig;
     }
 
-    public KafkaResults consume() {
+    private List<KafkaResult> consume() {
         final List<KafkaResult> kafkaResultList = new ArrayList<>();
         final ConsumerRecords consumerRecords = kafkaConsumer.poll(TIMEOUT);
 
@@ -51,9 +52,10 @@ public class TransactionalKafkaClient implements AutoCloseable {
                 )
             );
         }
+
         // Commit offsets
         commit();
-        return KafkaResults.newInstance(kafkaResultList);
+        return kafkaResultList;
     }
 
     public KafkaResults consumePerPartition() {
@@ -64,11 +66,10 @@ public class TransactionalKafkaClient implements AutoCloseable {
             kafkaConsumer.assign(Collections.singleton(topicPartition));
 
             // consume
-            final KafkaResults kafkaResults = consume();
+            final List<KafkaResult> kafkaResults = consume();
 
-            logger.info("Consumed Partition {} Records: {}", topicPartition.partition(), kafkaResults.getResults().size());
-
-            resultsByPartition.put(topicPartition.partition(), kafkaResults.getResults());
+            logger.info("Consumed Partition {} Records: {}", topicPartition.partition(), kafkaResults.size());
+            resultsByPartition.put(topicPartition.partition(), kafkaResults);
         }
 
         // Loop over results
@@ -77,7 +78,13 @@ public class TransactionalKafkaClient implements AutoCloseable {
             allResults.addAll(results);
         }
 
-        return KafkaResults.newInstance(allResults);
+        // Create return object
+        return new KafkaResults(
+            allResults,
+            getConsumerState().getOffsets(),
+            getHeadOffsets(),
+            getTailOffsets()
+        );
     }
 
     public ConsumerState seek(final Map<Integer, Long> partitionOffsetMap) {
@@ -91,17 +98,41 @@ public class TransactionalKafkaClient implements AutoCloseable {
         return getConsumerState();
     }
 
+    // Unsure if this should be exposed
+    public List<PartitionOffset> getHeadOffsets() {
+        final Map<TopicPartition, Long> results = kafkaConsumer.beginningOffsets(getAllPartitions());
+
+        final List<PartitionOffset> offsets = new ArrayList<>();
+        for (final Map.Entry<TopicPartition, Long> entry : results.entrySet()) {
+            offsets.add(new PartitionOffset(entry.getKey().partition(), entry.getValue()));
+        }
+        return offsets;
+    }
+
+    // Unsure if this should be exposed
+    public List<PartitionOffset> getTailOffsets() {
+        final Map<TopicPartition, Long> results = kafkaConsumer.endOffsets(getAllPartitions());
+
+        final List<PartitionOffset> offsets = new ArrayList<>();
+        for (final Map.Entry<TopicPartition, Long> entry : results.entrySet()) {
+            offsets.add(new PartitionOffset(entry.getKey().partition(), entry.getValue()));
+        }
+        return offsets;
+    }
+
+
     public ConsumerState getConsumerState() {
-        final Map<Integer, Long> partitionOffsetMap = new LinkedHashMap<>();
+        final List<PartitionOffset> offsets = new ArrayList<>();
 
         for (final TopicPartition topicPartition: getAllPartitions()) {
             final long offset = kafkaConsumer.position(topicPartition);
-            partitionOffsetMap.put(topicPartition.partition(), offset);
+            offsets.add(new PartitionOffset(topicPartition.partition(), offset));
         }
 
-        return new ConsumerState(clientConfig.getTopicConfig().getTopicName(), partitionOffsetMap);
+        return new ConsumerState(clientConfig.getTopicConfig().getTopicName(), offsets);
     }
 
+    // TODO we should probably cache this result.
     private List<TopicPartition> getAllPartitions() {
         // Determine which partitions to subscribe to, for now do all
         final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
@@ -139,6 +170,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
             final long currentOffset = kafkaConsumer.position(topicPartition);
             long newOffset = currentOffset - (clientConfig.getMaxRecords() * 2);
 
+            // Can't go before the head position!
             if (newOffset < headOffset) {
                 newOffset = headOffset;
             }
