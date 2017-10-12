@@ -5,33 +5,26 @@ import com.darksci.kafkaview.plugin.filter.RecordFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FilterConfig {
-    private List<Class<? extends RecordFilter>> filters;
+    private List<RecordFilter> recordFilters;
 
-    public FilterConfig(final List<Class<? extends RecordFilter>> filters) {
-        this.filters = filters;
+    public FilterConfig(final List<RecordFilter> recordFilters) {
+        this.recordFilters = recordFilters;
     }
 
     private FilterConfig() {
-        filters = new ArrayList<>();
+        recordFilters = new ArrayList<>();
     }
 
-    public List<Class<? extends RecordFilter>> getFilters() {
-        return filters;
-    }
-
-    public String getFiltersString() {
-        return filters.stream()
-            .map(Class::getName)
-            .collect(Collectors.joining(","));
+    public List<RecordFilter> getFilters() {
+        return recordFilters;
     }
 
     @Override
     public String toString() {
         return "FilterConfig{" +
-            "filters=" + filters +
+            "recordFilters=" + recordFilters +
             '}';
     }
 
@@ -39,7 +32,11 @@ public class FilterConfig {
         return new FilterConfig();
     }
 
-    public static FilterConfig withFilters(final Class<? extends RecordFilter>... filterClasses) {
-        return new FilterConfig(Arrays.asList(filterClasses));
+    public static FilterConfig withFilters(final RecordFilter... recordFilters) {
+        return new FilterConfig(Arrays.asList(recordFilters));
+    }
+
+    public static FilterConfig withFilters(final List<RecordFilter> recordFilters) {
+        return new FilterConfig(recordFilters);
     }
 }

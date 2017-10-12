@@ -72,21 +72,18 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
     @Override
     public void configure(final Map<String, ?> configs) {
         // Grab classes from config
-        final Iterable<Class<? extends RecordFilter>> filterClasses = (Iterable<Class<? extends RecordFilter>>) configs.get(CONFIG_KEY);
+        final Iterable<RecordFilter> filters = (Iterable<RecordFilter>) configs.get(CONFIG_KEY);
 
         // Create instances fo filters
-        for (final Class<? extends RecordFilter> filterClass: filterClasses) {
+        for (final RecordFilter recordFilter : filters) {
             try {
-                // Create instance
-                final RecordFilter recordFilter = filterClass.newInstance();
-
                 // Configure
                 recordFilter.configure(configs);
 
                 // Add to list
                 recordFilters.add(recordFilter);
-            } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
             }
         }
     }
