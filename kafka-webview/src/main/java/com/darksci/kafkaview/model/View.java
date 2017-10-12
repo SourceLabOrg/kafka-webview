@@ -1,12 +1,17 @@
 package com.darksci.kafkaview.model;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OrderColumn;
 import javax.persistence.Transient;
 import java.sql.Timestamp;
 import java.util.HashSet;
@@ -38,6 +43,18 @@ public class View {
 
     @Column(nullable = false)
     private Integer resultsPerPartition = 10;
+
+    @ManyToMany(cascade = {
+        CascadeType.PERSIST,
+        CascadeType.MERGE
+    })
+    @JoinTable(
+        name = "view_to_filter",
+        joinColumns = @JoinColumn(name = "view_id"),
+        inverseJoinColumns = @JoinColumn(name = "filter_id")
+    )
+    @OrderColumn(name = "sort_order")
+    private Set<Filter> filters = new HashSet<>();
 
     @Column(nullable = false)
     private Timestamp createdAt;
@@ -122,6 +139,14 @@ public class View {
             }
         }
         return partitionsSet;
+    }
+
+    public Set<Filter> getFilters() {
+        return filters;
+    }
+
+    public void setFilters(final Set<Filter> filters) {
+        this.filters = filters;
     }
 
     public Timestamp getCreatedAt() {

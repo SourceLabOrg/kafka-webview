@@ -85,8 +85,10 @@ public class MessageFormatController extends BaseController {
         }
 
         try {
+            // Sanitize file name.
+            final String filename = messageFormatForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".jar";
+
             // Persist jar on filesystem
-            final String filename = messageFormatForm.getName() + ".jar";
             final String jarPath = uploadManager.handleDeserializerUpload(file, filename);
 
             // Attempt to load jar?

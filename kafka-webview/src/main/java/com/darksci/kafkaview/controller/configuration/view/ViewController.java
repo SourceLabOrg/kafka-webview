@@ -9,9 +9,11 @@ import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
+import com.darksci.kafkaview.model.Filter;
 import com.darksci.kafkaview.model.MessageFormat;
 import com.darksci.kafkaview.model.View;
 import com.darksci.kafkaview.repository.ClusterRepository;
+import com.darksci.kafkaview.repository.FilterRepository;
 import com.darksci.kafkaview.repository.MessageFormatRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -45,6 +47,9 @@ public class ViewController extends BaseController {
     @Autowired
     private ViewRepository viewRepository;
 
+    @Autowired
+    private FilterRepository filterRepository;
+
     /**
      * GET Displays main configuration index.
      */
@@ -73,6 +78,10 @@ public class ViewController extends BaseController {
         // If we have a cluster Id
         model.addAttribute("topics", new ArrayList<>());
         model.addAttribute("partitions", new ArrayList<>());
+
+        // Retrieve any filters
+        model.addAttribute("filterList", filterRepository.findAllByOrderByNameAsc());
+
         if (viewForm.getClusterId() != null) {
             // Lets load the topics now
             // Retrieve cluster
@@ -127,6 +136,13 @@ public class ViewController extends BaseController {
         viewForm.setTopic(view.getTopic());
         viewForm.setPartitions(view.getPartitionsAsSet());
         viewForm.setResultsPerPartition(view.getResultsPerPartition());
+
+        // Set filters
+        final Set<Long> selectedFilters = new HashSet<>();
+        for (final Filter filter: view.getFilters()) {
+            selectedFilters.add(filter.getId());
+        }
+        viewForm.setFilters(selectedFilters);
 
         return createViewForm(viewForm, model);
     }
@@ -194,8 +210,36 @@ public class ViewController extends BaseController {
         view.setKeyMessageFormat(keyMessageFormat);
         view.setValueMessageFormat(valueMessageFormat);
         view.setCluster(cluster);
-        view.setPartitions(partitionsStr);
         view.setResultsPerPartition(viewForm.getResultsPerPartition());
+        view.setPartitions(partitionsStr);
+
+        // Loop over filters
+        final Set<Long> setFilterIds = new HashSet<>();
+        for (final Long filterId : viewForm.getFilters()) {
+            // Skip invalids
+            if (filterId == null || filterId.equals(0)) {
+                continue;
+            }
+
+            // Retrieve filter
+            final Filter filter = filterRepository.findOne(filterId);
+            if (filter == null) {
+                continue;
+            }
+            view.getFilters().add(filter);
+            setFilterIds.add(filterId);
+        }
+
+        final Set<Filter> toRemoveFilters = new HashSet<>();
+        for (final Filter filter: view.getFilters()) {
+            if (!setFilterIds.contains(filter.getId())) {
+                toRemoveFilters.add(filter);
+            }
+        }
+        if (!toRemoveFilters.isEmpty()) {
+            view.getFilters().removeAll(toRemoveFilters);
+        }
+
         viewRepository.save(view);
 
         // Set flash message

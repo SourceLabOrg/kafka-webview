@@ -8,11 +8,17 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kafka-webview-plugin</artifactId>
+    <artifactId>kafka-webview-examples</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
-        <!-- None! -->
+        <!-- Use kafka-webview-plugin dependency -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>kafka-webview-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
+
 
 </project>

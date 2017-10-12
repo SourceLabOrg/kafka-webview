@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.manager.kafka.filter;
 
+import com.darksci.kafkaview.plugin.filter.RecordFilter;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 public class RecordFilterInterceptor implements ConsumerInterceptor {
-    private final static Logger logger = LoggerFactory.getLogger(FilterInterceptor.class);
-    public final static String CONFIG_KEY = "FilterInterceptor.Classes";
+    private final static Logger logger = LoggerFactory.getLogger(RecordFilterInterceptor.class);
+    public final static String CONFIG_KEY = "RecordFilterInterceptor.Classes";
 
-    private List<Filter> filters = new ArrayList<>();
+    private List<RecordFilter> recordFilters = new ArrayList<>();
 
     public RecordFilterInterceptor() {
 
@@ -34,9 +35,9 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
             final ConsumerRecord record = recordIterator.next();
 
             // Iterate thru filters
-            for (final Filter filter: filters) {
+            for (final RecordFilter recordFilter: recordFilters) {
                 // Pass through filter
-                final boolean result = filter.filter(
+                final boolean result = recordFilter.filter(
                     record.topic(),
                     record.partition(),
                     record.offset(),
@@ -71,19 +72,19 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
     @Override
     public void configure(final Map<String, ?> configs) {
         // Grab classes from config
-        final Iterable<Class<? extends Filter>> filterClasses = (Iterable<Class<? extends Filter>>) configs.get(CONFIG_KEY);
+        final Iterable<Class<? extends RecordFilter>> filterClasses = (Iterable<Class<? extends RecordFilter>>) configs.get(CONFIG_KEY);
 
         // Create instances fo filters
-        for (final Class<? extends Filter> filterClass: filterClasses) {
+        for (final Class<? extends RecordFilter> filterClass: filterClasses) {
             try {
                 // Create instance
-                final Filter filter = filterClass.newInstance();
+                final RecordFilter recordFilter = filterClass.newInstance();
 
                 // Configure
-                filter.configure(configs);
+                recordFilter.configure(configs);
 
                 // Add to list
-                filters.add(filter);
+                recordFilters.add(recordFilter);
             } catch (InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }

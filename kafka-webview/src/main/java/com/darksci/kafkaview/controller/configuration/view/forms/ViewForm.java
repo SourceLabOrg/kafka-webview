@@ -38,6 +38,13 @@ public class ViewForm {
     @NotNull
     private Set<Integer> partitions = new HashSet<>();
 
+    /**
+     * Empty set means NO filters.
+     */
+    @NotNull
+    private Set<Long> filters = new HashSet<>();
+
+
     @NotNull
     @Range(min = 1, max = 500)
     private Integer resultsPerPartition = 10;
@@ -106,6 +113,14 @@ public class ViewForm {
         this.partitions = partitions;
     }
 
+    public Set<Long> getFilters() {
+        return filters;
+    }
+
+    public void setFilters(final Set<Long> filters) {
+        this.filters = filters;
+    }
+
     public boolean exists() {
         return getId() != null;
     }
@@ -120,6 +135,7 @@ public class ViewForm {
             ", valueMessageFormatId=" + valueMessageFormatId +
             ", topic='" + topic + '\'' +
             ", partitions=" + partitions +
+            ", filters=" + filters +
             ", resultsPerPartition=" + resultsPerPartition +
             '}';
     }

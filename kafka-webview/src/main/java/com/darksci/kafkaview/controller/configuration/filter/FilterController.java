@@ -7,6 +7,7 @@ import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Filter;
+import com.darksci.kafkaview.plugin.filter.RecordFilter;
 import com.darksci.kafkaview.repository.FilterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -32,7 +33,7 @@ public class FilterController extends BaseController {
     private PluginUploadManager uploadManager;
 
     @Autowired
-    private PluginFactory<com.darksci.kafkaview.manager.kafka.filter.Filter> filterPluginFactory;
+    private PluginFactory<RecordFilter> recordFilterPluginFactory;
 
     @Autowired
     protected FilterRepository filterRepository;
@@ -85,13 +86,15 @@ public class FilterController extends BaseController {
         }
 
         try {
+            // Sanitize filename
+            final String filename = filterForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".jar";
+
             // Persist jar on filesystem
-            final String filename = filterForm.getName() + ".jar";
             final String jarPath = uploadManager.handleFilterUpload(file, filename);
 
             // Attempt to load jar?
             try {
-                filterPluginFactory.getPlugin(filename, filterForm.getClasspath());
+                recordFilterPluginFactory.getPlugin(filename, filterForm.getClasspath());
             } catch (LoaderException e) {
                 // Remove jar
                 Files.delete(new File(jarPath).toPath());
@@ -132,7 +135,7 @@ public class FilterController extends BaseController {
         } else {
             try {
                 // Delete jar from disk
-                Files.delete(filterPluginFactory.getPathForJar(filter.getJar()));
+                Files.delete(recordFilterPluginFactory.getPathForJar(filter.getJar()));
 
                 // Delete entity
                 filterRepository.delete(id);

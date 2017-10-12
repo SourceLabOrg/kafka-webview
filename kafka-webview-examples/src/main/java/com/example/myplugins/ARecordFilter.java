@@ -1,8 +1,13 @@
-package com.darksci.kafkaview.manager.kafka.filter;
+package com.example.myplugins;
+
+import com.darksci.kafkaview.plugin.filter.RecordFilter;
 
 import java.util.Map;
 
-public class AFilter implements Filter {
+/**
+ * Example implementation to only show records that do NOT have the value "A"
+ */
+public class ARecordFilter implements RecordFilter {
 
     @Override
     public boolean filter(final String topic, final int partition, final long offset, final Object key, final Object value) {

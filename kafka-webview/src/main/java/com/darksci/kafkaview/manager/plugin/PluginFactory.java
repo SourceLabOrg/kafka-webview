@@ -3,6 +3,7 @@ package com.darksci.kafkaview.manager.plugin;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.manager.plugin.exception.UnableToFindClassException;
 import com.darksci.kafkaview.manager.plugin.exception.WrongImplementationException;
+import com.darksci.kafkaview.plugin.filter.RecordFilter;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -26,7 +27,7 @@ public class PluginFactory<T> {
         try {
             final String absolutePath = getPathForJar(jarName).toString();
             final URL jarUrl = new URL("file://" + absolutePath);
-            final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl);
+            final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader());
             return getPluginClass(pluginClassLoader, classpath);
         } catch (MalformedURLException exception) {
             throw new LoaderException("Unable to load jar " + jarName, exception);

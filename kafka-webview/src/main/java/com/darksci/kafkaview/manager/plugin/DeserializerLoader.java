@@ -25,7 +25,7 @@ public class DeserializerLoader {
         try {
             final String absolutePath = getPathForJar(jarName).toString();
             final URL jarUrl = new URL("file://" + absolutePath);
-            final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl);
+            final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader());
             return getDeserializerClass(pluginClassLoader, classpath);
         } catch (MalformedURLException exception) {
             throw new LoaderException("Unable to load jar " + jarName, exception);

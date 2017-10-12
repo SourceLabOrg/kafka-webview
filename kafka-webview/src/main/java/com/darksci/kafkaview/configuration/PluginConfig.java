@@ -1,15 +1,14 @@
 package com.darksci.kafkaview.configuration;
 
-import com.darksci.kafkaview.manager.kafka.filter.Filter;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.PluginSecurityPolicy;
 import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
+import com.darksci.kafkaview.plugin.filter.RecordFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 
 import java.security.Policy;
@@ -35,9 +34,9 @@ public class PluginConfig implements ApplicationListener<ApplicationReadyEvent> 
     }
 
     @Bean
-    public PluginFactory<Filter> getFilterLoader(final AppProperties appProperties) {
+    public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getJarUploadPath() + "/filters";
-        return new PluginFactory<>(jarDirectory, Filter.class);
+        return new PluginFactory<>(jarDirectory, RecordFilter.class);
     }
 
     @Override

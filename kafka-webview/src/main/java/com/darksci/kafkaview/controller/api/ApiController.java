@@ -1,6 +1,5 @@
 package com.darksci.kafkaview.controller.api;
 
-import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
@@ -15,12 +14,9 @@ import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
-import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
 import com.darksci.kafkaview.manager.kafka.dto.TopicListing;
-import com.darksci.kafkaview.manager.kafka.filter.AFilter;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
-import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.model.MessageFormat;
 import com.darksci.kafkaview.model.View;
@@ -39,7 +35,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

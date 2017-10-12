@@ -1,20 +1,13 @@
 package com.darksci.kafkaview.manager.kafka;
 
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
-import com.darksci.kafkaview.manager.kafka.filter.EvenNumberFilter;
-import com.darksci.kafkaview.manager.kafka.filter.FilterInterceptor;
-import com.darksci.kafkaview.model.View;
+import com.darksci.kafkaview.manager.kafka.filter.RecordFilterInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,8 +64,8 @@ public class KafkaConsumerFactory {
         // If we have any filters
         if (!clientConfig.getFilterConfig().getFilters().isEmpty()) {
             // Create interceptor
-            configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, FilterInterceptor.class.getName());
-            configMap.put(FilterInterceptor.CONFIG_KEY, clientConfig.getFilterConfig().getFilters());
+            configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, RecordFilterInterceptor.class.getName());
+            configMap.put(RecordFilterInterceptor.CONFIG_KEY, clientConfig.getFilterConfig().getFilters());
         }
 
         return configMap;

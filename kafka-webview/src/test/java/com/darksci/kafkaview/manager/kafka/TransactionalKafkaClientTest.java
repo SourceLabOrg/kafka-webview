@@ -6,7 +6,6 @@ import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
 import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
 import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResults;
-import com.darksci.kafkaview.manager.kafka.filter.AFilter;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -41,8 +40,7 @@ public class TransactionalKafkaClientTest {
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
 
         // Defines any filters
-        //final FilterConfig filterConfig = FilterConfig.withNoFilters();
-        final FilterConfig filterConfig = FilterConfig.withFilters(AFilter.class);
+        final FilterConfig filterConfig = FilterConfig.withNoFilters();
 
         // Defines our client
         final ClientConfig clientConfig = new ClientConfig(topicConfig, filterConfig, consumerId);
