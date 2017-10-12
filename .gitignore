@@ -1,5 +1,5 @@
 target/
 .idea/
 *.iml
-src/main/resources/static/node_modules/
+kafka-webview/src/main/resources/static/node_modules/
 uploads/

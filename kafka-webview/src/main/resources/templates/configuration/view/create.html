@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.thymeleaf.org"
+        layout:decorate="~{layout}">
+
+<head>
+    <title>View</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // On ready register handlers
+            jQuery(document).ready(function() {
+
+                // Handle selecting a cluster.
+                jQuery('#clusterId').change(function() {
+                    var clusterId = jQuery('#clusterId').val();
+                    ApiClient.getTopics(clusterId, function(topicList) {
+                        var topicSelector = jQuery('#topic');
+                        jQuery(topicSelector).empty();
+                        jQuery(topicSelector).removeAttr('disabled');
+                        jQuery(topicSelector).append(jQuery('<option></option>')
+                            .attr('value', '!')
+                            .text('Please select a topic')
+                        );
+                        jQuery.each(topicList, function (index, topic) {
+                            jQuery(topicSelector)
+                                .append(
+                                    jQuery('<option></option>')
+                                        .attr('value', topic.name)
+                                        .text(topic.name)
+                                );
+                        });
+                    });
+                });
+
+                // Handle selecting a topic
+                jQuery('#topic').change(function() {
+                    var topic = jQuery(this).val();
+                    if (topic === '!') {
+                        // Clear partitions
+                        return
+                    }
+                    var clusterId = jQuery('#clusterId').val();
+                    var topic = jQuery('#topic').val();
+
+                    ApiClient.getTopicDetails(clusterId, topic, function(results) {
+                        var partitionSelector = jQuery('#partitions');
+                        jQuery(partitionSelector).empty();
+                        jQuery(partitionSelector).removeAttr('disabled');
+                        jQuery(partitionSelector).append(jQuery('<option></option>')
+                            .attr('value', '')
+                            .text('View all partitions')
+                            .attr('selected', 'selected')
+                        );
+
+                        jQuery.each(results.partitions, function(index, result) {
+                            jQuery(partitionSelector)
+                                .append(
+                                    jQuery('<option></option>')
+                                        .attr('value', result.partition)
+                                        .text(result.partition)
+                                );
+                        });
+                    });
+                });
+            });
+        </script>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <strong th:text="${viewForm.exists()} ? 'Edit View' : 'Create'">Create</strong>
+                        <span th:text="${viewForm.exists()} ? ${viewForm.name} : 'New View'"></span>
+                    </div>
+                    <form method="post" class="form-horizontal"
+                        th:action="@{/configuration/view/update}"
+                        th:object="${viewForm}">
+
+                        <div class="card-body">
+                            <!-- Name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="name">
+                                    View Name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="name" name="name" class="form-control" type="text"
+                                        placeholder="A unique name to identify this view"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{name}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Cluster -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="clusterId">
+                                    Cluster
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                        id="clusterId" name="clusterId" class="form-control"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{clusterId}">
+                                        <option value="">Please select a cluster</option>
+                                        <option th:each="cluster : ${clusters}"
+                                                th:value="${cluster.id}" th:text="${cluster.name}">Cluster Name</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('clusterId')}" th:errors="*{clusterId}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Topic -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="topic">
+                                    Topic
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                        id="topic" name="topic" class="form-control"
+                                        th:attr="disabled=${topics.isEmpty()}? 'disabled'"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{topic}">
+                                        <option value="!">Please select a topic</option>
+                                        <option th:if="${topics} != null" th:each="topic : ${topics}"
+                                                th:value="${topic.name}" th:text="${topic.name}">Topic Name</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('topic')}" th:errors="*{topic}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Key Message Formats -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="keyMessageFormatId">
+                                    Message Format for Keys
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                            id="keyMessageFormatId" name="keyMessageFormatId" class="form-control"
+                                            th:errorclass="is-invalid"
+                                            th:field="*{keyMessageFormatId}">
+                                        <option value="">Please select a message format</option>
+                                        <optgroup label="Default Formats">
+                                            <option th:each="messageFormat : ${defaultMessageFormats}"
+                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
+                                        </optgroup>
+                                        <optgroup label="Custom Formats">
+                                            <option th:each="messageFormat : ${customMessageFormats}"
+                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
+                                        </optgroup>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('keyMessageFormatId')}" th:errors="*{keyMessageFormatId}"/>
+                                </div>
+                            </div>
+
+                            <!-- Key Message Formats -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="valueMessageFormatId">
+                                    Message Format for Values
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                            id="valueMessageFormatId" name="valueMessageFormatId" class="form-control"
+                                            th:errorclass="is-invalid"
+                                            th:field="*{valueMessageFormatId}">
+                                        <option value="">Please select a message format</option>
+                                        <optgroup label="Default Formats">
+                                            <option th:each="messageFormat : ${defaultMessageFormats}"
+                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
+                                        </optgroup>
+                                        <optgroup label="Custom Formats">
+                                            <option th:each="messageFormat : ${customMessageFormats}"
+                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
+                                        </optgroup>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('valueMessageFormatId')}" th:errors="*{valueMessageFormatId}"/>
+                                </div>
+                            </div>
+
+                            <!-- View Options -->
+                            <h6>Enforced Filtering</h6>
+                            <hr>
+
+                            <!-- Partition Selector -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="partitions">
+                                    Partition Filtering
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                        id="partitions" name="partitions" class="form-control" multiple="multiple"
+                                        th:attr="disabled=${partitions.isEmpty()}? 'disabled'"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{partitions}">>
+                                        <option value="">View all partitions</option>
+                                        <option th:if="${partitions} != null" th:each="partition : ${partitions}"
+                                                th:value="${partition.partition}" th:text="${partition.partition}">PartitionId</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('partitions')}" th:errors="*{partitions}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Filter  -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="filters">
+                                    Record Filter
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                        id="filters" name="filters" class="form-control" multiple="multiple"
+                                        th:attr="disabled=${filterList.isEmpty()}? 'disabled'"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{filters}">>
+                                        <option value="">No filters</option>
+                                        <option th:if="${filterList} != null" th:each="filter : ${filterList}"
+                                                th:value="${filter.id}" th:text="${filter.name}">Filter</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('filters')}" th:errors="*{filters}"></div>
+                                </div>
+                            </div>
+
+                            <!-- View Options -->
+                            <h6>View Options</h6>
+                            <hr>
+
+                            <!-- Results Per Partition -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="resultsPerPartition">
+                                    Results per Partition
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="resultsPerPartition" name="resultsPerPartition" class="form-control" type="text"
+                                        placeholder="How many results to display per partition"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{resultsPerPartition}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('resultsPerPartition')}" th:errors="*{resultsPerPartition}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="card-footer">
+                            <input type="hidden" name="id" th:if="${viewForm.exists()}" th:field="*{id}"></input>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa fa-dot-circle-o"></i>
+                                Submit
+                            </button>
+                            <a class="btn btn-sm btn-danger" href="/configuration/view" role="button">
+                                <i class="fa fa-ban"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

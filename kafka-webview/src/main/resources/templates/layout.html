@@ -1,0 +1,265 @@
+<!--
+ * CoreUI - Open Source Bootstrap Admin Template
+ * @version v1.0.0
+ * @link http://coreui.io
+ * Copyright (c) 2017 creativeLabs Łukasz Holeczek
+ * @license MIT
+ -->
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="CoreUI - Open Source Bootstrap Admin Template">
+    <meta name="author" content="Łukasz Holeczek">
+    <meta name="keyword" content="Bootstrap,Admin,Template,Open,Source,AngularJS,Angular,Angular2,Angular 2,Angular4,Angular 4,jQuery,CSS,HTML,RWD,Dashboard,React,React.js,Vue,Vue.js">
+    <link rel="shortcut icon" href="/img/favicon.png">
+    <title>CoreUI - Open Source Bootstrap Admin Template</title>
+
+    <!-- Icons -->
+    <link href="/node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/node_modules/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
+
+    <!-- Main styles for this application -->
+    <link href="/css/style.css" rel="stylesheet">
+
+    <!-- Bootstrap and necessary plugins -->
+    <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="/node_modules/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/node_modules/pace-progress/pace.min.js"></script>
+
+    <!-- Plugins and scripts required by all views -->
+    <script src="/node_modules/chart.js/dist/Chart.min.js"></script>
+
+    <!-- Handlebars -->
+    <script src="/node_modules/handlebars/dist/handlebars.js"></script>
+
+    <!-- GenesisUI main scripts -->
+    <script src="/js/app.js"></script>
+</head>
+
+<!-- BODY options, add following classes to body to change options
+
+// Header options
+1. '.header-fixed'					- Fixed Header
+
+// Brand options
+1. '.brand-minimized'       - Minimized brand (Only symbol)
+
+// Sidebar options
+1. '.sidebar-fixed'					- Fixed Sidebar
+2. '.sidebar-hidden'				- Hidden Sidebar
+3. '.sidebar-off-canvas'		- Off Canvas Sidebar
+4. '.sidebar-minimized'			- Minimized Sidebar (Only icons)
+5. '.sidebar-compact'			  - Compact Sidebar
+
+// Aside options
+1. '.aside-menu-fixed'			- Fixed Aside Menu
+2. '.aside-menu-hidden'			- Hidden Aside Menu
+3. '.aside-menu-off-canvas'	- Off Canvas Aside Menu
+
+// Breadcrumb options
+1. '.breadcrumb-fixed'			- Fixed Breadcrumb
+
+// Footer options
+1. '.footer-fixed'					- Fixed footer
+
+-->
+
+<body class="app header-fixed breadcrumb-fixed sidebar-minimized aside-menu-fixed aside-menu-hidden">
+<header class="app-header navbar">
+    <a class="navbar-brand" href="#"></a>
+
+    <!--
+    <ul class="nav navbar-nav d-md-down-none">
+        <li class="nav-item px-3">
+            <a class="nav-link" href="#">Dashboard</a>
+        </li>
+        <li class="nav-item px-3">
+            <a class="nav-link" href="#">Users</a>
+        </li>
+        <li class="nav-item px-3">
+            <a class="nav-link" href="#">Settings</a>
+        </li>
+    </ul>
+    -->
+
+    <!-- Header Right Side -->
+    <ul class="nav navbar-nav ml-auto">
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                <img src="/img/avatars/6.jpg" class="img-avatar" alt="admin@bootstrapmaster.com">
+                <span class="d-md-down-none">admin</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+                <div class="dropdown-header text-center">
+                    <strong>Account</strong>
+                </div>
+                <a class="dropdown-item" href="#"><i class="fa fa-user"></i> Profile</a>
+                <a class="dropdown-item" href="#"><i class="fa fa-wrench"></i> Settings</a>
+                <div class="divider"></div>
+                <a class="dropdown-item" href="#"><i class="fa fa-lock"></i> Logout</a>
+            </div>
+        </li>
+    </ul>
+
+    <!-- Toggles Right Pull Out
+    <button class="navbar-toggler aside-menu-toggler" type="button">☰</button>
+    -->
+
+</header>
+
+<div class="app-body">
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="nav">
+                <!-- Home? -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/"><i class="icon-speedometer"></i>
+                        Home
+                    </a>
+                </li>
+                <li class="divider"></li>
+
+                <!-- Header -->
+                <!--<li class="nav-title">
+                    Topics
+                </li>-->
+
+                <!-- Clusters -->
+                <li class="nav-item nav-dropdown">
+                    <a class="nav-link nav-dropdown-toggle" href="#">
+                        <i class="icon-layers"></i> Clusters
+                    </a>
+                    <ul class="nav-dropdown-items">
+                        <li class="nav-item" th:each="cluster : ${MenuClusters}">
+                            <a class="nav-link" href="#">
+                                <i class="icon-layers"></i>
+                                [[${cluster.name}]]
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Views -->
+                <li class="nav-item nav-dropdown">
+                    <a class="nav-link nav-dropdown-toggle" href="#">
+                        <i class="icon-eye"></i> Views
+                    </a>
+                    <ul class="nav-dropdown-items">
+                        <li class="nav-item" th:each="view : ${MenuViews}">
+                            <a class="nav-link" th:href="@{/browser/{id}(id=${view.id})}">
+                                <i class="icon-eye"></i>
+                                [[${view.name}]]
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Setup -->
+                <li class="divider"></li>
+                <li class="nav-item nav-dropdown">
+                    <a class="nav-link nav-dropdown-toggle" href="#">
+                        <i class="icon-settings"></i>
+                        Configuration
+                    </a>
+                    <ul class="nav-dropdown-items">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/configuration/cluster" target="_top">
+                                <i class="icon-layers"></i>
+                                Clusters
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/configuration/messageFormat" target="_top">
+                                <i class="icon-envelope-letter"></i>
+                                Message Formats
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/configuration/filter" target="_top">
+                                <i class="icon-magnifier"></i>
+                                Filters
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/configuration/view" target="_top">
+                                <i class="icon-eye"></i>
+                                Views
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <button class="sidebar-minimizer brand-minimizer" type="button"></button>
+    </div>
+
+    <!-- Main content -->
+    <main class="main">
+
+        <!-- Breadcrumb -->
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">Home</li>
+            <li class="breadcrumb-item"><a href="#">Admin</a>
+            </li>
+            <li class="breadcrumb-item active">Dashboard</li>
+
+            <!-- Breadcrumb Menu-->
+            <section layout:fragment="breadcrumb-menu">
+                <!-- empty by default -->
+            </section>
+            <!--
+            <li class="breadcrumb-menu d-md-down-none">
+                <div class="btn-group" role="group" aria-label="Button group">
+                    <a class="btn" href="#"><i class="icon-speech"></i></a>
+                    <a class="btn" href="./"><i class="icon-graph"></i> &nbsp;Dashboard</a>
+                    <a class="btn" href="#"><i class="icon-settings"></i> &nbsp;Settings</a>
+                </div>
+            </li>
+            -->
+
+        </ol>
+
+        <div class="container-fluid">
+            <div class="animated fadeIn">
+                <!-- Include Flash Attribute Messages -->
+                <div th:replace="fragments/alert :: alert (message=${FlashMessage})"></div>
+
+                <!-- Start main content -->
+                <section layout:fragment="content">
+                    <p>Page content goes here</p>
+                </section>
+            </div>
+
+        </div>
+        <!-- /.container-fluid -->
+    </main>
+
+    <!-- Right Side Menu -->
+    <aside class="aside-menu" layout:fragment="aside-menu">
+    </aside>
+
+
+</div>
+
+<!-- Start footer -->
+<footer class="app-footer">
+    <!--<p layout:fragment="custom-footer"> -->
+        <a href="http://coreui.io">CoreUI</a> © 2017 creativeLabs.
+        <span class="float-right">
+            Powered by <a href="http://coreui.io">CoreUI</a>
+        </span>
+    <!--</p> -->
+</footer>
+
+</body>
+</html>
