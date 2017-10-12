@@ -34,10 +34,12 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
         while (recordIterator.hasNext()) {
             final ConsumerRecord record = recordIterator.next();
 
+            boolean result = true;
+
             // Iterate thru filters
             for (final RecordFilter recordFilter: recordFilters) {
                 // Pass through filter
-                final boolean result = recordFilter.filter(
+                result = recordFilter.filter(
                     record.topic(),
                     record.partition(),
                     record.offset(),
@@ -45,13 +47,19 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
                     record.value()
                 );
 
-                // If filter return true
-                if (result) {
-                    // Include it in the results
-                    final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-                    filteredRecords.putIfAbsent(topicPartition, new ArrayList<>());
-                    filteredRecords.get(topicPartition).add(record);
+                // If we return false
+                if (!result) {
+                    // break out of loop
+                    break;
                 }
+            }
+
+            // If filter return true
+            if (result) {
+                // Include it in the results
+                final TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+                filteredRecords.putIfAbsent(topicPartition, new ArrayList<>());
+                filteredRecords.get(topicPartition).add(record);
             }
         }
 

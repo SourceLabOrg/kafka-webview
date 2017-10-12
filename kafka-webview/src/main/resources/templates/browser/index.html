@@ -492,15 +492,11 @@
                         <table class="table table-sm">
                             <thead>
                             <tr>
-                                <th>Field</th>
+                                <th>Setting</th>
                                 <th>Value</th>
                             </tr>
                             </thead>
                             <tbody id="view-details">
-                                <tr>
-                                    <td>Partitions</td>
-                                    <td th:text="${view.partitions.isEmpty()}? 'All' : ${view.partitions}"></td>
-                                </tr>
                                 <tr th:title="${view.keyMessageFormat.classpath}">
                                     <td>Key</td>
                                     <td th:text="${view.keyMessageFormat.name}"></td>
@@ -508,6 +504,20 @@
                                 <tr th:title="${view.valueMessageFormat.classpath}">
                                     <td>Value</td>
                                     <td th:text="${view.valueMessageFormat.name}"></td>
+                                </tr>
+                                <tr>
+                                    <td>Partitions</td>
+                                    <td th:text="${view.partitions.isEmpty()}? 'All' : 'Filtered'"></td>
+                                </tr>
+                                <tr th:if="!${view.filters.isEmpty()}">
+                                    <td>Record Filters</td>
+                                    <td th:text="${view.filters.size()}"></td>
+                                </tr>
+                                <tr>
+                                    <td>Results per Partition</td>
+                                    <td>
+                                        [[${view.resultsPerPartition}]]
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Format Dates</td>
@@ -519,12 +529,119 @@
                                         </label>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>Results per Partition</td>
-                                    <td>
-                                        [[${view.resultsPerPartition}]]
-                                    </td>
-                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partitions -->
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapsePartitions"
+                        aria-expanded="false" aria-controls="collapsePartitions">
+                        <strong>Partitions</strong>
+                    </div>
+                    <div class="collapse" id="collapsePartitions">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Partition</th>
+                                <th>Enabled</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>0</td>
+                                <td>
+                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
+                                        <span class="switch-label" data-on="" data-off=""></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>
+                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
+                                        <span class="switch-label" data-on="" data-off=""></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>
+                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
+                                        <span class="switch-label" data-on="" data-off=""></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
+
+            <!-- Filters -->
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapseFilters"
+                        aria-expanded="false" aria-controls="collapseFilters">
+                        <strong>Filters</strong>
+                    </div>
+                    <div class="collapse" id="collapseFilters">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Filter</th>
+                                <th>Enabled</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Filter Name A</td>
+                                <td>
+                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
+                                        <span class="switch-label" data-on="" data-off=""></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Filter Name B</td>
+                                <td>
+                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
+                                        <span class="switch-label" data-on="" data-off=""></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Filter Name C</td>
+                                <td>
+                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
+                                        <span class="switch-label" data-on="" data-off=""></span>
+                                        <span class="switch-handle"></span>
+                                    </label>
+                                </td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
