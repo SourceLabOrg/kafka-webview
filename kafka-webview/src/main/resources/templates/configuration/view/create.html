@@ -16,6 +16,15 @@
             // On ready register handlers
             jQuery(document).ready(function() {
 
+                // Enable fancy multi-select
+                $('#filters_available').multiselect({
+                    right: '#filters',
+                    sort: false,
+                    submitAllLeft: false,
+                    submitAllRight: true
+                    }
+                );
+
                 // Handle selecting a cluster.
                 jQuery('#clusterId').change(function() {
                     var clusterId = jQuery('#clusterId').val();
@@ -155,7 +164,7 @@
                                                     th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
                                         </optgroup>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('keyMessageFormatId')}" th:errors="*{keyMessageFormatId}"/>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('keyMessageFormatId')}" th:errors="*{keyMessageFormatId}"></div>
                                 </div>
                             </div>
 
@@ -179,11 +188,30 @@
                                                     th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
                                         </optgroup>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('valueMessageFormatId')}" th:errors="*{valueMessageFormatId}"/>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('valueMessageFormatId')}" th:errors="*{valueMessageFormatId}"></div>
                                 </div>
                             </div>
 
                             <!-- View Options -->
+                            <h6>View Options</h6>
+                            <hr>
+
+                            <!-- Results Per Partition -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="resultsPerPartition">
+                                    Results per Partition
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="resultsPerPartition" name="resultsPerPartition" class="form-control" type="text"
+                                        placeholder="How many results to display per partition"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{resultsPerPartition}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('resultsPerPartition')}" th:errors="*{resultsPerPartition}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Enforced Filtering Options -->
                             <h6>Enforced Filtering</h6>
                             <hr>
 
@@ -211,37 +239,30 @@
                                 <label class="col-md-3 form-control-label" for="filters">
                                     Record Filter
                                 </label>
-                                <div class="col-md-9">
+                                <div class="col-md-4">
+                                    Available:
+                                    <select
+                                        id="filters_available" name="filters_available" class="form-control" multiple="multiple"
+                                        th:attr="disabled=${filterList.isEmpty()}? 'disabled'">
+                                        <option th:if="${filterList} != null" th:each="filter : ${filterList}"
+                                            th:value="${filter.id}" th:text="${filter.name}">Filter</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1 text-center my-auto">
+
+                                </div>
+                                <div class="col-md-4">
+                                    Enabled:
                                     <select
                                         id="filters" name="filters" class="form-control" multiple="multiple"
                                         th:attr="disabled=${filterList.isEmpty()}? 'disabled'"
                                         th:errorclass="is-invalid"
                                         th:field="*{filters}">>
-                                        <option value="">No filters</option>
-                                        <option th:if="${filterList} != null" th:each="filter : ${filterList}"
+                                        <option th:if="${viewForm.filters .contains(filter.id)}" th:each="filter : ${filterList}"
                                                 th:value="${filter.id}" th:text="${filter.name}">Filter</option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('filters')}" th:errors="*{filters}"></div>
                                 </div>
-                            </div>
-
-                            <!-- View Options -->
-                            <h6>View Options</h6>
-                            <hr>
-
-                            <!-- Results Per Partition -->
-                            <div class="form-group row">
-                                <label class="col-md-3 form-control-label" for="resultsPerPartition">
-                                    Results per Partition
-                                </label>
-                                <div class="col-md-9">
-                                    <input
-                                        id="resultsPerPartition" name="resultsPerPartition" class="form-control" type="text"
-                                        placeholder="How many results to display per partition"
-                                        th:errorclass="is-invalid"
-                                        th:value="*{resultsPerPartition}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('resultsPerPartition')}" th:errors="*{resultsPerPartition}"></div>
-                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('filters')}" th:errors="*{filters}"></div>
                             </div>
                         </div>
 
