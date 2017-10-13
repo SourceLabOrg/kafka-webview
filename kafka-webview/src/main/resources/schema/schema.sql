@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `filter` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Defines which Filters are enforced on which Views
-CREATE TABLE IF NOT EXISTS `view_to_filter` (
+CREATE TABLE IF NOT EXISTS `view_to_filter_enforced` (
   id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   filter_id INT(11) UNSIGNED NOT NULL,
   view_id INT(11) UNSIGNED NOT NULL,
@@ -85,3 +85,17 @@ CREATE TABLE IF NOT EXISTS `view_to_filter` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Defines which Filters are available for which Views
+CREATE TABLE IF NOT EXISTS `view_to_filter_optional` (
+  id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  filter_id INT(11) UNSIGNED NOT NULL,
+  view_id INT(11) UNSIGNED NOT NULL,
+  sort_order INT(11) UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by INT(11) UNSIGNED DEFAULT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_by INT(11) UNSIGNED DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY (filter_id, view_id),
+  FOREIGN KEY (filter_id) REFERENCES filter(id),
+  FOREIGN KEY (view_id) REFERENCES view(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

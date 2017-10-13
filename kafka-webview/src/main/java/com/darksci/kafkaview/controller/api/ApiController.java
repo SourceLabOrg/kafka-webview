@@ -276,13 +276,13 @@ public class ApiController {
             .withPartitions(view.getPartitionsAsSet())
             .withMaxResultsPerPartition(view.getResultsPerPartition());
 
-        // Check for filters
-        if (view.getFilters().isEmpty()) {
+        // Check for enforced filters
+        if (view.getEnforcedFilters().isEmpty()) {
             clientConfigBuilder.withNoFilters();
         } else {
             final List<RecordFilter> recordFilters = new ArrayList<>();
             // Build filter list
-            for (final Filter filter: view.getFilters()) {
+            for (final Filter filter: view.getEnforcedFilters()) {
                 // Build it
                 try {
                     final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(filter.getJar(), filter.getClasspath());

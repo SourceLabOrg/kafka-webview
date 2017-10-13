@@ -92,6 +92,10 @@
                         th:object="${viewForm}">
 
                         <div class="card-body">
+                            <!-- Topic Options -->
+                            <h6>Topic Selection</h6>
+                            <hr>
+
                             <!-- Name -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="name">
@@ -211,6 +215,35 @@
                                 </div>
                             </div>
 
+                            <!-- Optional Record Filters  -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="filters">
+                                    Optional Record Filters
+                                </label>
+                                <div class="col-md-4">
+                                    Available:
+                                    <select
+                                        id="optional_filters_available" name="optional_filters_available" class="form-control" multiple="multiple"
+                                        th:attr="disabled=${filterList.isEmpty()}? 'disabled'">
+                                        <option th:if="${filterList} != null" th:each="filter : ${filterList}"
+                                                th:value="${filter.id}" th:text="${filter.name}">Filter</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1 text-center my-auto"></div>
+                                <div class="col-md-4">
+                                    Enabled:
+                                    <!--<select-->
+                                        <!--id="optional_filters" name="optional_filters" class="form-control" multiple="multiple"-->
+                                        <!--th:attr="disabled=${filterList.isEmpty()}? 'disabled'"-->
+                                        <!--th:errorclass="is-invalid"-->
+                                        <!--th:field="*{filters}">>-->
+                                        <!--<option th:if="${viewForm.filters .contains(filter.id)}" th:each="filter : ${filterList}"-->
+                                                <!--th:value="${filter.id}" th:text="${filter.name}">Filter</option>-->
+                                    <!--</select>-->
+                                </div>
+                                <!--<div class="invalid-feedback" th:if="${#fields.hasErrors('filters')}" th:errors="*{filters}"></div>-->
+                            </div>
+
                             <!-- Enforced Filtering Options -->
                             <h6>Enforced Filtering</h6>
                             <hr>
@@ -234,10 +267,10 @@
                                 </div>
                             </div>
 
-                            <!-- Filter  -->
+                            <!-- Enforced Record Filter  -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="filters">
-                                    Record Filter
+                                    Record Filtering
                                 </label>
                                 <div class="col-md-4">
                                     Available:
@@ -252,17 +285,17 @@
 
                                 </div>
                                 <div class="col-md-4">
-                                    Enabled:
+                                    Enforced:
                                     <select
                                         id="filters" name="filters" class="form-control" multiple="multiple"
                                         th:attr="disabled=${filterList.isEmpty()}? 'disabled'"
                                         th:errorclass="is-invalid"
-                                        th:field="*{filters}">>
-                                        <option th:if="${viewForm.filters .contains(filter.id)}" th:each="filter : ${filterList}"
+                                        th:field="*{enforcedFilters}">>
+                                        <option th:if="${viewForm.enforcedFilters.contains(filter.id)}" th:each="filter : ${filterList}"
                                                 th:value="${filter.id}" th:text="${filter.name}">Filter</option>
                                     </select>
                                 </div>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('filters')}" th:errors="*{filters}"></div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('enforcedFilters')}" th:errors="*{enforcedFilters}"></div>
                             </div>
                         </div>
 

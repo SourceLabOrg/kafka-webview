@@ -40,10 +40,19 @@ public class ViewForm {
 
     /**
      * Empty set means NO filters.
+     * These filters are enforced on the view and can not be removed.
+     * These are good if you want to enforce what users can see.
      */
     @NotNull
-    private Set<Long> filters = new HashSet<>();
+    private Set<Long> enforcedFilters = new HashSet<>();
 
+    /**
+     * Empty set means NO filters.
+     * These filters can be optionally enabled at consume/display time by the user.
+     * These are good if you want to allow customizable filtering at consume time.
+     */
+    @NotNull
+    private Set<Long> availableFilters = new HashSet<>();
 
     @NotNull
     @Range(min = 1, max = 500)
@@ -113,12 +122,20 @@ public class ViewForm {
         this.partitions = partitions;
     }
 
-    public Set<Long> getFilters() {
-        return filters;
+    public Set<Long> getEnforcedFilters() {
+        return enforcedFilters;
     }
 
-    public void setFilters(final Set<Long> filters) {
-        this.filters = filters;
+    public void setEnforcedFilters(final Set<Long> filters) {
+        this.enforcedFilters = filters;
+    }
+
+    private Set<Long> getAvailableFilters() {
+        return availableFilters;
+    }
+
+    private void setAvailableFilters(final Set<Long> availableFilters) {
+        this.availableFilters = availableFilters;
     }
 
     public boolean exists() {
@@ -135,7 +152,8 @@ public class ViewForm {
             ", valueMessageFormatId=" + valueMessageFormatId +
             ", topic='" + topic + '\'' +
             ", partitions=" + partitions +
-            ", filters=" + filters +
+            ", enforcedFilters=" + enforcedFilters +
+            ", availableFilters=" + availableFilters +
             ", resultsPerPartition=" + resultsPerPartition +
             '}';
     }

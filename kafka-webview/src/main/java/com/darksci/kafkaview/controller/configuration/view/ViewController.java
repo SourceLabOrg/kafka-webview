@@ -137,11 +137,11 @@ public class ViewController extends BaseController {
         viewForm.setResultsPerPartition(view.getResultsPerPartition());
 
         // Set filters
-        final Set<Long> selectedFilters = new HashSet<>();
-        for (final Filter filter: view.getFilters()) {
-            selectedFilters.add(filter.getId());
+        final Set<Long> enforcedFilterIds = new HashSet<>();
+        for (final Filter filter: view.getEnforcedFilters()) {
+            enforcedFilterIds.add(filter.getId());
         }
-        viewForm.setFilters(selectedFilters);
+        viewForm.setEnforcedFilters(enforcedFilterIds);
 
         return createViewForm(viewForm, model);
     }
@@ -212,9 +212,9 @@ public class ViewController extends BaseController {
         view.setResultsPerPartition(viewForm.getResultsPerPartition());
         view.setPartitions(partitionsStr);
 
-        // Loop over filters
+        // Loop over enforced filters
         final Set<Long> setFilterIds = new HashSet<>();
-        for (final Long filterId : viewForm.getFilters()) {
+        for (final Long filterId : viewForm.getEnforcedFilters()) {
             // Skip invalids
             if (filterId == null || filterId.equals(0)) {
                 continue;
@@ -225,18 +225,18 @@ public class ViewController extends BaseController {
             if (filter == null) {
                 continue;
             }
-            view.getFilters().add(filter);
+            view.getEnforcedFilters().add(filter);
             setFilterIds.add(filterId);
         }
 
         final Set<Filter> toRemoveFilters = new HashSet<>();
-        for (final Filter filter: view.getFilters()) {
+        for (final Filter filter: view.getEnforcedFilters()) {
             if (!setFilterIds.contains(filter.getId())) {
                 toRemoveFilters.add(filter);
             }
         }
         if (!toRemoveFilters.isEmpty()) {
-            view.getFilters().removeAll(toRemoveFilters);
+            view.getEnforcedFilters().removeAll(toRemoveFilters);
         }
 
         viewRepository.save(view);
