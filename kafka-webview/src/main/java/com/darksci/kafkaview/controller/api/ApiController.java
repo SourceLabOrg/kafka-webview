@@ -40,8 +40,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * Handles API requests.
@@ -78,6 +82,7 @@ public class ApiController {
         final View view = viewRepository.findOne(id);
         if (view == null) {
             // TODO Return some kind of error.
+            throw new RuntimeException("Unable to find view!");
         }
 
         // Optionally over ride results per partition
@@ -88,9 +93,36 @@ public class ApiController {
 
         // Optionally over ride partition filter,
         // but only if the view has no explicit partition filter setup!
-        if (view.getPartitions() == null || view.getPartitions().isEmpty() && partitions != null) {
-            // TODO validate the incoming partitions first!
-            view.setPartitions(partitions);
+        if (partitions != null && !partitions.isEmpty()) {
+            final boolean filterPartitions;
+            if (view.getPartitions() == null || view.getPartitions().isEmpty()) {
+                filterPartitions = false;
+            } else {
+                filterPartitions = true;
+            }
+
+            // Create a string of partitions
+            final Set<Integer> allowedPartitions = view.getPartitionsAsSet();
+            final Set<Integer> configuredPartitions = new HashSet<>();
+
+            // Convert the String array into an actual array
+            for (final String requestedPartitionStr: partitions.split(",")) {
+                try {
+                    // If its not an allowed partition skip it
+                    final Integer requestedPartition = Integer.parseInt(requestedPartitionStr);
+                    if (filterPartitions && !allowedPartitions.contains(requestedPartition)) {
+                        continue;
+                    }
+                    configuredPartitions.add(requestedPartition);
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+            }
+
+            // Finally override config if we have something
+            if (!configuredPartitions.isEmpty()) {
+                view.setPartitions(configuredPartitions.stream().map(Object::toString).collect(Collectors.joining(",")));
+            }
         }
 
         // Create consumer
