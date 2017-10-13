@@ -7,8 +7,12 @@ import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Filter;
+import com.darksci.kafkaview.model.ViewToFilterEnforced;
+import com.darksci.kafkaview.model.ViewToFilterOptional;
 import com.darksci.kafkaview.plugin.filter.RecordFilter;
 import com.darksci.kafkaview.repository.FilterRepository;
+import com.darksci.kafkaview.repository.ViewToFilterEnforcedRepository;
+import com.darksci.kafkaview.repository.ViewToFilterOptionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +28,7 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 @Controller
 @RequestMapping("/configuration/filter")
@@ -36,7 +41,13 @@ public class FilterController extends BaseController {
     private PluginFactory<RecordFilter> recordFilterPluginFactory;
 
     @Autowired
-    protected FilterRepository filterRepository;
+    private FilterRepository filterRepository;
+
+    @Autowired
+    private ViewToFilterEnforcedRepository viewToFilterEnforcedRepository;
+
+    @Autowired
+    private ViewToFilterOptionalRepository viewToFilterOptionalRepository;
 
     /**
      * GET Displays main filters index.
@@ -134,11 +145,18 @@ public class FilterController extends BaseController {
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to remove filter!"));
         } else {
             try {
-                // Delete jar from disk
-                Files.delete(recordFilterPluginFactory.getPathForJar(filter.getJar()));
+                // Delete any children
+                final List<ViewToFilterEnforced> enforcedList = viewToFilterEnforcedRepository.findByFilterId(id);
+                final List<ViewToFilterOptional> optionalList = viewToFilterOptionalRepository.findByFilterId(id);
+
+                viewToFilterEnforcedRepository.delete(enforcedList);
+                viewToFilterOptionalRepository.delete(optionalList);
 
                 // Delete entity
                 filterRepository.delete(id);
+
+                // Delete jar from disk
+                Files.delete(recordFilterPluginFactory.getPathForJar(filter.getJar()));
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted filter!"));
             } catch (IOException e) {
                 e.printStackTrace();

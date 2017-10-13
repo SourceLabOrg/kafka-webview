@@ -40,6 +40,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +78,7 @@ public class ApiController {
         final @PathVariable Long id,
         final @RequestParam(name = "action", required = false) String action,
         final @RequestParam(name = "partitions", required = false) String partitions,
+        final @RequestParam(name = "filters", required = false) String filters,
         final @RequestParam(name = "results_per_partition", required = false) Integer resultsPerPartition) {
 
         // Retrieve the view definition
@@ -91,8 +94,8 @@ public class ApiController {
             view.setResultsPerPartition(resultsPerPartition);
         }
 
-        // Optionally over ride partition filter,
-        // but only if the view has no explicit partition filter setup!
+        // Determine if we should apply filters over partitions
+        // but if the view has enforced partition filtering, don't bypass its logic.
         if (partitions != null && !partitions.isEmpty()) {
             final boolean filterPartitions;
             if (view.getPartitions() == null || view.getPartitions().isEmpty()) {
@@ -125,9 +128,42 @@ public class ApiController {
             }
         }
 
+        // Determine if we should apply record filters
+        // but if the view has enforced record filtering, don't bypass its logic, add onto it.
+        final Set<Filter> configuredFilters = new HashSet<>();
+        if (filters != null && !filters.isEmpty()) {
+            // Retrieve all available filters
+            final Map<Long, Filter> allowedFilters = new HashMap<>();
+
+            // Build list of allowed filters
+            for (final Filter allowedFilter : view.getOptionalFilters()) {
+                allowedFilters.put(allowedFilter.getId(), allowedFilter);
+            }
+
+            // Convert the String array into an actual array
+            for (final String requestedFilterStr: filters.split(",")) {
+                // Convert to a Long
+                try {
+                    // Convert to a long
+                    final Long requestedFilterId = Long.parseLong(requestedFilterStr);
+
+                    // See if its an allowed filter
+                    if (!allowedFilters.containsKey(requestedFilterId)) {
+                        // Skip not allowed filters
+                        continue;
+                    }
+                    // Configure it
+                    configuredFilters.add(allowedFilters.get(requestedFilterId));
+                } catch (NumberFormatException e) {
+                    // Skip invalid values
+                    continue;
+                }
+            }
+        }
+
         // Create consumer
         final KafkaResults results;
-        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view)) {
+        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, configuredFilters)) {
             // move directions if needed
             if ("next".equals(action)) {
                 // Do nothing!
@@ -159,7 +195,7 @@ public class ApiController {
         }
 
         // Create consumer
-        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view)) {
+        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, new HashSet<>())) {
             return transactionalKafkaClient.seek(partitionOffsetMap);
         }
     }
@@ -234,7 +270,7 @@ public class ApiController {
         return new KafkaOperations(adminClient);
     }
 
-    private TransactionalKafkaClient setup(final View view) {
+    private TransactionalKafkaClient setup(final View view, final Collection<Filter> filterList) {
         // Construct a consumerId based on user
         final String consumerId = "MyUserId1";
 
@@ -276,13 +312,15 @@ public class ApiController {
             .withPartitions(view.getPartitionsAsSet())
             .withMaxResultsPerPartition(view.getResultsPerPartition());
 
-        // Check for enforced filters
-        if (view.getEnforcedFilters().isEmpty()) {
+        // Add enforced filters to our filterList
+        filterList.addAll(view.getEnforcedFilters());
+
+        if (filterList.isEmpty()) {
             clientConfigBuilder.withNoFilters();
         } else {
             final List<RecordFilter> recordFilters = new ArrayList<>();
             // Build filter list
-            for (final Filter filter: view.getEnforcedFilters()) {
+            for (final Filter filter: filterList) {
                 // Build it
                 try {
                     final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(filter.getJar(), filter.getClasspath());

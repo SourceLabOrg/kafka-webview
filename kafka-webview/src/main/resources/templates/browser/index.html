@@ -134,7 +134,8 @@
                 // Build request params
                 var params = {
                     action: action,
-                    partitions: getToggledPartitions().join()
+                    partitions: getToggledPartitions().join(),
+                    filters: getToggledFilters().join()
                 };
 
                 ApiClient.consume(ConsumerInfo.viewId, params, handleConsumeResults);
@@ -233,12 +234,14 @@
                     // If they canceled the search.
                     showNoResultsFound('Middle');
                 } else if (hasMore) {
+                    console.log("REconsuming");
                     // If we have more offsets to page through
                     // Show in UI that we're searching..
                     showStillSearching();
 
                     // Fire next api call
-                    ApiClient.consume(ConsumerInfo.viewId, ConsumerInfo.direction, handleConsumeResults);
+                    executeConsume(ConsumerInfo.direction);
+                    //ApiClient.consume(ConsumerInfo.viewId, ConsumerInfo.direction, handleConsumeResults);
                 } else {
                     // Show in UI that no results found.
                     var positionStr = 'Tail';
