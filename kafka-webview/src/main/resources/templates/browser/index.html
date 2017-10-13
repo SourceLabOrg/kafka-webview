@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
 <head>
@@ -350,6 +351,19 @@
                 });
                 return enabledPartitions;
             }
+
+            /**
+             * Returns filter Ids that are toggled as enabled.
+             * @returns {Array}
+             */
+            function getToggledFilters() {
+                var enabledFilters = [];
+                jQuery('input.filter-toggle:checked').each(function(index, checkboxEl) {
+                    enabledFilters.push(jQuery(checkboxEl).val());
+                });
+                return enabledFilters;
+            }
+
         </script>
         <div class="row">
             <div class="col-lg-12">
@@ -589,8 +603,8 @@
                                     <td>Partitions</td>
                                     <td th:text="${view.partitions.isEmpty()}? 'All' : 'Filtered'"></td>
                                 </tr>
-                                <tr th:if="!${view.filters.isEmpty()}">
-                                    <td>Record Filters</td>
+                                <tr th:if="!${view.enforcedFilters.isEmpty()}">
+                                    <td>Enforced Record Filters</td>
                                     <td th:text="${view.filters.size()}"></td>
                                 </tr>
                                 <tr>
@@ -682,7 +696,7 @@
             </div>
             <hr class="mx-3 my-0">
 
-            <!-- Record Filters -->
+            <!-- Optional Record Filters -->
             <hr class="mx-3 my-0">
             <div class="callout callout-info m-0 py-3">
                 <div>
@@ -691,47 +705,27 @@
                         data-toggle="collapse"
                         href="#collapseFilters"
                         aria-expanded="false" aria-controls="collapseFilters">
-                        <strong>Filters</strong>
+                        <strong>Record Filters</strong>
                     </div>
                     <div class="collapse" id="collapseFilters">
                         <table class="table table-sm">
                             <thead>
-                            <tr>
-                                <th>Filter</th>
-                                <th>Enabled</th>
-                            </tr>
+                                <tr>
+                                    <th>Filter</th>
+                                    <th>Enabled</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td>Filter Name A</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Filter Name B</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Filter Name C</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
+                                <tr th:each="filter : ${view.optionalFilters}">
+                                    <td th:text="${filter.name}">Name</td>
+                                    <td>
+                                        <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                            <input class="switch-input filter-toggle" type="checkbox" id="" th:value="${filter.id}">
+                                            <span class="switch-label" data-on="" data-off=""></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
