@@ -146,24 +146,20 @@ function init(url) {
 
 // Client Properties
 var ApiClient = {
-  consume: function(viewId, action, callback) {
-      var actionStr = '';
-      if (action != null) {
-          actionStr = 'action=' + action;
-      }
-      jQuery.getJSON('/api/consumer/view/' + viewId, actionStr, callback);
+  consume: function(viewId, params, callback) {
+      jQuery.getJSON('/api/consumer/view/' + viewId, params, callback);
   },
   consumeNext: function(viewId, callback) {
-      ApiClient.consume(viewId, 'next', callback);
+      ApiClient.consume(viewId, {action:'next'}, callback);
   },
   consumePrevious: function(viewId, callback) {
-      ApiClient.consume(viewId, 'previous', callback);
+      ApiClient.consume(viewId, {action:'previous'}, callback);
   },
   consumeTail: function(viewId, callback) {
-      ApiClient.consume(viewId, 'tail', callback);
+      ApiClient.consume(viewId, {action:'tail'}, callback);
   },
   consumeHead: function(viewId, callback) {
-      ApiClient.consume(viewId, 'head', callback);
+      ApiClient.consume(viewId, {action:'head'}, callback);
   },
   setConsumerState: function(viewId, partitionOffsetJson, callback) {
       //jQuery.post('/api/consumer/view/' + viewId + '/offsets', partitionOffsetMap, callback);

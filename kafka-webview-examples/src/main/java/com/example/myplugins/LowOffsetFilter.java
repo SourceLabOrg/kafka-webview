@@ -10,15 +10,10 @@ import java.util.Map;
 public class LowOffsetFilter implements RecordFilter {
     @Override
     public boolean filter(final String topic, final int partition, final long offset, final Object key, final Object value) {
-        if (value == null) {
-            return false;
-        }
-        final Number number = (Number) value;
-        return number.longValue() > 600;
+        return offset > 600;
     }
 
     @Override
     public void configure(final Map<String, ?> configs) {
-
     }
 }

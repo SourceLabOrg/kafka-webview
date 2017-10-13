@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
 <head>
@@ -21,19 +22,28 @@
                 // View Options
                 viewId: '[[${view.id}]]',
                 formatDates: true,
-                resultsPerPartition: '[[${view.resultsPerPartition}]]'
+                resultsPerPartition: '[[${view.resultsPerPartition}]]',
+                partitions: '[[${view.partitions}]]'
             };
 
             // On load, fire off ajax request to load results.
             jQuery(document).ready(function() {
-                // Fire off initial request
-                executeConsume('next');
 
-                // Request Cluster Information
-                ApiClient.getClusterNodes('[[${cluster.id}]]', handleClusterNodeResults);
-
+                // Chain initial ajax requests.
                 // Request Topic Information
-                ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', handleTopicDetailResults);
+                ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', function(results) {
+                    // Handle results
+                    handleTopicDetailResults(results);
+
+                    // Request Cluster Information
+                    ApiClient.getClusterNodes('[[${cluster.id}]]', function(results) {
+                        // Handle results
+                        handleClusterNodeResults(results);
+
+                        // Fire off initial consume request
+                        executeConsume('next');
+                    });
+                });
 
                 // Control Events
                 jQuery('#control-head').click(function() {
@@ -121,7 +131,14 @@
                 // Record state
                 ConsumerInfo.direction = action;
 
-                ApiClient.consume(ConsumerInfo.viewId, action, handleConsumeResults);
+                // Build request params
+                var params = {
+                    action: action,
+                    partitions: getToggledPartitions().join(),
+                    filters: getToggledFilters().join()
+                };
+
+                ApiClient.consume(ConsumerInfo.viewId, params, handleConsumeResults);
             }
 
             function handleConsumeResults(results) {
@@ -217,12 +234,14 @@
                     // If they canceled the search.
                     showNoResultsFound('Middle');
                 } else if (hasMore) {
+                    console.log("REconsuming");
                     // If we have more offsets to page through
                     // Show in UI that we're searching..
                     showStillSearching();
 
                     // Fire next api call
-                    ApiClient.consume(ConsumerInfo.viewId, ConsumerInfo.direction, handleConsumeResults);
+                    executeConsume(ConsumerInfo.direction);
+                    //ApiClient.consume(ConsumerInfo.viewId, ConsumerInfo.direction, handleConsumeResults);
                 } else {
                     // Show in UI that no results found.
                     var positionStr = 'Tail';
@@ -285,11 +304,69 @@
                 var partitionDetails = jQuery('#partition-details');
                 jQuery(partitionDetails).empty();
 
+                // List Partition Details
                 jQuery.each(results.partitions, function(index, result) {
                     jQuery(partitionDetails).append('<tr><td>' + result.partition + '</td><td>' + result.replicas.length + '</td><td>' + result.isr.length + '</td></tr>');
                 });
 
+                // Get and compile template
+                var source   = jQuery('#partition-toggle-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#partitionSelectorTable');
+
+                // Show Partition Toggles
+                jQuery(table).empty();
+
+                // If we have no enforced partition filters
+                var partitions = [];
+                if (ConsumerInfo.partitions.length == 0) {
+                    // Build from results
+                    jQuery.each(results.partitions, function (index, result) {
+                        partitions.push(result.partition);
+                    });
+                } else {
+                    jQuery(ConsumerInfo.partitions.split(',')).each(function(index, partition) {
+                        partitions.push(partition);
+                    });
+                }
+
+                // Build and append template for each partition
+                jQuery(partitions).each(function(index, partition) {
+                    var properties = {
+                        partition: partition,
+                        enabled: true
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
+                });
             }
+
+            /**
+             * Returns partitions that are toggled as enabled.
+             * @returns {Array}
+             */
+            function getToggledPartitions() {
+                var enabledPartitions = [];
+                jQuery('input.partition-toggle:checked').each(function(index, checkboxEl) {
+                    enabledPartitions.push(jQuery(checkboxEl).val());
+                });
+                return enabledPartitions;
+            }
+
+            /**
+             * Returns filter Ids that are toggled as enabled.
+             * @returns {Array}
+             */
+            function getToggledFilters() {
+                var enabledFilters = [];
+                jQuery('input.filter-toggle:checked').each(function(index, checkboxEl) {
+                    enabledFilters.push(jQuery(checkboxEl).val());
+                });
+                return enabledFilters;
+            }
+
         </script>
         <div class="row">
             <div class="col-lg-12">
@@ -395,6 +472,20 @@
                 <td>{{value}}</td>
             </tr>
         </script>
+
+        <!-- Partition Toggle Template -->
+        <script id="partition-toggle-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{partition}}</td>
+                <td>
+                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                        <input class="switch-input partition-toggle" checked="{{enabled}}" type="checkbox" id="partitionToggle{{partition}}" value="{{partition}}">
+                        <span class="switch-label" data-on="" data-off=""></span>
+                        <span class="switch-handle"></span>
+                    </label>
+                </td>
+            </tr>
+        </script>
     </div>
 </section>
 
@@ -424,6 +515,8 @@
                 </small>
             </div>
             <hr class="transparent mx-3 my-0">
+
+            <!-- Cluster Details -->
             <div class="callout callout-info m-0 py-3">
                 <div>
                     <div
@@ -451,6 +544,8 @@
                 </div>
             </div>
             <hr class="mx-3 my-0">
+
+            <!-- Topic Details -->
             <div class="callout callout-info m-0 py-3">
                 <div>
                     <div
@@ -464,7 +559,7 @@
                         <table class="table table-sm">
                             <thead>
                             <tr>
-                                <th title="Partition Id">#</th>
+                                <th title="Partition Id">Partition</th>
                                 <th title="Replica Count">Replicas</th>
                                 <th title="In Sync Replica Count">ISRs</th>
                             </tr>
@@ -479,6 +574,8 @@
                 </div>
             </div>
             <hr class="mx-3 my-0">
+
+            <!-- View Details -->
             <div class="callout callout-info m-0 py-3">
                 <div>
                     <div
@@ -509,8 +606,8 @@
                                     <td>Partitions</td>
                                     <td th:text="${view.partitions.isEmpty()}? 'All' : 'Filtered'"></td>
                                 </tr>
-                                <tr th:if="!${view.filters.isEmpty()}">
-                                    <td>Record Filters</td>
+                                <tr th:if="!${view.enforcedFilters.isEmpty()}">
+                                    <td>Enforced Record Filters</td>
                                     <td th:text="${view.filters.size()}"></td>
                                 </tr>
                                 <tr>
@@ -529,119 +626,6 @@
                                         </label>
                                     </td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Partitions -->
-            <hr class="mx-3 my-0">
-            <div class="callout callout-info m-0 py-3">
-                <div>
-                    <div
-                        style="cursor: pointer;"
-                        data-toggle="collapse"
-                        href="#collapsePartitions"
-                        aria-expanded="false" aria-controls="collapsePartitions">
-                        <strong>Partitions</strong>
-                    </div>
-                    <div class="collapse" id="collapsePartitions">
-                        <table class="table table-sm">
-                            <thead>
-                            <tr>
-                                <th>Partition</th>
-                                <th>Enabled</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>0</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <hr class="mx-3 my-0">
-
-            <!-- Filters -->
-            <hr class="mx-3 my-0">
-            <div class="callout callout-info m-0 py-3">
-                <div>
-                    <div
-                        style="cursor: pointer;"
-                        data-toggle="collapse"
-                        href="#collapseFilters"
-                        aria-expanded="false" aria-controls="collapseFilters">
-                        <strong>Filters</strong>
-                    </div>
-                    <div class="collapse" id="collapseFilters">
-                        <table class="table table-sm">
-                            <thead>
-                            <tr>
-                                <th>Filter</th>
-                                <th>Enabled</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>Filter Name A</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Filter Name B</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Filter Name C</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -688,98 +672,69 @@
             </div>
             <hr class="transparent mx-3 my-0">
 
-            <div class="aside-options">
-                <div class="clearfix mt-4">
-                    <small><b>Option 1</b>
-                    </small>
-                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
-                        <input type="checkbox" class="switch-input" checked="">
-                        <span class="switch-label" data-on="On" data-off="Off"></span>
-                        <span class="switch-handle"></span>
-                    </label>
-                </div>
+            <!-- Partition Filter -->
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
                 <div>
-                    <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapsePartitions"
+                        aria-expanded="false" aria-controls="collapsePartitions">
+                        <strong>Partitions</strong>
+                    </div>
+                    <div class="collapse" id="collapsePartitions">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Partition</th>
+                                <th>Enabled</th>
+                            </tr>
+                            </thead>
+                            <tbody id="partitionSelectorTable">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+            <hr class="mx-3 my-0">
 
-            <div class="aside-options">
-                <div class="clearfix mt-3">
-                    <small><b>Option 2</b>
-                    </small>
-                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
-                        <input type="checkbox" class="switch-input">
-                        <span class="switch-label" data-on="On" data-off="Off"></span>
-                        <span class="switch-handle"></span>
-                    </label>
-                </div>
+            <!-- Optional Record Filters -->
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
                 <div>
-                    <small class="text-muted">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapseFilters"
+                        aria-expanded="false" aria-controls="collapseFilters">
+                        <strong>Record Filters</strong>
+                    </div>
+                    <div class="collapse" id="collapseFilters">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Filter</th>
+                                    <th>Enabled</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="filter : ${view.optionalFilters}">
+                                    <td th:text="${filter.name}">Name</td>
+                                    <td>
+                                        <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                            <input class="switch-input filter-toggle" type="checkbox" id="" th:value="${filter.id}">
+                                            <span class="switch-label" data-on="" data-off=""></span>
+                                            <span class="switch-handle"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-
-            <div class="aside-options">
-                <div class="clearfix mt-3">
-                    <small><b>Option 3</b>
-                    </small>
-                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
-                        <input type="checkbox" class="switch-input">
-                        <span class="switch-label" data-on="On" data-off="Off"></span>
-                        <span class="switch-handle"></span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="aside-options">
-                <div class="clearfix mt-3">
-                    <small><b>Option 4</b>
-                    </small>
-                    <label class="switch switch-text switch-pill switch-success switch-sm float-right">
-                        <input type="checkbox" class="switch-input" checked="">
-                        <span class="switch-label" data-on="On" data-off="Off"></span>
-                        <span class="switch-handle"></span>
-                    </label>
-                </div>
-            </div>
-
-            <hr>
-            <h6>System Utilization</h6>
-
-            <div class="text-uppercase mb-1 mt-4">
-                <small><b>CPU Usage</b>
-                </small>
-            </div>
-            <div class="progress progress-xs">
-                <div class="progress-bar bg-info" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted">348 Processes. 1/4 Cores.</small>
-
-            <div class="text-uppercase mb-1 mt-2">
-                <small><b>Memory Usage</b>
-                </small>
-            </div>
-            <div class="progress progress-xs">
-                <div class="progress-bar bg-warning" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted">11444GB/16384MB</small>
-
-            <div class="text-uppercase mb-1 mt-2">
-                <small><b>SSD 1 Usage</b>
-                </small>
-            </div>
-            <div class="progress progress-xs">
-                <div class="progress-bar bg-danger" role="progressbar" style="width: 95%" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted">243GB/256GB</small>
-
-            <div class="text-uppercase mb-1 mt-2">
-                <small><b>SSD 2 Usage</b>
-                </small>
-            </div>
-            <div class="progress progress-xs">
-                <div class="progress-bar bg-success" role="progressbar" style="width: 10%" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted">25GB/256GB</small>
+            <hr class="mx-3 my-0">
         </div>
     </div>
 </aside>

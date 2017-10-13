@@ -24,7 +24,6 @@ import java.util.TreeMap;
 
 public class TransactionalKafkaClient implements AutoCloseable {
     private final static Logger logger = LoggerFactory.getLogger(TransactionalKafkaClient.class);
-    private final static long TIMEOUT = 1000L;
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
@@ -37,7 +36,7 @@ public class TransactionalKafkaClient implements AutoCloseable {
 
     private List<KafkaResult> consume() {
         final List<KafkaResult> kafkaResultList = new ArrayList<>();
-        final ConsumerRecords consumerRecords = kafkaConsumer.poll(TIMEOUT);
+        final ConsumerRecords consumerRecords = kafkaConsumer.poll(clientConfig.getPollTimeoutMs());
 
         logger.info("Consumed {} records", consumerRecords.count());
         final Iterator<ConsumerRecord> recordIterator = consumerRecords.iterator();

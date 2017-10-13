@@ -31,7 +31,6 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @Controller
@@ -79,7 +78,7 @@ public class ViewController extends BaseController {
         model.addAttribute("topics", new ArrayList<>());
         model.addAttribute("partitions", new ArrayList<>());
 
-        // Retrieve any filters
+        // Retrieve all filters
         model.addAttribute("filterList", filterRepository.findAllByOrderByNameAsc());
 
         if (viewForm.getClusterId() != null) {
@@ -137,12 +136,19 @@ public class ViewController extends BaseController {
         viewForm.setPartitions(view.getPartitionsAsSet());
         viewForm.setResultsPerPartition(view.getResultsPerPartition());
 
-        // Set filters
-        final Set<Long> selectedFilters = new HashSet<>();
-        for (final Filter filter: view.getFilters()) {
-            selectedFilters.add(filter.getId());
+        // Set enforced filters
+        final Set<Long> enforcedFilterIds = new HashSet<>();
+        for (final Filter filter: view.getEnforcedFilters()) {
+            enforcedFilterIds.add(filter.getId());
         }
-        viewForm.setFilters(selectedFilters);
+        viewForm.setEnforcedFilters(enforcedFilterIds);
+
+        // Set optional filters
+        final Set<Long> optionalFilterIds = new HashSet<>();
+        for (final Filter filter: view.getOptionalFilters()) {
+            optionalFilterIds.add(filter.getId());
+        }
+        viewForm.setOptionalFilters(optionalFilterIds);
 
         return createViewForm(viewForm, model);
     }
@@ -213,9 +219,31 @@ public class ViewController extends BaseController {
         view.setResultsPerPartition(viewForm.getResultsPerPartition());
         view.setPartitions(partitionsStr);
 
-        // Loop over filters
-        final Set<Long> setFilterIds = new HashSet<>();
-        for (final Long filterId : viewForm.getFilters()) {
+        // Handle enforced filters
+        handleFilterSubmission(view.getEnforcedFilters(), viewForm.getEnforcedFilters());
+
+        // Handle optional filters
+        handleFilterSubmission(view.getOptionalFilters(), viewForm.getOptionalFilters());
+
+        // Persist the view
+        viewRepository.save(view);
+
+        // Set flash message
+        redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess(successMessage));
+
+        // redirect to cluster index
+        return "redirect:/configuration/view";
+    }
+
+    /**
+     * Handle adding/removing filters submitted.
+     * @param currentlySetFilters Set of Filters currently set on the view.
+     * @param submittedFilterIds Set of FilterIds submitted with the form.
+     */
+    private void handleFilterSubmission(final Set<Filter> currentlySetFilters, final Set<Long> submittedFilterIds) {
+        // Loop over filters submitted
+        final Set<Long> enabledFilterIds = new HashSet<>();
+        for (final Long filterId : submittedFilterIds) {
             // Skip invalids
             if (filterId == null || filterId.equals(0)) {
                 continue;
@@ -226,27 +254,19 @@ public class ViewController extends BaseController {
             if (filter == null) {
                 continue;
             }
-            view.getFilters().add(filter);
-            setFilterIds.add(filterId);
+            currentlySetFilters.add(filter);
+            enabledFilterIds.add(filterId);
         }
 
         final Set<Filter> toRemoveFilters = new HashSet<>();
-        for (final Filter filter: view.getFilters()) {
-            if (!setFilterIds.contains(filter.getId())) {
+        for (final Filter filter: currentlySetFilters) {
+            if (!enabledFilterIds.contains(filter.getId())) {
                 toRemoveFilters.add(filter);
             }
         }
         if (!toRemoveFilters.isEmpty()) {
-            view.getFilters().removeAll(toRemoveFilters);
+            currentlySetFilters.removeAll(toRemoveFilters);
         }
-
-        viewRepository.save(view);
-
-        // Set flash message
-        redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess(successMessage));
-
-        // redirect to cluster index
-        return "redirect:/configuration/view";
     }
 
     /**

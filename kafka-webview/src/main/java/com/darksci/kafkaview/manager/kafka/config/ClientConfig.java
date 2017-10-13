@@ -30,7 +30,15 @@ public class ClientConfig {
      */
     private final int maxResultsPerPartition;
 
+    /**
+     * Turn auto commit on/off.
+     */
     private boolean isAutoCommitEnabled = false;
+
+    /**
+     * How long to timeout poll requests.
+     */
+    private long pollTimeoutMs = 2000;
 
     public ClientConfig(final TopicConfig topicConfig, final FilterConfig filterConfig, final String consumerId) {
         this(topicConfig, filterConfig, consumerId, new ArrayList<>(), 10);
@@ -71,6 +79,10 @@ public class ClientConfig {
         return maxResultsPerPartition;
     }
 
+    public long getPollTimeoutMs() {
+        return pollTimeoutMs;
+    }
+
     /**
      * Should we limit what partitions we read from?
      */
@@ -84,6 +96,10 @@ public class ClientConfig {
             return false;
         }
         return !partitionIds.contains(partitionId);
+    }
+
+    public Set<Integer> getPartitionIds() {
+        return partitionIds;
     }
 
     @Override

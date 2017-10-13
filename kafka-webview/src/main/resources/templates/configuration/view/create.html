@@ -16,6 +16,23 @@
             // On ready register handlers
             jQuery(document).ready(function() {
 
+                // Enable fancy multi-select
+                $('#enforced_filters_available').multiselect({
+                    right: '#enforced_filters',
+                    sort: false,
+                    submitAllLeft: false,
+                    submitAllRight: true
+                    }
+                );
+
+                $('#optional_filters_available').multiselect({
+                        right: '#optional_filters',
+                        sort: false,
+                        submitAllLeft: false,
+                        submitAllRight: true
+                    }
+                );
+
                 // Handle selecting a cluster.
                 jQuery('#clusterId').change(function() {
                     var clusterId = jQuery('#clusterId').val();
@@ -83,6 +100,10 @@
                         th:object="${viewForm}">
 
                         <div class="card-body">
+                            <!-- Topic Options -->
+                            <h6>Topic Selection</h6>
+                            <hr>
+
                             <!-- Name -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="name">
@@ -155,7 +176,7 @@
                                                     th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
                                         </optgroup>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('keyMessageFormatId')}" th:errors="*{keyMessageFormatId}"/>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('keyMessageFormatId')}" th:errors="*{keyMessageFormatId}"></div>
                                 </div>
                             </div>
 
@@ -179,11 +200,59 @@
                                                     th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>
                                         </optgroup>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('valueMessageFormatId')}" th:errors="*{valueMessageFormatId}"/>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('valueMessageFormatId')}" th:errors="*{valueMessageFormatId}"></div>
                                 </div>
                             </div>
 
                             <!-- View Options -->
+                            <h6>View Options</h6>
+                            <hr>
+
+                            <!-- Results Per Partition -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="resultsPerPartition">
+                                    Results per Partition
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="resultsPerPartition" name="resultsPerPartition" class="form-control" type="text"
+                                        placeholder="How many results to display per partition"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{resultsPerPartition}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('resultsPerPartition')}" th:errors="*{resultsPerPartition}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Optional Record Filters  -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="optional_filters_available">
+                                    Optional Record Filters
+                                </label>
+                                <div class="col-md-4">
+                                    Available:
+                                    <select
+                                        id="optional_filters_available" name="optional_filters_available" class="form-control" multiple="multiple"
+                                        th:attr="disabled=${filterList.isEmpty()}? 'disabled'">
+                                        <option th:if="${filterList} != null" th:each="filter : ${filterList}"
+                                                th:value="${filter.id}" th:text="${filter.name}">Filter</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1 text-center my-auto"></div>
+                                <div class="col-md-4">
+                                    Enabled:
+                                    <select
+                                        id="optional_filters" name="optional_filters" class="form-control" multiple="multiple"
+                                        th:attr="disabled=${filterList.isEmpty()}? 'disabled'"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{optionalFilters}">>
+                                        <option th:if="${viewForm.optionalFilters.contains(filter.id)}" th:each="filter : ${filterList}"
+                                                th:value="${filter.id}" th:text="${filter.name}">Filter</option>
+                                    </select>
+                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('optionalFilters')}" th:errors="*{optionalFilters}"></div>
+                            </div>
+
+                            <!-- Enforced Filtering Options -->
                             <h6>Enforced Filtering</h6>
                             <hr>
 
@@ -206,42 +275,35 @@
                                 </div>
                             </div>
 
-                            <!-- Filter  -->
+                            <!-- Enforced Record Filter  -->
                             <div class="form-group row">
-                                <label class="col-md-3 form-control-label" for="filters">
-                                    Record Filter
+                                <label class="col-md-3 form-control-label" for="enforced_filters">
+                                    Record Filtering
                                 </label>
-                                <div class="col-md-9">
+                                <div class="col-md-4">
+                                    Available:
                                     <select
-                                        id="filters" name="filters" class="form-control" multiple="multiple"
+                                        id="enforced_filters_available" name="enforced_filters_available" class="form-control" multiple="multiple"
+                                        th:attr="disabled=${filterList.isEmpty()}? 'disabled'">
+                                        <option th:if="${filterList} != null" th:each="filter : ${filterList}"
+                                            th:value="${filter.id}" th:text="${filter.name}">Filter</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1 text-center my-auto">
+
+                                </div>
+                                <div class="col-md-4">
+                                    Enforced:
+                                    <select
+                                        id="enforced_filters" name="enforced_filters" class="form-control" multiple="multiple"
                                         th:attr="disabled=${filterList.isEmpty()}? 'disabled'"
                                         th:errorclass="is-invalid"
-                                        th:field="*{filters}">>
-                                        <option value="">No filters</option>
-                                        <option th:if="${filterList} != null" th:each="filter : ${filterList}"
+                                        th:field="*{enforcedFilters}">>
+                                        <option th:if="${viewForm.enforcedFilters.contains(filter.id)}" th:each="filter : ${filterList}"
                                                 th:value="${filter.id}" th:text="${filter.name}">Filter</option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('filters')}" th:errors="*{filters}"></div>
                                 </div>
-                            </div>
-
-                            <!-- View Options -->
-                            <h6>View Options</h6>
-                            <hr>
-
-                            <!-- Results Per Partition -->
-                            <div class="form-group row">
-                                <label class="col-md-3 form-control-label" for="resultsPerPartition">
-                                    Results per Partition
-                                </label>
-                                <div class="col-md-9">
-                                    <input
-                                        id="resultsPerPartition" name="resultsPerPartition" class="form-control" type="text"
-                                        placeholder="How many results to display per partition"
-                                        th:errorclass="is-invalid"
-                                        th:value="*{resultsPerPartition}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('resultsPerPartition')}" th:errors="*{resultsPerPartition}"></div>
-                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('enforcedFilters')}" th:errors="*{enforcedFilters}"></div>
                             </div>
                         </div>
 

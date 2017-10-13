@@ -49,12 +49,24 @@ public class View {
         CascadeType.MERGE
     })
     @JoinTable(
-        name = "view_to_filter",
+        name = "view_to_filter_enforced",
         joinColumns = @JoinColumn(name = "view_id"),
         inverseJoinColumns = @JoinColumn(name = "filter_id")
     )
     @OrderColumn(name = "sort_order")
-    private Set<Filter> filters = new HashSet<>();
+    private Set<Filter> enforcedFilters = new HashSet<>();
+
+    @ManyToMany(cascade = {
+        CascadeType.PERSIST,
+        CascadeType.MERGE
+    })
+    @JoinTable(
+        name = "view_to_filter_optional",
+        joinColumns = @JoinColumn(name = "view_id"),
+        inverseJoinColumns = @JoinColumn(name = "filter_id")
+    )
+    @OrderColumn(name = "sort_order")
+    private Set<Filter> optionalFilters = new HashSet<>();
 
     @Column(nullable = false)
     private Timestamp createdAt;
@@ -141,12 +153,20 @@ public class View {
         return partitionsSet;
     }
 
-    public Set<Filter> getFilters() {
-        return filters;
+    public Set<Filter> getEnforcedFilters() {
+        return enforcedFilters;
     }
 
-    public void setFilters(final Set<Filter> filters) {
-        this.filters = filters;
+    public void setEnforcedFilters(final Set<Filter> filters) {
+        this.enforcedFilters = filters;
+    }
+
+    public Set<Filter> getOptionalFilters() {
+        return optionalFilters;
+    }
+
+    public void setOptionalFilters(final Set<Filter> optionalFilters) {
+        this.optionalFilters = optionalFilters;
     }
 
     public Timestamp getCreatedAt() {
