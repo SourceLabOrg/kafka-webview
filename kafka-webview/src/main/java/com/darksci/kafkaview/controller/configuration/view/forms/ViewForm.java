@@ -52,7 +52,7 @@ public class ViewForm {
      * These are good if you want to allow customizable filtering at consume time.
      */
     @NotNull
-    private Set<Long> availableFilters = new HashSet<>();
+    private Set<Long> optionalFilters = new HashSet<>();
 
     @NotNull
     @Range(min = 1, max = 500)
@@ -130,12 +130,12 @@ public class ViewForm {
         this.enforcedFilters = filters;
     }
 
-    private Set<Long> getAvailableFilters() {
-        return availableFilters;
+    public Set<Long> getOptionalFilters() {
+        return optionalFilters;
     }
 
-    private void setAvailableFilters(final Set<Long> availableFilters) {
-        this.availableFilters = availableFilters;
+    public void setOptionalFilters(final Set<Long> optionalFilters) {
+        this.optionalFilters = optionalFilters;
     }
 
     public boolean exists() {
@@ -153,7 +153,7 @@ public class ViewForm {
             ", topic='" + topic + '\'' +
             ", partitions=" + partitions +
             ", enforcedFilters=" + enforcedFilters +
-            ", availableFilters=" + availableFilters +
+            ", optionalFilters=" + optionalFilters +
             ", resultsPerPartition=" + resultsPerPartition +
             '}';
     }
