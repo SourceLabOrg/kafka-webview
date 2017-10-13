@@ -21,19 +21,28 @@
                 // View Options
                 viewId: '[[${view.id}]]',
                 formatDates: true,
-                resultsPerPartition: '[[${view.resultsPerPartition}]]'
+                resultsPerPartition: '[[${view.resultsPerPartition}]]',
+                partitions: '[[${view.partitions}]]'
             };
 
             // On load, fire off ajax request to load results.
             jQuery(document).ready(function() {
-                // Fire off initial request
-                executeConsume('next');
 
-                // Request Cluster Information
-                ApiClient.getClusterNodes('[[${cluster.id}]]', handleClusterNodeResults);
-
+                // Chain initial ajax requests.
                 // Request Topic Information
-                ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', handleTopicDetailResults);
+                ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', function(results) {
+                    // Handle results
+                    handleTopicDetailResults(results);
+
+                    // Request Cluster Information
+                    ApiClient.getClusterNodes('[[${cluster.id}]]', function(results) {
+                        // Handle results
+                        handleClusterNodeResults(results);
+
+                        // Fire off initial consume request
+                        executeConsume('next');
+                    });
+                });
 
                 // Control Events
                 jQuery('#control-head').click(function() {
@@ -121,7 +130,13 @@
                 // Record state
                 ConsumerInfo.direction = action;
 
-                ApiClient.consume(ConsumerInfo.viewId, action, handleConsumeResults);
+                // Build request params
+                var params = {
+                    action: action,
+                    partitions: getToggledPartitions().join()
+                };
+
+                ApiClient.consume(ConsumerInfo.viewId, params, handleConsumeResults);
             }
 
             function handleConsumeResults(results) {
@@ -285,10 +300,55 @@
                 var partitionDetails = jQuery('#partition-details');
                 jQuery(partitionDetails).empty();
 
+                // List Partition Details
                 jQuery.each(results.partitions, function(index, result) {
                     jQuery(partitionDetails).append('<tr><td>' + result.partition + '</td><td>' + result.replicas.length + '</td><td>' + result.isr.length + '</td></tr>');
                 });
 
+                // Get and compile template
+                var source   = jQuery('#partition-toggle-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#partitionSelectorTable');
+
+                // Show Partition Toggles
+                jQuery(table).empty();
+
+                // If we have no enforced partition filters
+                var partitions = [];
+                if (ConsumerInfo.partitions.length == 0) {
+                    // Build from results
+                    jQuery.each(results.partitions, function (index, result) {
+                        partitions.push(result.partition);
+                    });
+                } else {
+                    jQuery(ConsumerInfo.partitions.split(',')).each(function(index, partition) {
+                        partitions.push(partition);
+                    });
+                }
+
+                // Build and append template for each partition
+                jQuery(partitions).each(function(index, partition) {
+                    var properties = {
+                        partition: partition,
+                        enabled: true
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
+                });
+            }
+
+            /**
+             * Returns partitions that are toggled as enabled.
+             * @returns {Array}
+             */
+            function getToggledPartitions() {
+                var enabledPartitions = [];
+                jQuery('input.partition-toggle:checked').each(function(index, checkboxEl) {
+                    enabledPartitions.push(jQuery(checkboxEl).val());
+                });
+                return enabledPartitions;
             }
         </script>
         <div class="row">
@@ -395,6 +455,20 @@
                 <td>{{value}}</td>
             </tr>
         </script>
+
+        <!-- Partition Toggle Template -->
+        <script id="partition-toggle-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{partition}}</td>
+                <td>
+                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                        <input class="switch-input partition-toggle" checked="{{enabled}}" type="checkbox" id="partitionToggle{{partition}}" value="{{partition}}">
+                        <span class="switch-label" data-on="" data-off=""></span>
+                        <span class="switch-handle"></span>
+                    </label>
+                </td>
+            </tr>
+        </script>
     </div>
 </section>
 
@@ -464,7 +538,7 @@
                         <table class="table table-sm">
                             <thead>
                             <tr>
-                                <th title="Partition Id">#</th>
+                                <th title="Partition Id">Partition</th>
                                 <th title="Replica Count">Replicas</th>
                                 <th title="In Sync Replica Count">ISRs</th>
                             </tr>
@@ -535,7 +609,7 @@
                 </div>
             </div>
 
-            <!-- Partitions -->
+            <!-- Partition Filter -->
             <hr class="mx-3 my-0">
             <div class="callout callout-info m-0 py-3">
                 <div>
@@ -554,37 +628,7 @@
                                 <th>Enabled</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            <tr>
-                                <td>0</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>
-                                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                        <input class="switch-input" checked="" type="checkbox" id="" value="1">
-                                        <span class="switch-label" data-on="" data-off=""></span>
-                                        <span class="switch-handle"></span>
-                                    </label>
-                                </td>
-                            </tr>
+                            <tbody id="partitionSelectorTable">
                             </tbody>
                         </table>
                     </div>

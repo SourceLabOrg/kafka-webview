@@ -17,7 +17,6 @@ import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
 import com.darksci.kafkaview.manager.kafka.dto.TopicListing;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
-import com.darksci.kafkaview.manager.plugin.PluginClassLoader;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.model.Cluster;
