@@ -89,10 +89,7 @@
 
                 jQuery('#timestamp-seek-button').click(function() {
                     var timestamp = jQuery('#timestamp-seek').val();
-                    ApiClient.seekTimestamp(ConsumerInfo.viewId, timestamp, function(result) {
-                        // TODO handle result?
-                        console.log(result);
-                    });
+                    ApiClient.seekTimestamp(ConsumerInfo.viewId, timestamp, handleSeekResults);
                 });
 
                 jQuery('#toggleStateEditor').click(function() {
@@ -114,13 +111,7 @@
                         partitionOffsetMapJson = JSON.stringify(partitionOffsetMap);
 
                         // Call api
-                        ApiClient.setConsumerState(ConsumerInfo.viewId, partitionOffsetMapJson, function(results) {
-                            // Update consumer state UI
-                            updateConsumerState(results.offsets);
-
-                            // Update consume results
-                            executeConsume('next');
-                        });
+                        ApiClient.setConsumerState(ConsumerInfo.viewId, partitionOffsetMapJson, handleSeekResults);
                     } else {
                         // Change Icon to Save
                         jQuery(this).find('i').attr('class', 'icon-check');
@@ -140,6 +131,14 @@
                     }
                 });
             });
+
+            function handleSeekResults(results) {
+                // Update consumer state UI
+                updateConsumerState(results.offsets);
+
+                // Update consume results
+                executeConsume('next');
+            }
 
             function executeConsume(action) {
                 // Hide table

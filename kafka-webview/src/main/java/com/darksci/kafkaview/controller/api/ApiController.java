@@ -201,6 +201,24 @@ public class ApiController {
     }
 
     /**
+     * POST manually set a consumer's offsets using a timestamp
+     */
+    @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
+    @ResponseBody
+    public ConsumerState setConsumerOffsetsByTimestamp(final @PathVariable Long id, final @PathVariable Long timestamp) {
+        // Retrieve the view definition
+        final View view = viewRepository.findOne(id);
+        if (view == null) {
+            // TODO Return some kind of error.
+        }
+
+        // Create consumer
+        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, new HashSet<>())) {
+            return transactionalKafkaClient.seek(timestamp);
+        }
+    }
+
+    /**
      * GET listing of all available kafka topics for a requested cluster.
      */
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
