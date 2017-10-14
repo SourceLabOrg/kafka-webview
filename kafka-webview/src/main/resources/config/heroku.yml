@@ -3,4 +3,4 @@ spring:
     url: ${JAWSDB_URL}
 
 app:
-  baseUrl: https://www.fightjudge.com
+  baseUrl: https://kafkawebview.herokuapp.com/

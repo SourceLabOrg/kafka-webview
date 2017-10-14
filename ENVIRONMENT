@@ -10,18 +10,5 @@ PORT=8080
 SMTP_USERNAME=username
 SMTP_PASSWORD=password
 
-## Pardot connection, if using that
-PARDOT_USERNAME=pardotuser
-PARDOT_PASSWORD=pardotpass
-PARDOT_USERTOKEN=usertoken
-
 ## Optional DB Url
 JAWSDB_URL=mysql://user:password@hostname:3306/dbname
-
-## OAUTH
-FACEBOOK_CLIENT_ID=token
-FACEBOOK_SECRET=
-GOOGLE_CLIENT_ID=token
-GOOGLE_SECRET=
-TWITTER_CLIENT_ID=token
-TWITTER_SECRET=
