@@ -216,16 +216,18 @@
     <main class="main">
 
         <!-- Breadcrumb -->
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">Home</li>
-            <li class="breadcrumb-item"><a href="#">Admin</a>
+        <!-- Handles showing breadcrumbs -->
+        <ol class="breadcrumb" th:if="${BreadCrumbs != null}">
+            <li class="breadcrumb-item" th:classappend="${itrStat.last} ? 'active'" th:each="crumb, itrStat: ${BreadCrumbs.getCrumbs()}">
+                <a th:if="${crumb.url != null}" th:href="${crumb.url}" th:text="${crumb.name}"></a>
+                <span th:if="${crumb.url == null}" th:text="${crumb.name}"></span>
             </li>
-            <li class="breadcrumb-item active">Dashboard</li>
 
             <!-- Breadcrumb Menu-->
             <section layout:fragment="breadcrumb-menu">
                 <!-- empty by default -->
             </section>
+
             <!--
             <li class="breadcrumb-menu d-md-down-none">
                 <div class="btn-group" role="group" aria-label="Button group">
@@ -235,7 +237,6 @@
                 </div>
             </li>
             -->
-
         </ol>
 
         <div class="container-fluid">

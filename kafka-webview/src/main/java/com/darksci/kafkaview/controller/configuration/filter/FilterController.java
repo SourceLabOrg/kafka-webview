@@ -5,6 +5,7 @@ import com.darksci.kafkaview.controller.configuration.filter.forms.FilterForm;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
+import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Filter;
 import com.darksci.kafkaview.model.ViewToFilterEnforced;
@@ -54,6 +55,9 @@ public class FilterController extends BaseController {
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
     public String index(final Model model) {
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, null, null);
+
         // Retrieve all message formats
         final Iterable<Filter> filterList = filterRepository.findAllByOrderByNameAsc();
         model.addAttribute("filters", filterList);
@@ -65,7 +69,10 @@ public class FilterController extends BaseController {
      * GET Displays create filter form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
-    public String createFilter(final FilterForm filterForm) {
+    public String createFilter(final FilterForm filterForm, final Model model) {
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Create", null);
+
         return "configuration/filter/create";
     }
 
@@ -165,5 +172,18 @@ public class FilterController extends BaseController {
 
         // redirect to cluster index
         return "redirect:/configuration/filter";
+    }
+
+    private void setupBreadCrumbs(final Model model, String name, String url) {
+        // Setup breadcrumbs
+        final BreadCrumbManager manager = new BreadCrumbManager(model)
+            .addCrumb("Configuration", "/configuration");
+
+        if (name != null) {
+            manager.addCrumb("Filters", "/configuration/filter");
+            manager.addCrumb(name, url);
+        } else {
+            manager.addCrumb("Filters", null);
+        }
     }
 }

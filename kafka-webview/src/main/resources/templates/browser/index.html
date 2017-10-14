@@ -320,13 +320,39 @@
             }
 
             function handleTopicDetailResults(results) {
-                // Remove existing
-                var partitionDetails = jQuery('#partition-details');
-                jQuery(partitionDetails).empty();
+                // Get and compile template
+                var source   = jQuery('#partition-details-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#partition-details');
+
+                // Clear table
+                jQuery(table).empty();
 
                 // List Partition Details
                 jQuery.each(results.partitions, function(index, result) {
-                    jQuery(partitionDetails).append('<tr><td>' + result.partition + '</td><td>' + result.replicas.length + '</td><td>' + result.isr.length + '</td></tr>');
+
+                    var isrNodes = [];
+                    jQuery(result.isr).each(function(i, isr) {
+                        isrNodes.push(isr.host);
+                    });
+
+                    var replicaNodes = [];
+                    jQuery(result.replicas).each(function(i, replica) {
+                        replicaNodes.push(replica.host);
+                    });
+
+                    // Build properties
+                    var properties = {
+                        partition: result.partition,
+                        replicas_count: result.replicas.length,
+                        isr_count: result.isr.length,
+                        replica_nodes: replicaNodes.join(', '),
+                        isr_nodes: isrNodes.join(', ')
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
                 });
 
                 // Get and compile template
@@ -493,6 +519,15 @@
             </tr>
         </script>
 
+        <!-- Partition Details Template -->
+        <script id="partition-details-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{partition}}</td>
+                <td title="{{replica_nodes}}">{{replicas_count}}</td>
+                <td title="{{isr_nodes}}">{{isr_count}}</td>
+            </tr>
+        </script>
+
         <!-- Partition Toggle Template -->
         <script id="partition-toggle-template" type="text/x-handlebars-template">
             <tr>
@@ -547,8 +582,8 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>id</th>
-                                    <th>host</th>
+                                    <th>Id</th>
+                                    <th>Host</th>
                                 </tr>
                             </thead>
                             <tbody id="broker-list">
@@ -623,9 +658,9 @@
                                     <td>Partitions</td>
                                     <td th:text="${view.partitions.isEmpty()}? 'All' : 'Filtered'"></td>
                                 </tr>
-                                <tr th:if="!${view.enforcedFilters.isEmpty()}">
-                                    <td>Enforced Record Filters</td>
-                                    <td th:text="${view.filters.size()}"></td>
+                                <tr th:each="filter : ${view.enforcedFilters}">
+                                    <td>Filter</td>
+                                    <td th:text="${filter.name}">Name</td>
                                 </tr>
                                 <tr>
                                     <td>Results per Partition</td>

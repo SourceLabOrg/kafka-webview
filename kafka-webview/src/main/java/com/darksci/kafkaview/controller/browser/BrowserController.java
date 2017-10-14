@@ -2,6 +2,7 @@ package com.darksci.kafkaview.controller.browser;
 
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
+import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.View;
 import com.darksci.kafkaview.repository.ViewRepository;
@@ -40,6 +41,13 @@ public class BrowserController extends BaseController {
             // redirect to home
             return "redirect:/";
         }
+
+        // Setup breadcrumbs
+        new BreadCrumbManager(model)
+            .addCrumb("Browser", "/browser")
+            .addCrumb(view.getName(), "/browser/" + view.getId());
+
+        // Set model Attributes
         model.addAttribute("view", view);
         model.addAttribute("cluster", view.getCluster());
 

@@ -10,6 +10,7 @@ import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
 import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
 import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
+import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.repository.ClusterRepository;
@@ -41,6 +42,9 @@ public class ClusterController extends BaseController {
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
     public String index(final Model model) {
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, null, null);
+
         // Retrieve all clusters
         final Iterable<Cluster> clusterList = clusterRepository.findAll();
         model.addAttribute("clusterList", clusterList);
@@ -52,7 +56,10 @@ public class ClusterController extends BaseController {
      * GET Displays create cluster form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
-    public String createClusterForm(final ClusterForm clusterForm) {
+    public String createClusterForm(final ClusterForm clusterForm, final Model model) {
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Create", "/configuration/cluster/create");
+
         return "configuration/cluster/create";
     }
 
@@ -63,7 +70,8 @@ public class ClusterController extends BaseController {
     public String editClusterForm(
         final @PathVariable Long id,
         final ClusterForm clusterForm,
-        final RedirectAttributes redirectAttributes) {
+        final RedirectAttributes redirectAttributes,
+        final Model model) {
 
         // Retrieve by id
         final Cluster cluster = clusterRepository.findOne(id);
@@ -76,6 +84,9 @@ public class ClusterController extends BaseController {
             // redirect to cluster index
             return "redirect:/configuration/cluster";
         }
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Edit: " + cluster.getName(), null);
 
         // Build form
         clusterForm.setId(cluster.getId());
@@ -170,5 +181,18 @@ public class ClusterController extends BaseController {
 
         // redirect to cluster index
         return "redirect:/configuration/cluster";
+    }
+
+    private void setupBreadCrumbs(final Model model, String name, String url) {
+        // Setup breadcrumbs
+        final BreadCrumbManager manager = new BreadCrumbManager(model)
+            .addCrumb("Configuration", "/configuration");
+
+        if (name != null) {
+            manager.addCrumb("Clusters", "/configuration/cluster");
+            manager.addCrumb(name, url);
+        } else {
+            manager.addCrumb("Clusters", null);
+        }
     }
 }

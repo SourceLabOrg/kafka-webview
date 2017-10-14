@@ -7,6 +7,7 @@ import com.darksci.kafkaview.manager.kafka.KafkaOperations;
 import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
+import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.model.Filter;
@@ -54,6 +55,9 @@ public class ViewController extends BaseController {
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
     public String index(final Model model) {
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, null, null);
+
         // Retrieve all message formats
         final Iterable<View> viewList = viewRepository.findAll();
         model.addAttribute("views", viewList);
@@ -66,6 +70,10 @@ public class ViewController extends BaseController {
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createViewForm(final ViewForm viewForm, final Model model) {
+        // Setup breadcrumbs
+        if (!model.containsAttribute("BreadCrumbs")) {
+            setupBreadCrumbs(model, "Create", null);
+        }
 
         // Retrieve all clusters
         model.addAttribute("clusters", clusterRepository.findAllByOrderByNameAsc());
@@ -125,6 +133,9 @@ public class ViewController extends BaseController {
             // redirect to view index
             return "redirect:/configuration/view";
         }
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Edit: " + view.getName(), null);
 
         // Build form
         viewForm.setId(view.getId());
@@ -288,5 +299,18 @@ public class ViewController extends BaseController {
 
         // redirect to cluster index
         return "redirect:/configuration/view";
+    }
+
+    private void setupBreadCrumbs(final Model model, String name, String url) {
+        // Setup breadcrumbs
+        final BreadCrumbManager manager = new BreadCrumbManager(model)
+            .addCrumb("Configuration", "/configuration");
+
+        if (name != null) {
+            manager.addCrumb("Views", "/configuration/view");
+            manager.addCrumb(name, url);
+        } else {
+            manager.addCrumb("Views", null);
+        }
     }
 }
