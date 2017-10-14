@@ -8,6 +8,7 @@ import com.darksci.kafkaview.manager.kafka.dto.PartitionOffset;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -98,6 +99,28 @@ public class TransactionalKafkaClient implements AutoCloseable {
         }
         commit();
         return getConsumerState();
+    }
+
+    /**
+     * Seek consumer to specific timestamp
+     * @param timestamp
+     */
+    public ConsumerState seek(final long timestamp) {
+        // Find offsets for timestamp
+        final Map<TopicPartition, Long> timestampMap = new HashMap<>();
+        for (final TopicPartition topicPartition: getAllPartitions()) {
+            timestampMap.put(topicPartition, timestamp);
+        }
+        final Map<TopicPartition, OffsetAndTimestamp> offsetMap = kafkaConsumer.offsetsForTimes(timestampMap);
+
+        // Build map of partition => offset
+        final Map<Integer, Long> partitionOffsetMap = new HashMap<>();
+        for (Map.Entry<TopicPartition, OffsetAndTimestamp> entry: offsetMap.entrySet()) {
+            partitionOffsetMap.put(entry.getKey().partition(), entry.getValue().offset());
+        }
+
+        // Now lets seek to those offsets
+        return seek(partitionOffsetMap);
     }
 
     // Unsure if this should be exposed

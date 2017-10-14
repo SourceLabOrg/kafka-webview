@@ -74,6 +74,24 @@
                     executeConsume('previous');
                 });
 
+                jQuery('#datetime-seek').datetimepicker({
+                    timeFormat: 'HH:mm:ssZ',
+                    dateFormat: "yy-mm-dd",
+                    gotoCurrent: true,
+                    showOn: "button",
+                    buttonText: "Choose",
+                    onClose: function () {
+                        var dateStr = jQuery('#datetime-seek').val();
+                        var timestamp = Date.parse(dateStr);
+                        jQuery('#timestamp-seek').val(timestamp);
+                    }
+                });
+
+                jQuery('#timestamp-seek-button').click(function() {
+                    var timestamp = jQuery('#timestamp-seek').val();
+                    ApiClient.seekTimestamp(ConsumerInfo.viewId, timestamp, handleSeekResults);
+                });
+
                 jQuery('#toggleStateEditor').click(function() {
                     var rows = jQuery('#consumerState-details tr');
                     var inputs = jQuery(rows).find('input');
@@ -93,13 +111,7 @@
                         partitionOffsetMapJson = JSON.stringify(partitionOffsetMap);
 
                         // Call api
-                        ApiClient.setConsumerState(ConsumerInfo.viewId, partitionOffsetMapJson, function(results) {
-                            // Update consumer state UI
-                            updateConsumerState(results.offsets);
-
-                            // Update consume results
-                            executeConsume('next');
-                        });
+                        ApiClient.setConsumerState(ConsumerInfo.viewId, partitionOffsetMapJson, handleSeekResults);
                     } else {
                         // Change Icon to Save
                         jQuery(this).find('i').attr('class', 'icon-check');
@@ -119,6 +131,14 @@
                     }
                 });
             });
+
+            function handleSeekResults(results) {
+                // Update consumer state UI
+                updateConsumerState(results.offsets);
+
+                // Update consume results
+                executeConsume('next');
+            }
 
             function executeConsume(action) {
                 // Hide table
@@ -497,9 +517,6 @@
             <a class="nav-link active" data-toggle="tab" href="#viewInfo" role="tab"><i class="icon-list"></i></a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-toggle="tab" href="#consumerState" role="tab"><i class="icon-feed"></i></a>
-        </li>
-        <li class="nav-item">
             <a class="nav-link" data-toggle="tab" href="#search" role="tab"><i class="icon-magnifier"></i></a>
         </li>
     </ul>
@@ -634,36 +651,6 @@
             <hr class="mx-3 my-0">
         </div>
 
-        <!-- Consumer State -->
-        <div class="tab-pane" id="consumerState" role="tabpanel">
-            <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
-                <small><b>Consumer State</b>
-                </small>
-            </div>
-            <hr class="transparent mx-3 my-0">
-            <div class="callout callout-info m-0 py-3">
-                <table class="table table-sm">
-                    <thead>
-                    <tr>
-                        <th>Partition</th>
-                        <th>
-                            Offset
-                            <a href="#" id="toggleStateEditor">
-                                <i class="icon-pencil"></i>
-                            </a>
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody id="consumerState-details">
-                    <tr>
-                        <td colspan="2">Loading...</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <hr class="mx-3 my-0">
-        </div>
-
         <!-- Search & Filtering-->
         <div class="tab-pane" id="search" role="tabpanel">
             <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
@@ -671,6 +658,74 @@
                 </small>
             </div>
             <hr class="transparent mx-3 my-0">
+
+            <!-- Consumer State -->
+            <hr class="transparent mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div
+                    style="cursor: pointer;"
+                    data-toggle="collapse"
+                    href="#collapseConsumerState"
+                    aria-expanded="false" aria-controls="collapseConsumerState">
+                    <strong>Consumer State</strong>
+                </div>
+                <div class="collapse" id="collapseConsumerState">
+                    <table class="table table-sm">
+                        <thead>
+                        <tr>
+                            <th>Partition</th>
+                            <th>
+                                Offset
+                                <a href="#" id="toggleStateEditor">
+                                    <i class="icon-pencil"></i>
+                                </a>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="consumerState-details">
+                        <tr>
+                            <td colspan="2">Loading...</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
+
+            <!-- Timestamp Seek -->
+            <hr class="transparent mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div
+                    style="cursor: pointer;"
+                    data-toggle="collapse"
+                    href="#collapseTimestampSeek"
+                    aria-expanded="false" aria-controls="collapseTimestampSeek">
+                    <strong>Timestamp Seek</strong>
+                </div>
+                <div class="collapse" id="collapseTimestampSeek">
+                    <table class="table table-sm">
+                        <tbody>
+                        <tr>
+                            <td colspan="2">Unix Timestamp</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input name="timestamp-seek" id="timestamp-seek" size="21">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input name="datetime-seek" id="datetime-seek" size="21" type="hidden">
+                            </td>
+                            <td>
+                                <input type="button" id="timestamp-seek-button" value="Seek">
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
 
             <!-- Partition Filter -->
             <hr class="mx-3 my-0">
