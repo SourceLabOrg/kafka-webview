@@ -1,6 +1,6 @@
 target/
 .idea/
 *.iml
-kafka-webview/src/main/resources/static/node_modules/
-kafka-webview/src/main/resources/static/dist/
+kafka-webview/src/main/frontend/node_modules/
+kafka-webview/src/main/frontend/dist/
 uploads/
