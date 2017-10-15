@@ -11,7 +11,7 @@ public class ClusterForm {
     private String name;
 
     @NotNull(message = "Enter kafka broker hosts")
-    @Size(min = 2, max = 255)
+    @Size(min = 2)
     private String brokerHosts;
 
     public Long getId() {
