@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.controller.api;
 
+import com.darksci.kafkaview.manager.demo.DemoDataGenerator;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
@@ -275,6 +276,25 @@ public class ApiController {
             final NodeList nodes = operations.getClusterNodes();
             return nodes.getNodes();
         }
+    }
+
+    /**
+     * GET Nodes within a cluster.
+     */
+    @RequestMapping(path = "/demo/{id}", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public String createDemoData(final @PathVariable Long id) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            return "Error";
+        }
+
+        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+        new DemoDataGenerator(clusterConfig).createDemoTopics();
+
+        return "done";
     }
 
     private KafkaOperations createOperationsClient(final Cluster cluster) {

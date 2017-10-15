@@ -6,6 +6,8 @@ import com.darksci.kafkaview.manager.kafka.dto.PartitionDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
@@ -124,6 +126,16 @@ public class KafkaOperations implements AutoCloseable {
         } catch (InterruptedException | ExecutionException e) {
             // TODO Handle this
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public void createTopic(final String topic, final int numPartitions, final short replicaFactor) {
+        final NewTopic newTopic = new NewTopic(topic, numPartitions, replicaFactor);
+        final CreateTopicsResult result = adminClient.createTopics(Collections.singletonList(newTopic));
+        try {
+            result.all().get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
     }
 
