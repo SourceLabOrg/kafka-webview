@@ -3,4 +3,5 @@ target/
 *.iml
 kafka-webview/src/main/frontend/node_modules/
 kafka-webview/src/main/frontend/dist/
+kafka-webview/src/main/resources/static/
 uploads/

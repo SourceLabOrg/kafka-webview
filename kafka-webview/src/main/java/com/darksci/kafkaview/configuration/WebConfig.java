@@ -27,8 +27,8 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 
         // js resource
         registry
-            .addResourceHandler("/node_modules/**")
-            .addResourceLocations("classpath:/static/node_modules/");
+            .addResourceHandler("/vendors/**")
+            .addResourceLocations("classpath:/static/vendors/");
 
         // img resource
         registry
