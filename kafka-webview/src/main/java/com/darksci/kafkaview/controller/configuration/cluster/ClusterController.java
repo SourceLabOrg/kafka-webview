@@ -146,7 +146,6 @@ public class ClusterController extends BaseController {
 
         // If we have errors
         if (bindingResult.hasErrors()) {
-            logger.info("Result: {}", clusterForm);
             return "configuration/cluster/create";
         }
 
