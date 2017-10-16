@@ -17,7 +17,6 @@ import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
 import com.darksci.kafkaview.manager.kafka.dto.TopicListing;
-import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.model.Cluster;
@@ -29,6 +28,7 @@ import com.darksci.kafkaview.repository.ClusterRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +61,7 @@ public class ApiController {
     private ViewRepository viewRepository;
 
     @Autowired
-    private DeserializerLoader deserializerLoader;
+    private PluginFactory<Deserializer> deserializerPluginFactory;
 
     @Autowired
     private ClusterRepository clusterRepository;
@@ -337,9 +337,9 @@ public class ApiController {
         final Class keyDeserializerClass;
         try {
             if (keyMessageFormat.isDefaultFormat()) {
-                keyDeserializerClass = deserializerLoader.getDeserializerClass(keyMessageFormat.getClasspath());
+                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getClasspath());
             } else {
-                keyDeserializerClass = deserializerLoader.getDeserializerClass(keyMessageFormat.getJar(), keyMessageFormat.getClasspath());
+                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getJar(), keyMessageFormat.getClasspath());
             }
         } catch (final LoaderException exception) {
             throw new RuntimeException(exception.getMessage(), exception);
@@ -348,9 +348,9 @@ public class ApiController {
         final Class valueDeserializerClass;
         try {
             if (valueMessageFormat.isDefaultFormat()) {
-                valueDeserializerClass = deserializerLoader.getDeserializerClass(valueMessageFormat.getClasspath());
+                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getClasspath());
             } else {
-                valueDeserializerClass = deserializerLoader.getDeserializerClass(valueMessageFormat.getJar(), valueMessageFormat.getClasspath());
+                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getJar(), valueMessageFormat.getClasspath());
             }
         } catch (final LoaderException exception) {
             throw new RuntimeException(exception.getMessage(), exception);
