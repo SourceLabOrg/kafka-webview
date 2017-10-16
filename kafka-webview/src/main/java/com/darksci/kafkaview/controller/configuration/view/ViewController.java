@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -214,6 +215,7 @@ public class ViewController extends BaseController {
             successMessage = "Updated view successfully!";
         } else {
             view = new View();
+            view.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             successMessage = "Created new view!";
         }
 
@@ -240,6 +242,7 @@ public class ViewController extends BaseController {
         handleFilterSubmission(view.getOptionalFilters(), viewForm.getOptionalFilters());
 
         // Persist the view
+        view.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         viewRepository.save(view);
 
         // Set flash message
