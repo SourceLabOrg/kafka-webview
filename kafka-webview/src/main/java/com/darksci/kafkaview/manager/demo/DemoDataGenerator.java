@@ -47,7 +47,7 @@ public class DemoDataGenerator {
             topicName, numberOfPartitions, replicationFactor);
 
         // Create the topic
-        getOperationsClient().createTopic(topicName, numberOfPartitions, replicationFactor);
+        //getOperationsClient().createTopic(topicName, numberOfPartitions, replicationFactor);
 
         // Create publisher
         final Map<String, Object> config = new HashMap<>();
@@ -74,7 +74,7 @@ public class DemoDataGenerator {
             topicName, numberOfPartitions, replicationFactor);
 
         // Create the topic
-        getOperationsClient().createTopic(topicName, numberOfPartitions, replicationFactor);
+        //getOperationsClient().createTopic(topicName, numberOfPartitions, replicationFactor);
 
         // Create publisher
         final Map<String, Object> config = new HashMap<>();

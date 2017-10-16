@@ -66,17 +66,17 @@ public class FilterController extends BaseController {
     }
 
     /**
-     * GET Displays createConsumer filter form.
+     * GET Displays create filter form.
      */
-    @RequestMapping(path = "/createConsumer", method = RequestMethod.GET)
+    @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createFilter(final FilterForm filterForm, final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", null);
 
-        return "configuration/filter/createConsumer";
+        return "configuration/filter/create";
     }
 
-    @RequestMapping(path = "/createConsumer", method = RequestMethod.POST)
+    @RequestMapping(path = "/create", method = RequestMethod.POST)
     public String create(
         @Valid final FilterForm filterForm,
         final BindingResult bindingResult,
@@ -84,7 +84,7 @@ public class FilterController extends BaseController {
 
         // If we have errors just display the form again.
         if (bindingResult.hasErrors()) {
-            return "configuration/filter/createConsumer";
+            return "configuration/filter/create";
         }
 
         final MultipartFile file = filterForm.getFile();
@@ -92,7 +92,7 @@ public class FilterController extends BaseController {
             bindingResult.addError(new FieldError(
                 "filterForm", "file", "", true, null, null, "Select a jar to upload")
             );
-            return "/configuration/filter/createConsumer";
+            return "/configuration/filter/create";
         }
 
         // Make sure ends with .jar
@@ -100,7 +100,7 @@ public class FilterController extends BaseController {
             bindingResult.addError(new FieldError(
                 "filterForm", "file", "", true, null, null, "File must have a .jar extension")
             );
-            return "/configuration/filter/createConsumer";
+            return "/configuration/filter/create";
         }
 
         try {
@@ -120,7 +120,7 @@ public class FilterController extends BaseController {
                 bindingResult.addError(new FieldError(
                     "filterForm", "file", "", true, null, null, e.getMessage())
                 );
-                return "/configuration/filter/createConsumer";
+                return "/configuration/filter/create";
             }
 
             final Filter filter = new Filter();
