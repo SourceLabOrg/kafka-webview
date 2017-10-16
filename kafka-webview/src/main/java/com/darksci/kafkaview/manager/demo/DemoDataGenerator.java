@@ -38,7 +38,7 @@ public class DemoDataGenerator {
      * This topic has 4 partitions, and we produce numbers 0-2000 into it.
      */
     private void createNumbersTopic() {
-        final String topicName = "tennessee-86173.NumberTopic";
+        final String topicName = "NumberTopic";
         final int numberOfPartitions = 4;
         final short replicationFactor = 1;
 
@@ -65,7 +65,7 @@ public class DemoDataGenerator {
     }
 
     private void createAlphabetTopic() {
-        final String topicName = "tennessee-86173.AlphabetTopic";
+        final String topicName = "AlphabetTopic";
         final int numberOfPartitions = 1;
         final short replicationFactor = 1;
 
