@@ -64,4 +64,4 @@ app:
   companyAddress: "123 Main Street, Atlanta, GA 30060"
   baseUrl: http://kafka.localhost.com:8080
   systemEmail: admin@example.com
-  jarUploadPath: "./uploads"
+  uploadPath: "./uploads"

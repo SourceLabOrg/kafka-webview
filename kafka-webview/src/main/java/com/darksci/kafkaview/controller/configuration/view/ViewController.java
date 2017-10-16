@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -49,6 +50,9 @@ public class ViewController extends BaseController {
 
     @Autowired
     private FilterRepository filterRepository;
+
+    @Autowired
+    private KafkaAdminFactory kafkaAdminFactory;
 
     /**
      * GET Displays main configuration index.
@@ -95,8 +99,8 @@ public class ViewController extends BaseController {
             final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
             if (cluster != null) {
                 // Create a new Operational Client
-                final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-                final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+                final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+                final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, "BobsYerAunty");
 
                 try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
                     final TopicList topics = operations.getAvailableTopics();
@@ -211,6 +215,7 @@ public class ViewController extends BaseController {
             successMessage = "Updated view successfully!";
         } else {
             view = new View();
+            view.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             successMessage = "Created new view!";
         }
 
@@ -237,6 +242,7 @@ public class ViewController extends BaseController {
         handleFilterSubmission(view.getOptionalFilters(), viewForm.getOptionalFilters());
 
         // Persist the view
+        view.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         viewRepository.save(view);
 
         // Set flash message

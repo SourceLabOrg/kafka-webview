@@ -1,10 +1,13 @@
 package com.darksci.kafkaview.configuration;
 
+import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
+import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.PluginSecurityPolicy;
-import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
+import com.darksci.kafkaview.manager.plugin.UploadManager;
 import com.darksci.kafkaview.plugin.filter.RecordFilter;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -24,19 +27,30 @@ public class PluginConfig implements ApplicationListener<ApplicationReadyEvent> 
     }
 
     @Bean
-    public PluginUploadManager getPluginUploadManager(final AppProperties appProperties) {
-        return new PluginUploadManager(appProperties.getJarUploadPath());
+    public UploadManager getPluginUploadManager(final AppProperties appProperties) {
+        return new UploadManager(appProperties.getUploadPath());
     }
 
     @Bean
-    public DeserializerLoader getDeserializerLoader(final AppProperties appProperties) {
-        return new DeserializerLoader(appProperties.getJarUploadPath() + "/deserializers");
+    public PluginFactory<Deserializer> getDeserializerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getUploadPath() + "/deserializers";
+        return new PluginFactory<>(jarDirectory, Deserializer.class);
     }
 
     @Bean
     public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final AppProperties appProperties) {
-        final String jarDirectory = appProperties.getJarUploadPath() + "/filters";
+        final String jarDirectory = appProperties.getUploadPath() + "/filters";
         return new PluginFactory<>(jarDirectory, RecordFilter.class);
+    }
+
+    @Bean
+    public KafkaAdminFactory getKafkaAdminFactory(final AppProperties appProperties) {
+        return new KafkaAdminFactory(appProperties.getUploadPath() + "/keyStores");
+    }
+
+    @Bean
+    public KafkaConsumerFactory getKafkaConsumerFactory(final AppProperties appProperties) {
+        return new KafkaConsumerFactory(appProperties.getUploadPath() + "/keyStores");
     }
 
     @Override

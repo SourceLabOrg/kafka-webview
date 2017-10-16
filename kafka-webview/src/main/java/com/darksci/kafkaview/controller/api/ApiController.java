@@ -17,7 +17,6 @@ import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
 import com.darksci.kafkaview.manager.kafka.dto.TopicListing;
-import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.model.Cluster;
@@ -29,6 +28,7 @@ import com.darksci.kafkaview.repository.ClusterRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +47,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -62,13 +61,19 @@ public class ApiController {
     private ViewRepository viewRepository;
 
     @Autowired
-    private DeserializerLoader deserializerLoader;
+    private PluginFactory<Deserializer> deserializerPluginFactory;
 
     @Autowired
     private ClusterRepository clusterRepository;
 
     @Autowired
     private PluginFactory<RecordFilter> recordFilterPluginFactory;
+
+    @Autowired
+    private KafkaAdminFactory kafkaAdminFactory;
+
+    @Autowired
+    private KafkaConsumerFactory kafkaConsumerFactory;
 
     /**
      * GET kafka results
@@ -291,8 +296,20 @@ public class ApiController {
             return "Error";
         }
 
-        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-        new DemoDataGenerator(clusterConfig).createDemoTopics();
+        final String consumerId = "DemoClientId";
+
+        // Create cluster config
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final ClientConfig.Builder clientConfigBuilder = ClientConfig.newBuilder()
+            .withNoFilters()
+            .withTopicConfig(new TopicConfig(clusterConfig, DeserializerConfig.defaultConfig(), "NotUsed"))
+            .withConsumerId(consumerId);
+
+
+        final KafkaOperations kafkaOperations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, consumerId));
+        final Map<String, Object> clientConfig = kafkaConsumerFactory.buildConsumerConfig(clientConfigBuilder.build());
+
+        new DemoDataGenerator(kafkaOperations, clientConfig).createDemoTopics();
 
         return "done";
     }
@@ -302,8 +319,8 @@ public class ApiController {
         final String clientId = "MyUser on MyTopic at MyCluster";
 
         // Create new Operational Client
-        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-        final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, clientId).create();
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, clientId);
 
         return new KafkaOperations(adminClient);
     }
@@ -320,9 +337,9 @@ public class ApiController {
         final Class keyDeserializerClass;
         try {
             if (keyMessageFormat.isDefaultFormat()) {
-                keyDeserializerClass = deserializerLoader.getDeserializerClass(keyMessageFormat.getClasspath());
+                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getClasspath());
             } else {
-                keyDeserializerClass = deserializerLoader.getDeserializerClass(keyMessageFormat.getJar(), keyMessageFormat.getClasspath());
+                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getJar(), keyMessageFormat.getClasspath());
             }
         } catch (final LoaderException exception) {
             throw new RuntimeException(exception.getMessage(), exception);
@@ -331,16 +348,16 @@ public class ApiController {
         final Class valueDeserializerClass;
         try {
             if (valueMessageFormat.isDefaultFormat()) {
-                valueDeserializerClass = deserializerLoader.getDeserializerClass(valueMessageFormat.getClasspath());
+                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getClasspath());
             } else {
-                valueDeserializerClass = deserializerLoader.getDeserializerClass(valueMessageFormat.getJar(), valueMessageFormat.getClasspath());
+                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getJar(), valueMessageFormat.getClasspath());
             }
         } catch (final LoaderException exception) {
             throw new RuntimeException(exception.getMessage(), exception);
         }
 
 
-        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
         final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
 
@@ -372,15 +389,9 @@ public class ApiController {
 
         // Create the damn consumer
         final ClientConfig clientConfig = clientConfigBuilder.build();
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(clientConfig);
-        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createAndSubscribe();
+        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
 
         // Create consumer
-        final KafkaResults results;
         return new TransactionalKafkaClient(kafkaConsumer, clientConfig);
-    }
-
-    private ClusterConfig getClusterConfig() {
-        return new ClusterConfig("localhost:9092");
     }
 }

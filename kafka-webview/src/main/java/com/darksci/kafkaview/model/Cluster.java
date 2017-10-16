@@ -18,10 +18,23 @@ public class Cluster {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(nullable = false, unique = false)
+    @Column(nullable = false)
     private String brokerHosts;
 
-    @Column(nullable = false, unique = false)
+    @Column(nullable = false)
+    private boolean isSslEnabled;
+
+    private String trustStoreFile;
+
+    // TODO Encrypt this value?
+    private String trustStorePassword;
+
+    private String keyStoreFile;
+
+    // TODO Encrypt this value?
+    private String keyStorePassword;
+
+    @Column(nullable = false)
     private boolean isValid;
 
     public long getId() {
@@ -48,6 +61,46 @@ public class Cluster {
         this.brokerHosts = brokerHosts;
     }
 
+    public boolean isSslEnabled() {
+        return isSslEnabled;
+    }
+
+    public void setSslEnabled(final boolean useSsl) {
+        this.isSslEnabled = useSsl;
+    }
+
+    public String getTrustStoreFile() {
+        return trustStoreFile;
+    }
+
+    public void setTrustStoreFile(final String trustStoreFile) {
+        this.trustStoreFile = trustStoreFile;
+    }
+
+    public String getTrustStorePassword() {
+        return trustStorePassword;
+    }
+
+    public void setTrustStorePassword(final String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+    }
+
+    public String getKeyStoreFile() {
+        return keyStoreFile;
+    }
+
+    public void setKeyStoreFile(final String keyStoreFile) {
+        this.keyStoreFile = keyStoreFile;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
+
+    public void setKeyStorePassword(final String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+    }
+
     public boolean isValid() {
         return isValid;
     }
@@ -62,6 +115,9 @@ public class Cluster {
             "id=" + id +
             ", name='" + name + '\'' +
             ", brokerHosts='" + brokerHosts + '\'' +
+            ", isSslEnabled=" + isSslEnabled +
+            ", trustStoreFile='" + trustStoreFile + '\'' +
+            ", keyStoreFile='" + keyStoreFile + '\'' +
             ", isValid=" + isValid +
             '}';
     }

@@ -1,11 +1,15 @@
 package com.darksci.kafkaview.manager.kafka;
 
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
+import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.filter.RecordFilterInterceptor;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.config.SslConfigs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,19 +18,19 @@ import java.util.Map;
 
 public class KafkaConsumerFactory {
 
-    private final ClientConfig clientConfig;
+    private final String keyStoreRootPath;
 
-    public KafkaConsumerFactory(final ClientConfig clientConfig) {
-        this.clientConfig = clientConfig;
+    public KafkaConsumerFactory(final String keyStoreRootPath) {
+        this.keyStoreRootPath = keyStoreRootPath;
     }
 
-    public KafkaConsumer create() {
+    public KafkaConsumer createConsumer(final ClientConfig clientConfig) {
         // Create consumer
-        return new KafkaConsumer<>(buildConsumerConfig());
+        return new KafkaConsumer<>(buildConsumerConfig(clientConfig));
     }
 
-    public KafkaConsumer createAndSubscribe() {
-        final KafkaConsumer kafkaConsumer = create();
+    public KafkaConsumer createConsumerAndSubscribe(final ClientConfig clientConfig) {
+        final KafkaConsumer kafkaConsumer = createConsumer(clientConfig);
 
         // Determine which partitions to subscribe to, for now do all
         final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
@@ -47,7 +51,11 @@ public class KafkaConsumerFactory {
         return kafkaConsumer;
     }
 
-    private Map<String, Object> buildConsumerConfig() {
+    public KafkaProducer createProducer(final ClientConfig clientConfig) {
+        return new KafkaProducer(buildConsumerConfig(clientConfig));
+    }
+
+    public Map<String, Object> buildConsumerConfig(final ClientConfig clientConfig) {
         // Build config
         final Map<String, Object> configMap = new HashMap<>();
         configMap.put(ConsumerConfig.CLIENT_ID_CONFIG, clientConfig.getConsumerId());
@@ -66,6 +74,17 @@ public class KafkaConsumerFactory {
             // Create interceptor
             configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, RecordFilterInterceptor.class.getName());
             configMap.put(RecordFilterInterceptor.CONFIG_KEY, clientConfig.getFilterConfig().getFilters());
+        }
+
+        // Use SSL?
+        final ClusterConfig clusterConfig = clientConfig.getTopicConfig().getClusterConfig();
+        if (clusterConfig.isUseSSL()) {
+            configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+            configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+            configMap.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
+            configMap.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());
+            configMap.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getTrustStoreFile());
+            configMap.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clusterConfig.getTrustStorePassword());
         }
 
         return configMap;

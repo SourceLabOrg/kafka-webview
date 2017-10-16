@@ -3,12 +3,14 @@ package com.darksci.kafkaview.controller.configuration.messageFormat;
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.messageFormat.forms.MessageFormatForm;
 import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
-import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
+import com.darksci.kafkaview.manager.plugin.PluginFactory;
+import com.darksci.kafkaview.manager.plugin.UploadManager;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.MessageFormat;
 import com.darksci.kafkaview.repository.MessageFormatRepository;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,10 +32,10 @@ import java.nio.file.Files;
 public class MessageFormatController extends BaseController {
 
     @Autowired
-    private PluginUploadManager uploadManager;
+    private UploadManager uploadManager;
 
     @Autowired
-    private DeserializerLoader deserializerLoader;
+    private PluginFactory<Deserializer> deserializerLoader;
 
     @Autowired
     private MessageFormatRepository messageFormatRepository;
@@ -100,7 +102,7 @@ public class MessageFormatController extends BaseController {
 
             // Attempt to load jar?
             try {
-                deserializerLoader.getDeserializer(filename, messageFormatForm.getClasspath());
+                deserializerLoader.getPlugin(filename, messageFormatForm.getClasspath());
             } catch (LoaderException e) {
                 // Remove jar
                 Files.delete(new File(jarPath).toPath());

@@ -11,6 +11,16 @@
 
 <body>
 <section layout:fragment="content">
+    <script type="application/javascript">
+        // On ready register handlers
+        jQuery(document).ready(function() {
+            jQuery('#ssl').click(function() {
+                var isChecked = jQuery('#ssl').is(':checked');
+                jQuery('#ssl-options').toggle(isChecked);
+            });
+        });
+    </script>
+
     <div class="container">
         <div class="row">
             <div class="col-md-12">
@@ -19,7 +29,9 @@
                         <strong th:text="${clusterForm.exists()} ? 'Edit' : 'Create'">Create</strong>
                         <span th:text="${clusterForm.exists()} ? ${clusterForm.name} : 'New Cluster'"></span>
                     </div>
-                    <form th:action="@{/configuration/cluster/update}" th:object="${clusterForm}" method="post" class="form-horizontal">
+                    <form
+                        enctype="multipart/form-data" method="post" class="form-horizontal"
+                        th:action="@{/configuration/cluster/update}" th:object="${clusterForm}">
                         <div class="card-body">
                             <!-- Name -->
                             <div class="form-group row">
@@ -50,7 +62,96 @@
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('brokerHosts')}" th:errors="*{brokerHosts}"/>
                                 </div>
                             </div>
+
+                            <!-- Use SSL -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="ssl">
+                                    Use SSL authentication?
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="ssl" name="ssl" class="" type="checkbox"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{ssl}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('ssl')}" th:errors="*{ssl}"/>
+                                </div>
+                            </div>
+
+                            <!-- SSL Options -->
+                            <div id="ssl-options" th:styleappend="${clusterForm.getSsl()} ? 'display: block;' : 'display: none;'">
+                                <h6>SSL Settings</h6>
+                                <hr>
+
+                                <!-- Trust Store file -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="trustStoreFile">
+                                        Trust Store
+                                        <div
+                                                th:if="${clusterForm.getTrustStoreFilename()} != null"
+                                                th:text="'Current: ' + ${clusterForm.getTrustStoreFilename()}">
+                                        </div>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            id="trustStoreFile" name="trustStoreFile" class="form-control" type="file"
+                                            placeholder="Select TrustStore JKS"
+                                            th:errorclass="is-invalid"
+                                            th:value="*{trustStoreFile}">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('trustStoreFile')}" th:errors="*{trustStoreFile}"/>
+                                    </div>
+                                </div>
+
+                                <!-- Trust Store Password -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="trustStorePassword">
+                                        Trust Store Password
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            id="trustStorePassword" name="trustStorePassword" class="form-control" type="password"
+                                            placeholder="TrustStore password"
+                                            th:errorclass="is-invalid"
+                                            th:value="*{trustStorePassword}">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('trustStorePassword')}" th:errors="*{trustStorePassword}"/>
+                                    </div>
+                                </div>
+
+                                <!-- Client KeyStore file -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="keyStoreFile">
+                                        Trust Store JKS
+                                        <div
+                                            th:if="${clusterForm.getKeyStoreFilename()} != null"
+                                            th:text="'Current: ' + ${clusterForm.getKeyStoreFilename()}">
+                                        </div>
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            id="keyStoreFile" name="keyStoreFile" class="form-control" type="file"
+                                            placeholder="Select KeyStore JKS"
+                                            th:errorclass="is-invalid"
+                                            th:value="*{keyStoreFile}">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStoreFile')}" th:errors="*{keyStoreFile}"/>
+                                    </div>
+                                </div>
+
+                                <!-- Client KeyStore Password -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="keyStorePassword">
+                                        Key Store Password
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            id="keyStorePassword" name="keyStorePassword" class="form-control" type="password"
+                                            placeholder="TrustStore password"
+                                            th:errorclass="is-invalid"
+                                            th:value="*{keyStorePassword}">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStorePassword')}" th:errors="*{keyStorePassword}"/>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="card-footer">
                             <input type="hidden" name="id" th:if="${clusterForm.exists()}" th:field="*{id}"></input>
                             <button type="submit" class="btn btn-sm btn-primary">

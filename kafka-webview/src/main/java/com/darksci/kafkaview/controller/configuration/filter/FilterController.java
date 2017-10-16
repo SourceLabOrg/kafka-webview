@@ -3,7 +3,7 @@ package com.darksci.kafkaview.controller.configuration.filter;
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.filter.forms.FilterForm;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
-import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
+import com.darksci.kafkaview.manager.plugin.UploadManager;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
@@ -36,7 +36,7 @@ import java.util.List;
 public class FilterController extends BaseController {
 
     @Autowired
-    private PluginUploadManager uploadManager;
+    private UploadManager uploadManager;
 
     @Autowired
     private PluginFactory<RecordFilter> recordFilterPluginFactory;

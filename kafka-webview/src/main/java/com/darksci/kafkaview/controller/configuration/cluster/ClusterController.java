@@ -2,19 +2,15 @@ package com.darksci.kafkaview.controller.configuration.cluster;
 
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
-import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
+import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
-import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
 import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
-import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
-import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
-import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
-import com.darksci.kafkaview.manager.kafka.dto.TopicList;
+import com.darksci.kafkaview.manager.plugin.UploadManager;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.repository.ClusterRepository;
-import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.io.IOException;
 
 @Controller
 @RequestMapping("/configuration/cluster")
@@ -36,6 +33,12 @@ public class ClusterController extends BaseController {
 
     @Autowired
     private ClusterRepository clusterRepository;
+
+    @Autowired
+    private UploadManager uploadManager;
+
+    @Autowired
+    private KafkaAdminFactory kafkaAdminFactory;
 
     /**
      * GET Displays main configuration index.
@@ -53,7 +56,7 @@ public class ClusterController extends BaseController {
     }
 
     /**
-     * GET Displays create cluster form.
+     * GET Displays createConsumer cluster form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createClusterForm(final ClusterForm clusterForm, final Model model) {
@@ -92,6 +95,9 @@ public class ClusterController extends BaseController {
         clusterForm.setId(cluster.getId());
         clusterForm.setName(cluster.getName());
         clusterForm.setBrokerHosts(cluster.getBrokerHosts());
+        clusterForm.setSsl(cluster.isSslEnabled());
+        clusterForm.setKeyStoreFilename(cluster.getKeyStoreFile());
+        clusterForm.setTrustStoreFilename(cluster.getTrustStoreFile());
 
         // Display template
         return "configuration/cluster/create";
@@ -117,6 +123,24 @@ public class ClusterController extends BaseController {
                 bindingResult.addError(new FieldError(
                     "clusterForm", "name", clusterForm.getName(), true, null, null, "Name is already used")
                 );
+            }
+        }
+
+        // If SSL is enabled
+        if (clusterForm.getSsl()) {
+            // If we're creating a new cluster
+            if (!clusterForm.exists()) {
+                // Ensure that we have files uploaded
+                if (clusterForm.getTrustStoreFile().isEmpty()) {
+                    bindingResult.addError(new FieldError(
+                        "clusterForm", "trustStoreFile", null, true, null, null, "Select a TrustStore JKS to upload")
+                    );
+                }
+                if (clusterForm.getKeyStoreFile().isEmpty()) {
+                    bindingResult.addError(new FieldError(
+                        "clusterForm", "keyStoreFile", null, true, null, null, "Select a KeyStore JKS to upload")
+                    );
+                }
             }
         }
 
@@ -148,6 +172,71 @@ public class ClusterController extends BaseController {
             successMessage = "Created new cluster!";
         }
 
+        // SSL Options
+        if (clusterForm.getSsl()) {
+            // Flip flag to true
+            cluster.setSslEnabled(true);
+
+            // Determine if we should update keystores
+            if (!clusterForm.exists() || !clusterForm.getTrustStoreFile().isEmpty()) {
+                // Delete previous trust store if updating
+                if (cluster.getTrustStoreFile() != null) {
+                    uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+                    cluster.setTrustStoreFile(null);
+                    cluster.setTrustStorePassword(null);
+                }
+
+                // Sanitize filename
+                final String filename = clusterForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".truststore.jks";
+
+                // Persist JKS on filesystem
+                try {
+                    uploadManager.handleKeystoreUpload(clusterForm.getTrustStoreFile(), filename);
+                    cluster.setTrustStoreFile(filename);
+
+                    // TODO encrypt this value
+                    cluster.setTrustStorePassword(clusterForm.getTrustStorePassword());
+                } catch (IOException exception) {
+                    // TODO handle
+                    throw new RuntimeException(exception.getMessage(), exception);
+                }
+            }
+
+            // Handle key store update
+            if (!clusterForm.exists() || !clusterForm.getKeyStoreFile().isEmpty()) {
+                // Delete previous key store if updating
+                if (cluster.getKeyStoreFile() != null) {
+                    uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+                    cluster.setKeyStoreFile(null);
+                    cluster.setKeyStorePassword(null);
+                }
+
+                // Sanitize filename
+                final String filename = clusterForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".keystore.jks";
+
+                // Persist JKS on filesystem
+                try {
+                    uploadManager.handleKeystoreUpload(clusterForm.getKeyStoreFile(), filename);
+                    cluster.setKeyStoreFile(filename);
+
+                    // TODO encrypt this value
+                    cluster.setKeyStorePassword(clusterForm.getKeyStorePassword());
+                } catch (IOException exception) {
+                    // TODO handle
+                    throw new RuntimeException(exception.getMessage(), exception);
+                }
+            }
+        } else {
+            // Disable SSL options
+            cluster.setSslEnabled(false);
+
+            // TODO handle removing keystores
+            cluster.setKeyStoreFile(null);
+            cluster.setKeyStorePassword(null);
+            cluster.setTrustStoreFile(null);
+            cluster.setTrustStorePassword(null);
+        }
+
         // Update properties
         cluster.setName(clusterForm.getName());
         cluster.setBrokerHosts(clusterForm.getBrokerHosts());
@@ -173,11 +262,57 @@ public class ClusterController extends BaseController {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
         } else {
+            // Delete KeyStores
+            if (cluster.getTrustStoreFile() != null) {
+                uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+            }
+            if (cluster.getKeyStoreFile() != null) {
+                uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+            }
+
             // Delete it
             clusterRepository.delete(id);
 
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted cluster!"));
         }
+
+        // redirect to cluster index
+        return "redirect:/configuration/cluster";
+    }
+
+    @RequestMapping(path = "/test/{id}", method = RequestMethod.GET)
+    public String testCluster(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+        // Retrieve it
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
+        }
+
+        // Build a client
+        // TODO use a clientId unique to the client + cluster + topic
+        final String clientId = "TestingClient-" + cluster.getId();
+
+        // Create new Operational Client
+        final ClusterConfig.Builder clusterConfigBuilder = ClusterConfig.newBuilder(cluster);
+
+        final AdminClient adminClient = kafkaAdminFactory.create(clusterConfigBuilder.build(), clientId);
+        try (final KafkaOperations kafkaOperations = new KafkaOperations(adminClient)) {
+            logger.info("Cluster Nodes: {}", kafkaOperations.getClusterNodes());
+
+            // If we made it this far, we should be AOK
+            cluster.setValid(true);
+            clusterRepository.save(cluster);
+
+            // Set success msg
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Cluster configuration is valid!"));
+        } catch (Exception e) {
+            // Set error msg
+            cluster.setValid(false);
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newDanger("Error connecting to cluster: " + e.getMessage()));
+        }
+        // Update
+        clusterRepository.save(cluster);
 
         // redirect to cluster index
         return "redirect:/configuration/cluster";
