@@ -14,7 +14,7 @@ spring:
     name: KafkaViewer
   datasource:
     schema: "classpath:/schema/schema.sql"
-#    data: "classpath:/schema/data.sql"
+    data: "classpath:/schema/data.sql"
 
   http:
     multipart:
