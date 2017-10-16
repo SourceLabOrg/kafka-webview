@@ -1,9 +1,6 @@
 package com.darksci.kafkaview.manager.demo;
 
-import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
-import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -21,16 +18,15 @@ import java.util.Map;
 public class DemoDataGenerator {
     private final static Logger logger = LoggerFactory.getLogger(DemoDataGenerator.class);
 
-    private final ClusterConfig clusterConfig;
-    private KafkaOperations kafkaOperations = null;
+    private final KafkaOperations kafkaOperations;
+    private final Map<String, Object> clientConfig;
 
-    public DemoDataGenerator(final ClusterConfig clusterConfig) {
-        this.clusterConfig = clusterConfig;
+    public DemoDataGenerator(final KafkaOperations kafkaOperations, final Map<String, Object> clientConfig) {
+        this.kafkaOperations = kafkaOperations;
+        this.clientConfig = clientConfig;
     }
 
     public void createDemoTopics() {
-        getOperationsClient().createTopic("NumbersTopic", 2, (short) 1);
-
         createNumbersTopic();
         createAlphabetTopic();
 
@@ -42,7 +38,7 @@ public class DemoDataGenerator {
      * This topic has 4 partitions, and we produce numbers 0-2000 into it.
      */
     private void createNumbersTopic() {
-        final String topicName = "NumbersTopic";
+        final String topicName = "tennessee-86173.NumbersTopic";
         final int numberOfPartitions = 4;
         final short replicationFactor = 1;
 
@@ -55,9 +51,9 @@ public class DemoDataGenerator {
 
         // Create publisher
         final Map<String, Object> config = new HashMap<>();
+        config.putAll(clientConfig);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class);
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getConnectString());
 
         final KafkaProducer<Integer, Integer> producer = new KafkaProducer<>(config);
         for (int index = 0; index < 2000; index++) {
@@ -69,7 +65,7 @@ public class DemoDataGenerator {
     }
 
     private void createAlphabetTopic() {
-        final String topicName = "AlphabetTopic";
+        final String topicName = "tennessee-86173.AlphabetTopic";
         final int numberOfPartitions = 1;
         final short replicationFactor = 1;
 
@@ -82,9 +78,9 @@ public class DemoDataGenerator {
 
         // Create publisher
         final Map<String, Object> config = new HashMap<>();
+        config.putAll(clientConfig);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getConnectString());
 
         final KafkaProducer<String, String> producer = new KafkaProducer<>(config);
         for (int repetition = 1; repetition < 11; repetition++) {
@@ -102,14 +98,6 @@ public class DemoDataGenerator {
     }
 
     private KafkaOperations getOperationsClient() {
-        if (kafkaOperations == null) {
-            // TODO use a clientId unique to the client + cluster + topic
-            final String clientId = "MyUser on MyTopic at MyCluster";
-
-            // Create new Operational Client
-            final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, clientId).create();
-            kafkaOperations = new KafkaOperations(adminClient);
-        }
         return kafkaOperations;
     }
 }

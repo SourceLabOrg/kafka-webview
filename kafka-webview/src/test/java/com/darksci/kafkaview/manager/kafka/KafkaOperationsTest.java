@@ -12,12 +12,14 @@ public class KafkaOperationsTest {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaOperationsTest.class);
 
+    private final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("./uploads");
+
     @Test
     public void testGetAvailableTopics() {
-        final ClusterConfig clusterConfig = new ClusterConfig("localhost:9092");
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder().withBrokerHosts("localhost:9092").build();
         final String clientId = "BobsYerAunty";
 
-        final KafkaOperations operations = new KafkaOperations(new KafkaAdminFactory(clusterConfig, clientId).create());
+        final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId));
 
         final TopicList topics = operations.getAvailableTopics();
         logger.info("{}", topics);
@@ -25,10 +27,10 @@ public class KafkaOperationsTest {
 
     @Test
     public void testGetClusterNodes() {
-        final ClusterConfig clusterConfig = new ClusterConfig("localhost:9092");
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder().withBrokerHosts("localhost:9092").build();
         final String clientId = "BobsYerAunty";
 
-        final KafkaOperations operations = new KafkaOperations(new KafkaAdminFactory(clusterConfig, clientId).create());
+        final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId));
 
         final NodeList nodeList = operations.getClusterNodes();
         logger.info("{}", nodeList);
@@ -36,10 +38,10 @@ public class KafkaOperationsTest {
 
     @Test
     public void testGetTopicDetails() {
-        final ClusterConfig clusterConfig = new ClusterConfig("localhost:9092");
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder().withBrokerHosts("localhost:9092").build();
         final String clientId = "BobsYerAunty";
 
-        final KafkaOperations operations = new KafkaOperations(new KafkaAdminFactory(clusterConfig, clientId).create());
+        final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId));
 
         final TopicDetails topicDetails = operations.getTopicDetails("A");
         logger.info("{}", topicDetails);

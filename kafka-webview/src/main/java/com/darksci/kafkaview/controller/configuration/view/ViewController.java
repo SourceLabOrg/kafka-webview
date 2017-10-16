@@ -50,6 +50,9 @@ public class ViewController extends BaseController {
     @Autowired
     private FilterRepository filterRepository;
 
+    @Autowired
+    private KafkaAdminFactory kafkaAdminFactory;
+
     /**
      * GET Displays main configuration index.
      */
@@ -66,9 +69,9 @@ public class ViewController extends BaseController {
     }
 
     /**
-     * GET Displays create view form
+     * GET Displays createConsumer view form
      */
-    @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequestMapping(path = "/createConsumer", method = RequestMethod.GET)
     public String createViewForm(final ViewForm viewForm, final Model model) {
         // Setup breadcrumbs
         if (!model.containsAttribute("BreadCrumbs")) {
@@ -95,8 +98,8 @@ public class ViewController extends BaseController {
             final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
             if (cluster != null) {
                 // Create a new Operational Client
-                final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-                final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, "BobsYerAunty").create();
+                final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+                final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, "BobsYerAunty");
 
                 try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
                     final TopicList topics = operations.getAvailableTopics();
@@ -111,7 +114,7 @@ public class ViewController extends BaseController {
             }
         }
 
-        return "configuration/view/create";
+        return "configuration/view/createConsumer";
     }
 
     /**

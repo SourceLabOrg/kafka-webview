@@ -25,8 +25,8 @@ public class AppProperties {
     @Value("${app.companyAddress}")
     private String companyAddress;
 
-    @Value("${app.jarUploadPath}")
-    private String jarUploadPath;
+    @Value("${app.uploadPath}")
+    private String uploadPath;
 
     private Map<String, String> globalProperties;
 
@@ -50,8 +50,8 @@ public class AppProperties {
         return companyName;
     }
 
-    public String getJarUploadPath() {
-        return jarUploadPath;
+    public String getUploadPath() {
+        return uploadPath;
     }
 
     public Map<String, String> getGlobalProperties() {

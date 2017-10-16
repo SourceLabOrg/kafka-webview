@@ -30,6 +30,7 @@
                             <tr>
                                 <th>Cluster Name</th>
                                 <th>Brokers</th>
+                                <th>SSL Enabled</th>
                                 <th>Status</th>
                                 <th class="text-right">Action</th>
                             </tr>
@@ -40,12 +41,22 @@
                                     <td th:text="${cluster.brokerHosts}"></td>
                                     <td>
                                         <span
+                                            th:if="${cluster.isSslEnabled()}"
+                                            class="badge badge-success">Yes
+                                        </span>
+                                        <span
+                                            th:if="!${cluster.isSslEnabled()}"
+                                            class="badge badge-danger">No
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
                                             th:if="${cluster.isValid()}"
-                                            class="badge badge-success">On-line
+                                            class="badge badge-success">Validated
                                         </span>
                                         <span
                                             th:if="!${cluster.isValid()}"
-                                            class="badge badge-danger">Off-line
+                                            class="badge badge-danger">Untested
                                         </span>
                                     </td>
                                     <td class="text-right">
@@ -54,9 +65,9 @@
                                                 Actions
                                             </button>
                                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                <a th:if="!${cluster.isValid()}" class="dropdown-item" th:href="@{/configuration/cluster/test/{id}(id=${cluster.id})}">
+                                                <a class="dropdown-item" th:href="@{/configuration/cluster/test/{id}(id=${cluster.id})}">
                                                     <i class="fa fa-edit"></i>
-                                                    Validate
+                                                    Test
                                                 </a>
                                                 <a class="dropdown-item" th:href="@{/configuration/cluster/edit/{id}(id=${cluster.id})}">
                                                     <i class="fa fa-edit"></i>

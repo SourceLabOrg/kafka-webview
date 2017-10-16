@@ -24,6 +24,8 @@ public class TransactionalKafkaClientTest {
 
     private final static Logger logger = LoggerFactory.getLogger(TransactionalKafkaClientTest.class);
 
+    private final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("./uploads");
+
     @Test
     public void doTest() {
         // Create the configs
@@ -31,7 +33,7 @@ public class TransactionalKafkaClientTest {
         final String consumerId = "BobsYerAunty";
 
         // Defines the Cluster
-        final ClusterConfig clusterConfig = new ClusterConfig("localhost:9092");
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder().withBrokerHosts("localhost:9092").build();
 
         // Define our Deserializer
         final DeserializerConfig deserializerConfig = new DeserializerConfig(StringDeserializer.class, StringDeserializer.class);
@@ -46,7 +48,7 @@ public class TransactionalKafkaClientTest {
         final ClientConfig clientConfig = new ClientConfig(topicConfig, filterConfig, consumerId);
 
         // Build a consumer
-        final KafkaConsumer kafkaConsumer = new KafkaConsumerFactory(clientConfig).createAndSubscribe();
+        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
 
         // Create consumer
         final TransactionalKafkaClient transactionalKafkaClient = new TransactionalKafkaClient(kafkaConsumer, clientConfig);

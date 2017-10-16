@@ -3,7 +3,7 @@ package com.darksci.kafkaview.controller.configuration.filter;
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.filter.forms.FilterForm;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
-import com.darksci.kafkaview.manager.plugin.PluginUploadManager;
+import com.darksci.kafkaview.manager.plugin.UploadManager;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
@@ -36,7 +36,7 @@ import java.util.List;
 public class FilterController extends BaseController {
 
     @Autowired
-    private PluginUploadManager uploadManager;
+    private UploadManager uploadManager;
 
     @Autowired
     private PluginFactory<RecordFilter> recordFilterPluginFactory;
@@ -66,17 +66,17 @@ public class FilterController extends BaseController {
     }
 
     /**
-     * GET Displays create filter form.
+     * GET Displays createConsumer filter form.
      */
-    @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequestMapping(path = "/createConsumer", method = RequestMethod.GET)
     public String createFilter(final FilterForm filterForm, final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", null);
 
-        return "configuration/filter/create";
+        return "configuration/filter/createConsumer";
     }
 
-    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequestMapping(path = "/createConsumer", method = RequestMethod.POST)
     public String create(
         @Valid final FilterForm filterForm,
         final BindingResult bindingResult,
@@ -84,7 +84,7 @@ public class FilterController extends BaseController {
 
         // If we have errors just display the form again.
         if (bindingResult.hasErrors()) {
-            return "configuration/filter/create";
+            return "configuration/filter/createConsumer";
         }
 
         final MultipartFile file = filterForm.getFile();
@@ -92,7 +92,7 @@ public class FilterController extends BaseController {
             bindingResult.addError(new FieldError(
                 "filterForm", "file", "", true, null, null, "Select a jar to upload")
             );
-            return "/configuration/filter/create";
+            return "/configuration/filter/createConsumer";
         }
 
         // Make sure ends with .jar
@@ -100,7 +100,7 @@ public class FilterController extends BaseController {
             bindingResult.addError(new FieldError(
                 "filterForm", "file", "", true, null, null, "File must have a .jar extension")
             );
-            return "/configuration/filter/create";
+            return "/configuration/filter/createConsumer";
         }
 
         try {
@@ -120,7 +120,7 @@ public class FilterController extends BaseController {
                 bindingResult.addError(new FieldError(
                     "filterForm", "file", "", true, null, null, e.getMessage())
                 );
-                return "/configuration/filter/create";
+                return "/configuration/filter/createConsumer";
             }
 
             final Filter filter = new Filter();

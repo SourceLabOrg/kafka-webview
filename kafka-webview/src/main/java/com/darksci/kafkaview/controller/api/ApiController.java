@@ -47,7 +47,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +68,12 @@ public class ApiController {
 
     @Autowired
     private PluginFactory<RecordFilter> recordFilterPluginFactory;
+
+    @Autowired
+    private KafkaAdminFactory kafkaAdminFactory;
+
+    @Autowired
+    private KafkaConsumerFactory kafkaConsumerFactory;
 
     /**
      * GET kafka results
@@ -291,8 +296,20 @@ public class ApiController {
             return "Error";
         }
 
-        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-        new DemoDataGenerator(clusterConfig).createDemoTopics();
+        final String consumerId = "DemoClientId";
+
+        // Create cluster config
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final ClientConfig.Builder clientConfigBuilder = ClientConfig.newBuilder()
+            .withNoFilters()
+            .withTopicConfig(new TopicConfig(clusterConfig, DeserializerConfig.defaultConfig(), "NotUsed"))
+            .withConsumerId(consumerId);
+
+
+        final KafkaOperations kafkaOperations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, consumerId));
+        final Map<String, Object> clientConfig = kafkaConsumerFactory.buildConsumerConfig(clientConfigBuilder.build());
+
+        new DemoDataGenerator(kafkaOperations, clientConfig).createDemoTopics();
 
         return "done";
     }
@@ -302,8 +319,8 @@ public class ApiController {
         final String clientId = "MyUser on MyTopic at MyCluster";
 
         // Create new Operational Client
-        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
-        final AdminClient adminClient = new KafkaAdminFactory(clusterConfig, clientId).create();
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, clientId);
 
         return new KafkaOperations(adminClient);
     }
@@ -340,7 +357,7 @@ public class ApiController {
         }
 
 
-        final ClusterConfig clusterConfig = new ClusterConfig(cluster.getBrokerHosts());
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
         final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
 
@@ -372,15 +389,9 @@ public class ApiController {
 
         // Create the damn consumer
         final ClientConfig clientConfig = clientConfigBuilder.build();
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(clientConfig);
-        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createAndSubscribe();
+        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
 
         // Create consumer
-        final KafkaResults results;
         return new TransactionalKafkaClient(kafkaConsumer, clientConfig);
-    }
-
-    private ClusterConfig getClusterConfig() {
-        return new ClusterConfig("localhost:9092");
     }
 }
