@@ -1,12 +1,7 @@
 package com.darksci.kafkaview.controller.configuration.view.forms;
 
-import com.darksci.kafkaview.model.Cluster;
-import com.darksci.kafkaview.model.MessageFormat;
 import org.hibernate.validator.constraints.Range;
 
-import javax.persistence.Column;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.HashSet;

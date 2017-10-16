@@ -3,7 +3,6 @@ package com.darksci.kafkaview.manager.plugin;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.manager.plugin.exception.UnableToFindClassException;
 import com.darksci.kafkaview.manager.plugin.exception.WrongImplementationException;
-import com.darksci.kafkaview.plugin.filter.RecordFilter;
 
 import java.io.File;
 import java.net.MalformedURLException;

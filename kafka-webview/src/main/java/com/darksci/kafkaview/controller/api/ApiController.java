@@ -2,7 +2,9 @@ package com.darksci.kafkaview.controller.api;
 
 import com.darksci.kafkaview.manager.demo.DemoDataGenerator;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
+import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
+import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
 import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
 import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
@@ -14,8 +16,6 @@ import com.darksci.kafkaview.manager.kafka.dto.NodeDetails;
 import com.darksci.kafkaview.manager.kafka.dto.NodeList;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
-import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
-import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
 import com.darksci.kafkaview.manager.kafka.dto.TopicListing;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;

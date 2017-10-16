@@ -2,7 +2,6 @@ package com.darksci.kafkaview.controller.configuration.messageFormat;
 
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.messageFormat.forms.MessageFormatForm;
-import com.darksci.kafkaview.manager.plugin.DeserializerLoader;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.UploadManager;
 import com.darksci.kafkaview.manager.plugin.exception.LoaderException;

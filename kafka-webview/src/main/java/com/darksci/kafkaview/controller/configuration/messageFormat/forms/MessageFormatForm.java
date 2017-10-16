@@ -1,6 +1,5 @@
 package com.darksci.kafkaview.controller.configuration.messageFormat.forms;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;

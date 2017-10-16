@@ -6,7 +6,6 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.common.config.SslConfigs;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,10 +1,10 @@
 package com.darksci.kafkaview.controller.register;
 
 import com.darksci.kafkaview.configuration.CustomUserDetails;
+import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.register.forms.RegisterForm;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.manager.user.NewUserManager;
-import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.slf4j.Logger;
