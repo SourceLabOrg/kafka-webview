@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Configuration</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Configuration
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th width="15%">Section</th>
+                                <th>Description</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>
+                                    <a href="/configuration/cluster">Clusters</a>
+                                </td>
+                                <td>
+                                    Define connection parameters for Kafka clusters you want to view data on.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a href="/configuration/messageFormat">Message Formats</a>
+                                </td>
+                                <td>
+                                    Messages stored within Kafka can be persisted in various formats.  This section allows you
+                                    to define and upload custom Deserializers for viewing data on your kafka clusters.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a href="/configuration/filter">Record Filters</a>
+                                </td>
+                                <td>
+                                    Often when viewing data in a Kafka topic, you are only interested in a subset of the
+                                    messages. Record Filters allow you to do server side filtering of messages coming from Kafka.
+                                    This section allows you to define and upload custom Record Filters.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a href="/configuration/view">Views</a>
+                                </td>
+                                <td>
+                                    This section allows you to define how you would like view data from a configured
+                                    Kafka cluster and topic.  It also allows you to configure Record Filters.
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>
