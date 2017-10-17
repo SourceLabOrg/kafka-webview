@@ -23,9 +23,58 @@ public class ClusterController extends BaseController {
     /**
      * GET Displays edit cluster form.
      */
-    @RequestMapping(path = "/read/{id}", method = RequestMethod.GET)
-    public String readCluster(final @PathVariable Long id, final Model model, final RedirectAttributes redirectAttributes) {
+    @RequestMapping(path = "/read/{clusterId}", method = RequestMethod.GET)
+    public String readCluster(
+        final @PathVariable Long clusterId,
+        final Model model,
+        final RedirectAttributes redirectAttributes) {
 
+        // Retrieve by id
+        final Cluster cluster = retrieveCluster(clusterId, redirectAttributes);
+        if (cluster == null) {
+            // redirect
+            return "redirect:/";
+        }
+        model.addAttribute("cluster", cluster);
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model)
+            .addCrumb(cluster.getName(), null);
+
+        // Display template
+        return "cluster/read";
+    }
+
+    /**
+     * GET Displays info about a specific broker in a cluster.
+     */
+    @RequestMapping(path = "/read/{clusterId}/broker/{brokerId}", method = RequestMethod.GET)
+    public String readBroker(
+        final @PathVariable Long clusterId,
+        final @PathVariable Integer brokerId,
+        final Model model,
+        final RedirectAttributes redirectAttributes) {
+
+        // Retrieve by id
+        final Cluster cluster = retrieveCluster(clusterId, redirectAttributes);
+        if (cluster == null) {
+            // redirect
+            return "redirect:/";
+        }
+        model.addAttribute("cluster", cluster);
+        model.addAttribute("brokerId", brokerId);
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model)
+            .addCrumb(cluster.getName(), "/cluster/read/" + clusterId)
+            .addCrumb("Broker " + brokerId, null);
+
+
+        // Display template
+        return "cluster/readBroker";
+    }
+
+    private Cluster retrieveCluster(final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve by id
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -35,26 +84,15 @@ public class ClusterController extends BaseController {
             redirectAttributes.addFlashAttribute("FlashMessage", flashMessage);
 
             // redirect to cluster index
-            return "redirect:/";
+            return null;
         }
-        model.addAttribute("cluster", cluster);
-
-        // Setup breadcrumbs
-        setupBreadCrumbs(model,  cluster.getName(), null);
-
-        // Display template
-        return "cluster/read";
+        return cluster;
     }
 
-    private void setupBreadCrumbs(final Model model, String name, String url) {
+    private BreadCrumbManager setupBreadCrumbs(final Model model) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model);
-
-        if (name != null) {
-            manager.addCrumb("Cluster Explorer", "/cluster");
-            manager.addCrumb(name, url);
-        } else {
-            manager.addCrumb("Cluster Explorer", null);
-        }
+        manager.addCrumb("Cluster Explorer", "/cluster");
+        return manager;
     }
 }

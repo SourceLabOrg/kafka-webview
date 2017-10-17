@@ -30,6 +30,7 @@
                     jQuery.each(results, function(index, result) {
                         // Generate html from template
                         var properties = {
+                            clusterId: ClusterInfo.clusterId,
                             id: result.id,
                             host: result.host,
                             port: result.port,
@@ -66,6 +67,8 @@
                         // Generate html from template
                         var properties = {
                             topic: result.name,
+                            encodedTopic: encodeURIComponent(result.name),
+                            clusterId: ClusterInfo.clusterId,
                             internal: result.internal,
                             partitions_count: result.partitions.length
                         };
@@ -193,7 +196,9 @@
         <!-- Nodes Template -->
         <script id="nodes-template" type="text/x-handlebars-template">
             <tr>
-                <td>{{id}}</td>
+                <td>
+                    <a href="/cluster/read/{{clusterId}}/broker/{{id}}">{{id}}</a>
+                </td>
                 <td>{{host}}:{{port}}</td>
                 <td>
                     {{#if rack}}
@@ -208,9 +213,19 @@
         <!-- Topics Details Template -->
         <script id="topics-template" type="text/x-handlebars-template">
             <tr>
-                <td>{{topic}}</td>
+                <td>
+                    <a href="/cluster/read/{{clusterId}}/topic/{{encodedTopic}}">
+                        {{topic}}
+                    </a>
+                </td>
                 <td>{{partitions_count}}</td>
-                <td>{{internal}}</td>
+                <td>
+                    {{#if internal}}
+                        <span class="badge badge-info">
+                            internal
+                        </span>
+                    {{/if}}
+                </td>
             </tr>
         </script>
     </div>
