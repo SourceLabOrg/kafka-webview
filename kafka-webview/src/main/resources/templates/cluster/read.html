@@ -197,7 +197,7 @@
         <script id="nodes-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/read/{{clusterId}}/broker/{{id}}">{{id}}</a>
+                    <a href="/cluster/{{clusterId}}/broker/{{id}}">{{id}}</a>
                 </td>
                 <td>{{host}}:{{port}}</td>
                 <td>
@@ -214,7 +214,7 @@
         <script id="topics-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/read/{{clusterId}}/topic/{{encodedTopic}}">
+                    <a href="/cluster/{{clusterId}}/topic/{{encodedTopic}}">
                         {{topic}}
                     </a>
                 </td>

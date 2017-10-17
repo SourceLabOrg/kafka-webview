@@ -23,7 +23,7 @@ public class ClusterController extends BaseController {
     /**
      * GET Displays edit cluster form.
      */
-    @RequestMapping(path = "/read/{clusterId}", method = RequestMethod.GET)
+    @RequestMapping(path = "/{clusterId}", method = RequestMethod.GET)
     public String readCluster(
         final @PathVariable Long clusterId,
         final Model model,
@@ -48,7 +48,7 @@ public class ClusterController extends BaseController {
     /**
      * GET Displays info about a specific broker in a cluster.
      */
-    @RequestMapping(path = "/read/{clusterId}/broker/{brokerId}", method = RequestMethod.GET)
+    @RequestMapping(path = "/{clusterId}/broker/{brokerId}", method = RequestMethod.GET)
     public String readBroker(
         final @PathVariable Long clusterId,
         final @PathVariable Integer brokerId,
@@ -66,12 +66,41 @@ public class ClusterController extends BaseController {
 
         // Setup breadcrumbs
         setupBreadCrumbs(model)
-            .addCrumb(cluster.getName(), "/cluster/read/" + clusterId)
+            .addCrumb(cluster.getName(), "/cluster/" + clusterId)
             .addCrumb("Broker " + brokerId, null);
 
 
         // Display template
         return "cluster/readBroker";
+    }
+
+    /**
+     * GET Displays info about a specific topic in a cluster.
+     */
+    @RequestMapping(path = "/{clusterId}/topic/{topic:.+}", method = RequestMethod.GET)
+    public String readTopic(
+        final @PathVariable Long clusterId,
+        final @PathVariable String topic,
+        final Model model,
+        final RedirectAttributes redirectAttributes) {
+
+        // Retrieve by id
+        final Cluster cluster = retrieveCluster(clusterId, redirectAttributes);
+        if (cluster == null) {
+            // redirect
+            return "redirect:/";
+        }
+        model.addAttribute("cluster", cluster);
+        model.addAttribute("topic", topic);
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model)
+            .addCrumb(cluster.getName(), "/cluster/" + clusterId)
+            .addCrumb("Topic " + topic, null);
+
+
+        // Display template
+        return "cluster/readTopic";
     }
 
     private Cluster retrieveCluster(final Long id, final RedirectAttributes redirectAttributes) {

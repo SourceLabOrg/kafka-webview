@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Cluster Explorer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // Maintains state of our consumer
+            var TopicInfo = {
+                clusterId: '[[${cluster.id}]]',
+                topic: '[[${topic}]]',
+
+                handleTopicDetails: function(results) {
+                    // Clear nodes table
+                    var table = jQuery('#topic-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#topic-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Loop through partitions
+                    jQuery(results.partitions).each(function(partitionIndex, partition) {
+                        // Build replicas
+                        var replicas = [];
+
+                        jQuery(partition.replicas).each(function(replicaIndex, replica) {
+                            var inSync = false;
+                            jQuery(partition.isr).each(function(isrIndex, isr) {
+                                if (isr.id == replica.id) {
+                                    inSync = true;
+                                }
+                            });
+
+                            replicas.push({
+                                    host: replica.host + ":" + replica.port,
+                                    id: replica.id,
+                                    inSync: inSync
+                                }
+                            );
+                        });
+
+                        var properties = {
+                            partition: partition.partition,
+                            clusterId: TopicInfo.clusterId,
+                            leaderId: partition.leader.id,
+                            leaderHost: partition.leader.host + ":" + partition.leader.port,
+                            replicas: replicas
+                        };
+
+                        console.log(properties);
+
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#topic-loader').toggle(false);
+
+                    if (false) {
+                        jQuery('#topic-no-results').toggle(true);
+                    } else {
+                        jQuery('#topic-no-results').toggle(false);
+                        jQuery('#topic-table').toggle(true);
+                    }
+                }
+            };
+
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                // Chain initial ajax requests.
+                // Request Cluster Information
+                ApiClient.getTopicDetails(TopicInfo.clusterId, TopicInfo.topic, TopicInfo.handleTopicDetails);
+            });
+        </script>
+
+        <!-- Brokers -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong>
+                        Topic <strong th:text="${topic}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="topic-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="topic-no-results" style="display: none;">
+                            <h4 class="alert-heading">Topic Not Found</h4>
+                            <p>Looks like we couldn't find any information about this topic!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="topic-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Partition</th>
+                                <th>Leader</th>
+                                <th>Replicas</th>
+                            </tr>
+                            </thead>
+                            <tbody id="topic-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Broker Template -->
+        <script id="topic-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{partition}}</td>
+                <td>
+                    <a href="/cluster/{{clusterId}}/broker/{{leaderId}}">
+                        {{leaderHost}}
+                    </a> ( {{leaderId}} )
+                </td>
+                <td>
+                    <ul class="list-group">
+                        {{#each replicas}}
+                            <li title="{{#if this.inSync }}In Sync{{else}}Out of Sync{{/if}}"
+                                class="list-group-item {{#unless this.inSync }} list-group-item-danger {{/unless}}">
+                                {{this.host}}
+                            </li>
+                        {{/each}}
+                    </ul>
+                </td>
+            </tr>
+        </script>
+    </div>
+</section>
+
+</body>
+</html>
