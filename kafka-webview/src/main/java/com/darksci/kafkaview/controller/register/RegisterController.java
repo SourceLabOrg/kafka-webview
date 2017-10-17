@@ -6,6 +6,7 @@ import com.darksci.kafkaview.controller.register.forms.RegisterForm;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.manager.user.NewUserManager;
 import com.darksci.kafkaview.model.User;
+import com.darksci.kafkaview.model.UserRole;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,7 @@ public class RegisterController extends BaseController {
         }
 
         // Create the user
-        final User newUser = newUserManager.createNewUser(registerForm.getEmail(), registerForm.getDisplayName(), registerForm.getPassword());
+        final User newUser = newUserManager.createNewUser(registerForm.getEmail(), registerForm.getDisplayName(), registerForm.getPassword(), UserRole.ROLE_USER);
         if (newUser == null) {
             // Add error flash msg
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error registering new user!"));

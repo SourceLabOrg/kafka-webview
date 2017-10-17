@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+<head>
+    <title>User</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <strong th:text="${userForm.exists()} ? 'Edit' : 'Create'">Create</strong>
+                        <span th:text="${userForm.exists()} ? ${userForm.name} : 'New User'"></span>
+                    </div>
+                    <form
+                        th:action="@{/configuration/user/update}"
+                        th:object="${userForm}"
+                        method="post" class="form-horizontal" autocomplete="off">
+                        <div class="card-body">
+
+                            <!-- Email Input -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="email">
+                                    Email Address
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="email" name="email" class="form-control" type="text"
+                                        placeholder="User's email address"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{email}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"/>
+                                </div>
+                            </div>
+
+                            <!-- Name Input -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="displayName">
+                                    Name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="displayName" name="displayName" class="form-control" type="text"
+                                        placeholder="User's name"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{displayName}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}"/>
+                                </div>
+                            </div>
+
+                            <!-- Password Input -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="password">
+                                    Password
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="password" name="password" class="form-control" type="password"
+                                        placeholder=""
+                                        th:errorclass="is-invalid"
+                                        th:value="*{password}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"/>
+                                </div>
+                            </div>
+
+                            <!-- Password Validation Input -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="password2">
+                                    Password
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="password2" name="password2" class="form-control" type="password"
+                                        placeholder=""
+                                        th:errorclass="is-invalid"
+                                        th:value="*{password2}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password2')}" th:errors="*{password2}"/>
+                                </div>
+                            </div>
+
+                            <!-- User role -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="userRole">
+                                    User Role
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                        id="userRole" name="userRole" class="form-control"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{userRole}">
+                                    <option value="">Please select a user role</option>
+                                    <option th:each="userRole : ${userRoles}"
+                                            th:value="${userRole}" th:text="${userRole}">Role Name</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('userRole')}" th:errors="*{userRole}"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <input type="hidden" name="id" th:if="${userForm.exists()}" th:field="*{id}">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa fa-dot-circle-o"></i>
+                                Submit
+                            </button>
+                            <a class="btn btn-sm btn-danger" href="/configuration/user" role="button">
+                                <i class="fa fa-ban"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

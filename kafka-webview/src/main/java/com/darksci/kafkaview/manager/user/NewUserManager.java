@@ -28,13 +28,13 @@ public class NewUserManager {
      * @param password Password of new user.
      * @return The new user.
      */
-    public User createNewUser(final String email, final String displayName, final String password) {
+    public User createNewUser(final String email, final String displayName, final String password, final UserRole userRole) {
         final UserBuilder userBuilder = new UserBuilder();
         userBuilder
             .withEmail(email)
             .withDisplayName(displayName)
             .withPassword(password)
-            .withRole(UserRole.ROLE_USER)
+            .withRole(userRole)
             .withIsActive(true);
 
         // Create them!
