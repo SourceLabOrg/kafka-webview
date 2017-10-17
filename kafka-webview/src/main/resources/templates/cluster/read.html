@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Cluster Explorer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // Maintains state of our consumer
+            var ClusterInfo = {
+                clusterId: '[[${cluster.id}]]',
+
+                // Handle cluster node results ajax result
+                handleClusterNodeResults: function(results) {
+                    // Clear nodes table
+                    var table = jQuery('#nodes-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#nodes-template').html();
+                    var template = Handlebars.compile(source);
+
+                    jQuery.each(results, function(index, result) {
+                        // Generate html from template
+                        var properties = {
+                            clusterId: ClusterInfo.clusterId,
+                            id: result.id,
+                            host: result.host,
+                            port: result.port,
+                            rack: result.rack
+                        };
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#nodes-loader').toggle(false);
+
+                    if (results.length == 0) {
+                        jQuery('#nodes-no-results').toggle(true);
+                    } else {
+                        jQuery('#nodes-no-results').toggle(false);
+                        jQuery('#nodes-table').toggle(true);
+                    }
+                },
+
+                // Handle all topics details results ajax result
+                handleAllTopicsDetails: function(results) {
+                    // Clear topics table
+                    var table = jQuery('#topics-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#topics-template').html();
+                    var template = Handlebars.compile(source);
+
+                    jQuery.each(results, function(index, result) {
+                        // Generate html from template
+                        var properties = {
+                            topic: result.name,
+                            encodedTopic: encodeURIComponent(result.name),
+                            clusterId: ClusterInfo.clusterId,
+                            internal: result.internal,
+                            partitions_count: result.partitions.length
+                        };
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#topics-loader').toggle(false);
+
+                    if (results.length == 0) {
+                        jQuery('#topics-no-results').toggle(true);
+                    } else {
+                        jQuery('#topics-no-results').toggle(false);
+                        jQuery('#topics-table').toggle(true);
+                    }
+                }
+            };
+
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                // Chain initial ajax requests.
+                // Request Cluster Information
+                ApiClient.getClusterNodes(ClusterInfo.clusterId, function(results) {
+                    // Handle results
+                    ClusterInfo.handleClusterNodeResults(results);
+
+                    // Fire off request to get topic details
+                    ApiClient.getAllTopicsDetails(ClusterInfo.clusterId, function(results) {
+                       // Handle results
+                       ClusterInfo.handleAllTopicsDetails(results);
+                    });
+                });
+            });
+        </script>
+
+        <!-- Brokers -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong> Brokers
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="nodes-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="nodes-no-results" style="display: none;">
+                            <h4 class="alert-heading">No Brokers Found</h4>
+                            <p>Looks like we couldn't find any brokers!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="nodes-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Broker Id</th>
+                                <th>Hostname</th>
+                                <th>Rack</th>
+                            </tr>
+                            </thead>
+                            <tbody id="nodes-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topics -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong> Topics
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="topics-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="topics-no-results" style="display: none;">
+                            <h4 class="alert-heading">No Topics Found</h4>
+                            <p>Looks like we couldn't find any topics!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="topics-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Topic</th>
+                                <th>Partitions</th>
+                                <th>Internal</th>
+                            </tr>
+                            </thead>
+                            <tbody id="topics-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nodes Template -->
+        <script id="nodes-template" type="text/x-handlebars-template">
+            <tr>
+                <td>
+                    <a href="/cluster/{{clusterId}}/broker/{{id}}">{{id}}</a>
+                </td>
+                <td>{{host}}:{{port}}</td>
+                <td>
+                    {{#if rack}}
+                        {{rack}}
+                    {{else}}
+                        <i>none</i>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+
+        <!-- Topics Details Template -->
+        <script id="topics-template" type="text/x-handlebars-template">
+            <tr>
+                <td>
+                    <a href="/cluster/{{clusterId}}/topic/{{encodedTopic}}">
+                        {{topic}}
+                    </a>
+                </td>
+                <td>{{partitions_count}}</td>
+                <td>
+                    {{#if internal}}
+                        <span class="badge badge-info">
+                            internal
+                        </span>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+    </div>
+</section>
+
+</body>
+</html>

@@ -10,6 +10,7 @@ import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
 import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
 import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
+import com.darksci.kafkaview.manager.kafka.dto.ConfigItem;
 import com.darksci.kafkaview.manager.kafka.dto.ConsumerState;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResults;
 import com.darksci.kafkaview.manager.kafka.dto.NodeDetails;
@@ -245,7 +246,7 @@ public class ApiController {
     }
 
     /**
-     * GET Topic Details
+     * GET Details for a specific Topic.
      */
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
@@ -261,6 +262,70 @@ public class ApiController {
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             final TopicDetails topicDetails = operations.getTopicDetails(topic);
             return topicDetails;
+        }
+    }
+
+    /**
+     * GET Config for a specific Topic.
+     */
+    @RequestMapping(path = "/cluster/{id}/topic/{topic}/config", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public List<ConfigItem> getTopicConfig(final @PathVariable Long id, final @PathVariable String topic) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            new ArrayList<>();
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.getTopicConfig(topic).getConfigEntries();
+        }
+    }
+
+    /**
+     * GET Config for a specific broker.
+     */
+    @RequestMapping(path = "/cluster/{id}/broker/{brokerId}/config", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public List<ConfigItem> getBrokerConfig(final @PathVariable Long id, final @PathVariable String brokerId) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            new ArrayList<>();
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.getBrokerConfig(brokerId).getConfigEntries();
+        }
+    }
+
+    /**
+     * GET Details for all Topics on a cluster.
+     */
+    @RequestMapping(path = "/cluster/{id}/topics/details", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public Collection<TopicDetails> getAllTopicsDetails(final @PathVariable Long id) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            new ArrayList<>();
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            // First get all of the topics
+            final TopicList topicList = operations.getAvailableTopics();
+
+            // Now get details about all the topics
+            final Map<String, TopicDetails> results = operations.getTopicDetails(topicList.getTopicNames());
+
+            // Return just the TopicDetails
+            return results.values();
         }
     }
 

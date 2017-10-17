@@ -43,6 +43,9 @@ public abstract class BaseController {
         return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
+    /**
+     * This gets executed for all requests.
+     */
     @ModelAttribute
     public void addAttributes(Model model) {
         // TODO put a limit on these

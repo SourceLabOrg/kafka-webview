@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.manager.kafka.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TopicList {
@@ -11,6 +12,14 @@ public class TopicList {
 
     public List<TopicListing> getTopics() {
         return topics;
+    }
+
+    public List<String> getTopicNames() {
+        final List<String> topicNames = new ArrayList<>();
+        for (final TopicListing topicListing: getTopics()) {
+            topicNames.add(topicListing.getName());
+        }
+        return topicNames;
     }
 
     @Override

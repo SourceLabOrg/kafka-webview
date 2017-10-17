@@ -150,7 +150,7 @@
                     </a>
                     <ul class="nav-dropdown-items">
                         <li class="nav-item" th:each="cluster : ${MenuClusters}">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" th:href="'/cluster/' + ${cluster.id}">
                                 <i class="icon-layers"></i>
                                 [[${cluster.name}]]
                             </a>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Cluster Explorer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // Maintains state of our consumer
+            var TopicInfo = {
+                clusterId: '[[${cluster.id}]]',
+                topic: '[[${topic}]]',
+
+                handleTopicDetails: function(results) {
+                    // Clear topic table
+                    var table = jQuery('#topic-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#topic-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Loop through partitions
+                    jQuery(results.partitions).each(function(partitionIndex, partition) {
+                        // Build replicas
+                        var replicas = [];
+
+                        jQuery(partition.replicas).each(function(replicaIndex, replica) {
+                            var inSync = false;
+                            jQuery(partition.isr).each(function(isrIndex, isr) {
+                                if (isr.id == replica.id) {
+                                    inSync = true;
+                                }
+                            });
+
+                            replicas.push({
+                                    host: replica.host + ":" + replica.port,
+                                    id: replica.id,
+                                    inSync: inSync
+                                }
+                            );
+                        });
+
+                        var properties = {
+                            partition: partition.partition,
+                            clusterId: TopicInfo.clusterId,
+                            leaderId: partition.leader.id,
+                            leaderHost: partition.leader.host + ":" + partition.leader.port,
+                            replicas: replicas
+                        };
+
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#topic-loader').toggle(false);
+
+                    if (results.partitions.length == 0) {
+                        jQuery('#topic-no-results').toggle(true);
+                    } else {
+                        jQuery('#topic-no-results').toggle(false);
+                        jQuery('#topic-table').toggle(true);
+                    }
+                },
+                handleConfigResults: function(results) {
+                    // Clear topic table
+                    var table = jQuery('#config-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#config-template').html();
+                    var template = Handlebars.compile(source);
+
+                    jQuery(results).each(function(index, config) {
+                        var properties = {
+                            name: config.name,
+                            value: config.value,
+                            isDefault: config.default
+                        };
+
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#config-loader').toggle(false);
+
+                    if (results.length == 0) {
+                        jQuery('#config-no-results').toggle(true);
+                    } else {
+                        jQuery('#config-no-results').toggle(false);
+                        jQuery('#config-table').toggle(true);
+                    }
+                }
+            };
+
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                // Chain initial ajax requests.
+                // Request Cluster Information
+                ApiClient.getTopicDetails(TopicInfo.clusterId, TopicInfo.topic, function(results) {
+                    // handle results
+                    TopicInfo.handleTopicDetails(results);
+
+                    // Fire off request to get topic config
+                    ApiClient.getTopicConfig(TopicInfo.clusterId, TopicInfo.topic, function(results) {
+                        // Handle results
+                        TopicInfo.handleConfigResults(results);
+                    });
+                });
+            });
+        </script>
+
+        <!-- Partitions -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Topic <strong th:text="${topic}"></strong> Partitions on Cluster <strong th:text="${cluster.name}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="topic-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="topic-no-results" style="display: none;">
+                            <h4 class="alert-heading">Topic Not Found</h4>
+                            <p>Looks like we couldn't find any information about this topic!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="topic-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Partition</th>
+                                <th>Leader</th>
+                                <th>Replicas</th>
+                            </tr>
+                            </thead>
+                            <tbody id="topic-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topic Config -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Topic <strong th:text="${topic}"></strong> Configuration on Cluster <strong th:text="${cluster.name}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="config-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="config-no-results" style="display: none;">
+                            <h4 class="alert-heading">Topic Not Found</h4>
+                            <p>Looks like we couldn't find any information about this topic!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="config-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Config</th>
+                                <th>Value</th>
+                                <th>Default Value</th>
+                            </tr>
+                            </thead>
+                            <tbody id="config-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Broker Template -->
+        <script id="topic-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{partition}}</td>
+                <td>
+                    <a href="/cluster/{{clusterId}}/broker/{{leaderId}}">
+                        {{leaderHost}}
+                    </a> ( {{leaderId}} )
+                </td>
+                <td>
+                    <ul class="list-group">
+                        {{#each replicas}}
+                            <li title="{{#if this.inSync }}In Sync{{else}}Out of Sync{{/if}}"
+                                class="list-group-item {{#unless this.inSync }} list-group-item-danger {{/unless}}">
+                                {{this.host}}
+                            </li>
+                        {{/each}}
+                    </ul>
+                </td>
+            </tr>
+        </script>
+
+        <!-- Config Template -->
+        <script id="config-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{name}}</td>
+                <td>
+                    {{value}}
+                </td>
+                <td>
+                    {{#if isDefault}}
+                    <span class="badge badge-success">default</span>
+                    {{else}}
+                    <span class="badge badge-warning">modified</span>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+    </div>
+</section>
+
+</body>
+</html>

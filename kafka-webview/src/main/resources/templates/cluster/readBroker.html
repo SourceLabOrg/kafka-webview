@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.thymeleaf.org"
+        layout:decorate="~{layout}">
+
+<head>
+    <title>Cluster Explorer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // Maintains state of our consumer
+            var BrokerInfo = {
+                clusterId: '[[${cluster.id}]]',
+                brokerId: '[[${brokerId}]]',
+
+                handleClusterNodeResults: function(topics) {
+                    // Clear nodes table
+                    var table = jQuery('#broker-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#broker-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Results entry flag
+                    var brokerHost = null;
+
+                    // Loop over each topic
+                    jQuery(topics).each(function(topicIndex, topic) {
+                        // Loop thru each partitions
+                        jQuery(topic.partitions).each(function(partitionIndex, partition) {
+                            var topicName = partition.topic;
+                            var partitionId = partition.partition;
+                            var role = null;
+                            var inSync = false;
+
+                            // If we're the leader
+                            if (partition.leader != null && partition.leader.id == BrokerInfo.brokerId) {
+                                role = 'Leader';
+                                inSync = true;
+                                brokerHost = partition.leader.host + ":" + partition.leader.port;
+                            } else {
+                                // See if they're a replica?
+                                jQuery(partition.replicas).each(function(replicaIndex, replica) {
+                                    if (replica.id == BrokerInfo.brokerId) {
+                                        role = 'Replica';
+                                        brokerHost = replica.host + ":" + replica.port;
+                                    }
+                                });
+
+                                // If they're a replica
+                                if (role != null) {
+                                    // See if they're an ISR
+                                    jQuery(partition.isr).each(function(isrIndex, isr) {
+                                       if (isr.id == BrokerInfo.brokerId) {
+                                           inSync = true;
+                                       }
+                                    });
+                                }
+                            }
+
+                            // If we found ourselves
+                            if (role != null) {
+                                // Generate html from template
+                                var properties = {
+                                    clusterId: BrokerInfo.clusterId,
+                                    topic: topicName,
+                                    encodedTopic: encodeURIComponent(topicName),
+                                    partition: partitionId,
+                                    role: role,
+                                    inSync: inSync
+                                };
+                                var resultHtml = template(properties);
+
+                                // Append it to our table
+                                jQuery(table).append(resultHtml);
+                            }
+                        });
+                    });
+
+                    // Hide loader
+                    jQuery('#broker-loader').toggle(false);
+
+                    if (brokerHost == null) {
+                        jQuery('#broker-no-results').toggle(true);
+                    } else {
+                        jQuery('.broker-host').text(brokerHost);
+                        jQuery('#broker-no-results').toggle(false);
+                        jQuery('#broker-table').toggle(true);
+                    }
+                },
+                handleConfigResults: function(results) {
+                    // Clear topic table
+                    var table = jQuery('#config-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#config-template').html();
+                    var template = Handlebars.compile(source);
+
+                    jQuery(results).each(function(index, config) {
+                        var properties = {
+                            name: config.name,
+                            value: config.value,
+                            isDefault: config.default
+                        };
+
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#config-loader').toggle(false);
+
+                    if (results.length == 0) {
+                        jQuery('#config-no-results').toggle(true);
+                    } else {
+                        jQuery('#config-no-results').toggle(false);
+                        jQuery('#config-table').toggle(true);
+                    }
+                }
+            };
+
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                // Chain initial ajax requests.
+                // Request Cluster Information
+                ApiClient.getAllTopicsDetails(BrokerInfo.clusterId, function(results) {
+                    // Handle results
+                    BrokerInfo.handleClusterNodeResults(results);
+
+                    // Fire off request to get topic config
+                    ApiClient.getBrokerConfig(BrokerInfo.clusterId, BrokerInfo.brokerId, function(results) {
+                        // Handle results
+                        BrokerInfo.handleConfigResults(results);
+                    });
+                });
+            });
+        </script>
+
+        <!-- Brokers -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Broker <strong th:text="${brokerId}"></strong> <strong class="broker-host"></strong>
+                        on Cluster <strong th:text="${cluster.name}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="broker-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="broker-no-results" style="display: none;">
+                            <h4 class="alert-heading">No Topics or Partitions Found</h4>
+                            <p>Looks like we couldn't find any Topics this broker manages!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="broker-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Topic</th>
+                                <th>Partition</th>
+                                <th>Role</th>
+                                <th>In-Sync</th>
+                            </tr>
+                            </thead>
+                            <tbody id="broker-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Broker Config -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Broker <strong th:text="${brokerId}"></strong> <strong class="broker-host"></strong> Configuration
+                        on Cluster <strong th:text="${cluster.name}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="config-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="config-no-results" style="display: none;">
+                            <h4 class="alert-heading">Broker Not Found</h4>
+                            <p>Looks like we couldn't find any information about this broker!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="config-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Config</th>
+                                <th>Value</th>
+                                <th>Default Value</th>
+                            </tr>
+                            </thead>
+                            <tbody id="config-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Broker Template -->
+        <script id="broker-template" type="text/x-handlebars-template">
+            <tr>
+                <td>
+                    <a href="/cluster/{{clusterId}}/topic/{{encodedTopic}}">
+                        {{topic}}
+                    </a>
+                </td>
+                <td>{{partition}}</td>
+                <td>{{role}}</td>
+                <td>
+                    {{#if inSync}}
+                    <span class="badge badge-success">
+                        Yes
+                    </span>
+                    {{else}}
+                    <span class="badge badge-danger">
+                        No
+                    </span>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+
+        <!-- Config Template -->
+        <script id="config-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{name}}</td>
+                <td>
+                    {{value}}
+                </td>
+                <td>
+                    {{#if isDefault}}
+                    <span class="badge badge-success">default</span>
+                    {{else}}
+                    <span class="badge badge-warning">modified</span>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+    </div>
+</section>
+
+</body>
+</html>
