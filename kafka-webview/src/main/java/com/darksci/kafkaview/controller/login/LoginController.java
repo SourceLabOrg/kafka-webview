@@ -1,19 +1,17 @@
 package com.darksci.kafkaview.controller.login;
 
-import com.darksci.kafkaview.configuration.CustomUserDetails;
+import com.darksci.kafkaview.manager.user.CustomUserDetails;
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.login.forms.LoginForm;
 import com.darksci.kafkaview.controller.login.forms.LostPasswordForm;
 import com.darksci.kafkaview.controller.login.forms.ResetPasswordForm;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
-import com.darksci.kafkaview.manager.user.ResetUserPasswordManager;
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -27,15 +25,12 @@ import javax.validation.Valid;
 /**
  * For handling logins.
  */
-@Controller
+//@Controller
 public class LoginController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private ResetUserPasswordManager resetUserPasswordManager;
 
     /**
      * GET Displays the Login Form.
@@ -131,7 +126,7 @@ public class LoginController extends BaseController {
         final User user = userRepository.findByEmail(lostPasswordForm.getEmail());
         if (user != null) {
             // Do email reset request.
-            resetUserPasswordManager.requestPasswordReset(user);
+            //resetUserPasswordManager.requestPasswordReset(user);
         }
 
         // return success
@@ -177,7 +172,7 @@ public class LoginController extends BaseController {
         boolean result = false;
         if (user != null) {
             // Attempt reset
-            result = resetUserPasswordManager.resetPassword(user, resetPasswordForm.getToken(), resetPasswordForm.getPassword());
+            //result = resetUserPasswordManager.resetPassword(user, resetPasswordForm.getToken(), resetPasswordForm.getPassword());
         }
 
         final FlashMessage flashMessage;

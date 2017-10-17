@@ -1,6 +1,6 @@
 package com.darksci.kafkaview.controller;
 
-import com.darksci.kafkaview.configuration.CustomUserDetails;
+import com.darksci.kafkaview.manager.user.CustomUserDetails;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.model.View;
 import com.darksci.kafkaview.repository.ClusterRepository;

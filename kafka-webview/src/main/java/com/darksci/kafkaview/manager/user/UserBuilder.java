@@ -2,9 +2,13 @@ package com.darksci.kafkaview.manager.user;
 
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
 
 public final class UserBuilder {
 
@@ -88,6 +92,29 @@ public final class UserBuilder {
         final double random = (Math.random() * 31 + System.currentTimeMillis());
 
         // Concat to the salt and sha1 it
-        return DigestUtils.sha1Hex(salt.concat(String.valueOf(random)));
+        //return DigestUtils.sha1Hex(salt.concat(String.valueOf(random)));
+        return sha1(salt.concat(String.valueOf(random)));
+
+    }
+
+    private static String sha1(final String input) {
+        try {
+            MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+            crypt.reset();
+            crypt.update(input.getBytes("UTF-8"));
+            return byteToHex(crypt.digest());
+        }
+        catch(NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private static String byteToHex(final byte[] hash) {
+        try (final Formatter formatter = new Formatter();) {
+            for (final byte bit : hash) {
+                formatter.format("%02x", bit);
+            }
+            return formatter.toString();
+        }
     }
 }
