@@ -1,11 +1,11 @@
 package com.darksci.kafkaview.controller.login;
 
-import com.darksci.kafkaview.manager.user.CustomUserDetails;
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.login.forms.LoginForm;
 import com.darksci.kafkaview.controller.login.forms.LostPasswordForm;
 import com.darksci.kafkaview.controller.login.forms.ResetPasswordForm;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
+import com.darksci.kafkaview.manager.user.CustomUserDetails;
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.slf4j.Logger;
