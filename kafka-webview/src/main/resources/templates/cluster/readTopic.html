@@ -223,7 +223,7 @@
                         {{#each replicas}}
                             <li title="{{#if this.inSync }}In Sync{{else}}Out of Sync{{/if}}"
                                 class="list-group-item {{#unless this.inSync }} list-group-item-danger {{/unless}}">
-                                {{this.host}}
+                                {{this.host}} ( {{this.id}} )
                             </li>
                         {{/each}}
                     </ul>
