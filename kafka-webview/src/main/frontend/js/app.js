@@ -194,6 +194,12 @@ var ApiClient = {
   },
   getTopics: function(clusterId, callback) {
       jQuery.getJSON('/api/cluster/' + clusterId + '/topics/list', '', callback);
+  },
+  getTopicConfig: function(clusterId, topic, callback) {
+      jQuery.getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/config', '', callback);
+  },
+  getBrokerConfig: function(clusterId, brokerId, callback) {
+      jQuery.getJSON('/api/cluster/' + clusterId + '/broker/' + brokerId + '/config', '', callback);
   }
 };
 

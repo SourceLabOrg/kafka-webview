@@ -1,17 +1,24 @@
 package com.darksci.kafkaview.manager.kafka;
 
+import com.darksci.kafkaview.manager.kafka.dto.BrokerConfig;
+import com.darksci.kafkaview.manager.kafka.dto.ConfigItem;
 import com.darksci.kafkaview.manager.kafka.dto.NodeDetails;
 import com.darksci.kafkaview.manager.kafka.dto.NodeList;
 import com.darksci.kafkaview.manager.kafka.dto.PartitionDetails;
+import com.darksci.kafkaview.manager.kafka.dto.TopicConfig;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
+import org.apache.kafka.common.config.ConfigResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,6 +151,47 @@ public class KafkaOperations implements AutoCloseable {
     public TopicDetails getTopicDetails(final String topic) {
         final Map<String, TopicDetails> results = getTopicDetails(Collections.singleton(topic));
         return results.get(topic);
+    }
+
+    /**
+     * Get the configuration for topic.
+     */
+    public TopicConfig getTopicConfig(final String topic) {
+        final ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic);
+        return new TopicConfig(describeResource(configResource));
+    }
+
+    /**
+     * Get the configuration for topic.
+     */
+    public BrokerConfig getBrokerConfig(final String brokerId) {
+        final ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, brokerId);
+        return new BrokerConfig(describeResource(configResource));
+    }
+
+    private List<ConfigItem> describeResource(final ConfigResource configResource) {
+        final DescribeConfigsResult result = adminClient.describeConfigs(Collections.singleton(configResource));
+
+        final List<ConfigItem> configItems = new ArrayList<>();
+
+        try {
+            final Map<ConfigResource, Config> configMap = result.all().get();
+
+            final Config config = configMap.get(configResource);
+            for (final ConfigEntry configEntry : config.entries()) {
+                // Skip sensitive entries
+                if (configEntry.isSensitive()) {
+                    continue;
+                }
+                configItems.add(
+                    new ConfigItem(configEntry.name(), configEntry.value(), configEntry.isDefault())
+                );
+            }
+            return configItems;
+        } catch (InterruptedException | ExecutionException e) {
+            // TODO Handle this
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
     public void createTopic(final String topic, final int numPartitions, final short replicaFactor) {

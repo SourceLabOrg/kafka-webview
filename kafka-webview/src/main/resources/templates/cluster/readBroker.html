@@ -89,9 +89,41 @@
                     if (brokerHost == null) {
                         jQuery('#broker-no-results').toggle(true);
                     } else {
-                        jQuery('#broker-host').text(brokerHost);
+                        jQuery('.broker-host').text(brokerHost);
                         jQuery('#broker-no-results').toggle(false);
                         jQuery('#broker-table').toggle(true);
+                    }
+                },
+                handleConfigResults: function(results) {
+                    // Clear topic table
+                    var table = jQuery('#config-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#config-template').html();
+                    var template = Handlebars.compile(source);
+
+                    jQuery(results).each(function(index, config) {
+                        var properties = {
+                            name: config.name,
+                            value: config.value,
+                            isDefault: config.default
+                        };
+
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#config-loader').toggle(false);
+
+                    if (results.length == 0) {
+                        jQuery('#config-no-results').toggle(true);
+                    } else {
+                        jQuery('#config-no-results').toggle(false);
+                        jQuery('#config-table').toggle(true);
                     }
                 }
             };
@@ -103,6 +135,12 @@
                 ApiClient.getAllTopicsDetails(BrokerInfo.clusterId, function(results) {
                     // Handle results
                     BrokerInfo.handleClusterNodeResults(results);
+
+                    // Fire off request to get topic config
+                    ApiClient.getBrokerConfig(BrokerInfo.clusterId, BrokerInfo.brokerId, function(results) {
+                        // Handle results
+                        BrokerInfo.handleConfigResults(results);
+                    });
                 });
             });
         </script>
@@ -113,8 +151,8 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Cluster <strong th:text="${cluster.name}"></strong>
-                        Broker <strong th:text="${brokerId}"></strong> <strong id="broker-host"></strong>
+                        Broker <strong th:text="${brokerId}"></strong> <strong class="broker-host"></strong>
+                        on Cluster <strong th:text="${cluster.name}"></strong>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -152,6 +190,50 @@
             </div>
         </div>
 
+        <!-- Broker Config -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Broker <strong th:text="${brokerId}"></strong> <strong class="broker-host"></strong> Configuration
+                        on Cluster <strong th:text="${cluster.name}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="config-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="config-no-results" style="display: none;">
+                            <h4 class="alert-heading">Broker Not Found</h4>
+                            <p>Looks like we couldn't find any information about this broker!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="config-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Config</th>
+                                <th>Value</th>
+                                <th>Default Value</th>
+                            </tr>
+                            </thead>
+                            <tbody id="config-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Broker Template -->
         <script id="broker-template" type="text/x-handlebars-template">
             <tr>
@@ -171,6 +253,23 @@
                     <span class="badge badge-danger">
                         No
                     </span>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+
+        <!-- Config Template -->
+        <script id="config-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{name}}</td>
+                <td>
+                    {{value}}
+                </td>
+                <td>
+                    {{#if isDefault}}
+                    <span class="badge badge-success">default</span>
+                    {{else}}
+                    <span class="badge badge-warning">modified</span>
                     {{/if}}
                 </td>
             </tr>
