@@ -245,7 +245,7 @@ public class ApiController {
     }
 
     /**
-     * GET Topic Details
+     * GET Details for a specific Topic.
      */
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
@@ -261,6 +261,32 @@ public class ApiController {
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             final TopicDetails topicDetails = operations.getTopicDetails(topic);
             return topicDetails;
+        }
+    }
+
+    /**
+     * GET Details for all Topics on a cluster.
+     */
+    @RequestMapping(path = "/cluster/{id}/topics/details", method = RequestMethod.GET, produces = "application/json")
+    @ResponseBody
+    public Collection<TopicDetails> getAllTopicsDetails(final @PathVariable Long id) {
+        // Retrieve cluster
+        final Cluster cluster = clusterRepository.findOne(id);
+        if (cluster == null) {
+            // Handle error by returning empty list?
+            new ArrayList<>();
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            // First get all of the topics
+            final TopicList topicList = operations.getAvailableTopics();
+
+            // Now get details about all the topics
+            final Map<String, TopicDetails> results = operations.getTopicDetails(topicList.getTopicNames());
+
+            // Return just the TopicDetails
+            return results.values();
         }
     }
 

@@ -28,8 +28,8 @@ import java.io.IOException;
 
 @Controller
 @RequestMapping("/configuration/cluster")
-public class ClusterController extends BaseController {
-    private final static Logger logger = LoggerFactory.getLogger(ClusterController.class);
+public class ClusterConfigController extends BaseController {
+    private final static Logger logger = LoggerFactory.getLogger(ClusterConfigController.class);
 
     @Autowired
     private ClusterRepository clusterRepository;

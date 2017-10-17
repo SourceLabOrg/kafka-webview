@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -61,7 +62,7 @@ public class KafkaOperations implements AutoCloseable {
         try {
             final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
             for (final Node node: nodes) {
-                nodeDetails.add(new NodeDetails(node.id(), node.host(), node.port()));
+                nodeDetails.add(new NodeDetails(node.id(), node.host(), node.port(), node.rack()));
             }
             return new NodeList(nodeDetails);
         } catch (InterruptedException | ExecutionException e) {
@@ -71,61 +72,78 @@ public class KafkaOperations implements AutoCloseable {
     }
 
     /**
-     * Get information about a specific topic.
+     * Get information about several topics.
      */
-    public TopicDetails getTopicDetails(final String topic) {
+    public Map<String, TopicDetails> getTopicDetails(final Collection<String> topics) {
+        final Map<String, TopicDetails> results = new HashMap<>();
+
         try {
-            final Map<String, TopicDescription> topicDescriptionMap = adminClient.describeTopics(Collections.singleton(topic)).all().get();
-            final TopicDescription topicDescription = topicDescriptionMap.get(topic);
+            final Map<String, TopicDescription> topicDescriptionMap = adminClient.describeTopics(topics).all().get();
 
-            List<PartitionDetails> partitionDetails = new ArrayList<>();
+            // Now parse results
+            for (final Map.Entry<String, TopicDescription> entry: topicDescriptionMap.entrySet()) {
+                final String topic = entry.getKey();
+                final TopicDescription topicDescription = entry.getValue();
 
-            for (final TopicPartitionInfo partitionInfo: topicDescription.partitions()) {
-                final List<NodeDetails> isrNodes = new ArrayList<>();
-                final List<NodeDetails> replicaNodes = new ArrayList<>();
+                final List<PartitionDetails> partitionDetails = new ArrayList<>();
 
-                // Translate Leader
-                final NodeDetails leaderNode = new NodeDetails(
-                    partitionInfo.leader().id(), partitionInfo.leader().host(), partitionInfo.leader().port()
-                );
+                for (final TopicPartitionInfo partitionInfo: topicDescription.partitions()) {
+                    final List<NodeDetails> isrNodes = new ArrayList<>();
+                    final List<NodeDetails> replicaNodes = new ArrayList<>();
 
-                // Translate ISR nodes
-                for (final Node node: partitionInfo.isr()) {
-                    isrNodes.add(
-                        new NodeDetails(node.id(), node.host(), node.port())
+                    // Translate Leader
+                    final Node partitionLeader = partitionInfo.leader();
+                    final NodeDetails leaderNode = new NodeDetails(
+                        partitionLeader.id(), partitionLeader.host(), partitionLeader.port(), partitionLeader.rack()
                     );
-                }
 
-                // Translate Replicas nodes
-                for (final Node node: partitionInfo.replicas()) {
-                    replicaNodes.add(
-                        new NodeDetails(node.id(), node.host(), node.port())
+                    // Translate ISR nodes
+                    for (final Node node: partitionInfo.isr()) {
+                        isrNodes.add(
+                            new NodeDetails(node.id(), node.host(), node.port(), node.rack())
+                        );
+                    }
+
+                    // Translate Replicas nodes
+                    for (final Node node: partitionInfo.replicas()) {
+                        replicaNodes.add(
+                            new NodeDetails(node.id(), node.host(), node.port(), node.rack())
+                        );
+                    }
+
+                    // Create the details
+                    partitionDetails.add(
+                        new PartitionDetails(
+                            topicDescription.name(),
+                            partitionInfo.partition(),
+                            leaderNode,
+                            replicaNodes,
+                            isrNodes
+                        )
                     );
-                }
 
-                // Create the details
-                partitionDetails.add(
-                    new PartitionDetails(
+                    final TopicDetails topicDetails = new TopicDetails(
                         topicDescription.name(),
-                        partitionInfo.partition(),
-                        leaderNode,
-                        replicaNodes,
-                        isrNodes
-                    )
-                );
+                        topicDescription.isInternal(),
+                        partitionDetails
+                    );
+                    results.put(topic, topicDetails);
+                }
             }
-
             // Return it
-            return new TopicDetails(
-                topicDescription.name(),
-                topicDescription.isInternal(),
-                partitionDetails
-            );
-
+            return results;
         } catch (InterruptedException | ExecutionException e) {
             // TODO Handle this
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Get information about a specific topic.
+     */
+    public TopicDetails getTopicDetails(final String topic) {
+        final Map<String, TopicDetails> results = getTopicDetails(Collections.singleton(topic));
+        return results.get(topic);
     }
 
     public void createTopic(final String topic, final int numPartitions, final short replicaFactor) {
