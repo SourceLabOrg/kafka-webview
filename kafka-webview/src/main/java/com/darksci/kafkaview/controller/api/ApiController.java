@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.controller.api;
 
+import com.darksci.kafkaview.manager.encryption.SecretManager;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
@@ -74,6 +75,9 @@ public class ApiController {
 
     @Autowired
     private KafkaConsumerFactory kafkaConsumerFactory;
+
+    @Autowired
+    private SecretManager secretManager;
 
     /**
      * GET kafka results
@@ -352,7 +356,7 @@ public class ApiController {
         final String clientId = "MyUser on MyTopic at MyCluster";
 
         // Create new Operational Client
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
         final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, clientId);
 
         return new KafkaOperations(adminClient);
@@ -390,7 +394,7 @@ public class ApiController {
         }
 
 
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
         final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
 

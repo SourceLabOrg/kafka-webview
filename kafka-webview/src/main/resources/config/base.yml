@@ -39,7 +39,4 @@ spring:
 app:
   name: Kafka Web View
   uploadPath: "./uploads"
-  companyName:
-  companyAddress:
-  baseUrl:
-  systemEmail:
+  key: "SuperSecretKey"

@@ -3,8 +3,6 @@ package com.darksci.kafkaview.configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-
 @Component
 public class AppProperties {
 
@@ -14,7 +12,8 @@ public class AppProperties {
     @Value("${app.uploadPath}")
     private String uploadPath;
 
-    private Map<String, String> globalProperties;
+    @Value("${app.key}")
+    private String appKey;
 
     public String getName() {
         return name;
@@ -22,5 +21,9 @@ public class AppProperties {
 
     public String getUploadPath() {
         return uploadPath;
+    }
+
+    public String getAppKey() {
+        return appKey;
     }
 }

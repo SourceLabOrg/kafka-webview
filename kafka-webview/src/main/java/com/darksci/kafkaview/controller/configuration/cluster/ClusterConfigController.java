@@ -2,6 +2,7 @@ package com.darksci.kafkaview.controller.configuration.cluster;
 
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
+import com.darksci.kafkaview.manager.encryption.SecretManager;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
 import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
@@ -39,6 +40,9 @@ public class ClusterConfigController extends BaseController {
 
     @Autowired
     private KafkaAdminFactory kafkaAdminFactory;
+
+    @Autowired
+    private SecretManager secretManager;
 
     /**
      * GET Displays main configuration index.
@@ -190,11 +194,15 @@ public class ClusterConfigController extends BaseController {
 
                 // Persist JKS on filesystem
                 try {
-                    uploadManager.handleKeystoreUpload(clusterForm.getTrustStoreFile(), filename);
-                    cluster.setTrustStoreFile(filename);
+                    // Encrypt password
+                    final String encrypted = secretManager.encrypt(clusterForm.getTrustStorePassword());
 
-                    // TODO encrypt this value
-                    cluster.setTrustStorePassword(clusterForm.getTrustStorePassword());
+                    // Handle upload
+                    uploadManager.handleKeystoreUpload(clusterForm.getTrustStoreFile(), filename);
+
+                    // Persist in model.
+                    cluster.setTrustStoreFile(filename);
+                    cluster.setTrustStorePassword(encrypted);
                 } catch (IOException exception) {
                     // TODO handle
                     throw new RuntimeException(exception.getMessage(), exception);
@@ -215,11 +223,15 @@ public class ClusterConfigController extends BaseController {
 
                 // Persist JKS on filesystem
                 try {
-                    uploadManager.handleKeystoreUpload(clusterForm.getKeyStoreFile(), filename);
-                    cluster.setKeyStoreFile(filename);
+                    // Encrypt password
+                    final String encrypted = secretManager.encrypt(clusterForm.getKeyStorePassword());
 
-                    // TODO encrypt this value
-                    cluster.setKeyStorePassword(clusterForm.getKeyStorePassword());
+                    // Handle upload
+                    uploadManager.handleKeystoreUpload(clusterForm.getKeyStoreFile(), filename);
+
+                    // Persist in model
+                    cluster.setKeyStoreFile(filename);
+                    cluster.setKeyStorePassword(encrypted);
                 } catch (IOException exception) {
                     // TODO handle
                     throw new RuntimeException(exception.getMessage(), exception);
@@ -293,7 +305,7 @@ public class ClusterConfigController extends BaseController {
         final String clientId = "TestingClient-" + cluster.getId();
 
         // Create new Operational Client
-        final ClusterConfig.Builder clusterConfigBuilder = ClusterConfig.newBuilder(cluster);
+        final ClusterConfig.Builder clusterConfigBuilder = ClusterConfig.newBuilder(cluster, secretManager);
 
         final AdminClient adminClient = kafkaAdminFactory.create(clusterConfigBuilder.build(), clientId);
         try (final KafkaOperations kafkaOperations = new KafkaOperations(adminClient)) {
