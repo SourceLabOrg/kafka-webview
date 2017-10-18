@@ -77,7 +77,7 @@
 
                 <!-- Clusters -->
                 <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="#">
+                    <a class="nav-link nav-dropdown-toggle" href="/cluster">
                         <i class="icon-layers"></i> Clusters
                     </a>
                     <ul class="nav-dropdown-items">
@@ -92,12 +92,12 @@
 
                 <!-- Views -->
                 <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="#">
+                    <a class="nav-link nav-dropdown-toggle" href="/view">
                         <i class="icon-eye"></i> Views
                     </a>
                     <ul class="nav-dropdown-items">
                         <li class="nav-item" th:each="view : ${MenuViews}">
-                            <a class="nav-link" th:href="@{/browser/{id}(id=${view.id})}">
+                            <a class="nav-link" th:href="@{/templates/view/{id}(id=${view.id})}">
                                 <i class="icon-eye"></i>
                                 [[${view.name}]]
                             </a>

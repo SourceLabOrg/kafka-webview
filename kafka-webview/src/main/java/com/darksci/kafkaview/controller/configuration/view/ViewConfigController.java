@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/configuration/view")
-public class ViewController extends BaseController {
+public class ViewConfigController extends BaseController {
 
     @Autowired
     private ClusterRepository clusterRepository;

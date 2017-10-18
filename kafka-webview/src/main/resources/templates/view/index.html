@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layout}">
+
+<head>
+    <title>Views</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6" th:each="cluster: ${clusters}">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Topic</th>
+                                <th>Partitions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:unless="${viewsByClusterId.get(cluster.getId()).isEmpty()}" th:each="view : ${viewsByClusterId.get(cluster.getId())}">
+                                <td>
+                                    <a th:href="'/view/' + ${view.id}" th:text="${view.name}"></a>
+                                </td>
+                                <td th:text="${view.topic}"></td>
+                                <td th:text="${view.partitions.isEmpty()} ? 'All' : ${view.partitions}"></td>
+                            </tr>
+                            <!-- Empty List -->
+                            <tr th:if="${viewsByClusterId.get(cluster.getId()).isEmpty()}" >
+                                <td colspan="3" class="text-center">
+                                    No Views Found!
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--/.col-->
+        </div>
+    </div>
+</section>
+
+</body>
+</html>
