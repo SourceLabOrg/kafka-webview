@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.manager.kafka.config;
 
+import com.darksci.kafkaview.manager.encryption.SecretManager;
 import com.darksci.kafkaview.model.Cluster;
 
 import java.util.Arrays;
@@ -7,6 +8,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Configuration defining cluster specific information.
+ */
 public class ClusterConfig {
     private final Set<String> brokerHosts;
     private final boolean useSSL;
@@ -73,19 +77,38 @@ public class ClusterConfig {
             '}';
     }
 
+    /**
+     * @return New empty builder instance.
+     */
     public static Builder newBuilder() {
         return new Builder();
     }
 
-    public static Builder newBuilder(final Cluster cluster) {
+    /**
+     * Create a new Builder instance using a Cluster model entity and SecretManager
+     * for decrypting secrets.
+     *
+     * @param cluster Cluster entity to build config off of.
+     * @param secretManager SecretManager to decrypt secrets with.
+     * @return Builder instance.
+     */
+    public static Builder newBuilder(final Cluster cluster, final SecretManager secretManager) {
         // Create new Operational Client
-        return ClusterConfig.newBuilder()
-            .withBrokerHosts(cluster.getBrokerHosts())
-            .withUseSSL(cluster.isSslEnabled())
-            .withKeyStoreFile(cluster.getKeyStoreFile())
-            .withKeyStorePassword(cluster.getKeyStorePassword())
-            .withTrustStoreFile(cluster.getTrustStoreFile())
-            .withTrustStorePassword(cluster.getTrustStorePassword());
+        final ClusterConfig.Builder builder = ClusterConfig.newBuilder()
+            .withBrokerHosts(cluster.getBrokerHosts());
+
+        if (cluster.isSslEnabled()) {
+            builder
+                .withUseSSL(cluster.isSslEnabled())
+                .withKeyStoreFile(cluster.getKeyStoreFile())
+                .withKeyStorePassword(secretManager.decrypt(cluster.getKeyStorePassword()))
+                .withTrustStoreFile(cluster.getTrustStoreFile())
+                .withTrustStorePassword(secretManager.decrypt(cluster.getTrustStorePassword()));
+        } else {
+            builder.withUseSSL(false);
+        }
+
+        return builder;
     }
 
 

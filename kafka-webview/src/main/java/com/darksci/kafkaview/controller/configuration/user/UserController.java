@@ -1,8 +1,6 @@
 package com.darksci.kafkaview.controller.configuration.user;
 
-import com.darksci.kafkaview.configuration.CustomUserDetails;
 import com.darksci.kafkaview.controller.BaseController;
-import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
 import com.darksci.kafkaview.controller.configuration.user.forms.UserForm;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
@@ -11,9 +9,6 @@ import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;

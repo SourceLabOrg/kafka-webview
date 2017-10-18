@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.configuration;
 
+import com.darksci.kafkaview.manager.encryption.SecretManager;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
@@ -49,6 +50,11 @@ public class PluginConfig implements ApplicationListener<ApplicationReadyEvent> 
     @Bean
     public KafkaConsumerFactory getKafkaConsumerFactory(final AppProperties appProperties) {
         return new KafkaConsumerFactory(appProperties.getUploadPath() + "/keyStores");
+    }
+
+    @Bean
+    public SecretManager getSecretManager(final AppProperties appProperties) {
+        return new SecretManager(appProperties.getAppKey());
     }
 
     @Override

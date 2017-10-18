@@ -1,6 +1,5 @@
 package com.darksci.kafkaview.manager.user;
 
-import com.darksci.kafkaview.manager.email.EmailManager;
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;
 import com.darksci.kafkaview.repository.UserRepository;
@@ -13,12 +12,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class NewUserManager {
     private final UserRepository userRepository;
-    private final EmailManager emailManager;
 
     @Autowired
-    public NewUserManager(final UserRepository userRepository, final EmailManager emailManager) {
+    public NewUserManager(final UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.emailManager = emailManager;
     }
 
     /**
@@ -45,9 +42,6 @@ public class NewUserManager {
         // Build user & save
         final User user = userBuilder.build();
         userRepository.save(user);
-
-        // Now send them a welcome email!
-        emailManager.sendWelcomeEmail(user);
 
         // return the user
         return user;

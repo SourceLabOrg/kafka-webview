@@ -1,6 +1,6 @@
 package com.darksci.kafkaview.controller.api;
 
-import com.darksci.kafkaview.manager.demo.DemoDataGenerator;
+import com.darksci.kafkaview.manager.encryption.SecretManager;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
@@ -75,6 +75,9 @@ public class ApiController {
 
     @Autowired
     private KafkaConsumerFactory kafkaConsumerFactory;
+
+    @Autowired
+    private SecretManager secretManager;
 
     /**
      * GET kafka results
@@ -348,43 +351,12 @@ public class ApiController {
         }
     }
 
-    /**
-     * GET Nodes within a cluster.
-     */
-    @RequestMapping(path = "/demo/{id}", method = RequestMethod.GET, produces = "application/json")
-    @ResponseBody
-    public String createDemoData(final @PathVariable Long id) {
-        // Retrieve cluster
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
-            // Handle error by returning empty list?
-            return "Error";
-        }
-
-        final String consumerId = "DemoClientId";
-
-        // Create cluster config
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
-        final ClientConfig.Builder clientConfigBuilder = ClientConfig.newBuilder()
-            .withNoFilters()
-            .withTopicConfig(new TopicConfig(clusterConfig, DeserializerConfig.defaultConfig(), "NotUsed"))
-            .withConsumerId(consumerId);
-
-
-        final KafkaOperations kafkaOperations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, consumerId));
-        final Map<String, Object> clientConfig = kafkaConsumerFactory.buildConsumerConfig(clientConfigBuilder.build());
-
-        new DemoDataGenerator(kafkaOperations, clientConfig).createDemoTopics();
-
-        return "done";
-    }
-
     private KafkaOperations createOperationsClient(final Cluster cluster) {
         // TODO use a clientId unique to the client + cluster + topic
         final String clientId = "MyUser on MyTopic at MyCluster";
 
         // Create new Operational Client
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
         final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, clientId);
 
         return new KafkaOperations(adminClient);
@@ -422,7 +394,7 @@ public class ApiController {
         }
 
 
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster).build();
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
         final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
 

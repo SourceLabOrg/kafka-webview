@@ -144,8 +144,18 @@ function init(url) {
   $('[rel="popover"],[data-rel="popover"],[data-toggle="popover"]').popover();
 }
 
-// Client Properties
 var ApiClient = {
+  getCsrfToken: function() {
+      return jQuery("meta[name='_csrf']").attr("content");
+  },
+  getCsrfHeader: function() {
+      var headerName = jQuery("meta[name='_csrf_header']").attr("content");
+      var headerValue = ApiClient.getCsrfToken();
+
+      var headers = {};
+      headers[headerName] = headerValue;
+      return headers;
+  },
   consume: function(viewId, params, callback) {
       jQuery.getJSON('/api/consumer/view/' + viewId, params, callback);
   },
@@ -166,16 +176,17 @@ var ApiClient = {
           type: 'POST',
           url: '/api/consumer/view/' + viewId + '/timestamp/' + unixTimestamp,
           dataType: 'json',
-          success: callback,
+          headers: ApiClient.getCsrfHeader(),
+          success: callback
       });
   },
   setConsumerState: function(viewId, partitionOffsetJson, callback) {
-      //jQuery.post('/api/consumer/view/' + viewId + '/offsets', partitionOffsetMap, callback);
       jQuery.ajax({
           type: 'POST',
           url: '/api/consumer/view/' + viewId + '/offsets',
           data: partitionOffsetJson,
           dataType: 'json',
+          headers: ApiClient.getCsrfHeader(),
           success: callback,
           beforeSend: function(xhr) {
               xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');

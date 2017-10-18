@@ -1,4 +1,4 @@
-package com.darksci.kafkaview.configuration;
+package com.darksci.kafkaview.manager.user;
 
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;

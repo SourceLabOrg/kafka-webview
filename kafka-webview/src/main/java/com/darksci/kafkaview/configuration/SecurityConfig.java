@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.configuration;
 
+import com.darksci.kafkaview.manager.user.CustomUserDetailsService;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
@@ -36,28 +37,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
         http
-            .csrf().disable()
-            .authorizeRequests()
-                .antMatchers("/**").permitAll()
-                .and()
-//            .authorizeRequests()
-//                .antMatchers("/css/**", "/register/**", "/login/**", "/", "/api/**")
-//                    .permitAll()
-//                .anyRequest()
-//                    .fullyAuthenticated()
-//                .and()
-            .formLogin()
-                .loginPage("/login")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .failureUrl("/login?error=true")
-                .permitAll()
-                .and()
-            .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/")
-                .permitAll();
+            // CSRF Enabled
+            .csrf().and()
 
+            // But wide open access, no user support yet.
+            .authorizeRequests()
+                .antMatchers("/**").permitAll();
+        
         // If require SSL is enabled
         if (securityProperties.isRequireSsl()) {
             // Ensure its enabled.
