@@ -48,6 +48,11 @@ public abstract class BaseController {
      */
     @ModelAttribute
     public void addAttributes(Model model) {
+        // But only if logged in
+        if (!isLoggedIn()) {
+            return;
+        }
+
         // TODO put a limit on these
         final Iterable<Cluster> clusters = clusterRepository.findAllByOrderByNameAsc();
         final Iterable<View> views = viewRepository.findAllByOrderByNameAsc();

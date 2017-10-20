@@ -97,7 +97,7 @@
                     </a>
                     <ul class="nav-dropdown-items">
                         <li class="nav-item" th:each="view : ${MenuViews}">
-                            <a class="nav-link" th:href="@{/templates/view/{id}(id=${view.id})}">
+                            <a class="nav-link" th:href="@{/view/{id}(id=${view.id})}">
                                 <i class="icon-eye"></i>
                                 [[${view.name}]]
                             </a>
@@ -113,6 +113,12 @@
                         Configuration
                     </a>
                     <ul class="nav-dropdown-items">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/configuration/user" target="_top">
+                                <i class="icon-people"></i>
+                                Users
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/configuration/cluster" target="_top">
                                 <i class="icon-layers"></i>

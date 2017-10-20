@@ -64,6 +64,7 @@ public class PluginFactory<T> {
             final String absolutePath = getPathForJar(jarName).toString();
             final URL jarUrl = new URL("file://" + absolutePath);
             final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader());
+            //final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl);
             return getPluginClass(pluginClassLoader, classpath);
         } catch (MalformedURLException exception) {
             throw new LoaderException("Unable to load jar " + jarName, exception);
@@ -123,6 +124,13 @@ public class PluginFactory<T> {
 
     private String getJarDirectory() {
         return jarDirectory;
+    }
+
+    private void checkSecurityManager() {
+        // Sanity test of environment?
+        if (System.getSecurityManager() == null) {
+            throw new RuntimeException("You should have a security manager loaded!");
+        }
     }
 
     /**

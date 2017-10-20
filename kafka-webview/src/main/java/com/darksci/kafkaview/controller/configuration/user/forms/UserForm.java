@@ -16,10 +16,8 @@ public class UserForm {
     @Size(min = 2, max = 64)
     private String displayName;
 
-    @Size(min = 8, max = 255, message = "Please enter a password of at least 8 characters")
     private String password;
-
-    @Size(min = 8, max = 255)
+    
     private String password2;
 
     @NotNull(message = "Select a user role")

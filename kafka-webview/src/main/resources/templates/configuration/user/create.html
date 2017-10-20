@@ -15,7 +15,7 @@
                 <div class="card">
                     <div class="card-header">
                         <strong th:text="${userForm.exists()} ? 'Edit' : 'Create'">Create</strong>
-                        <span th:text="${userForm.exists()} ? ${userForm.name} : 'New User'"></span>
+                        <span th:text="${userForm.exists()} ? ${userForm.displayName} : 'New User'"></span>
                     </div>
                     <form
                         th:action="@{/configuration/user/update}"
@@ -71,7 +71,7 @@
                             <!-- Password Validation Input -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="password2">
-                                    Password
+                                    Verify Password
                                 </label>
                                 <div class="col-md-9">
                                     <input

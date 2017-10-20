@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.RequestContextListener;
  * Manages Security Configuration.
  */
 @Configuration
+@EnableWebSecurity
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -40,9 +42,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // CSRF Enabled
             .csrf().and()
 
-            // But wide open access, no user support yet.
             .authorizeRequests()
-                .antMatchers("/**").permitAll();
+                .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
+                    .permitAll()
+                .anyRequest()
+                    .fullyAuthenticated()
+                .and()
+            .formLogin()
+                .loginPage("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
+                .failureUrl("/login?error=true")
+                .successForwardUrl("/login")
+                .permitAll()
+                .and()
+            .logout()
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login")
+                .permitAll();
         
         // If require SSL is enabled
         if (securityProperties.isRequireSsl()) {

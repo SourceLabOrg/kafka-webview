@@ -13,12 +13,49 @@
 
     <dependencies>
         <!-- Use kafka-webview-plugin dependency -->
+        <!-- Scope is provided -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>kafka-webview-plugin</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Kafka Dependency for Deserializers -->
+        <!-- Scope is provided -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>0.11.0.1</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
-
+    <!-- Copy dependencies over into packaged jar -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass/>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

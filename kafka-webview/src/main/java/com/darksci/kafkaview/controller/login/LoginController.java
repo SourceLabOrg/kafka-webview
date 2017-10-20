@@ -1,7 +1,6 @@
 package com.darksci.kafkaview.controller.login;
 
 import com.darksci.kafkaview.controller.BaseController;
-import com.darksci.kafkaview.controller.login.forms.LoginForm;
 import com.darksci.kafkaview.controller.login.forms.LostPasswordForm;
 import com.darksci.kafkaview.controller.login.forms.ResetPasswordForm;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
@@ -12,9 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,7 +24,7 @@ import javax.validation.Valid;
 /**
  * For handling logins.
  */
-//@Controller
+@Controller
 public class LoginController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
@@ -36,11 +35,7 @@ public class LoginController extends BaseController {
      * GET Displays the Login Form.
      */
     @RequestMapping(path = "/login", method = RequestMethod.GET)
-    public String loginForm(
-        final LoginForm loginForm,
-        final Model model,
-        final @RequestParam(value = "error", required = false) String isError) {
-
+    public String loginForm(final Model model, final @RequestParam(value = "error", required = false) String isError) {
         // Redirect to home
         if (isLoggedIn()) {
             return "redirect:/";
@@ -52,36 +47,18 @@ public class LoginController extends BaseController {
             model.addAttribute("FlashMessage", FlashMessage.newWarning("Invalid Username or Password!"));
         }
 
-        return "login/loginForm";
+        return "login.html";
     }
 
     /**
-     * POST Requests handle logging into the system.
+     * POST redirects
      */
     @RequestMapping(path = "/login", method = RequestMethod.POST)
-    public String loginFormSubmit(@Valid final LoginForm loginForm, final BindingResult bindingResult) {
-        // Redirect to home if already logged in
+    public String submitForm(final Model model, final @RequestParam(value = "error", required = false) String isError) {
         if (isLoggedIn()) {
-            return "redirect:/";
+            return "login/success";
         }
-
-        // If we have errors
-        if (bindingResult.hasErrors()) {
-            logger.info("Result: {}", loginForm);
-            return "login/loginForm";
-        }
-
-        // Retrieve User
-        final User user = userRepository.findByEmail(loginForm.getEmail());
-        logger.info("User: {}", user);
-        if (user == null) {
-            bindingResult.addError(new FieldError("loginForm", "email", "Invalid Email or Password"));
-            return "login/loginForm";
-        }
-
-        // Otherwise success
-        // return success
-        return "login/success";
+        return loginForm(model, isError);
     }
 
     /**

@@ -9,12 +9,12 @@ import java.security.ProtectionDomain;
 public class PluginSecurityPolicy extends Policy {
     @Override
     public PermissionCollection getPermissions(ProtectionDomain domain) {
-        if (isPlugin(domain)) {
-            return pluginPermissions();
-        }
-        else {
+//        if (isPlugin(domain)) {
+//            return pluginPermissions();
+//        }
+//        else {
             return applicationPermissions();
-        }
+        //}
     }
 
     private boolean isPlugin(ProtectionDomain domain) {

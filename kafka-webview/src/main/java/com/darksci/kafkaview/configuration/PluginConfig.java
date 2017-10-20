@@ -16,14 +16,7 @@ import org.springframework.stereotype.Component;
 import java.security.Policy;
 
 @Component
-public class PluginConfig implements ApplicationListener<ApplicationReadyEvent> {
-
-    private final Policy pluginSecurityPolicy = new PluginSecurityPolicy();
-
-    @Bean
-    public Policy getPluginSecurityPolicy() {
-        return pluginSecurityPolicy;
-    }
+public class PluginConfig {
 
     @Bean
     public UploadManager getPluginUploadManager(final AppProperties appProperties) {
@@ -55,12 +48,5 @@ public class PluginConfig implements ApplicationListener<ApplicationReadyEvent> 
     @Bean
     public SecretManager getSecretManager(final AppProperties appProperties) {
         return new SecretManager(appProperties.getAppKey());
-    }
-
-    @Override
-    public void onApplicationEvent(final ApplicationReadyEvent event) {
-//        // Setup plugin policy on startup
-//        Policy.setPolicy(getPluginSecurityPolicy());
-//        System.setSecurityManager(new SecurityManager());
     }
 }
