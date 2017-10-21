@@ -4,11 +4,13 @@ import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.user.forms.UserForm;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
+import com.darksci.kafkaview.manager.user.CustomUserDetails;
 import com.darksci.kafkaview.manager.user.UserManager;
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -18,7 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.security.auth.Subject;
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,6 +82,17 @@ public class UserController extends BaseController {
         final RedirectAttributes redirectAttributes,
         final Model model) {
 
+        final boolean isAdmin = hasRole("ADMIN");
+
+        // If user doesn't have admin role, and Id isn't their own
+        if (!isAdmin && !id.equals(getLoggedInUserId())) {
+            // Cant edit this user.
+            return "redirect:/";
+        }
+
+        // Set isAdmin attribute
+        model.addAttribute("isAdmin", isAdmin);
+
         // Retrieve by id
         final User user = userRepository.findOne(id);
         if (user == null) {
@@ -115,6 +130,17 @@ public class UserController extends BaseController {
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
         final Model model) {
+
+        final boolean isAdmin = hasRole("ADMIN");
+
+        // If user doesn't have admin role, and Id isn't their own
+        if (!isAdmin && !userForm.getId().equals(getLoggedInUserId())) {
+            // Can't modify this user.
+            return "redirect:/";
+        }
+
+        // Set isAdmin attribute
+        model.addAttribute("isAdmin", isAdmin);
 
         // Validate email doesn't already exist!
         final User existingUser = userRepository.findByEmail(userForm.getEmail());
@@ -167,7 +193,11 @@ public class UserController extends BaseController {
             final User user = userRepository.findOne(userForm.getId());
             user.setEmail(userForm.getEmail());
             user.setDisplayName(userForm.getDisplayName());
-            user.setRole(userForm.getUserRole());
+
+            // Only admins can set the role
+            if (hasRole("ADMIN")) {
+                user.setRole(userForm.getUserRole());
+            }
 
             // If they changed their password
             if (!userForm.getPassword().isEmpty()) {
@@ -182,7 +212,11 @@ public class UserController extends BaseController {
         }
 
         // Otherwise success
-        return "redirect:/configuration/user";
+        if (isAdmin) {
+            return "redirect:/configuration/user";
+        } else {
+            return "redirect:/";
+        }
     }
 
     private void setupBreadCrumbs(final Model model, String name, String url) {

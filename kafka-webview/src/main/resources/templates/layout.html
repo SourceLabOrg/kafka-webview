@@ -65,13 +65,13 @@
         <li class="nav-item dropdown" style="padding-right: 50px;">
             <a class="nav-link dropdown-toggle nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                 <i class="icon-user"></i>
-                <span class="d-md-down-none">Stephen Powis</span>
+                <span class="d-md-down-none" sec:authentication="name"></span>
             </a>
             <div class="dropdown-menu dropdown-menu-right">
                 <div class="dropdown-header text-center">
                     <strong>Settings</strong>
                 </div>
-                <a class="dropdown-item" href="/configuration/user/read/#">
+                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}">
                     <i class="fa fa-user"></i> Profile
                 </a>
                 <div class="divider"></div>
@@ -128,7 +128,7 @@
 
                 <!-- Setup -->
                 <li class="divider"></li>
-                <li class="nav-item nav-dropdown">
+                <li class="nav-item nav-dropdown" sec:authorize="hasRole('ROLE_ADMIN')">
                     <a class="nav-link nav-dropdown-toggle" href="/configuration">
                         <i class="icon-settings"></i>
                         Configuration

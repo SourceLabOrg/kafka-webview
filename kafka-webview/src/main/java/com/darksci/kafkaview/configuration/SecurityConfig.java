@@ -44,12 +44,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .csrf().and()
 
             .authorizeRequests()
+                // Paths to static resources are available to anyone
                 .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
                     .permitAll()
+                // Users can edit their own profile
+                .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
+                    .fullyAuthenticated()
+                // But other Configuration paths require ADMIN role.
+                .antMatchers("/configuration/**")
+                    .hasRole("ADMIN")
+                // All other requests must be authenticated
                 .anyRequest()
                     .fullyAuthenticated()
                 .and()
 
+            // Define how you login
             .formLogin()
                 .loginPage("/login")
                 .usernameParameter("email")
@@ -59,6 +68,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .and()
 
+            // And how you logout
             .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                 .logoutSuccessUrl("/login")

@@ -8,9 +8,12 @@ import com.darksci.kafkaview.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
+
+import java.util.Collection;
 
 /**
  * Base Controller w/ common code.
@@ -44,6 +47,13 @@ public abstract class BaseController {
     }
 
     /**
+     * @return Currently logged in user Id.
+     */
+    protected long getLoggedInUserId() {
+        return getLoggedInUser().getUserId();
+    }
+
+    /**
      * This gets executed for all requests.
      */
     @ModelAttribute
@@ -59,6 +69,25 @@ public abstract class BaseController {
 
         model.addAttribute("MenuClusters", clusters);
         model.addAttribute("MenuViews", views);
+        model.addAttribute("UserId", getLoggedInUserId());
+    }
+
+    /**
+     * Determine if the authentication has the requested role.
+     * @param role The role to look for.
+     * @return Boolean, true if so, false if not.
+     */
+    protected boolean hasRole(final String role) {
+        final String realRole = "ROLE_" + role;
+        final Collection<? extends GrantedAuthority> authorities = getLoggedInUser().getAuthorities();
+
+        // Find
+        for (final GrantedAuthority authority : authorities) {
+            if (authority.getAuthority().equals(realRole)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
