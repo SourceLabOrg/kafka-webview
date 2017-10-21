@@ -15,7 +15,7 @@
                 <div class="card">
                     <div class="card-header">
                         <strong th:text="${userForm.exists()} ? 'Edit' : 'Create'">Create</strong>
-                        <span th:text="${userForm.exists()} ? ${userForm.name} : 'New User'"></span>
+                        <span th:text="${userForm.exists()} ? ${userForm.displayName} : 'New User'"></span>
                     </div>
                     <form
                         th:action="@{/configuration/user/update}"
@@ -71,7 +71,7 @@
                             <!-- Password Validation Input -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="password2">
-                                    Password
+                                    Verify Password
                                 </label>
                                 <div class="col-md-9">
                                     <input
@@ -84,7 +84,7 @@
                             </div>
 
                             <!-- User role -->
-                            <div class="form-group row">
+                            <div class="form-group row" th:if="${isAdmin}">
                                 <label class="col-md-3 form-control-label" for="userRole">
                                     User Role
                                 </label>
@@ -107,7 +107,7 @@
                                 <i class="fa fa-dot-circle-o"></i>
                                 Submit
                             </button>
-                            <a class="btn btn-sm btn-danger" href="/configuration/user" role="button">
+                            <a class="btn btn-sm btn-danger" th:href="${isAdmin} ? '/configuration/user' : '/'" role="button">
                                 <i class="fa fa-ban"></i>
                                 Cancel
                             </a>

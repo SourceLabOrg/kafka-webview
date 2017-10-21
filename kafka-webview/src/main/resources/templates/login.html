@@ -1,0 +1,82 @@
+<!--
+ * CoreUI - Open Source Bootstrap Admin Template
+ * @version v1.0.0
+ * @link http://coreui.io
+ * Copyright (c) 2017 creativeLabs Łukasz Holeczek
+ * @license MIT
+ -->
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Kafka Webview">
+    <meta name="keyword" content="Kafka WebView">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="shortcut icon" href="/img/favicon.png">
+    <title>Kafka WebView - Login</title>
+
+    <!-- Icons -->
+    <link href="/vendors/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/vendors/css/simple-line-icons.min.css" rel="stylesheet">
+
+    <!-- Main styles for this application -->
+    <link href="/css/style.css" rel="stylesheet">
+
+    <!-- Bootstrap and necessary plugins -->
+    <script src="/vendors/js/jquery.min.js"></script>
+    <script src="/vendors/js/popper.min.js"></script>
+    <script src="/vendors/js/bootstrap.min.js"></script>
+    <script src="/vendors/js/pace.min.js"></script>
+</head>
+
+<body class="app flex-row align-items-center">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Include Flash Attribute Messages -->
+            <div th:replace="fragments/alert :: alert (message=${FlashMessage})"></div>
+
+            <div class="card-group mb-0">
+                <div class="card p-4">
+                    <div class="card-body animated fadeIn">
+                        <form th:action="@{/login}" autocomplete="off" method="post">
+                            <h1>Login</h1>
+                            <p class="text-muted">Sign In to your account</p>
+                            <div class="input-group mb-3">
+                                    <span class="input-group-addon">
+                                        <i class="icon-user"></i>
+                                    </span>
+                                <input type="text" id="email" name="email" class="form-control" placeholder="Email">
+                            </div>
+                            <div class="input-group mb-4">
+                                    <span class="input-group-addon"><i class="icon-lock"></i>
+                                    </span>
+                                <input type="password" id="password" name="password" class="form-control" placeholder="Password">
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button class="btn btn-primary px-4" type="submit">Login</button>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <a href="/login/lostPassword" class="btn btn-link px-0">Forgot Password?</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

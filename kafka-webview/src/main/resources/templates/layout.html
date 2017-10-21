@@ -59,7 +59,28 @@
 <body class="app header-fixed breadcrumb-fixed sidebar-minimized aside-menu-fixed aside-menu-hidden">
 <header class="app-header navbar">
     <a class="navbar-brand" href="#"></a>
-    <!-- Optional app-header-navbar -->
+
+    <!-- User Settings Nav -->
+    <ul class="nav navbar-nav ml-auto">
+        <li class="nav-item dropdown" style="padding-right: 50px;">
+            <a class="nav-link dropdown-toggle nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                <i class="icon-user"></i>
+                <span class="d-md-down-none" sec:authentication="name"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+                <div class="dropdown-header text-center">
+                    <strong>Settings</strong>
+                </div>
+                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}">
+                    <i class="fa fa-user"></i> Profile
+                </a>
+                <div class="divider"></div>
+                <a class="dropdown-item" href="/logout">
+                    <i class="fa fa-lock"></i> Logout
+                </a>
+            </div>
+        </li>
+    </ul>
 </header>
 
 <div class="app-body">
@@ -77,7 +98,7 @@
 
                 <!-- Clusters -->
                 <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="#">
+                    <a class="nav-link nav-dropdown-toggle" href="/cluster">
                         <i class="icon-layers"></i> Clusters
                     </a>
                     <ul class="nav-dropdown-items">
@@ -92,12 +113,12 @@
 
                 <!-- Views -->
                 <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="#">
+                    <a class="nav-link nav-dropdown-toggle" href="/view">
                         <i class="icon-eye"></i> Views
                     </a>
                     <ul class="nav-dropdown-items">
                         <li class="nav-item" th:each="view : ${MenuViews}">
-                            <a class="nav-link" th:href="@{/browser/{id}(id=${view.id})}">
+                            <a class="nav-link" th:href="@{/view/{id}(id=${view.id})}">
                                 <i class="icon-eye"></i>
                                 [[${view.name}]]
                             </a>
@@ -107,12 +128,18 @@
 
                 <!-- Setup -->
                 <li class="divider"></li>
-                <li class="nav-item nav-dropdown">
+                <li class="nav-item nav-dropdown" sec:authorize="hasRole('ROLE_ADMIN')">
                     <a class="nav-link nav-dropdown-toggle" href="/configuration">
                         <i class="icon-settings"></i>
                         Configuration
                     </a>
                     <ul class="nav-dropdown-items">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/configuration/user" target="_top">
+                                <i class="icon-people"></i>
+                                Users
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/configuration/cluster" target="_top">
                                 <i class="icon-layers"></i>

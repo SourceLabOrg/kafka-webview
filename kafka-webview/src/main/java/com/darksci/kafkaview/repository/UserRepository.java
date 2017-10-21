@@ -4,7 +4,14 @@ import com.darksci.kafkaview.model.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+/**
+ * For interacting w/ the User database table.
+ */
 @Repository
 public interface UserRepository extends CrudRepository<User, Long> {
+
+    /**
+     * Find user by email address.
+     */
     User findByEmail(String email);
 }

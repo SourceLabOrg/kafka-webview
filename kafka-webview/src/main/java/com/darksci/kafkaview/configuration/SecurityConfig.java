@@ -9,15 +9,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.context.request.RequestContextListener;
 
 /**
  * Manages Security Configuration.
  */
 @Configuration
+@EnableWebSecurity
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -40,9 +43,36 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // CSRF Enabled
             .csrf().and()
 
-            // But wide open access, no user support yet.
             .authorizeRequests()
-                .antMatchers("/**").permitAll();
+                // Paths to static resources are available to anyone
+                .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
+                    .permitAll()
+                // Users can edit their own profile
+                .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
+                    .fullyAuthenticated()
+                // But other Configuration paths require ADMIN role.
+                .antMatchers("/configuration/**")
+                    .hasRole("ADMIN")
+                // All other requests must be authenticated
+                .anyRequest()
+                    .fullyAuthenticated()
+                .and()
+
+            // Define how you login
+            .formLogin()
+                .loginPage("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
+                .failureUrl("/login?error=true")
+                .defaultSuccessUrl("/")
+                .permitAll()
+                .and()
+
+            // And how you logout
+            .logout()
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutSuccessUrl("/login")
+                .permitAll();
         
         // If require SSL is enabled
         if (securityProperties.isRequireSsl()) {

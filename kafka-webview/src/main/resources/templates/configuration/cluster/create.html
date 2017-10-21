@@ -86,8 +86,8 @@
                                     <label class="col-md-3 form-control-label" for="trustStoreFile">
                                         Trust Store
                                         <div
-                                                th:if="${clusterForm.getTrustStoreFilename()} != null"
-                                                th:text="'Current: ' + ${clusterForm.getTrustStoreFilename()}">
+                                            th:if="${clusterForm.getTrustStoreFilename()} != null"
+                                            th:text="'Current: ' + ${clusterForm.getTrustStoreFilename()}">
                                         </div>
                                     </label>
                                     <div class="col-md-9">
@@ -118,7 +118,7 @@
                                 <!-- Client KeyStore file -->
                                 <div class="form-group row">
                                     <label class="col-md-3 form-control-label" for="keyStoreFile">
-                                        Trust Store JKS
+                                        Key Store JKS
                                         <div
                                             th:if="${clusterForm.getKeyStoreFilename()} != null"
                                             th:text="'Current: ' + ${clusterForm.getKeyStoreFilename()}">
@@ -142,7 +142,7 @@
                                     <div class="col-md-9">
                                         <input
                                             id="keyStorePassword" name="keyStorePassword" class="form-control" type="password"
-                                            placeholder="TrustStore password"
+                                            placeholder="Key Store password"
                                             th:errorclass="is-invalid"
                                             th:value="*{keyStorePassword}">
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStorePassword')}" th:errors="*{keyStorePassword}"/>

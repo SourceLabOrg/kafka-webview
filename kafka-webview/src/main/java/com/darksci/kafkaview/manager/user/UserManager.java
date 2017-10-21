@@ -4,17 +4,19 @@ import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;
 import com.darksci.kafkaview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
  * Used for creating new users.
  */
 @Component
-public class NewUserManager {
+public class UserManager {
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
-    public NewUserManager(final UserRepository userRepository) {
+    public UserManager(final UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -36,6 +38,10 @@ public class NewUserManager {
 
         // Create them!
         return persistNewUser(userBuilder);
+    }
+
+    public String encodePassword(final String plaintext) {
+        return passwordEncoder.encode(plaintext);
     }
 
     private User persistNewUser(final UserBuilder userBuilder) {
