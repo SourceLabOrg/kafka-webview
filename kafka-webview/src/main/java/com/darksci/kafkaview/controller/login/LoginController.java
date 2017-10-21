@@ -51,17 +51,6 @@ public class LoginController extends BaseController {
     }
 
     /**
-     * POST redirects
-     */
-    @RequestMapping(path = "/login", method = RequestMethod.POST)
-    public String submitForm(final Model model, final @RequestParam(value = "error", required = false) String isError) {
-        if (isLoggedIn()) {
-            return "login/success";
-        }
-        return loginForm(model, isError);
-    }
-
-    /**
      * GET Displays the Lost Password Form.
      */
     @RequestMapping(path = "/login/lostPassword", method = RequestMethod.GET)
