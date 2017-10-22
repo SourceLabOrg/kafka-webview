@@ -2,22 +2,12 @@ security:
   require-ssl: false
 
 spring:
-  # MYSQL Datasource
-#  datasource:
-#    url: "jdbc:mysql://localhost:3306/kafkaviewer"
-#    username: root
-#    password:
-
-  # H2 datasource
-  datasource:
-    url: "jdbc:h2:file:./uploads"
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
   # H2 Datbase
   h2:
     console:
       ## Disable for release
       enabled: false
       path: /h2
+
+  jpa:
+    show-sql: true

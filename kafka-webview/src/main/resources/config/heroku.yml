@@ -1,6 +1,0 @@
-spring:
-  datasource:
-    url: ${JAWSDB_URL}
-
-app:
-  baseUrl: https://kafkawebview.herokuapp.com/
