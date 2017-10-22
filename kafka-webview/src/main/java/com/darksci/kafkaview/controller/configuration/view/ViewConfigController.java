@@ -5,6 +5,7 @@ import com.darksci.kafkaview.controller.configuration.view.forms.ViewForm;
 import com.darksci.kafkaview.manager.encryption.SecretManager;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
+import com.darksci.kafkaview.manager.kafka.KafkaOperationsFactory;
 import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
@@ -53,10 +54,7 @@ public class ViewConfigController extends BaseController {
     private FilterRepository filterRepository;
 
     @Autowired
-    private KafkaAdminFactory kafkaAdminFactory;
-
-    @Autowired
-    private SecretManager secretManager;
+    private KafkaOperationsFactory kafkaOperationsFactory;
 
     /**
      * GET Displays main configuration index.
@@ -102,11 +100,7 @@ public class ViewConfigController extends BaseController {
             // Retrieve cluster
             final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
             if (cluster != null) {
-                // Create a new Operational Client
-                final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
-                final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, "BobsYerAunty");
-
-                try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
+                try (final KafkaOperations operations = kafkaOperationsFactory.createOperationsClient(cluster, 1L)) {
                     final TopicList topics = operations.getAvailableTopics();
                     model.addAttribute("topics", topics.getTopics());
 

@@ -347,6 +347,9 @@ public class ApiController {
         return new ApiErrorResponse(exception.getType(), exception.getMessage());
     }
 
+    /**
+     * Create an operations client.
+     */
     private KafkaOperations createOperationsClient(final Cluster cluster) {
         return kafkaOperationsFactory.createOperationsClient(cluster, 1L);
     }
