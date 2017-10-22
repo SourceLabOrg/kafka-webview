@@ -6,5 +6,5 @@ SPRING_CONFIG_LOCATION=classpath:/config/base.yml,classpath:/config/dev.yml
 ## What port to listen on
 PORT=8080
 
-## Optional DB Url
-JAWSDB_URL=mysql://user:password@hostname:3306/dbname
+## Building distribution
+mvn clean package assembly:single -DskipTests=true

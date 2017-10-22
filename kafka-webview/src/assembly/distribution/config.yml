@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+security:
+  require-ssl: false
+
+## Various App Configs
+app:
+  key: "SuperSecretKey"
