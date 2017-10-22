@@ -12,6 +12,7 @@ import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.repository.ClusterRepository;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.security.UnrecoverableKeyException;
 
 @Controller
 @RequestMapping("/configuration/cluster")
@@ -298,6 +300,9 @@ public class ClusterConfigController extends BaseController {
         if (cluster == null) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
+
+            // redirect to cluster index
+            return "redirect:/configuration/cluster";
         }
 
         // Build a client
@@ -305,25 +310,32 @@ public class ClusterConfigController extends BaseController {
         final String clientId = "TestingClient-" + cluster.getId();
 
         // Create new Operational Client
-        final ClusterConfig.Builder clusterConfigBuilder = ClusterConfig.newBuilder(cluster, secretManager);
+        try {
+            final ClusterConfig.Builder clusterConfigBuilder = ClusterConfig.newBuilder(cluster, secretManager);
+            final AdminClient adminClient = kafkaAdminFactory.create(clusterConfigBuilder.build(), clientId);
+            try (final KafkaOperations kafkaOperations = new KafkaOperations(adminClient)) {
+                logger.info("Cluster Nodes: {}", kafkaOperations.getClusterNodes());
 
-        final AdminClient adminClient = kafkaAdminFactory.create(clusterConfigBuilder.build(), clientId);
-        try (final KafkaOperations kafkaOperations = new KafkaOperations(adminClient)) {
-            logger.info("Cluster Nodes: {}", kafkaOperations.getClusterNodes());
+                // If we made it this far, we should be AOK
+                cluster.setValid(true);
+                clusterRepository.save(cluster);
 
-            // If we made it this far, we should be AOK
-            cluster.setValid(true);
-            clusterRepository.save(cluster);
-
-            // Set success msg
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Cluster configuration is valid!"));
+                // Set success msg
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Cluster configuration is valid!"));
+            }
         } catch (Exception e) {
+            String reason = e.getMessage();
+            if (e instanceof KafkaException && e.getCause() != null) {
+                reason = e.getCause().getMessage();
+            }
             // Set error msg
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newDanger("Error connecting to cluster: " + reason));
+
+            // Mark as invalid
             cluster.setValid(false);
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newDanger("Error connecting to cluster: " + e.getMessage()));
+            clusterRepository.save(cluster);
         }
-        // Update
-        clusterRepository.save(cluster);
+
 
         // redirect to cluster index
         return "redirect:/configuration/cluster";

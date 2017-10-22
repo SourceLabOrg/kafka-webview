@@ -10,6 +10,7 @@ import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
 import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
 import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
 import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
+import com.darksci.kafkaview.manager.kafka.dto.ApiErrorResponse;
 import com.darksci.kafkaview.manager.kafka.dto.ConfigItem;
 import com.darksci.kafkaview.manager.kafka.dto.ConsumerState;
 import com.darksci.kafkaview.manager.kafka.dto.KafkaResults;
@@ -33,14 +34,18 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -56,8 +61,6 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/api")
 public class ApiController {
-    private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
-
     @Autowired
     private ViewRepository viewRepository;
 
@@ -82,8 +85,8 @@ public class ApiController {
     /**
      * GET kafka results
      */
-    @RequestMapping(path = "/consumer/view/{id}", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/consumer/view/{id}", method = RequestMethod.GET, produces = "application/json")
     public KafkaResults consume(
         final @PathVariable Long id,
         final @RequestParam(name = "action", required = false) String action,
@@ -94,8 +97,7 @@ public class ApiController {
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
         if (view == null) {
-            // TODO Return some kind of error.
-            throw new RuntimeException("Unable to find view!");
+            throw new NotFoundApiException("Consume", "Unable to find view");
         }
 
         // Optionally over ride results per partition
@@ -127,7 +129,8 @@ public class ApiController {
                         continue;
                     }
                     configuredPartitions.add(requestedPartition);
-                } catch (NumberFormatException e) {
+                } catch (final NumberFormatException e) {
+                    // Skip invalid partitions
                     continue;
                 }
             }
@@ -172,7 +175,6 @@ public class ApiController {
         }
 
         // Create consumer
-        final KafkaResults results;
         try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, configuredFilters)) {
             // move directions if needed
             if ("next".equals(action)) {
@@ -187,136 +189,143 @@ public class ApiController {
             }
 
             // Poll
-            results = transactionalKafkaClient.consumePerPartition();
+            return transactionalKafkaClient.consumePerPartition();
+        } catch (final Exception e) {
+            throw new ApiException("Consume", e);
         }
-        return results;
     }
 
     /**
      * POST manually set a consumer's offsets.
      */
-    @RequestMapping(path = "/consumer/view/{id}/offsets", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/consumer/view/{id}/offsets", method = RequestMethod.POST, produces = "application/json")
     public ConsumerState setConsumerOffsets(final @PathVariable Long id, final @RequestBody Map<Integer, Long> partitionOffsetMap) {
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
         if (view == null) {
-            // TODO Return some kind of error.
+            throw new NotFoundApiException("Offsets", "Unable to find view");
         }
 
         // Create consumer
         try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, new HashSet<>())) {
             return transactionalKafkaClient.seek(partitionOffsetMap);
+        } catch (final Exception e) {
+            throw new ApiException("Offsets", e);
         }
     }
 
     /**
      * POST manually set a consumer's offsets using a timestamp
      */
-    @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
     public ConsumerState setConsumerOffsetsByTimestamp(final @PathVariable Long id, final @PathVariable Long timestamp) {
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
         if (view == null) {
-            // TODO Return some kind of error.
+            throw new NotFoundApiException("OffsetsByTimestamp", "Unable to find view");
         }
 
         // Create consumer
         try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, new HashSet<>())) {
             return transactionalKafkaClient.seek(timestamp);
+        } catch (final Exception e) {
+            throw new ApiException("OffsetsByTimestamp", e);
         }
     }
 
     /**
      * GET listing of all available kafka topics for a requested cluster.
      */
-    @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
     public List<TopicListing> getTopics(final @PathVariable Long id) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
-            // Handle error by returning empty list?
-            new ArrayList<>();
+            throw new NotFoundApiException("Topics", "Unable to find cluster");
         }
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             final TopicList topics = operations.getAvailableTopics();
             return topics.getTopics();
+        } catch (final Exception e) {
+            throw new ApiException("Topics", e);
         }
     }
 
     /**
      * GET Details for a specific Topic.
      */
-    @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
     public TopicDetails getTopicDetails(final @PathVariable Long id, final @PathVariable String topic) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
-            // Handle error by returning empty list?
-            new ArrayList<>();
+            throw new NotFoundApiException("TopicDetails", "Unable to find cluster");
         }
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
-            final TopicDetails topicDetails = operations.getTopicDetails(topic);
-            return topicDetails;
+            return operations.getTopicDetails(topic);
+        } catch (final Exception e) {
+            throw new ApiException("TopicDetails", e);
         }
     }
 
     /**
      * GET Config for a specific Topic.
      */
-    @RequestMapping(path = "/cluster/{id}/topic/{topic}/config", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/topic/{topic}/config", method = RequestMethod.GET, produces = "application/json")
     public List<ConfigItem> getTopicConfig(final @PathVariable Long id, final @PathVariable String topic) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
-            // Handle error by returning empty list?
-            new ArrayList<>();
+            throw new NotFoundApiException("TopicConfig", "Unable to find cluster");
         }
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             return operations.getTopicConfig(topic).getConfigEntries();
+        } catch (final Exception e) {
+            throw new ApiException("TopicConfig", e);
         }
     }
 
     /**
      * GET Config for a specific broker.
      */
-    @RequestMapping(path = "/cluster/{id}/broker/{brokerId}/config", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/broker/{brokerId}/config", method = RequestMethod.GET, produces = "application/json")
     public List<ConfigItem> getBrokerConfig(final @PathVariable Long id, final @PathVariable String brokerId) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
-            // Handle error by returning empty list?
-            new ArrayList<>();
+            throw new NotFoundApiException("TopicConfig", "Unable to find cluster");
         }
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             return operations.getBrokerConfig(brokerId).getConfigEntries();
+        } catch (final Exception e) {
+            throw new ApiException("BrokerConfig", e);
         }
     }
 
     /**
      * GET Details for all Topics on a cluster.
      */
-    @RequestMapping(path = "/cluster/{id}/topics/details", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/topics/details", method = RequestMethod.GET, produces = "application/json")
     public Collection<TopicDetails> getAllTopicsDetails(final @PathVariable Long id) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
-            // Handle error by returning empty list?
-            new ArrayList<>();
+            throw new NotFoundApiException("TopicDetails", "Unable to find cluster");
         }
 
         // Create new Operational Client
@@ -329,26 +338,39 @@ public class ApiController {
 
             // Return just the TopicDetails
             return results.values();
+        } catch (final Exception e) {
+            throw new ApiException("TopicDetails", e);
         }
     }
 
     /**
      * GET Nodes within a cluster.
      */
-    @RequestMapping(path = "/cluster/{id}/nodes", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/nodes", method = RequestMethod.GET, produces = "application/json")
     public List<NodeDetails> getClusterNodes(final @PathVariable Long id) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
-            // Handle error by returning empty list?
-            new ArrayList<>();
+            throw new NotFoundApiException("ClusterNodes", "Unable to find cluster");
         }
 
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             final NodeList nodes = operations.getClusterNodes();
             return nodes.getNodes();
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
         }
+    }
+
+    /**
+     * Error handler for ApiExceptions.
+     */
+    @ResponseBody
+    @ExceptionHandler(ApiException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiErrorResponse handleApiException(final ApiException exception) {
+        return new ApiErrorResponse(exception.getType(), exception.getMessage());
     }
 
     private KafkaOperations createOperationsClient(final Cluster cluster) {
