@@ -6,6 +6,11 @@ import com.darksci.kafkaview.model.Cluster;
 import org.apache.kafka.clients.admin.AdminClient;
 
 public class KafkaOperationsFactory {
+    /**
+     * Defines the consumerId.
+     */
+    private final static String consumerIdPrefix = "KafkaWebView-Operation-UserId";
+
     private final SecretManager secretManager;
     private final KafkaAdminFactory kafkaAdminFactory;
 
@@ -14,8 +19,8 @@ public class KafkaOperationsFactory {
         this.kafkaAdminFactory = kafkaAdminFactory;
     }
 
-    public KafkaOperations createOperationsClient(final Cluster cluster, final long userId) {
-        final String clientId = "User" + userId;
+    public KafkaOperations create(final Cluster cluster, final long userId) {
+        final String clientId = consumerIdPrefix + userId;
 
         // Create new Operational Client
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();

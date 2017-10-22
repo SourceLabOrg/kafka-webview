@@ -21,6 +21,11 @@ import java.util.Collection;
 import java.util.List;
 
 public class WebKafkaConsumerFactory {
+    /**
+     * Defines the consumerId.
+     */
+    private final static String consumerIdPrefix = "KafkaWebView-Consumer-UserId";
+
     private final PluginFactory<Deserializer> deserializerPluginFactory;
     private final PluginFactory<RecordFilter> recordFilterPluginFactory;
     private final SecretManager secretManager;
@@ -37,9 +42,9 @@ public class WebKafkaConsumerFactory {
         this.kafkaConsumerFactory = kafkaConsumerFactory;
     }
 
-    public WebKafkaConsumer setup(final View view, final Collection<Filter> filterList, final long userId) {
+    public WebKafkaConsumer create(final View view, final Collection<Filter> filterList, final long userId) {
         // Construct a consumerId based on user
-        final String consumerId = "User" + userId;
+        final String consumerId = consumerIdPrefix + userId;
 
         // Grab our relevant bits
         final Cluster cluster = view.getCluster();

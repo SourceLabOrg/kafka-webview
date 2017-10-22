@@ -1,5 +1,6 @@
 package com.darksci.kafkaview.controller.api;
 
+import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
 import com.darksci.kafkaview.manager.kafka.KafkaOperationsFactory;
 import com.darksci.kafkaview.manager.kafka.WebKafkaConsumer;
@@ -21,7 +22,9 @@ import com.darksci.kafkaview.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +46,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequestMapping("/api")
-public class ApiController {
+public class ApiController extends BaseController {
     @Autowired
     private ViewRepository viewRepository;
 
@@ -351,13 +354,22 @@ public class ApiController {
      * Create an operations client.
      */
     private KafkaOperations createOperationsClient(final Cluster cluster) {
-        return kafkaOperationsFactory.createOperationsClient(cluster, 1L);
+        return kafkaOperationsFactory.create(cluster, getLoggedInUserId());
     }
 
     /**
      * Creates a WebKafkaConsumer instance.
      */
     private WebKafkaConsumer setup(final View view, final Collection<Filter> filterList) {
-        return webKafkaConsumerFactory.setup(view, filterList, 1L);
+        return webKafkaConsumerFactory.create(view, filterList, getLoggedInUserId());
+    }
+
+    /**
+     * Override parent method.
+     */
+    @Override
+    @ModelAttribute
+    public void addAttributes(Model model) {
+        // Do nothing.
     }
 }
