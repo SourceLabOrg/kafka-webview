@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class TransactionalKafkaClient implements AutoCloseable {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionalKafkaClient.class);
+public class WebKafkaConsumer implements AutoCloseable {
+    private final static Logger logger = LoggerFactory.getLogger(WebKafkaConsumer.class);
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
     private List<TopicPartition> cachedTopicsAndPartitions = null;
 
-    public TransactionalKafkaClient(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
+    public WebKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
     }

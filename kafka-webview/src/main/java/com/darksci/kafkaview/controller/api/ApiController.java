@@ -1,15 +1,9 @@
 package com.darksci.kafkaview.controller.api;
 
-import com.darksci.kafkaview.manager.encryption.SecretManager;
-import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
-import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
-import com.darksci.kafkaview.manager.kafka.TransactionalKafkaClient;
-import com.darksci.kafkaview.manager.kafka.config.ClientConfig;
-import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
-import com.darksci.kafkaview.manager.kafka.config.DeserializerConfig;
-import com.darksci.kafkaview.manager.kafka.config.FilterConfig;
-import com.darksci.kafkaview.manager.kafka.config.TopicConfig;
+import com.darksci.kafkaview.manager.kafka.KafkaOperationsFactory;
+import com.darksci.kafkaview.manager.kafka.WebKafkaConsumer;
+import com.darksci.kafkaview.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafkaview.manager.kafka.dto.ApiErrorResponse;
 import com.darksci.kafkaview.manager.kafka.dto.ConfigItem;
 import com.darksci.kafkaview.manager.kafka.dto.ConsumerState;
@@ -19,20 +13,11 @@ import com.darksci.kafkaview.manager.kafka.dto.NodeList;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.kafka.dto.TopicListing;
-import com.darksci.kafkaview.manager.plugin.PluginFactory;
-import com.darksci.kafkaview.manager.plugin.exception.LoaderException;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.model.Filter;
-import com.darksci.kafkaview.model.MessageFormat;
 import com.darksci.kafkaview.model.View;
-import com.darksci.kafkaview.plugin.filter.RecordFilter;
 import com.darksci.kafkaview.repository.ClusterRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.Deserializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -45,8 +30,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,22 +48,13 @@ public class ApiController {
     private ViewRepository viewRepository;
 
     @Autowired
-    private PluginFactory<Deserializer> deserializerPluginFactory;
-
-    @Autowired
     private ClusterRepository clusterRepository;
 
     @Autowired
-    private PluginFactory<RecordFilter> recordFilterPluginFactory;
+    private WebKafkaConsumerFactory webKafkaConsumerFactory;
 
     @Autowired
-    private KafkaAdminFactory kafkaAdminFactory;
-
-    @Autowired
-    private KafkaConsumerFactory kafkaConsumerFactory;
-
-    @Autowired
-    private SecretManager secretManager;
+    private KafkaOperationsFactory kafkaOperationsFactory;
 
     /**
      * GET kafka results
@@ -175,21 +149,21 @@ public class ApiController {
         }
 
         // Create consumer
-        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, configuredFilters)) {
+        try (final WebKafkaConsumer webKafkaConsumer = setup(view, configuredFilters)) {
             // move directions if needed
             if ("next".equals(action)) {
                 // Do nothing!
-                //transactionalKafkaClient.next();
+                //webKafkaConsumer.next();
             } else if ("previous".equals(action)) {
-                transactionalKafkaClient.previous();
+                webKafkaConsumer.previous();
             } else if ("head".equals(action)) {
-                transactionalKafkaClient.toHead();
+                webKafkaConsumer.toHead();
             } else if ("tail".equals(action)) {
-                transactionalKafkaClient.toTail();
+                webKafkaConsumer.toTail();
             }
 
             // Poll
-            return transactionalKafkaClient.consumePerPartition();
+            return webKafkaConsumer.consumePerPartition();
         } catch (final Exception e) {
             throw new ApiException("Consume", e);
         }
@@ -208,8 +182,8 @@ public class ApiController {
         }
 
         // Create consumer
-        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, new HashSet<>())) {
-            return transactionalKafkaClient.seek(partitionOffsetMap);
+        try (final WebKafkaConsumer webKafkaConsumer = setup(view, new HashSet<>())) {
+            return webKafkaConsumer.seek(partitionOffsetMap);
         } catch (final Exception e) {
             throw new ApiException("Offsets", e);
         }
@@ -228,8 +202,8 @@ public class ApiController {
         }
 
         // Create consumer
-        try (final TransactionalKafkaClient transactionalKafkaClient = setup(view, new HashSet<>())) {
-            return transactionalKafkaClient.seek(timestamp);
+        try (final WebKafkaConsumer webKafkaConsumer = setup(view, new HashSet<>())) {
+            return webKafkaConsumer.seek(timestamp);
         } catch (final Exception e) {
             throw new ApiException("OffsetsByTimestamp", e);
         }
@@ -374,83 +348,13 @@ public class ApiController {
     }
 
     private KafkaOperations createOperationsClient(final Cluster cluster) {
-        // TODO use a clientId unique to the client + cluster + topic
-        final String clientId = "MyUser on MyTopic at MyCluster";
-
-        // Create new Operational Client
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
-        final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, clientId);
-
-        return new KafkaOperations(adminClient);
+        return kafkaOperationsFactory.createOperationsClient(cluster, 1L);
     }
 
-    private TransactionalKafkaClient setup(final View view, final Collection<Filter> filterList) {
-        // Construct a consumerId based on user
-        final String consumerId = "MyUserId1";
-
-        // Grab our relevant bits
-        final Cluster cluster = view.getCluster();
-        final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
-        final MessageFormat valueMessageFormat = view.getValueMessageFormat();
-
-        final Class keyDeserializerClass;
-        try {
-            if (keyMessageFormat.isDefaultFormat()) {
-                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getClasspath());
-            } else {
-                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getJar(), keyMessageFormat.getClasspath());
-            }
-        } catch (final LoaderException exception) {
-            throw new RuntimeException(exception.getMessage(), exception);
-        }
-
-        final Class valueDeserializerClass;
-        try {
-            if (valueMessageFormat.isDefaultFormat()) {
-                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getClasspath());
-            } else {
-                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getJar(), valueMessageFormat.getClasspath());
-            }
-        } catch (final LoaderException exception) {
-            throw new RuntimeException(exception.getMessage(), exception);
-        }
-
-
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
-        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
-
-        final ClientConfig.Builder clientConfigBuilder = ClientConfig.newBuilder()
-            .withTopicConfig(topicConfig)
-            .withConsumerId(consumerId)
-            .withPartitions(view.getPartitionsAsSet())
-            .withMaxResultsPerPartition(view.getResultsPerPartition());
-
-        // Add enforced filters to our filterList
-        filterList.addAll(view.getEnforcedFilters());
-
-        if (filterList.isEmpty()) {
-            clientConfigBuilder.withNoFilters();
-        } else {
-            final List<RecordFilter> recordFilters = new ArrayList<>();
-            // Build filter list
-            for (final Filter filter: filterList) {
-                // Build it
-                try {
-                    final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(filter.getJar(), filter.getClasspath());
-                    recordFilters.add(recordFilter);
-                } catch (LoaderException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            clientConfigBuilder.withFilterConfig(FilterConfig.withFilters(recordFilters));
-        }
-
-        // Create the damn consumer
-        final ClientConfig clientConfig = clientConfigBuilder.build();
-        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
-
-        // Create consumer
-        return new TransactionalKafkaClient(kafkaConsumer, clientConfig);
+    /**
+     * Creates a WebKafkaConsumer instance.
+     */
+    private WebKafkaConsumer setup(final View view, final Collection<Filter> filterList) {
+        return webKafkaConsumerFactory.setup(view, filterList, 1L);
     }
 }
