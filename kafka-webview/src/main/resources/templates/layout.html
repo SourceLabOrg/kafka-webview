@@ -203,6 +203,9 @@
                 <!-- Include Flash Attribute Messages -->
                 <div th:replace="fragments/alert :: alert (message=${FlashMessage})"></div>
 
+                <!-- Container for Dynamic Alerts -->
+                <div id="AlertContainer"></div>
+
                 <!-- Start main content -->
                 <section layout:fragment="content">
                     <p>Page content goes here</p>

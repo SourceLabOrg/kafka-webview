@@ -145,122 +145,166 @@ function init(url) {
 }
 
 var ApiClient = {
-  getCsrfToken: function() {
-      return jQuery("meta[name='_csrf']").attr("content");
-  },
-  getCsrfHeader: function() {
-      var headerName = jQuery("meta[name='_csrf_header']").attr("content");
-      var headerValue = ApiClient.getCsrfToken();
+    // Returns the CSRF Token
+    getCsrfToken: function() {
+        return jQuery("meta[name='_csrf']").attr("content");
+    },
+    // Returns the CSRF Header name
+    getCsrfHeader: function() {
+        var headerName = jQuery("meta[name='_csrf_header']").attr("content");
+        var headerValue = ApiClient.getCsrfToken();
 
-      var headers = {};
-      headers[headerName] = headerValue;
-      return headers;
-  },
-  consume: function(viewId, params, callback) {
-      jQuery.getJSON('/api/consumer/view/' + viewId, params, callback);
-  },
-  consumeNext: function(viewId, callback) {
-      ApiClient.consume(viewId, {action:'next'}, callback);
-  },
-  consumePrevious: function(viewId, callback) {
-      ApiClient.consume(viewId, {action:'previous'}, callback);
-  },
-  consumeTail: function(viewId, callback) {
-      ApiClient.consume(viewId, {action:'tail'}, callback);
-  },
-  consumeHead: function(viewId, callback) {
-      ApiClient.consume(viewId, {action:'head'}, callback);
-  },
-  seekTimestamp: function(viewId, unixTimestamp, callback) {
-      jQuery.ajax({
-          type: 'POST',
-          url: '/api/consumer/view/' + viewId + '/timestamp/' + unixTimestamp,
-          dataType: 'json',
-          headers: ApiClient.getCsrfHeader(),
-          success: callback
-      });
-  },
-  setConsumerState: function(viewId, partitionOffsetJson, callback) {
-      jQuery.ajax({
-          type: 'POST',
-          url: '/api/consumer/view/' + viewId + '/offsets',
-          data: partitionOffsetJson,
-          dataType: 'json',
-          headers: ApiClient.getCsrfHeader(),
-          success: callback,
-          beforeSend: function(xhr) {
-              xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-          }
-      });
-  },
-  // Retrieve cluster node info
-  getClusterNodes: function(clusterId, callback) {
-      jQuery.getJSON('/api/cluster/' + clusterId + '/nodes', '', callback);
-  },
-  getTopicDetails: function(clusterId, topic, callback) {
-      jQuery.getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/details', '', callback);
-  },
-  getAllTopicsDetails: function(clusterId, callback) {
-      jQuery.getJSON('/api/cluster/' + clusterId + '/topics/details', '', callback);
-  },
-  getTopics: function(clusterId, callback) {
-      jQuery.getJSON('/api/cluster/' + clusterId + '/topics/list', '', callback);
-  },
-  getTopicConfig: function(clusterId, topic, callback) {
-      jQuery.getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/config', '', callback);
-  },
-  getBrokerConfig: function(clusterId, brokerId, callback) {
-      jQuery.getJSON('/api/cluster/' + clusterId + '/broker/' + brokerId + '/config', '', callback);
-  }
+        var headers = {};
+        headers[headerName] = headerValue;
+        return headers;
+    },
+    consume: function(viewId, params, successCallback) {
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/consumer/view/' + viewId,
+            dataType: 'json',
+            data: params,
+            success: successCallback,
+            error: ApiClient.defaultErrorHandler
+        });
+    },
+    consumeNext: function(viewId, callback) {
+        ApiClient.consume(viewId, {action:'next'}, callback);
+    },
+    consumePrevious: function(viewId, callback) {
+        ApiClient.consume(viewId, {action:'previous'}, callback);
+    },
+    consumeTail: function(viewId, callback) {
+        ApiClient.consume(viewId, {action:'tail'}, callback);
+    },
+    consumeHead: function(viewId, callback) {
+        ApiClient.consume(viewId, {action:'head'}, callback);
+    },
+    seekTimestamp: function(viewId, unixTimestamp, callback) {
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/consumer/view/' + viewId + '/timestamp/' + unixTimestamp,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler
+        });
+    },
+    setConsumerState: function(viewId, partitionOffsetJson, callback) {
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/consumer/view/' + viewId + '/offsets',
+            data: partitionOffsetJson,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
+    // Retrieve cluster node info
+    getClusterNodes: function(clusterId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/nodes', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+    getTopicDetails: function(clusterId, topic, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/details', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+    getAllTopicsDetails: function(clusterId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/topics/details', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+    getTopics: function(clusterId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/topics/list', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+    getTopicConfig: function(clusterId, topic, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/config', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+    getBrokerConfig: function(clusterId, brokerId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/broker/' + brokerId + '/config', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+    defaultErrorHandler: function(jqXHR, textStatus, errorThrown) {
+        // convert response to json
+        var response = jQuery.parseJSON(jqXHR.responseText);
+        UITools.showAlert(response.message, 15)
+    }
+};
+
+var UITools = {
+    alertContainerId: "#AlertContainer",
+    showAlert: function(message, timeoutInSecs) {
+        var alertContainer = jQuery(UITools.alertContainerId);
+
+        var alertElement = jQuery.parseHTML('<div class="alert alert-dismissable alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> <i class="icon-fire"></i> <span><strong>Error </strong>' + message + '</span></div>');
+        jQuery(alertContainer)
+            .append(alertElement);
+
+        if (timeoutInSecs) {
+            setTimeout(function() {
+                jQuery(alertElement).alert('close');
+            }, timeoutInSecs * 1000);
+        }
+    }
 };
 
 var DateTools = {
-  localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  displayTimestamp: function(timestampMs) {
-    // Adjusts timestamp into local timezone and locate
-    //return new Date(timestampMs).toLocaleString();
-      var myDate = new Date(timestampMs);
+    localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    displayTimestamp: function(timestampMs) {
+        // Adjusts timestamp into local timezone and locate
+        //return new Date(timestampMs).toLocaleString();
+        var myDate = new Date(timestampMs);
 
-      var year = myDate.getFullYear();
-      var month = myDate.getMonth() + 1;
-      var day = myDate.getDate();
-      var hour = myDate.getHours();
-      var min = myDate.getMinutes();
-      var sec = myDate.getSeconds();
+        var year = myDate.getFullYear();
+        var month = myDate.getMonth() + 1;
+        var day = myDate.getDate();
+        var hour = myDate.getHours();
+        var min = myDate.getMinutes();
+        var sec = myDate.getSeconds();
 
-      month = (month < 10 ? "0" : "") + month;
-      day = (day < 10 ? "0" : "") + day;
-      hour = (hour < 10 ? "0" : "") + hour;
-      min = (min < 10 ? "0" : "") + min;
-      sec = (sec < 10 ? "0" : "") + sec;
+        month = (month < 10 ? "0" : "") + month;
+        day = (day < 10 ? "0" : "") + day;
+        hour = (hour < 10 ? "0" : "") + hour;
+        min = (min < 10 ? "0" : "") + min;
+        sec = (sec < 10 ? "0" : "") + sec;
 
-      return year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec + DateTools.formatTz(myDate);
-  },
-  formatTz: function(date) {
-      var timezone_offset_min = date.getTimezoneOffset(),
-          offset_hrs = parseInt(Math.abs(timezone_offset_min/60)),
-          offset_min = Math.abs(timezone_offset_min%60),
-          timezone_standard;
+        return year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec + DateTools.formatTz(myDate);
+    },
+    formatTz: function(date) {
+        var timezone_offset_min = date.getTimezoneOffset(),
+            offset_hrs = parseInt(Math.abs(timezone_offset_min/60)),
+            offset_min = Math.abs(timezone_offset_min%60),
+            timezone_standard;
 
-      if (offset_hrs < 10) {
-          offset_hrs = '0' + offset_hrs;
-      }
+        if (offset_hrs < 10) {
+            offset_hrs = '0' + offset_hrs;
+        }
 
-      if (offset_min < 10) {
-          offset_min = '0' + offset_min;
-      }
+        if (offset_min < 10) {
+            offset_min = '0' + offset_min;
+        }
 
-      // Add an opposite sign to the offset
-      // If offset is 0, it means timezone is UTC
-      if(timezone_offset_min < 0) {
-          timezone_standard = '+' + offset_hrs + ':' + offset_min;
-      } else if(timezone_offset_min > 0) {
-          timezone_standard = '-' + offset_hrs + ':' + offset_min;
-      } else if(timezone_offset_min == 0) {
-          timezone_standard = 'Z';
-      }
+        // Add an opposite sign to the offset
+        // If offset is 0, it means timezone is UTC
+        if(timezone_offset_min < 0) {
+            timezone_standard = '+' + offset_hrs + ':' + offset_min;
+        } else if(timezone_offset_min > 0) {
+            timezone_standard = '-' + offset_hrs + ':' + offset_min;
+        } else if(timezone_offset_min == 0) {
+            timezone_standard = 'Z';
+        }
 
-      return timezone_standard;
-  }
+        return timezone_standard;
+    }
 };
-
