@@ -20,9 +20,9 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TransactionalKafkaClientTest {
+public class WebKafkaConsumerTest {
 
-    private final static Logger logger = LoggerFactory.getLogger(TransactionalKafkaClientTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(WebKafkaConsumerTest.class);
 
     private final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("./uploads");
 
@@ -51,13 +51,13 @@ public class TransactionalKafkaClientTest {
         final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
 
         // Create consumer
-        final TransactionalKafkaClient transactionalKafkaClient = new TransactionalKafkaClient(kafkaConsumer, clientConfig);
+        final WebKafkaConsumer webKafkaConsumer = new WebKafkaConsumer(kafkaConsumer, clientConfig);
 
         // Poll
-        final KafkaResults results = transactionalKafkaClient.consumePerPartition();
+        final KafkaResults results = webKafkaConsumer.consumePerPartition();
 
         // and close
-        transactionalKafkaClient.close();
+        webKafkaConsumer.close();
 
         // Debug log
         logger.info("Consumed Results: {}", results);

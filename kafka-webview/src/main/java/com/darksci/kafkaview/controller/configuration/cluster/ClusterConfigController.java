@@ -3,15 +3,13 @@ package com.darksci.kafkaview.controller.configuration.cluster;
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.cluster.forms.ClusterForm;
 import com.darksci.kafkaview.manager.encryption.SecretManager;
-import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
-import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
+import com.darksci.kafkaview.manager.kafka.KafkaOperationsFactory;
 import com.darksci.kafkaview.manager.plugin.UploadManager;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.repository.ClusterRepository;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +25,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.io.IOException;
-import java.security.UnrecoverableKeyException;
 
 @Controller
 @RequestMapping("/configuration/cluster")
@@ -41,10 +38,10 @@ public class ClusterConfigController extends BaseController {
     private UploadManager uploadManager;
 
     @Autowired
-    private KafkaAdminFactory kafkaAdminFactory;
+    private SecretManager secretManager;
 
     @Autowired
-    private SecretManager secretManager;
+    private KafkaOperationsFactory kafkaOperationsFactory;
 
     /**
      * GET Displays main configuration index.
@@ -311,9 +308,7 @@ public class ClusterConfigController extends BaseController {
 
         // Create new Operational Client
         try {
-            final ClusterConfig.Builder clusterConfigBuilder = ClusterConfig.newBuilder(cluster, secretManager);
-            final AdminClient adminClient = kafkaAdminFactory.create(clusterConfigBuilder.build(), clientId);
-            try (final KafkaOperations kafkaOperations = new KafkaOperations(adminClient)) {
+            try (final KafkaOperations kafkaOperations = kafkaOperationsFactory.create(cluster, getLoggedInUserId())) {
                 logger.info("Cluster Nodes: {}", kafkaOperations.getClusterNodes());
 
                 // If we made it this far, we should be AOK

@@ -31,9 +31,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class KafkaOperations implements AutoCloseable {
-    private final static Logger logger = LoggerFactory.getLogger(KafkaOperations.class);
-    private final static long TIMEOUT = 5000L;
-
     private final AdminClient adminClient;
 
     public KafkaOperations(final AdminClient adminClient) {

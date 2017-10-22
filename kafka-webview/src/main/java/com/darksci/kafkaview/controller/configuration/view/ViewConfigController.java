@@ -2,10 +2,8 @@ package com.darksci.kafkaview.controller.configuration.view;
 
 import com.darksci.kafkaview.controller.BaseController;
 import com.darksci.kafkaview.controller.configuration.view.forms.ViewForm;
-import com.darksci.kafkaview.manager.encryption.SecretManager;
-import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaOperations;
-import com.darksci.kafkaview.manager.kafka.config.ClusterConfig;
+import com.darksci.kafkaview.manager.kafka.KafkaOperationsFactory;
 import com.darksci.kafkaview.manager.kafka.dto.TopicDetails;
 import com.darksci.kafkaview.manager.kafka.dto.TopicList;
 import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
@@ -18,7 +16,6 @@ import com.darksci.kafkaview.repository.ClusterRepository;
 import com.darksci.kafkaview.repository.FilterRepository;
 import com.darksci.kafkaview.repository.MessageFormatRepository;
 import com.darksci.kafkaview.repository.ViewRepository;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -53,10 +50,7 @@ public class ViewConfigController extends BaseController {
     private FilterRepository filterRepository;
 
     @Autowired
-    private KafkaAdminFactory kafkaAdminFactory;
-
-    @Autowired
-    private SecretManager secretManager;
+    private KafkaOperationsFactory kafkaOperationsFactory;
 
     /**
      * GET Displays main configuration index.
@@ -102,11 +96,7 @@ public class ViewConfigController extends BaseController {
             // Retrieve cluster
             final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
             if (cluster != null) {
-                // Create a new Operational Client
-                final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
-                final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, "BobsYerAunty");
-
-                try (final KafkaOperations operations = new KafkaOperations(adminClient)) {
+                try (final KafkaOperations operations = kafkaOperationsFactory.create(cluster, getLoggedInUserId())) {
                     final TopicList topics = operations.getAvailableTopics();
                     model.addAttribute("topics", topics.getTopics());
 

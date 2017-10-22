@@ -3,6 +3,8 @@ package com.darksci.kafkaview.configuration;
 import com.darksci.kafkaview.manager.encryption.SecretManager;
 import com.darksci.kafkaview.manager.kafka.KafkaAdminFactory;
 import com.darksci.kafkaview.manager.kafka.KafkaConsumerFactory;
+import com.darksci.kafkaview.manager.kafka.KafkaOperationsFactory;
+import com.darksci.kafkaview.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafkaview.manager.plugin.PluginFactory;
 import com.darksci.kafkaview.manager.plugin.PluginSecurityPolicy;
 import com.darksci.kafkaview.manager.plugin.UploadManager;
@@ -48,5 +50,23 @@ public class PluginConfig {
     @Bean
     public SecretManager getSecretManager(final AppProperties appProperties) {
         return new SecretManager(appProperties.getAppKey());
+    }
+
+    @Bean
+    public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties) {
+        return new WebKafkaConsumerFactory(
+            getDeserializerPluginFactory(appProperties),
+            getRecordFilterPluginFactory(appProperties),
+            getSecretManager(appProperties),
+            getKafkaConsumerFactory(appProperties)
+        );
+    }
+
+    @Bean
+    public KafkaOperationsFactory getKafkaOperationsFactory(final AppProperties appProperties) {
+        return new KafkaOperationsFactory(
+            getSecretManager(appProperties),
+            getKafkaAdminFactory(appProperties)
+        );
     }
 }
