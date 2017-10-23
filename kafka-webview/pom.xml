@@ -3,24 +3,26 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>kafkaview</artifactId>
-        <groupId>com.dsc</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <artifactId>kafka</artifactId>
+        <groupId>com.darksci</groupId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kafka-webview</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
         <bootstrap.version>4.0.0-beta</bootstrap.version>
     </properties>
 
     <dependencies>
         <!-- Use kafka-webview-plugin dependency -->
         <dependency>
-            <groupId>com.dsc</groupId>
+            <groupId>com.darksci</groupId>
             <artifactId>kafka-webview-plugin</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Kafka -->
@@ -106,6 +108,17 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Set Source & Target JRE Version -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
             </plugin>
 
             <!-- Copy dependencies over into packaged jar -->
@@ -238,6 +251,16 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- Skip deploying this module -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>
