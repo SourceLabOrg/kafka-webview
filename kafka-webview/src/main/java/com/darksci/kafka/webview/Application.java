@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 /**
  * Main entry point.
  */
-@EnableJpaRepositories("com.darksci.kafkaview.repository")
-@EntityScan("com.darksci.kafkaview.model")
+@EnableJpaRepositories("com.darksci.kafka.webview.repository")
+@EntityScan("com.darksci.kafka.webview.model")
 @SpringBootApplication
 public class Application {
     public static void main(String[] args) {
