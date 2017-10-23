@@ -3,35 +3,24 @@ package com.darksci.kafka.webview.manager.plugin;
 import com.darksci.kafka.webview.manager.plugin.exception.LoaderException;
 import com.darksci.kafka.webview.plugin.filter.RecordFilter;
 import org.apache.kafka.common.serialization.Deserializer;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.security.Policy;
 
 import static org.junit.Assert.*;
 
 public class PluginFactoryTest {
-
-    @Before
-    public void setSecurityManager() {
-        if (System.getSecurityManager() == null) {
-            final Policy pluginSecurityPolicy = new PluginSecurityPolicy();
-            Policy.setPolicy(pluginSecurityPolicy);
-            System.setSecurityManager(new SecurityManager());
-        }
-    }
 
     /**
      * Test creating a RecordFilter.
      */
     @Test
     public void testWithRecordFilter() throws LoaderException {
-        final String jarFilename = "badPlugin.jar";
-        final String classPath = "com.example.myplugins.BadFilter";
+        final String jarFilename = "testPlugins.jar";
+        final String classPath = "com.darksci.kafka.webview.plugin.examples.filter.LowOffsetFilter";
 
         // Find jar on filesystem.
         final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
@@ -68,7 +57,7 @@ public class PluginFactoryTest {
     @Test
     public void testWithDeserializer() throws LoaderException {
         final String jarFilename = "testPlugins.jar";
-        final String classPath = "com.example.myplugins.deserializer.ExampleDeserializer";
+        final String classPath = "com.darksci.kafka.webview.plugin.examples.deserializer.ExampleDeserializer";
 
         // Find jar on filesystem.
         final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);

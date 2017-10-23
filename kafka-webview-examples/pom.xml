@@ -15,7 +15,7 @@
         <!-- Use kafka-webview-plugin dependency -->
         <!-- Scope is provided -->
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>com.darksci</groupId>
             <artifactId>kafka-webview-plugin</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
@@ -55,6 +55,15 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>
