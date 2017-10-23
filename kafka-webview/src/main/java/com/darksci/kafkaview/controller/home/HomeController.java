@@ -27,7 +27,7 @@ public class HomeController extends BaseController {
         final long numberOfViews = viewRepository.count();
 
         // If at least one view is configured
-        if (false && numberOfViews > 0) {
+        if (numberOfViews > 0) {
             // Redirect to the vew index
             return "redirect:/view";
         }
@@ -38,5 +38,13 @@ public class HomeController extends BaseController {
         model.addAttribute("hasView", (numberOfViews > 0));
         model.addAttribute("hasCluster", (numberOfClusters > 0));
         return "home/index";
+    }
+
+    /**
+     * Provides in App Help documentation.
+     */
+    @RequestMapping(path = "/help", method = RequestMethod.GET)
+    public String help() {
+        return "home/help";
     }
 }
