@@ -12,7 +12,7 @@
     <!-- Define submodules -->
     <modules>
         <module>kafka-webview-plugin</module>
-        <module>kafka-webview</module>
+        <module>kafka-webview-ui</module>
     </modules>
 
     <!-- Require Maven 3.3.9 -->
