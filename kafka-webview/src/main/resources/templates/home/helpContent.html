@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Shows shared help content -->
+<div th:fragment="help">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#configuration" role="tab">Setup</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#deserializers" role="tab">Custom Deserializers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#filters" role="tab">Custom Filters</a>
+        </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+
+        <!-- Configuration Tab -->
+        <div class="tab-pane active" id="configuration" role="tabpanel">
+            <h2>Setup</h2>
+            <div class="list-group">
+                <div class="list-group-item">
+                    <h5 class="mb-1">1. Setup users</h5>
+                    <p class="mb-1">
+                        You first need to configure who has access to Kafka WebView.
+                        Kafka WebView provides two roles for users: <strong>Admin</strong> and <strong>User</strong>.<br/>
+                        <br/>
+                        <strong>Admin</strong> users have the ability to Manage and Configure all aspects of WebView, including defining Kafka Clusters,
+                        add/remove users, define View etc..<br/>
+                        <strong>User</strong> users have the ability to view Cluster information, and consume Views.<br/>
+                        <br/>
+                        If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
+                        and remove the default one.<br/>
+                        <br/>
+                        <a class="btn btn-primary" role="button" href="/configuration/user">Setup Users</a>
+                    </p>
+                </div>
+                <div class="list-group-item">
+                    <h5 class="mb-1">2. Connect Kafka clusters.</h5>
+                    <p class="mb-1">
+                        You'll need to let WebView know about what Kafka clusters you want to view data from.<br/>
+                        <br/>
+                        <strong>Connecting with SSL</strong><br/>
+                        WebView supports connecting to Clusters using SSL.  You'll need to follow the <a href="https://kafka.apache.org/documentation.html#security_ssl" target="_blank">standard Kafka consumer client directions</a> to
+                        create a Java Key Store (JKS) for your Trusted CA (TrustStore), and a JKS for your Consumer Key (KeyStore).<br/>
+                        <br/>
+                        <a class="btn btn-primary" role="button" href="/configuration/cluster">Setup Clusters</a>
+                    </p>
+                </div>
+                <div class="list-group-item">
+                    <h5 class="mb-1">3. Configure custom Message Formats. (Optional)</h5>
+                    <p class="mb-1">
+                        Kafka allows you to store data within the Cluster in any data-format and provides an Interface for
+                        understanding how to Deserialize your data.  Out of the box Kafka WebView supports the following Deserializers that can be
+                        used for both Keys and Values:
+                    <ul>
+                        <li>ByteArray</li>
+                        <li>Bytes</li>
+                        <li>Double</li>
+                        <li>Float</li>
+                        <li>Integer</li>
+                        <li>Long</li>
+                        <li>Short</li>
+                        <li>String</li>
+                    </ul>
+
+                    Often times data is stored using a custom format such as <a href="https://avro.apache.org/" target="_blank">Avro</a> or <a href="https://developers.google.com/protocol-buffers/" target="_blank">ProtocolBuffers</a>.
+                    Admin users can upload a JAR containing custom Deserializer implementations to extend support to WebView.<br/>
+                    <br/>
+                    Read more about implementing <a href="#" onclick="showTab('#deserializers');">Deserializers</a>.<br/>
+                    <br/>
+                    <a class="btn btn-primary" role="button" href="/configuration/messageFormat">Setup Message Formats</a>
+                    </p>
+                </div>
+                <div class="list-group-item">
+                    <h5 class="mb-1">4. Configure Filters. (Optional)</h5>
+                    <p class="mb-1">
+                        Filters are an optional construct unique to WebView.  Filters allow you to implement
+                        an Interface that can be used on the <strong>server side</strong> to filter messages coming from Kafka.  There are several benefits to doing
+                        filtering on the server side in this way.  You can use these as a simple search-like filter and avoid passing large amounts of data
+                        to the client web browser when you're looking for a small subset of messages.  Filters could also be used to enforce a filtered view of data from a Topic.<br/>
+                        <br/>
+                        Read more about implementing <a href="#filters" onclick="showTab('#filters');">custom Filters</a>.<br/>
+                        <br/>
+                        <a class="btn btn-primary" role="button" href="/configuration/filter">Setup Filters</a>
+                    </p>
+                </div>
+                <div class="list-group-item">
+                    <h5 class="mb-1">5. Define Views.</h5>
+                    <p class="mb-1">
+                        Views are the last step where you put everything together.  Views let you configure what Topic you want to consume from, configure which Message Formats the Topic uses, and apply any Filters.<br/>
+                        <br/>
+                        <a class="btn btn-primary" role="button" href="/configuration/view">Setup Views</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deserializers Tab -->
+        <div class="tab-pane" id="deserializers" role="tabpanel">
+            <h2>Writing Custom Deserializers</h2>
+            <p class="mb-1">
+                The <a href="https://kafka.apache.org/0110/javadoc/org/apache/kafka/common/serialization/Deserializer.html" target="_blank">Deserializer Interface</a>
+                is provided by Kafka, WebView requires nothing special or additional above implementing this interface.  If you already have a Deserializer implementation
+                for consuming from Kafka then you simply can just use it as is.<br/>
+                <br/>
+                If you don't already have an implementation, the interface looks as follows:<br/>
+                <br>
+            </p>
+            <pre style="background-color:#2b2b2b;color:#a9b7c6;font-family:'Menlo';font-size:9.0pt;">
+    <em style="color:#629755; font-style:italic">/**
+    </em><em style="color:#629755; font-style:italic"> * An interface for converting bytes to objects.
+    </em><em style="color:#629755; font-style:italic"> *
+    </em><em style="color:#629755; font-style:italic"> * A class that implements this interface is expected to have a constructor with no parameters.
+    </em><em style="color:#629755; font-style:italic"> * </em><em style="color:#77b767; font-style:italic">&lt;p&gt;
+    </em><em style="color:#77b767; font-style:italic"> </em><em style="color:#629755; font-style:italic">* Implement {</em><em style="color:#629755; font-style:italic; font-weight:bold">@link </em><em style="color:#629755; font-style:italic">org.apache.kafka.common.ClusterResourceListener} to receive cluster metadata once it&#39;s available. Please see the class documentation for ClusterResourceListener for more information.
+    </em><em style="color:#629755; font-style:italic"> *
+    </em><em style="color:#629755; font-style:italic"> * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><span style="color:#8a653b">&lt;</span><em style="color:#8a653b; font-style:italic">T</em><span style="color:#8a653b">&gt; </span><em style="color:#629755; font-style:italic">Type to be deserialized into.
+    </em><em style="color:#629755; font-style:italic"> */
+    </em><span style="color:#cc7832">public interface </span>Deserializer&lt;<span style="color:#507874">T</span>&gt; <span style="color:#cc7832">extends </span>Closeable {
+    <em style="color:#629755; font-style:italic">/**
+    </em><em style="color:#629755; font-style:italic">     * Configure this class.
+    </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">configs </em><em style="color:#629755; font-style:italic">configs in key/value pairs
+    </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">isKey </em><em style="color:#629755; font-style:italic">whether is for key or value
+    </em><em style="color:#629755; font-style:italic">     */
+    </em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">void </span><span style="color:#ffc66d">configure</span>(Map&lt;String<span style="color:#cc7832">, </span>?&gt; configs<span style="color:#cc7832">, boolean </span>isKey)<span style="color:#cc7832">;
+    </span>
+    <span style="color:#cc7832">    </span><em style="color:#629755; font-style:italic">/**
+    </em><em style="color:#629755; font-style:italic">     * Deserialize a record value from a byte array into a value or object.
+    </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">topic </em><em style="color:#629755; font-style:italic">topic associated with the data
+    </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">data </em><em style="color:#629755; font-style:italic">serialized bytes; may be null; implementations are recommended to handle null by returning a value or null rather than throwing an exception.
+    </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@return </em><em style="color:#629755; font-style:italic">deserialized typed data; may be null
+    </em><em style="color:#629755; font-style:italic">     */
+    </em><em style="color:#629755; font-style:italic">    </em><span style="color:#507874">T </span><span style="color:#ffc66d">deserialize</span>(String topic<span style="color:#cc7832">, byte</span>[] data)<span style="color:#cc7832">;
+    </span>
+    <span style="color:#cc7832">    </span><span style="color:#bbb529">@Override
+    </span><span style="color:#bbb529">    </span><span style="color:#cc7832">void </span><span style="color:#ffc66d">close</span>()<span style="color:#cc7832">;
+    </span>}
+                                </pre>
+            <br/>
+            <h2>Example Project</h2>
+            <p class="mb-1">
+                To get up and going quickly, the <a href="#" target="_blank">Kafka-WebView-Example</a> project on GitHub can be cloned and used as a template.
+                This Maven based example project is configured with all of the correct dependencies and has a few example implementations.<br/>
+            </p>
+            <br/>
+
+            <h2>Packaging a Jar</h2>
+            <p class="mb-1">
+                If you're using the <a href="#" target="_blank">Kafka-WebView-Example</a> project, it should be as simple as issuing the command `mvn package` and retrieving the compiled Jar from the target/ directory.<br/>
+                <br/>
+                If you're building from your own project, you'll need to package a Jar that contains your implementation along with
+                any of it's required dependencies.<br/>
+            </p>
+            <br/>
+        </div>
+
+        <!-- Filters Tab -->
+        <div class="tab-pane" id="filters" role="tabpanel">
+            <h2>Writing Custom Filters</h2>
+            <p class="mb-1">
+                The <a href="https://github.com/Crim/kafka-webview/blob/master/kafka-webview-plugin/src/main/java/com/darksci/kafkaview/plugin/filter/RecordFilter.java" target="_blank">RecordFilter Interface</a>
+                is provided by Kafka WebView and is NOT part of the standard Kafka library.  The interface looks as follows:<br/>
+                <br>
+            </p>
+            <pre style="background-color:#2b2b2b;color:#a9b7c6;font-family:'Menlo';font-size:9.0pt;">
+<em style="color:#629755; font-style:italic">/**
+</em><em style="color:#629755; font-style:italic"> * Interface that defines a Record Filter.
+</em><em style="color:#629755; font-style:italic"> */
+</em><span style="color:#cc7832">public interface </span>RecordFilter {
+<em style="color:#629755; font-style:italic">/**
+</em><em style="color:#629755; font-style:italic">     * Configure this class.
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">configs </em><em style="color:#629755; font-style:italic">configs in key/value pairs
+</em><em style="color:#629755; font-style:italic">     */
+</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">void </span><span style="color:#ffc66d">configure</span>(<span style="color:#cc7832">final </span>Map&lt;String<span style="color:#cc7832">, </span>?&gt; configs)<span style="color:#cc7832">;
+</span>
+<span style="color:#cc7832">    </span><em style="color:#629755; font-style:italic">/**
+</em><em style="color:#629755; font-style:italic">     * Define the filter behavior.
+</em><em style="color:#629755; font-style:italic">     * A return value of TRUE means the record WILL be shown.
+</em><em style="color:#629755; font-style:italic">     * A return value of FALSE means the record will NOT be shown.
+</em><em style="color:#629755; font-style:italic">     *
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">topic </em><em style="color:#629755; font-style:italic">Name of topic the message came from.
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">partition </em><em style="color:#629755; font-style:italic">Partition the message came from.
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">offset </em><em style="color:#629755; font-style:italic">Offset the message came from.
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">key </em><em style="color:#629755; font-style:italic">Deserialized Key object.
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">value </em><em style="color:#629755; font-style:italic">Deserialized Value object.
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@return </em><em style="color:#629755; font-style:italic">True means the record WILL be shown.  False means the record will NOT be shown.
+</em><em style="color:#629755; font-style:italic">     */
+</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">boolean </span><span style="color:#ffc66d">filter</span>(<span style="color:#cc7832">final </span>String topic<span style="color:#cc7832">, final int </span>partition<span style="color:#cc7832">, final long </span>offset<span style="color:#cc7832">, final </span>Object key<span style="color:#cc7832">, final </span>Object value)<span style="color:#cc7832">;
+</span>}
+                                </pre>
+            <br/>
+            <h2>Example Project</h2>
+            <p class="mb-1">
+                To get up and going quickly, the <a href="#" target="_blank">Kafka-WebView-Example</a> project on GitHub can be cloned and used as a template.
+                This Maven based example project is configured with all of the correct dependencies and has a few example implementations.<br/>
+            </p>
+            <br/>
+
+            <h2>Packaging a Jar</h2>
+            <p class="mb-1">
+                If you're using the <a href="#" target="_blank">Kafka-WebView-Example</a> project, it should be as simple as issuing the command `mvn package` and retrieving the compiled Jar from the target/ directory.<br/>
+                <br/>
+                If you're building from your own project, you'll need to package a Jar that contains your implementation along with
+                any of it's required dependencies.<br/>
+            </p>
+            <br/>
+        </div>
+    </div>
+    <script type="application/javascript">
+        jQuery(document).ready(function() {
+            // wire up shown event
+            jQuery('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                window.location.hash = e.target.hash;
+                return false;
+            });
+
+            // read hash from page load and change tab
+            var hash = document.location.hash;
+            if (hash) {
+                showTab(hash);
+            }
+        });
+
+        function showTab(name) {
+            jQuery('.nav-tabs a[href="' + name + '"]').tab('show');
+        }
+    </script>
+</div>
+
+</body>
+</html>

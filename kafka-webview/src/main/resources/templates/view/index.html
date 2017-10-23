@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="~{layout}">
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    layout:decorate="~{layout}">
 
 <head>
     <title>Views</title>
@@ -10,6 +11,29 @@
 <body>
 <section layout:fragment="content">
     <div class="container">
+
+        <div class="row" th:if="${clusters.isEmpty()}">
+            <!-- No Clusters Found -->
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="alert alert-warning" role="alert">
+                        <h4 class="alert-heading"><strong>No Kafka Clusters Found</strong></h4>
+                        <p>
+                            It looks like you have no Kafka Clusters configured yet!<br/>
+                        </p>
+                        <p class="mb-0">
+                            <span sec:authorize="hasRole('ROLE_ADMIN')">
+                                Let's head over and set one up now!
+                                <a href="/configuration/cluster/create">Setup new Cluster</a>
+                            </span>
+                            <span sec:authorize="!hasRole('ROLE_ADMIN')">
+                                Ask an Administrator to configure a cluster.
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-lg-6" th:each="cluster: ${clusters}">
                 <div class="card">

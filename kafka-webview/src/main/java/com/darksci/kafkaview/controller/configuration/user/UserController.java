@@ -6,6 +6,7 @@ import com.darksci.kafkaview.manager.ui.BreadCrumbManager;
 import com.darksci.kafkaview.manager.ui.FlashMessage;
 import com.darksci.kafkaview.manager.user.CustomUserDetails;
 import com.darksci.kafkaview.manager.user.UserManager;
+import com.darksci.kafkaview.model.Cluster;
 import com.darksci.kafkaview.model.User;
 import com.darksci.kafkaview.model.UserRole;
 import com.darksci.kafkaview.repository.UserRepository;
@@ -45,7 +46,7 @@ public class UserController extends BaseController {
         setupBreadCrumbs(model, null, null);
 
         // Retrieve all users
-        final Iterable<User> usersList = userRepository.findAll();
+        final Iterable<User> usersList = userRepository.findAllByIsActiveOrderByEmailAsc(true);
         model.addAttribute("users", usersList);
 
         return "configuration/user/index";
@@ -95,7 +96,9 @@ public class UserController extends BaseController {
 
         // Retrieve by id
         final User user = userRepository.findOne(id);
-        if (user == null) {
+
+        // If we couldn't find the user, or the user is archived.
+        if (user == null || !user.getActive()) {
             // redirect
             // Set flash message
             final FlashMessage flashMessage = FlashMessage.newWarning("Unable to find user!");
@@ -183,7 +186,7 @@ public class UserController extends BaseController {
 
             if (newUser == null) {
                 // Add error flash msg
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error registering new user!"));
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error creating new user!"));
             } else {
                 // Add success flash msg
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Created new user " + newUser.getDisplayName() + "!"));
@@ -191,24 +194,32 @@ public class UserController extends BaseController {
         } else {
             // Update existing user
             final User user = userRepository.findOne(userForm.getId());
-            user.setEmail(userForm.getEmail());
-            user.setDisplayName(userForm.getDisplayName());
 
-            // Only admins can set the role
-            if (hasRole("ADMIN")) {
-                user.setRole(userForm.getUserRole());
+            // If the user is archived
+            if (!user.getActive()) {
+                // Add error flash msg
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error creating new user!"));
+            } else {
+                // Update user
+                user.setEmail(userForm.getEmail());
+                user.setDisplayName(userForm.getDisplayName());
+
+                // Only admins can set the role
+                if (hasRole("ADMIN")) {
+                    user.setRole(userForm.getUserRole());
+                }
+
+                // If they changed their password
+                if (!userForm.getPassword().isEmpty()) {
+                    user.setPassword(userManager.encodePassword(userForm.getPassword()));
+                }
+
+                // Update
+                userRepository.save(user);
+
+                // Add success flash msg
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Updated user " + user.getDisplayName() + "!"));
             }
-
-            // If they changed their password
-            if (!userForm.getPassword().isEmpty()) {
-                user.setPassword(userManager.encodePassword(userForm.getPassword()));
-            }
-
-            // Update
-            userRepository.save(user);
-
-            // Add success flash msg
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Updated user " + user.getDisplayName() + "!"));
         }
 
         // Otherwise success
@@ -217,6 +228,31 @@ public class UserController extends BaseController {
         } else {
             return "redirect:/";
         }
+    }
+
+    /**
+     * POST deletes the selected user
+     */
+    @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
+    public String delete(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+        // Retrieve it
+        final User user = userRepository.findOne(id);
+        if (user == null) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find user!"));
+        } else if (user.getId() == getLoggedInUserId()) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to delete your own user!"));
+        } else {
+            // Rename user
+            user.setEmail("DELETED: " + user.getEmail());
+            user.setActive(false);
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Archived user!"));
+        }
+
+        // redirect to cluster index
+        return "redirect:/configuration/user";
     }
 
     private void setupBreadCrumbs(final Model model, String name, String url) {

@@ -4,7 +4,7 @@
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout}">
 <head>
-    <title>Welcome!</title>
+    <title>Help and Documentation</title>
 </head>
 
 <body>
@@ -17,15 +17,11 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Welcome to <strong>Kafka WebView!</strong>
+                        <strong>Documentation and Help</strong>
                     </div>
                     <div class="card-body">
-                        <div>
-                            <h2>Let's get started!</h2>
-                            <p class="mb-1">
-                                Looks like you've just gotten installed!  Here's what you need to know to get going.
-                            </p><br/>
-                        </div>
+                        <h2>Documentation and Help</h2>
+
                         <div th:include="home/helpContent :: help"></div>
                     </div>
                 </div>
