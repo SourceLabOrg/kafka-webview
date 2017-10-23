@@ -1,8 +1,8 @@
 target/
 .idea/
 *.iml
-kafka-webview/src/main/frontend/node_modules/
-kafka-webview/src/main/frontend/dist/
-kafka-webview/src/main/resources/static/
+kafka-webview-ui/src/main/frontend/node_modules/
+kafka-webview-ui/src/main/frontend/dist/
+kafka-webview-ui/src/main/resources/static/
 data/
 TODO

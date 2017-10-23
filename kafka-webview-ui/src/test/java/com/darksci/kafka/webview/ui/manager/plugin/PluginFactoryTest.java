@@ -20,7 +20,7 @@ public class PluginFactoryTest {
     @Test
     public void testWithRecordFilter() throws LoaderException {
         final String jarFilename = "testPlugins.jar";
-        final String classPath = "com.darksci.kafka.webview.plugin.examples.filter.LowOffsetFilter";
+        final String classPath = "examples.filter.LowOffsetFilter";
 
         // Find jar on filesystem.
         final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
@@ -57,7 +57,7 @@ public class PluginFactoryTest {
     @Test
     public void testWithDeserializer() throws LoaderException {
         final String jarFilename = "testPlugins.jar";
-        final String classPath = "com.darksci.kafka.webview.plugin.examples.deserializer.ExampleDeserializer";
+        final String classPath = "examples.deserializer.ExampleDeserializer";
 
         // Find jar on filesystem.
         final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);

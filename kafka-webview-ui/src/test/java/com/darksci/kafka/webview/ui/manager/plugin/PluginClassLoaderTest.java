@@ -19,7 +19,7 @@ public class PluginClassLoaderTest {
     public void badLoad() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         // Get URL to our jar
         final URL jar = getClass().getClassLoader().getResource("testDeserializer/testPlugins.jar");
-        final String classPath = "com.darksci.kafka.webview.plugin.examples.filter.LowOffsetFilter";
+        final String classPath = "examples.filter.LowOffsetFilter";
 
         // Create class loader
         final PluginClassLoader pluginClassLoader = new PluginClassLoader(jar);
