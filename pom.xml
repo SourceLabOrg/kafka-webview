@@ -24,7 +24,8 @@
     <name>Kafka WebView</name>
     <description>
         A full-featured web-based Apache Kafka consumer. Kafka WebView presents an easy-to-use web based interface for
-        reading data out of kafka topics and providing basic filtering and searching capabilities.</description>
+        reading data out of kafka topics and providing basic filtering and searching capabilities.
+    </description>
     <url>https://github.com/Crim/kafka-webview</url>
     <developers>
         <developer>

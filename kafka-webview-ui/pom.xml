@@ -11,6 +11,22 @@
     <artifactId>kafka-webview-ui</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
+    <!-- Module Description and Ownership -->
+    <name>Kafka WebView UI</name>
+    <description>
+        A full-featured web-based Apache Kafka consumer. Kafka WebView presents an easy-to-use web based interface for
+        reading data out of kafka topics and providing basic filtering and searching capabilities.
+    </description>
+    <url>https://github.com/Crim/kafka-webview</url>
+    <developers>
+        <developer>
+            <name>Stephen Powis</name>
+            <email>stephen.powis@gmail.com</email>
+            <organization>Darksci</organization>
+            <organizationUrl>https://www.darksci.com/</organizationUrl>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
