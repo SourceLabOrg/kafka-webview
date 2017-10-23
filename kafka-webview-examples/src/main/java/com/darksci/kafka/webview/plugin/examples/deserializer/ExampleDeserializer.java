@@ -1,4 +1,4 @@
-package com.example.myplugins.deserializer;
+package com.darksci.kafka.webview.plugin.examples.deserializer;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
