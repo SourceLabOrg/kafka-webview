@@ -8,7 +8,139 @@
 <!-- Main Content -->
 <section layout:fragment="content">
     <div class="container">
-        Welcome to your home page!
+        <div class="row">
+
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Welcome to <strong>Kafka WebView!</strong>
+                    </div>
+                    <div class="card-body">
+                        <h2>Let's get started!</h2>
+                        <p class="mb-1">
+                            Looks like you've just gotten installed!  Here's what you need to know to get going.
+                        </p><br/>
+
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#configuration" role="tab">Setup</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#consuming" role="tab">Consuming from a View</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#deserializers" role="tab">Custom Deserializers</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#filters" role="tab">Custom Filters</a>
+                            </li>
+                        </ul>
+
+                        <!-- Tab panes -->
+                        <div class="tab-content">
+
+                            <!-- Configuration Tab -->
+                            <div class="tab-pane active" id="configuration" role="tabpanel">
+                                <div class="list-group">
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">1. Setup users</h5>
+                                        <p class="mb-1">
+                                            You first need to configure who has access to Kafka WebView.
+                                            We provide two roles for users: <strong>Admin</strong> and <strong>User</strong>.<br/>
+                                            <br/>
+                                            <strong>Admin</strong> users have the ability to Manage and Configure all aspects of WebView, including defining Kafka Clusters,
+                                            add/remove users, define View etc..<br/>
+                                            <strong>User</strong> users have the ability to view Cluster information, and consume Views.<br/>
+                                            <br/>
+                                            If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
+                                            and remove the default one.<br/>
+                                            <br/>
+                                            <a class="btn btn-primary" role="button" href="/configuration/user">Setup Users</a>
+                                        </p>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">2. Connect Kafka clusters.</h5>
+                                        <p class="mb-1">
+                                            You'll need to let WebView know about what Kafka clusters you want to view data from.<br/>
+                                            <br/>
+                                            <strong>Connecting with SSL</strong><br/>
+                                            WebView supports connecting to Clusters using SSL.  You'll need to follow the <a href="https://kafka.apache.org/documentation.html#security_ssl" target="_blank">standard Kafka consumer client directions</a> to
+                                            create a Java Key Store (JKS) for your Trusted CA (TrustStore), and a JKS for your Consumer Key (KeyStore).<br/>
+                                            <br/>
+                                            <a class="btn btn-primary" role="button" href="/configuration/cluster">Setup Clusters</a>
+                                        </p>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">3. Configure custom Message Formats. (Optional)</h5>
+                                        <p class="mb-1">
+                                            Kafka allows you to store data within the Cluster in any data-format and provides an Interface for
+                                            understanding how to Deserialize your data.  Out of the box we support the following Deserializers that can be
+                                            used for both Keys and Values:
+                                        <ul>
+                                            <li>ByteArray</li>
+                                            <li>Bytes</li>
+                                            <li>Double</li>
+                                            <li>Float</li>
+                                            <li>Integer</li>
+                                            <li>Long</li>
+                                            <li>Short</li>
+                                            <li>String</li>
+                                        </ul>
+
+                                        Often times data is stored using a custom format such as <a href="https://avro.apache.org/" target="_blank">Avro</a> or <a href="https://developers.google.com/protocol-buffers/" target="_blank">ProtocolBuffers</a>.
+                                        Admin users can upload a JAR containing custom Deserializer implementations to extend support to WebView.<br/>
+                                        <br/>
+                                        <a class="btn btn-primary" role="button" href="/configuration/messageFormat">Setup Message Formats</a>
+                                        </p>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">4. Configure Filters. (Optional)</h5>
+                                        <p class="mb-1">
+                                            Filters are an optional construct unique to WebView.  Filters allow you to implement
+                                            an Interface that can be used on the <strong>server side</strong> to filter messages coming from Kafka.  There are several benefits to doing
+                                            filtering on the server side in this way.  You can use these as a simple search-like filter and avoid passing large amounts of data
+                                            to the client web browser when you're looking for a small subset of messages.  Filters could also be used to enforce a filtered view of data from a Topic.<br/>
+                                            <br>
+                                            The Filter interface looks like:
+                                        <pre>
+        void configure(final Map<String, ?> configs);
+        boolean filter(final String topic, final int partition, final long offset, final Object key, final Object value);
+                                    </pre>
+                                        <br/>
+                                        <a class="btn btn-primary" role="button" href="/configuration/filters">Setup Filters</a>
+                                        </p>
+                                    </div>
+                                    <div class="list-group-item">
+                                        <h5 class="mb-1">5. Define Views.</h5>
+                                        <p class="mb-1">
+                                            Views are the last step where you put everything together.  Views let you configure what Topic you want to view, configure which Message Formats the Topic uses, and apply any Filters.<br/>
+                                            <br/>
+                                            <a class="btn btn-primary" role="button" href="/configuration/views">Setup Views</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Consuming Tab -->
+                            <div class="tab-pane active" id="consuming" role="tabpanel">
+                                consuming help here.
+                            </div>
+
+                            <!-- Deserializers Tab -->
+                            <div class="tab-pane active" id="deserializers" role="tabpanel">
+                                deserializer info here.
+                            </div>
+
+                            <!-- Filters Tab -->
+                            <div class="tab-pane active" id="filters" role="tabpanel">
+                                filter info here.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
     </div>
 </section>
 
