@@ -20,9 +20,12 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 Web socket streaming consumer.
 
 ### Screen Shots
-<img src="images/consume.jpeg" alt="Image of Web Consumer" width=600"/>
 
-<img src="images/configuration.jpeg" alt="Image of Configuration" width=600"/>
+#### Web Consumer
+![Web Consumer Screenshot](images/webconsumer.png)
+
+#### Configuration
+![Configuration Screenshot](images/configuration.png)
 
 ## Installation ##
 
