@@ -57,3 +57,10 @@ retrieving the compiled Jar from the target/ directory.
                
 If you're building from your own project, you'll need to package a Jar that contains your implementation along with
 any of it's required dependencies.
+
+# Changelog
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+[View Changelog](CHANGELOG.md)

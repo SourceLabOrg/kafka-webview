@@ -4,10 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.dsc</groupId>
-    <artifactId>kafkaview</artifactId>
+    <groupId>com.darksci</groupId>
+    <artifactId>kafka</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <!-- Define submodules -->
     <modules>
@@ -16,16 +16,53 @@
         <module>kafka-webview-examples</module>
     </modules>
 
+    <!-- Require Maven 3.3.9 -->
+    <prerequisites>
+        <maven>3.3.9</maven>
+    </prerequisites>
+
+    <!-- Module Description and Ownership -->
+    <name>Kafka WebView</name>
+    <description>
+        A full-featured web-based Apache Kafka consumer. Kafka WebView presents an easy-to-use web based interface for
+        reading data out of kafka topics and providing basic filtering and searching capabilities.</description>
+    <url>https://github.com/Crim/kafka-webview</url>
+    <developers>
+        <developer>
+            <name>Stephen Powis</name>
+            <email>stephen.powis@gmail.com</email>
+            <organization>Darksci</organization>
+            <organizationUrl>https://www.darksci.com/</organizationUrl>
+        </developer>
+    </developers>
+
+    <!-- MIT License -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <!-- Source Control -->
+    <scm>
+        <connection>scm:git:git://github.com/crim/kafka-webview.git</connection>
+        <developerConnection>scm:git:ssh://github.com:Crim/kafka-webview.git</developerConnection>
+        <url>https://github.com/Crim/kafka-webview/tree/master</url>
+    </scm>
+
+    <!-- Module Properties -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
+    </properties>
+
     <!-- Use Spring Boot Starter as Parent -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>1.5.6.RELEASE</version>
     </parent>
-
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
 
     <dependencies>
         <!-- No Parent Dependencies! -->
