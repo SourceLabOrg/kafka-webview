@@ -49,7 +49,29 @@
     <script src="/webjars/sockjs-client/1.1.2/sockjs.min.js"></script>
     <script src="/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
     <script type="application/javascript">
-        var stompClient = null;
+        var SocketDetails = {
+            // Logged in userdId
+            userId: '[[${userId}]]',
+            viewId: '[[${viewId}]]',
+
+            // Our stomp client
+            stompClient: null,
+
+            // End point to connect
+            socketUrl: "/websocket",
+
+            // End point to consume a view
+            consumerSubscribeUrl: "/socket/consume",
+            consumerBaseUrl: "/user/topic/view",
+
+            getConsumerUrl : function() {
+                return SocketDetails.consumerBaseUrl + '/' + SocketDetails.viewId + '/' + SocketDetails.userId;
+            },
+
+            getSubscribeUrl: function() {
+                return SocketDetails.consumerSubscribeUrl + '/' + SocketDetails.viewId;
+            }
+        };
 
         function setConnected(connected) {
             $("#connect").prop("disabled", connected);
@@ -64,27 +86,47 @@
         }
 
         function connect() {
-            var socket = new SockJS('/websocket');
-            stompClient = Stomp.over(socket);
-            stompClient.connect({}, function (frame) {
+            var socket = new SockJS(SocketDetails.socketUrl);
+            SocketDetails.stompClient = Stomp.over(socket);
+            SocketDetails.stompClient.connect({}, function (frame) {
                 setConnected(true);
                 console.log('Connected: ' + frame);
-                stompClient.subscribe('/topic/greetings', function (greeting) {
-                    showGreeting(JSON.parse(greeting.body).content);
-                });
+
+                // Request subscription
+                subscribeResults();
+                requestSubscription();
+            });
+        }
+
+        function requestSubscription() {
+//            var topic = SocketDetails.getSubscribeUrl();
+//            console.log("Subscribing to Topic " + topic);
+//            SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
+//                var json = JSON.parse(incomingMessage.body);
+//                console.log("Subscription: " + json);
+//            });
+            SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify({}));
+        }
+
+        function subscribeResults() {
+            var topic = SocketDetails.getConsumerUrl();
+            console.log("Subscribing to Topic " + topic);
+            SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
+                var json = JSON.parse(incomingMessage.body);
+                console.log(json);
             });
         }
 
         function disconnect() {
-            if (stompClient !== null) {
-                stompClient.disconnect();
+            if (SocketDetails.stompClient !== null) {
+                SocketDetails.stompClient.disconnect();
             }
             setConnected(false);
             console.log("Disconnected");
         }
 
         function sendName() {
-            stompClient.send("/app/hello", {}, JSON.stringify({'name': $("#name").val()}));
+            SocketDetails.stompClient.send("/app/hello", {}, JSON.stringify({'name': $("#name").val()}));
         }
 
         function showGreeting(message) {

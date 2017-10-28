@@ -1,10 +1,9 @@
 package com.darksci.kafka.webview.ui.controller.stream;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
-import com.darksci.kafka.webview.ui.manager.kafka.KafkaConsumerFactory;
-import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
+import com.darksci.kafka.webview.ui.manager.user.CustomUserDetails;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +13,11 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.ArrayList;
+import javax.transaction.Transactional;
 
 /**
  * Websocket controller end points.
@@ -35,9 +35,10 @@ public class StreamController extends BaseController {
 
 
     @MessageMapping("/consume/{viewId}")
-    @SendTo("/topic/notifications")
-    public String consume(
-        final @DestinationVariable Long viewId) {
+    @Transactional
+    public String newConsumer(
+        final @DestinationVariable Long viewId,
+        final Authentication auth) {
 
         // Retrieve view
         final View view = viewRepository.findOne(viewId);
@@ -46,12 +47,32 @@ public class StreamController extends BaseController {
         }
 
         // Subscribe
-        webSocketConsumersManager.addNewConsumer(view, getLoggedInUserId());
-        return "User " + getLoggedInUser().getUsername() + " Subscribed to View " + view.getName();
+        final long userId = getLoggedInUserId(auth);
+        final String username = auth.getName();
+        webSocketConsumersManager.addNewConsumer(view, userId, username);
+        return "{success: true}";
     }
 
     @RequestMapping(path = "/stream", method = RequestMethod.GET)
-    public String streamIndex() {
+    public String streamIndex(final Model model) {
+        // Fixed for now
+        model.addAttribute("viewId", 1L);
+        model.addAttribute("userId", getLoggedInUserId());
+
         return "stream/index";
+    }
+
+    /**
+     * @return Currently logged in user Id.
+     */
+    private long getLoggedInUserId(final Authentication authentication) {
+        return getLoggedInUser(authentication).getUserId();
+    }
+
+    /**
+     * @return Currently logged in user's details.
+     */
+    private CustomUserDetails getLoggedInUser(final Authentication authentication) {
+        return ((CustomUserDetails) authentication.getPrincipal());
     }
 }

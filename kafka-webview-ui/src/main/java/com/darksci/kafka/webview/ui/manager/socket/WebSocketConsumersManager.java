@@ -33,7 +33,7 @@ public class WebSocketConsumersManager implements Runnable {
         this.simpMessagingTemplate = messagingTemplate;
     }
 
-    public void addNewConsumer(final View view, final long userId) {
+    public void addNewConsumer(final View view, final long userId, final String username) {
         synchronized (consumers) {
             // create a key
             final ConsumerKey consumerKey = new ConsumerKey(view.getId(), userId);
@@ -45,7 +45,7 @@ public class WebSocketConsumersManager implements Runnable {
 
             final WebKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.create(view, new ArrayList<>(), userId);
 
-            final ConsumerEntry consumerEntry = new ConsumerEntry(view.getId(), userId, webKafkaConsumer);
+            final ConsumerEntry consumerEntry = new ConsumerEntry(view.getId(), userId, username, webKafkaConsumer);
             consumers.put(consumerKey, consumerEntry);
         }
     }
@@ -101,11 +101,12 @@ public class WebSocketConsumersManager implements Runnable {
                     final KafkaResults kafkaResults = consumerEntry.getWebKafkaConsumer().consumePerPartition();
 
                     // publish
-                    final String username = "Username";
-                    final String target = "/topic/something";
+                    final String username = consumerEntry.getUsername();
+                    final String target = "/topic/view/" + consumerEntry.getViewId() + "/" + consumerEntry.getUserId();
                     simpMessagingTemplate.convertAndSendToUser(username, target, kafkaResults);
                 } catch (final Exception exception) {
                     // Handle
+                    logger.error(exception.getMessage(), exception);
                 }
             }
 
@@ -116,7 +117,7 @@ public class WebSocketConsumersManager implements Runnable {
 
             // Throttle with sleep
             try {
-                Thread.sleep(1000L);
+                Thread.sleep(5000L);
             } catch (final InterruptedException e) {
                 break;
             }
@@ -125,14 +126,16 @@ public class WebSocketConsumersManager implements Runnable {
 
     private static class ConsumerEntry {
         private final long userId;
+        private final String username;
         private final long viewId;
         private final WebKafkaConsumer webKafkaConsumer;
 
         private boolean shouldStop = false;
 
-        public ConsumerEntry(final long viewId, final long userId, final WebKafkaConsumer webKafkaConsumer) {
+        public ConsumerEntry(final long viewId, final long userId, final String username, final WebKafkaConsumer webKafkaConsumer) {
             this.userId = userId;
             this.viewId = viewId;
+            this.username = username;
             this.webKafkaConsumer = webKafkaConsumer;
         }
 
@@ -146,6 +149,18 @@ public class WebSocketConsumersManager implements Runnable {
 
         public synchronized void requestStop() {
             this.shouldStop = true;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public long getUserId() {
+            return userId;
+        }
+
+        public long getViewId() {
+            return viewId;
         }
     }
 
