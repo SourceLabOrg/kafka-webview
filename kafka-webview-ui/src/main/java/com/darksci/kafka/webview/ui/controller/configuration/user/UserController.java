@@ -48,17 +48,17 @@ public class UserController extends BaseController {
     }
 
     /**
-     * GET Displays create user form.
+     * GET Displays createWebClient user form.
      */
-    @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequestMapping(path = "/createWebClient", method = RequestMethod.GET)
     public String createUser(final UserForm userForm, final Model model) {
         // Setup breadcrumbs
-        setupBreadCrumbs(model, "Create", "/configuration/user/create");
+        setupBreadCrumbs(model, "Create", "/configuration/user/createWebClient");
 
         // Set user role options.
         model.addAttribute("userRoles", getUserRoleOptions());
 
-        return "configuration/user/create";
+        return "configuration/user/createWebClient";
     }
 
     private List<UserRole> getUserRoleOptions() {
@@ -116,7 +116,7 @@ public class UserController extends BaseController {
         model.addAttribute("userRoles", getUserRoleOptions());
 
         // Display template
-        return "configuration/user/create";
+        return "configuration/user/createWebClient";
     }
 
     /**

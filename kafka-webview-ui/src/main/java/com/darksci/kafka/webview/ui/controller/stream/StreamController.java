@@ -62,6 +62,50 @@ public class StreamController extends BaseController {
     }
 
     /**
+     * Serves web socket requests, requesting to pause a consumer.
+     */
+    @MessageMapping("/pause/{viewId}")
+    @Transactional
+    public String pauseConsumer(
+        final @DestinationVariable Long viewId,
+        final Authentication auth) {
+
+        // Retrieve view
+        final View view = viewRepository.findOne(viewId);
+        if (view == null) {
+            throw new RuntimeException("TODO Better handling");
+        }
+
+        // Subscribe
+        final long userId = getLoggedInUserId(auth);
+        final String username = auth.getName();
+        webSocketConsumersManager.pauseConsumer(view.getId(), userId, username);
+        return "{success: true}";
+    }
+
+    /**
+     * Serves web socket requests, requesting to resume a consumer.
+     */
+    @MessageMapping("/resume/{viewId}")
+    @Transactional
+    public String resumeConsumer(
+        final @DestinationVariable Long viewId,
+        final Authentication auth) {
+
+        // Retrieve view
+        final View view = viewRepository.findOne(viewId);
+        if (view == null) {
+            throw new RuntimeException("TODO Better handling");
+        }
+
+        // Subscribe
+        final long userId = getLoggedInUserId(auth);
+        final String username = auth.getName();
+        webSocketConsumersManager.resumeConsumer(view.getId(), userId, username);
+        return "{success: true}";
+    }
+
+    /**
      * @return Currently logged in user Id.
      */
     private long getLoggedInUserId(final Authentication authentication) {

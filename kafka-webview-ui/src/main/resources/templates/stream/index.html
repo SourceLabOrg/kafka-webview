@@ -17,6 +17,8 @@
                     <div class="form-group">
                         <label for="connect">WebSocket connection:</label>
                         <button id="connect" class="btn btn-default" type="submit">Connect</button>
+                        <button id="pause" class="btn btn-default" type="submit" disabled="disabled">Pause</button>
+                        <button id="resume" class="btn btn-default" type="submit" disabled="disabled">Resume</button>
                         <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
                         </button>
                     </div>
@@ -49,7 +51,7 @@
             userId: '[[${userId}]]',
             viewId: '[[${viewId}]]',
 
-            // SHould we format timestamps?
+            // Should we format timestamps?
             formatDates: false,
 
             // Holds results template
@@ -65,7 +67,6 @@
             socketUrl: "/websocket",
 
             // End point to consume a view
-            consumerSubscribeUrl: "/websocket/consume",
             consumerBaseUrl: "/user/topic/view",
 
             getConsumerUrl : function() {
@@ -73,7 +74,15 @@
             },
 
             getSubscribeUrl: function() {
-                return SocketDetails.consumerSubscribeUrl + '/' + SocketDetails.viewId;
+                return SocketDetails.socketUrl + '/consume/' + SocketDetails.viewId;
+            },
+
+            getPauseUrl: function() {
+                return SocketDetails.socketUrl + '/pause/' + SocketDetails.viewId;
+            },
+
+            getResumeUrl: function() {
+                return SocketDetails.socketUrl + '/resume/' + SocketDetails.viewId;
             },
 
             // Connect to web socket
@@ -95,9 +104,13 @@
                 $("#connect").prop("disabled", connected);
                 $("#disconnect").prop("disabled", !connected);
                 if (connected) {
+                    $('#resume').prop("disabled", true);
+                    $('#pause').prop("disabled", false);
                     $("#results").show();
                 }
                 else {
+                    $('#resume').prop("disabled", true);;
+                    $('#pause').prop("disabled", true);;
                     $("#results").hide();
                 }
                 $("#results-tbody").html("");
@@ -110,6 +123,24 @@
                 }
                 SocketDetails.setConnected(false);
                 console.log("Disconnected");
+            },
+
+            // Pause the stream
+            pause: function() {
+                SocketDetails.stompClient.send(SocketDetails.getPauseUrl(), {}, JSON.stringify({}));
+
+                // Flip button state
+                $('#resume').prop("disabled", false);
+                $('#pause').prop("disabled", true);
+            },
+
+            // Pause the stream
+            resume: function() {
+                SocketDetails.stompClient.send(SocketDetails.getResumeUrl(), {}, JSON.stringify({}));
+
+                // Flip button state
+                $('#resume').prop("disabled", true);
+                $('#pause').prop("disabled", false);
             },
 
             // Subscribe to a specific view
@@ -160,6 +191,12 @@
             });
             $( "#connect" ).click(function() { SocketDetails.connect(); });
             $( "#disconnect" ).click(function() { SocketDetails.disconnect(); });
+            $( "#pause" ).click(function() {
+                SocketDetails.pause();
+            })
+            $( "#resume" ).click(function() {
+                SocketDetails.resume();
+            })
         });
     </script>
 

@@ -39,9 +39,10 @@ public class WebSocketConsumersManager implements Runnable {
      */
     private final SimpMessagingTemplate simpMessagingTemplate;
 
+    /**
+     * Threadpool we run consumers within.
+     */
     private final ThreadPoolExecutor threadPoolExecutor;
-
-
 
     public WebSocketConsumersManager(final WebKafkaConsumerFactory webKafkaConsumerFactory, final SimpMessagingTemplate messagingTemplate) {
         this.webKafkaConsumerFactory = webKafkaConsumerFactory;
@@ -55,7 +56,7 @@ public class WebSocketConsumersManager implements Runnable {
 
     public void addNewConsumer(final View view, final long userId, final String username) {
         synchronized (consumers) {
-            // create a key
+            // createWebClient a key
             final ConsumerKey consumerKey = new ConsumerKey(view.getId(), userId);
 
             if (consumers.containsKey(consumerKey)) {
@@ -75,7 +76,7 @@ public class WebSocketConsumersManager implements Runnable {
             );
 
             // Create entry
-            final ConsumerEntry consumerEntry = new ConsumerEntry(view.getId(), userId, username, webKafkaConsumer);
+            final ConsumerEntry consumerEntry = new ConsumerEntry(username, webKafkaConsumer);
             consumers.put(consumerKey, consumerEntry);
 
             // Toss into executor
@@ -96,7 +97,7 @@ public class WebSocketConsumersManager implements Runnable {
 
     public void removeConsumerForUserAndView(final long viewId, final long userId) {
         synchronized (consumers) {
-            // create a key
+            // createWebClient a key
             final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
             if (!consumers.containsKey(consumerKey)) {
                 return;
@@ -107,6 +108,38 @@ public class WebSocketConsumersManager implements Runnable {
 
             // Close consumer
             consumerEntry.requestStop();
+        }
+    }
+
+    public void pauseConsumer(final long viewId, final long userId, final String username) {
+        synchronized (consumers) {
+            // createWebClient a key
+            final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
+            if (!consumers.containsKey(consumerKey)) {
+                return;
+            }
+
+            // Get entry
+            final ConsumerEntry consumerEntry = consumers.get(consumerKey);
+
+            // Lets pause it
+            consumerEntry.requestPause();
+        }
+    }
+
+    public void resumeConsumer(final long viewId, final long userId, final String username) {
+        synchronized (consumers) {
+            // createWebClient a key
+            final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
+            if (!consumers.containsKey(consumerKey)) {
+                return;
+            }
+
+            // Get entry
+            final ConsumerEntry consumerEntry = consumers.get(consumerKey);
+
+            // Lets pause it
+            consumerEntry.requestResume();
         }
     }
 
@@ -140,7 +173,7 @@ public class WebSocketConsumersManager implements Runnable {
 
                     // publish
                     final String username = consumerEntry.getUsername();
-                    final String target = "/topic/view/" + consumerEntry.getViewId() + "/" + consumerEntry.getUserId();
+                    final String target = "/topic/view/" + consumerKey.getViewId() + "/" + consumerKey.getUserId();
                     simpMessagingTemplate.convertAndSendToUser(username, target, kafkaResult);
                 } catch (final Exception exception) {
                     // Handle
@@ -169,25 +202,33 @@ public class WebSocketConsumersManager implements Runnable {
     }
 
     private static class ConsumerEntry {
-        private final long userId;
         private final String username;
-        private final long viewId;
         private final SocketKafkaConsumer socketKafkaConsumer;
 
+        /**
+         * Flag if we should stop.
+         */
         private boolean shouldStop = false;
 
+        /**
+         * Flag if we should be paused.
+         */
+        private boolean isPaused = false;
+
         public ConsumerEntry(
-            final long viewId,
-            final long userId,
             final String username,
             final SocketKafkaConsumer socketKafkaConsumer) {
-            this.userId = userId;
-            this.viewId = viewId;
             this.username = username;
             this.socketKafkaConsumer = socketKafkaConsumer;
         }
 
         public KafkaResult nextResult() {
+            // If paused
+            if (isPaused) {
+                // always return false.  This will cause the internal buffer to block
+                // on the consumer side.
+                return null;
+            }
             return socketKafkaConsumer.nextResult();
         }
 
@@ -200,16 +241,16 @@ public class WebSocketConsumersManager implements Runnable {
             this.shouldStop = true;
         }
 
+        public synchronized void requestPause() {
+            this.isPaused = true;
+        }
+
+        public synchronized void requestResume() {
+            this.isPaused = false;
+        }
+
         public String getUsername() {
             return username;
-        }
-
-        public long getUserId() {
-            return userId;
-        }
-
-        public long getViewId() {
-            return viewId;
         }
     }
 

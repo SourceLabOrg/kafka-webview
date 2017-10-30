@@ -98,6 +98,7 @@ public class SocketKafkaConsumer implements Runnable {
     }
 
     public KafkaResult nextResult() {
+        // Get the next Result
         return outputQueue.poll();
     }
 

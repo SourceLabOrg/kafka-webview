@@ -44,9 +44,9 @@ public class WebKafkaConsumerFactory {
         this.kafkaConsumerFactory = kafkaConsumerFactory;
     }
 
-    public WebKafkaConsumer create(final View view, final Collection<Filter> filterList, final long userId) {
-        // Create client config
-        final ClientConfig clientConfig = createClientConfig(view, filterList, userId);
+    public WebKafkaConsumer createWebClient(final View view, final Collection<Filter> filterList, final long userId) {
+        // Create client config builder
+        final ClientConfig clientConfig = createClientConfig(view, filterList, userId).build();
 
         // Create kafka consumer
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
@@ -56,8 +56,8 @@ public class WebKafkaConsumerFactory {
     }
 
     public SocketKafkaConsumer createWebSocketClient(final View view, final Collection<Filter> filterList, final long userId, final Queue<KafkaResult> kafkaResultQueue) {
-        // Create client config
-        final ClientConfig clientConfig = createClientConfig(view, filterList, userId);
+        // Create client config builder
+        final ClientConfig clientConfig = createClientConfig(view, filterList, userId).build();
 
         // Create kafka consumer
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
@@ -72,7 +72,7 @@ public class WebKafkaConsumerFactory {
         return socketKafkaConsumer;
     }
 
-    private ClientConfig createClientConfig(final View view, final Collection<Filter> filterList, final long userId) {
+    private ClientConfig.Builder createClientConfig(final View view, final Collection<Filter> filterList, final long userId) {
         // Construct a consumerId based on user
         final String consumerId = consumerIdPrefix + userId;
 
@@ -135,7 +135,7 @@ public class WebKafkaConsumerFactory {
         }
 
         // Create the damn consumer
-        return clientConfigBuilder.build();
+        return clientConfigBuilder;
     }
 
     private KafkaConsumer createKafkaConsumer(final ClientConfig clientConfig) {

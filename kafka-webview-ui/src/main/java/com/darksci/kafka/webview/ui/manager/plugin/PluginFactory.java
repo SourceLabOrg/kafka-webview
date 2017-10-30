@@ -13,7 +13,7 @@ import java.nio.file.Path;
  * A factory class for creating instances of uploaded plugins.
  * Currently this supports two types of plugins: Deserializers, and RecordFilters.
  *
- * @param <T> Interface/Type of plugin we want to create instances of.
+ * @param <T> Interface/Type of plugin we want to createWebClient instances of.
  */
 public class PluginFactory<T> {
     /**
@@ -22,14 +22,14 @@ public class PluginFactory<T> {
     private final String jarDirectory;
 
     /**
-     * Type/Interface of class we want to create instances of.
+     * Type/Interface of class we want to createWebClient instances of.
      */
     private final Class<T> typeParameterClass;
 
     /**
      * Constructor.
      * @param jarDirectory Where we can load JARs from.
-     * @param typeParameterClass The type/interface of classes we can create instances of.
+     * @param typeParameterClass The type/interface of classes we can createWebClient instances of.
      */
     public PluginFactory(final String jarDirectory, final Class<T> typeParameterClass) {
         this.jarDirectory = jarDirectory;

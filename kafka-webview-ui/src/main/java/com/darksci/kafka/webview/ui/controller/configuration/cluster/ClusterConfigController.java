@@ -61,12 +61,12 @@ public class ClusterConfigController extends BaseController {
     /**
      * GET Displays createConsumer cluster form.
      */
-    @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequestMapping(path = "/createWebClient", method = RequestMethod.GET)
     public String createClusterForm(final ClusterForm clusterForm, final Model model) {
         // Setup breadcrumbs
-        setupBreadCrumbs(model, "Create", "/configuration/cluster/create");
+        setupBreadCrumbs(model, "Create", "/configuration/cluster/createWebClient");
 
-        return "configuration/cluster/create";
+        return "configuration/cluster/createWebClient";
     }
 
     /**
@@ -103,7 +103,7 @@ public class ClusterConfigController extends BaseController {
         clusterForm.setTrustStoreFilename(cluster.getTrustStoreFile());
 
         // Display template
-        return "configuration/cluster/create";
+        return "configuration/cluster/createWebClient";
     }
 
     /**
@@ -149,7 +149,7 @@ public class ClusterConfigController extends BaseController {
 
         // If we have errors
         if (bindingResult.hasErrors()) {
-            return "configuration/cluster/create";
+            return "configuration/cluster/createWebClient";
         }
 
         // If we're updating

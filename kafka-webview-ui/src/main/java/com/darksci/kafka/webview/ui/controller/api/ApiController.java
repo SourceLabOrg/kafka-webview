@@ -361,7 +361,7 @@ public class ApiController extends BaseController {
      * Creates a WebKafkaConsumer instance.
      */
     private WebKafkaConsumer setup(final View view, final Collection<Filter> filterList) {
-        return webKafkaConsumerFactory.create(view, filterList, getLoggedInUserId());
+        return webKafkaConsumerFactory.createWebClient(view, filterList, getLoggedInUserId());
     }
 
     /**

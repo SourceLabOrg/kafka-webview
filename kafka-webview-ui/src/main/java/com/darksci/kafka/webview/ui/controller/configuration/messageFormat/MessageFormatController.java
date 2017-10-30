@@ -55,17 +55,17 @@ public class MessageFormatController extends BaseController {
     }
 
     /**
-     * GET Displays create cluster form.
+     * GET Displays createWebClient cluster form.
      */
-    @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequestMapping(path = "/createWebClient", method = RequestMethod.GET)
     public String createMessageFormat(final MessageFormatForm messageFormatForm, final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", null);
 
-        return "configuration/messageFormat/create";
+        return "configuration/messageFormat/createWebClient";
     }
 
-    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequestMapping(path = "/createWebClient", method = RequestMethod.POST)
     public String create(
         @Valid final MessageFormatForm messageFormatForm,
         final BindingResult bindingResult,
@@ -73,7 +73,7 @@ public class MessageFormatController extends BaseController {
 
         // If we have errors just display the form again.
         if (bindingResult.hasErrors()) {
-            return "configuration/messageFormat/create";
+            return "configuration/messageFormat/createWebClient";
         }
 
         final MultipartFile file = messageFormatForm.getFile();
@@ -81,7 +81,7 @@ public class MessageFormatController extends BaseController {
             bindingResult.addError(new FieldError(
                 "messageFormatForm", "file", "", true, null, null, "Select a jar to upload")
             );
-            return "/configuration/messageFormat/create";
+            return "/configuration/messageFormat/createWebClient";
         }
 
         // Make sure ends with .jar
@@ -89,7 +89,7 @@ public class MessageFormatController extends BaseController {
             bindingResult.addError(new FieldError(
                 "messageFormatForm", "file", "", true, null, null, "File must have a .jar extension")
             );
-            return "/configuration/messageFormat/create";
+            return "/configuration/messageFormat/createWebClient";
         }
 
         try {
@@ -109,7 +109,7 @@ public class MessageFormatController extends BaseController {
                 bindingResult.addError(new FieldError(
                     "messageFormatForm", "file", "", true, null, null, e.getMessage())
                 );
-                return "/configuration/messageFormat/create";
+                return "/configuration/messageFormat/createWebClient";
             }
 
             final MessageFormat messageFormat = new MessageFormat();

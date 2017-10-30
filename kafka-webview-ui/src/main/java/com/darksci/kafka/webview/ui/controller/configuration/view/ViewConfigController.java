@@ -68,9 +68,9 @@ public class ViewConfigController extends BaseController {
     }
 
     /**
-     * GET Displays create view form
+     * GET Displays createWebClient view form
      */
-    @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequestMapping(path = "/createWebClient", method = RequestMethod.GET)
     public String createViewForm(final ViewForm viewForm, final Model model) {
         // Setup breadcrumbs
         if (!model.containsAttribute("BreadCrumbs")) {
@@ -109,7 +109,7 @@ public class ViewConfigController extends BaseController {
             }
         }
 
-        return "configuration/view/create";
+        return "configuration/view/createWebClient";
     }
 
     /**
