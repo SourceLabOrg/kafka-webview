@@ -22,25 +22,20 @@
                     </div>
                 </form>
             </div>
-            <div class="col-md-6">
-                <form class="form-inline">
-                    <div class="form-group">
-                        <label for="name">What is your name?</label>
-                        <input type="text" id="name" class="form-control" placeholder="Your name here...">
-                    </div>
-                    <button id="send" class="btn btn-default" type="submit">Send</button>
-                </form>
-            </div>
         </div>
         <div class="row">
             <div class="col-md-12">
-                <table id="conversation" class="table table-striped">
+                <table id="results" class="table table-striped">
                     <thead>
                     <tr>
-                        <th>Greetings</th>
+                        <th>Partition</th>
+                        <th>Offset</th>
+                        <th>Timestamp</th>
+                        <th>Key</th>
+                        <th>Value</th>
                     </tr>
                     </thead>
-                    <tbody id="greetings">
+                    <tbody id="results-tbody">
                     </tbody>
                 </table>
             </div>
@@ -53,6 +48,15 @@
             // Logged in userdId
             userId: '[[${userId}]]',
             viewId: '[[${viewId}]]',
+
+            // SHould we format timestamps?
+            formatDates: false,
+
+            // Holds results template
+            resultsTemplate: '',
+
+            // Holds reference to results table
+            resultsTable: null,
 
             // Our stomp client
             stompClient: null,
@@ -70,77 +74,110 @@
 
             getSubscribeUrl: function() {
                 return SocketDetails.consumerSubscribeUrl + '/' + SocketDetails.viewId;
+            },
+
+            // Connect to web socket
+            connect: function() {
+                var socket = new SockJS(SocketDetails.socketUrl);
+                SocketDetails.stompClient = Stomp.over(socket);
+                SocketDetails.stompClient.connect({}, function (frame) {
+                    SocketDetails.setConnected(true);
+                    console.log('Connected: ' + frame);
+
+                    // Request subscription
+                    SocketDetails.subscribeResults();
+                    SocketDetails.requestSubscription();
+                });
+            },
+
+            // Mark as connected
+            setConnected: function(connected) {
+                $("#connect").prop("disabled", connected);
+                $("#disconnect").prop("disabled", !connected);
+                if (connected) {
+                    $("#results").show();
+                }
+                else {
+                    $("#results").hide();
+                }
+                $("#results-tbody").html("");
+            },
+
+            // Disconnect from web socket
+            disconnect: function() {
+                if (SocketDetails.stompClient !== null) {
+                    SocketDetails.stompClient.disconnect();
+                }
+                SocketDetails.setConnected(false);
+                console.log("Disconnected");
+            },
+
+            // Subscribe to a specific view
+            requestSubscription: function() {
+                SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify({}));
+            },
+
+            subscribeResults: function() {
+                var topic = SocketDetails.getConsumerUrl();
+                console.log("Subscribing to Topic " + topic);
+                SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
+                    var json = JSON.parse(incomingMessage.body);
+                    console.log(json);
+                    SocketDetails.appendResult(json);
+                });
+            },
+
+            // Append results to browser
+            appendResult: function(result) {
+                // Generate html from template
+                var properties = {
+                    partition: result.partition,
+                    offset: result.offset,
+                    key: result.key,
+                    value: result.value,
+                    timestamp: result.timestamp,
+                    date: DateTools.displayTimestamp(result.timestamp),
+                    timezone: DateTools.localTimezone,
+                    showPrettyDates: SocketDetails.formatDates
+                };
+                var resultHtml = SocketDetails.resultsTemplate(properties);
+
+                // Append it to our table
+                jQuery(SocketDetails.resultsTable).append(resultHtml);
             }
         };
 
-        function setConnected(connected) {
-            $("#connect").prop("disabled", connected);
-            $("#disconnect").prop("disabled", !connected);
-            if (connected) {
-                $("#conversation").show();
-            }
-            else {
-                $("#conversation").hide();
-            }
-            $("#greetings").html("");
-        }
-
-        function connect() {
-            var socket = new SockJS(SocketDetails.socketUrl);
-            SocketDetails.stompClient = Stomp.over(socket);
-            SocketDetails.stompClient.connect({}, function (frame) {
-                setConnected(true);
-                console.log('Connected: ' + frame);
-
-                // Request subscription
-                subscribeResults();
-                requestSubscription();
-            });
-        }
-
-        function requestSubscription() {
-//            var topic = SocketDetails.getSubscribeUrl();
-//            console.log("Subscribing to Topic " + topic);
-//            SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
-//                var json = JSON.parse(incomingMessage.body);
-//                console.log("Subscription: " + json);
-//            });
-            SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify({}));
-        }
-
-        function subscribeResults() {
-            var topic = SocketDetails.getConsumerUrl();
-            console.log("Subscribing to Topic " + topic);
-            SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
-                var json = JSON.parse(incomingMessage.body);
-                console.log(json);
-            });
-        }
-
-        function disconnect() {
-            if (SocketDetails.stompClient !== null) {
-                SocketDetails.stompClient.disconnect();
-            }
-            setConnected(false);
-            console.log("Disconnected");
-        }
-
-        function sendName() {
-            SocketDetails.stompClient.send("/app/hello", {}, JSON.stringify({'name': $("#name").val()}));
-        }
-
-        function showGreeting(message) {
-            $("#greetings").append("<tr><td>" + message + "</td></tr>");
-        }
-
         $(function () {
+            // Get and compile template
+            var source   = jQuery('#results-template').html();
+            var template = Handlebars.compile(source);
+            SocketDetails.resultsTable = jQuery('#results-tbody');
+            SocketDetails.resultsTemplate = template;
+
+            // Setup event handlers
             $("form").on('submit', function (e) {
                 e.preventDefault();
             });
-            $( "#connect" ).click(function() { connect(); });
-            $( "#disconnect" ).click(function() { disconnect(); });
-            $( "#send" ).click(function() { sendName(); });
+            $( "#connect" ).click(function() { SocketDetails.connect(); });
+            $( "#disconnect" ).click(function() { SocketDetails.disconnect(); });
         });
+    </script>
+
+    <!-- Results Template -->
+    <script id="results-template" type="text/x-handlebars-template">
+        <tr>
+            <td>{{partition}}</td>
+            <td>{{offset}}</td>
+            <td>
+                {{#if showPrettyDates}}
+                <span class="date" title="{{timezone}}">{{date}}</span>
+                {{else}}
+                <span class="timestamp" title="{{date}}">{{timestamp}}</span>
+                {{/if}}
+            </td>
+            <td>{{key}}</td>
+            <td>{{value}}</td>
+        </tr>
     </script>
 </section>
 
