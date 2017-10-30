@@ -1,7 +1,6 @@
 package com.darksci.kafka.webview.ui.controller.stream;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
-import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
 import com.darksci.kafka.webview.ui.manager.user.CustomUserDetails;
 import com.darksci.kafka.webview.ui.model.View;
@@ -9,8 +8,6 @@ import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,12 +25,23 @@ public class StreamController extends BaseController {
     private ViewRepository viewRepository;
 
     @Autowired
-    private WebKafkaConsumerFactory consumerFactory;
-
-    @Autowired
     private WebSocketConsumersManager webSocketConsumersManager;
 
+    /**
+     * Serves standard http requested page with client JS code.
+     */
+    @RequestMapping(path = "/stream", method = RequestMethod.GET)
+    public String streamIndex(final Model model) {
+        // Fixed for now
+        model.addAttribute("viewId", 1L);
+        model.addAttribute("userId", getLoggedInUserId());
 
+        return "stream/index";
+    }
+
+    /**
+     * Serves websocket requests, requesting to start a stream on the given view.
+     */
     @MessageMapping("/consume/{viewId}")
     @Transactional
     public String newConsumer(
@@ -51,15 +59,6 @@ public class StreamController extends BaseController {
         final String username = auth.getName();
         webSocketConsumersManager.addNewConsumer(view, userId, username);
         return "{success: true}";
-    }
-
-    @RequestMapping(path = "/stream", method = RequestMethod.GET)
-    public String streamIndex(final Model model) {
-        // Fixed for now
-        model.addAttribute("viewId", 1L);
-        model.addAttribute("userId", getLoggedInUserId());
-
-        return "stream/index";
     }
 
     /**

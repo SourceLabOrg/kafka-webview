@@ -43,7 +43,11 @@ public class WebSocketConsumersManager implements Runnable {
                 throw new RuntimeException("Consumer already exists!");
             }
 
+            // Create consumer
             final WebKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.create(view, new ArrayList<>(), userId);
+
+            // TODO Change this to tail. For now to head for testing.
+            webKafkaConsumer.toHead();
 
             final ConsumerEntry consumerEntry = new ConsumerEntry(view.getId(), userId, username, webKafkaConsumer);
             consumers.put(consumerKey, consumerEntry);
