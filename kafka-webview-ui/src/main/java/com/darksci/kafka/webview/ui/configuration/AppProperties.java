@@ -15,6 +15,9 @@ public class AppProperties {
     @Value("${app.key}")
     private String appKey;
 
+    @Value("${app.maxConcurrentWebSocketConsumers}")
+    private Integer maxConcurrentWebSocketConsumers = 100;
+
     public String getName() {
         return name;
     }
@@ -25,5 +28,19 @@ public class AppProperties {
 
     public String getAppKey() {
         return appKey;
+    }
+
+    public Integer getMaxConcurrentWebSocketConsumers() {
+        return maxConcurrentWebSocketConsumers;
+    }
+
+    @Override
+    public String toString() {
+        return "AppProperties{" +
+            "name='" + name + '\'' +
+            ", uploadPath='" + uploadPath + '\'' +
+            ", appKey='" + appKey + '\'' +
+            ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers +
+            '}';
     }
 }

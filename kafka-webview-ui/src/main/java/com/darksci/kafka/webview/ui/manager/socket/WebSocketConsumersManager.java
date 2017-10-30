@@ -1,21 +1,18 @@
 package com.darksci.kafka.webview.ui.manager.socket;
 
 import com.darksci.kafka.webview.ui.manager.kafka.SocketKafkaConsumer;
-import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
-import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import com.darksci.kafka.webview.ui.model.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -44,13 +41,17 @@ public class WebSocketConsumersManager implements Runnable {
      */
     private final ThreadPoolExecutor threadPoolExecutor;
 
-    public WebSocketConsumersManager(final WebKafkaConsumerFactory webKafkaConsumerFactory, final SimpMessagingTemplate messagingTemplate) {
+    public WebSocketConsumersManager(
+        final WebKafkaConsumerFactory webKafkaConsumerFactory,
+        final SimpMessagingTemplate messagingTemplate,
+        final int maxConcurrentConsumers) {
         this.webKafkaConsumerFactory = webKafkaConsumerFactory;
         this.simpMessagingTemplate = messagingTemplate;
 
-        // TODO evaluate how many threads.
+        // Setup managed thread pool with number of concurrent threads.
+        // TODO add handler for when a new connection comes in that exceeds the maximum running concurrent consumers.
         this.threadPoolExecutor = new ThreadPoolExecutor(
-            100, 100, 5, TimeUnit.MINUTES, new LinkedBlockingQueue<>(100)
+            maxConcurrentConsumers, maxConcurrentConsumers, 5, TimeUnit.MINUTES, new LinkedBlockingQueue<>(100)
         );
     }
 
@@ -64,15 +65,11 @@ public class WebSocketConsumersManager implements Runnable {
                 throw new RuntimeException("Consumer already exists!");
             }
 
-            // Create queue
-            final Queue<KafkaResult> outputQueue = new LinkedBlockingQueue<>(256);
-
             // Create consumer
             final SocketKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.createWebSocketClient(
                 view,
                 new ArrayList<>(),
-                userId,
-                outputQueue
+                userId
             );
 
             // Create entry
@@ -81,6 +78,12 @@ public class WebSocketConsumersManager implements Runnable {
 
             // Toss into executor
             threadPoolExecutor.execute(webKafkaConsumer);
+
+            // Add logger statement
+            logger.info("Added new web socket consumer, now has {}/{} running consumers",
+                threadPoolExecutor.getActiveCount(),
+                threadPoolExecutor.getMaximumPoolSize()
+            );
         }
     }
 
@@ -111,7 +114,7 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
-    public void pauseConsumer(final long viewId, final long userId, final String username) {
+    public void pauseConsumer(final long viewId, final long userId) {
         synchronized (consumers) {
             // createWebClient a key
             final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
@@ -127,7 +130,7 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
-    public void resumeConsumer(final long viewId, final long userId, final String username) {
+    public void resumeConsumer(final long viewId, final long userId) {
         synchronized (consumers) {
             // createWebClient a key
             final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
@@ -163,8 +166,8 @@ public class WebSocketConsumersManager implements Runnable {
                     }
 
                     // Consume
-                    final KafkaResult kafkaResult = consumerEntry.nextResult();
-                    if (kafkaResult == null) {
+                    final Optional<KafkaResult> kafkaResult = consumerEntry.nextResult();
+                    if (!kafkaResult.isPresent()) {
                         continue;
                     }
                     // Flip flag to true
@@ -174,7 +177,7 @@ public class WebSocketConsumersManager implements Runnable {
                     // publish
                     final String username = consumerEntry.getUsername();
                     final String target = "/topic/view/" + consumerKey.getViewId() + "/" + consumerKey.getUserId();
-                    simpMessagingTemplate.convertAndSendToUser(username, target, kafkaResult);
+                    simpMessagingTemplate.convertAndSendToUser(username, target, kafkaResult.get());
                 } catch (final Exception exception) {
                     // Handle
                     logger.error(exception.getMessage(), exception);
@@ -184,6 +187,12 @@ public class WebSocketConsumersManager implements Runnable {
             // Remove any consumers
             for (final ConsumerKey consumerKey: consumerKeysToRemove) {
                 consumers.remove(consumerKey);
+
+                // Add logger statement
+                logger.info("Removed web socket consumer, now has {}/{} running consumers",
+                    threadPoolExecutor.getActiveCount(),
+                    threadPoolExecutor.getMaximumPoolSize()
+                );
             }
 
             // Throttle with sleep
@@ -206,7 +215,7 @@ public class WebSocketConsumersManager implements Runnable {
         private final SocketKafkaConsumer socketKafkaConsumer;
 
         /**
-         * Flag if we should stop.
+         * Flag if we should requestStop.
          */
         private boolean shouldStop = false;
 
@@ -222,12 +231,12 @@ public class WebSocketConsumersManager implements Runnable {
             this.socketKafkaConsumer = socketKafkaConsumer;
         }
 
-        public KafkaResult nextResult() {
+        public Optional<KafkaResult> nextResult() {
             // If paused
             if (isPaused) {
                 // always return false.  This will cause the internal buffer to block
                 // on the consumer side.
-                return null;
+                return Optional.empty();
             }
             return socketKafkaConsumer.nextResult();
         }
@@ -237,7 +246,7 @@ public class WebSocketConsumersManager implements Runnable {
         }
 
         public synchronized void requestStop() {
-            this.socketKafkaConsumer.stop();
+            this.socketKafkaConsumer.requestStop();
             this.shouldStop = true;
         }
 

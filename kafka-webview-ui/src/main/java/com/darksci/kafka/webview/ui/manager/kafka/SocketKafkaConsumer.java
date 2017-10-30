@@ -1,7 +1,6 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClientConfig;
-import com.darksci.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -38,19 +38,41 @@ public class SocketKafkaConsumer implements Runnable {
      * Constructor.
      * @param kafkaConsumer The consumer to consume with.
      * @param clientConfig The client's configuration.
-     * @param outputQueue Where to push consumed messages onto.
      */
-    public SocketKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig, final Queue<KafkaResult> outputQueue) {
+    public SocketKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
         this.outputQueue = new LinkedBlockingQueue<>(256);
     }
 
+    /**
+     * Ask for the next record that the consumer has pulled from kafka.
+     * This operation will never block, simply return null if no record found.
+     */
+    public Optional<KafkaResult> nextResult() {
+        // Get the next Result
+        return Optional.ofNullable(outputQueue.poll());
+    }
+
+    /**
+     * Request that the consumer requestStop.
+     */
+    public void requestStop() {
+        this.requestStop = true;
+    }
+
     @Override
     public void run() {
+        // Rename thread.
+        Thread.currentThread().setName("WebSocket Consumer: " + clientConfig.getConsumerId());
         logger.info("Starting socket consumer for {}", clientConfig.getConsumerId());
+
+        // Start at tail
+        // TODO change this to tail, set to head for testing.
+        toHead();
+
         do {
-            // Consume messages
+            // Start trying to consume messages from kafka
             final ConsumerRecords consumerRecords = kafkaConsumer.poll(POLL_TIMEOUT_MS);
 
             // If no records found
@@ -73,7 +95,8 @@ public class SocketKafkaConsumer implements Runnable {
                     consumerRecord.value()
                 );
 
-                // Add to queue, this may block.
+                // Add to the queue, this operation may block, effectively preventing the consumer from
+                // consuming unbounded-ly.
                 outputQueue.add(kafkaResult);
             }
 
@@ -82,7 +105,7 @@ public class SocketKafkaConsumer implements Runnable {
         }
         while (!requestStop);
 
-        // stop
+        // requestStop
         kafkaConsumer.close();
 
         logger.info("Shutdown consumer {}", clientConfig.getConsumerId());
@@ -93,20 +116,11 @@ public class SocketKafkaConsumer implements Runnable {
             // Sleep for a period.
             Thread.sleep(timeMs);
         } catch (final InterruptedException e) {
-            stop();
+            requestStop();
         }
     }
 
-    public KafkaResult nextResult() {
-        // Get the next Result
-        return outputQueue.poll();
-    }
-
-    public void stop() {
-        this.requestStop = true;
-    }
-
-    public void toHead() {
+    private void toHead() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();
 
@@ -121,10 +135,9 @@ public class SocketKafkaConsumer implements Runnable {
             // Seek to earlier offset
             kafkaConsumer.seek(topicPartition, newOffset);
         }
-        commit();
     }
 
-    public void toTail() {
+    private void toTail() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();
 
@@ -139,7 +152,6 @@ public class SocketKafkaConsumer implements Runnable {
             // Seek to earlier offset
             kafkaConsumer.seek(topicPartition, newOffset);
         }
-        commit();
     }
 
     private List<TopicPartition> getAllPartitions() {
@@ -155,9 +167,5 @@ public class SocketKafkaConsumer implements Runnable {
             }
         }
         return topicsAndPartitions;
-    }
-
-    private void commit() {
-        kafkaConsumer.commitSync();
     }
 }

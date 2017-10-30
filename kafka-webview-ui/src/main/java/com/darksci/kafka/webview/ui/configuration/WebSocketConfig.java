@@ -41,13 +41,17 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
         return new PresenceEventListener(webSocketConsumersManager);
     }
 
+    /**
+     * This thread runs the WebSocketConsumerManager, which manages any consumers for web sockets.
+     * It only needs a single thread, because the manager starts up its own managed thread pool.
+     */
     @Bean
     public TaskExecutor backgroundConsumerExecutor() {
         final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         // Only a single thread in the pool
         executor.setCorePoolSize(1);
         executor.setMaxPoolSize(1);
-        executor.setThreadNamePrefix("Background Consumer Thread(s)");
+        executor.setThreadNamePrefix("Web Socket Consumer Manager");
         executor.initialize();
 
         return executor;
@@ -60,10 +64,15 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
     public WebSocketConsumersManager getWebSocketConsumersManager(
         final WebKafkaConsumerFactory webKafkaConsumerFactory,
         final SimpMessagingTemplate messagingTemplate,
-        final TaskExecutor backgroundConsumerExecutor) {
+        final TaskExecutor backgroundConsumerExecutor,
+        final AppProperties appProperties) {
 
         // Create manager
-        final WebSocketConsumersManager manager = new WebSocketConsumersManager(webKafkaConsumerFactory, messagingTemplate);
+        final WebSocketConsumersManager manager = new WebSocketConsumersManager(
+            webKafkaConsumerFactory,
+            messagingTemplate,
+            appProperties.getMaxConcurrentWebSocketConsumers()
+        );
 
         // Submit to executor service
         backgroundConsumerExecutor.execute(manager);

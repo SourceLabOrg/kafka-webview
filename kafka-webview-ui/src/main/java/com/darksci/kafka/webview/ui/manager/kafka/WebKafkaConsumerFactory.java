@@ -55,7 +55,7 @@ public class WebKafkaConsumerFactory {
         return new WebKafkaConsumer(kafkaConsumer, clientConfig);
     }
 
-    public SocketKafkaConsumer createWebSocketClient(final View view, final Collection<Filter> filterList, final long userId, final Queue<KafkaResult> kafkaResultQueue) {
+    public SocketKafkaConsumer createWebSocketClient(final View view, final Collection<Filter> filterList, final long userId) {
         // Create client config builder
         final ClientConfig clientConfig = createClientConfig(view, filterList, userId).build();
 
@@ -63,13 +63,7 @@ public class WebKafkaConsumerFactory {
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
 
         // Create consumer
-        final SocketKafkaConsumer socketKafkaConsumer =  new SocketKafkaConsumer(kafkaConsumer, clientConfig, kafkaResultQueue);
-
-        // TODO Reset to tail
-        // for now go to head
-        socketKafkaConsumer.toHead();
-
-        return socketKafkaConsumer;
+        return new SocketKafkaConsumer(kafkaConsumer, clientConfig);
     }
 
     private ClientConfig.Builder createClientConfig(final View view, final Collection<Filter> filterList, final long userId) {

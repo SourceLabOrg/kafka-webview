@@ -2,6 +2,7 @@ package com.darksci.kafka.webview.ui.controller.stream;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
 import com.darksci.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
+import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
 import com.darksci.kafka.webview.ui.manager.user.CustomUserDetails;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
@@ -11,8 +12,10 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.transaction.Transactional;
 
@@ -20,6 +23,7 @@ import javax.transaction.Transactional;
  * Websocket controller end points.
  */
 @Controller
+@RequestMapping("/stream")
 public class StreamController extends BaseController {
     @Autowired
     private ViewRepository viewRepository;
@@ -27,17 +31,41 @@ public class StreamController extends BaseController {
     @Autowired
     private WebSocketConsumersManager webSocketConsumersManager;
 
+
+    /**
+     * Just redirects to view index for now?
+     */
+    @RequestMapping(path = "", method = RequestMethod.GET)
+    public String index() {
+        return "redirect:/view";
+    }
+
     /**
      * Serves standard http requested page with client JS code.
      */
-    @RequestMapping(path = "/stream", method = RequestMethod.GET)
-    public String streamIndex(final Model model) {
+    @RequestMapping(path = "/{id}", method = RequestMethod.GET)
+    public String stream(
+        final @PathVariable Long id,
+        final Model model,
+        final RedirectAttributes redirectAttributes) {
+        // Retrieve view
+        final View view = viewRepository.findOne(id);
+        if (view == null) {
+            // Set flash message
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
+
+            // redirect to home
+            return "redirect:/";
+        }
+
         // Fixed for now
-        model.addAttribute("viewId", 1L);
+        model.addAttribute("viewId", view.getId());
         model.addAttribute("userId", getLoggedInUserId());
 
         return "stream/index";
     }
+
+// Here down serves websocket requests
 
     /**
      * Serves websocket requests, requesting to start a stream on the given view.
@@ -51,7 +79,7 @@ public class StreamController extends BaseController {
         // Retrieve view
         final View view = viewRepository.findOne(viewId);
         if (view == null) {
-            throw new RuntimeException("TODO Better handling");
+            return "{success: false}";
         }
 
         // Subscribe
@@ -70,16 +98,9 @@ public class StreamController extends BaseController {
         final @DestinationVariable Long viewId,
         final Authentication auth) {
 
-        // Retrieve view
-        final View view = viewRepository.findOne(viewId);
-        if (view == null) {
-            throw new RuntimeException("TODO Better handling");
-        }
-
-        // Subscribe
+        // Request a pause
         final long userId = getLoggedInUserId(auth);
-        final String username = auth.getName();
-        webSocketConsumersManager.pauseConsumer(view.getId(), userId, username);
+        webSocketConsumersManager.pauseConsumer(viewId, userId);
         return "{success: true}";
     }
 
@@ -92,16 +113,9 @@ public class StreamController extends BaseController {
         final @DestinationVariable Long viewId,
         final Authentication auth) {
 
-        // Retrieve view
-        final View view = viewRepository.findOne(viewId);
-        if (view == null) {
-            throw new RuntimeException("TODO Better handling");
-        }
-
-        // Subscribe
+        // Request Resume
         final long userId = getLoggedInUserId(auth);
-        final String username = auth.getName();
-        webSocketConsumersManager.resumeConsumer(view.getId(), userId, username);
+        webSocketConsumersManager.resumeConsumer(viewId, userId);
         return "{success: true}";
     }
 
