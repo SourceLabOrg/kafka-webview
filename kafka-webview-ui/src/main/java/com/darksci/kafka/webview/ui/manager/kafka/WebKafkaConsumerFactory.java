@@ -1,6 +1,7 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
 import com.darksci.kafka.webview.ui.manager.encryption.SecretManager;
+import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import com.darksci.kafka.webview.ui.model.Cluster;
 import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClientConfig;
@@ -19,6 +20,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
 
 public class WebKafkaConsumerFactory {
     /**
@@ -43,6 +45,34 @@ public class WebKafkaConsumerFactory {
     }
 
     public WebKafkaConsumer create(final View view, final Collection<Filter> filterList, final long userId) {
+        // Create client config
+        final ClientConfig clientConfig = createClientConfig(view, filterList, userId);
+
+        // Create kafka consumer
+        final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
+
+        // Create consumer
+        return new WebKafkaConsumer(kafkaConsumer, clientConfig);
+    }
+
+    public SocketKafkaConsumer createWebSocketClient(final View view, final Collection<Filter> filterList, final long userId, final Queue<KafkaResult> kafkaResultQueue) {
+        // Create client config
+        final ClientConfig clientConfig = createClientConfig(view, filterList, userId);
+
+        // Create kafka consumer
+        final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
+
+        // Create consumer
+        final SocketKafkaConsumer socketKafkaConsumer =  new SocketKafkaConsumer(kafkaConsumer, clientConfig, kafkaResultQueue);
+
+        // TODO Reset to tail
+        // for now go to head
+        socketKafkaConsumer.toHead();
+
+        return socketKafkaConsumer;
+    }
+
+    private ClientConfig createClientConfig(final View view, final Collection<Filter> filterList, final long userId) {
         // Construct a consumerId based on user
         final String consumerId = consumerIdPrefix + userId;
 
@@ -105,10 +135,10 @@ public class WebKafkaConsumerFactory {
         }
 
         // Create the damn consumer
-        final ClientConfig clientConfig = clientConfigBuilder.build();
-        final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
+        return clientConfigBuilder.build();
+    }
 
-        // Create consumer
-        return new WebKafkaConsumer(kafkaConsumer, clientConfig);
+    private KafkaConsumer createKafkaConsumer(final ClientConfig clientConfig) {
+        return kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
     }
 }
