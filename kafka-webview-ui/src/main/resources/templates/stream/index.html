@@ -15,12 +15,11 @@
             <div class="col-md-6">
                 <form class="form-inline">
                     <div class="form-group">
-                        <label for="connect">WebSocket connection:</label>
+                        <label for="connect">Streaming Connection: </label>
                         <button id="connect" class="btn btn-default" type="submit">Connect</button>
                         <button id="pause" class="btn btn-default" type="submit" disabled="disabled">Pause</button>
                         <button id="resume" class="btn btn-default" type="submit" disabled="disabled">Resume</button>
-                        <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
-                        </button>
+                        <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect</button>
                     </div>
                 </form>
             </div>
@@ -50,6 +49,9 @@
             // Logged in userdId
             userId: '[[${userId}]]',
             viewId: '[[${viewId}]]',
+
+            // How many rows to display before removing the oldest
+            maxResults: 50,
 
             // Should we format timestamps?
             formatDates: false,
@@ -173,8 +175,14 @@
                 };
                 var resultHtml = SocketDetails.resultsTemplate(properties);
 
-                // Append it to our table
-                jQuery(SocketDetails.resultsTable).append(resultHtml);
+                // Prepend it to the top of our table
+                SocketDetails.resultsTable.prepend(resultHtml);
+
+                // Remove rows > max results from the end
+                var resultRows = SocketDetails.resultsTable.children();
+                if (resultRows.length > SocketDetails.maxResults) {
+                    resultRows.last().remove();
+                }
             }
         };
 

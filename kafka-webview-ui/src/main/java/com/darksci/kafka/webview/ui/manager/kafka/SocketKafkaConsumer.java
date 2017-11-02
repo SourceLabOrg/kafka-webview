@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -29,7 +30,7 @@ public class SocketKafkaConsumer implements Runnable {
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
-    private final Queue<KafkaResult> outputQueue;
+    private final BlockingQueue<KafkaResult> outputQueue;
 
     private volatile boolean requestStop = false;
 
@@ -97,7 +98,12 @@ public class SocketKafkaConsumer implements Runnable {
 
                 // Add to the queue, this operation may block, effectively preventing the consumer from
                 // consuming unbounded-ly.
-                outputQueue.add(kafkaResult);
+                try {
+                    outputQueue.put(kafkaResult);
+                } catch (final InterruptedException interruptedException) {
+                    // InterruptedException means we should shut down.
+                    requestStop();
+                }
             }
 
             // Sleep for a bit
