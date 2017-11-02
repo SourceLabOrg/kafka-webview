@@ -1,6 +1,7 @@
 package com.darksci.kafka.webview.ui.controller.configuration.messageFormat;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
+import com.darksci.kafka.webview.ui.controller.configuration.messageFormat.forms.MessageFormatForm;
 import com.darksci.kafka.webview.ui.manager.plugin.PluginFactory;
 import com.darksci.kafka.webview.ui.manager.plugin.UploadManager;
 import com.darksci.kafka.webview.ui.manager.plugin.exception.LoaderException;
@@ -9,7 +10,6 @@ import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
 import com.darksci.kafka.webview.ui.model.MessageFormat;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.repository.MessageFormatRepository;
-import com.darksci.kafka.webview.ui.controller.configuration.messageFormat.forms.MessageFormatForm;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Autowired;

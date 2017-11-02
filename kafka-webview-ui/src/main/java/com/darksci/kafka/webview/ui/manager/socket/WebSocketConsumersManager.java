@@ -15,12 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Manages background kafka consumers and transfers consumed messages from them to their
+ * corresponding WebSocket connections.
+ */
 public class WebSocketConsumersManager implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(WebSocketConsumersManager.class);
 
@@ -58,6 +61,11 @@ public class WebSocketConsumersManager implements Runnable {
         );
     }
 
+    /**
+     * Start up a new consumer for the given view.
+     * @param view The view to consume from
+     * @param sessionIdentifier The user who is consuming.
+     */
     public void addNewConsumer(final View view, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
@@ -90,10 +98,13 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
-    public void removeConsumersForUser(final long userId) {
+    /**
+     * Remove consumer based on their session id.
+     */
+    public void removeConsumersForSessionId(final String sessionId) {
         synchronized (consumers) {
             for (final Map.Entry<ConsumerKey, ConsumerEntry> entry : consumers.entrySet()) {
-                if (entry.getKey().getUserId() != userId) {
+                if (! entry.getKey().getSessionId().equals(sessionId)) {
                     continue;
                 }
                 entry.getValue().requestStop();
@@ -101,22 +112,9 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
-    public void removeConsumerForUserAndView(final long viewId, final SessionIdentifier sessionIdentifier) {
-        synchronized (consumers) {
-            // createWebClient a key
-            final ConsumerKey consumerKey = new ConsumerKey(viewId, sessionIdentifier);
-            if (!consumers.containsKey(consumerKey)) {
-                return;
-            }
-
-            // Get entry
-            final ConsumerEntry consumerEntry = consumers.get(consumerKey);
-
-            // Close consumer
-            consumerEntry.requestStop();
-        }
-    }
-
+    /**
+     * Pause a consumer.
+     */
     public void pauseConsumer(final long viewId, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
@@ -133,6 +131,9 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
+    /**
+     * Resume a consumer.
+     */
     public void resumeConsumer(final long viewId, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
@@ -149,6 +150,9 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
+    /**
+     * Main processing loop for the Manager.
+     */
     @Override
     public void run() {
         // Loop thru consumers, consume, and publish to socket.
@@ -156,6 +160,7 @@ public class WebSocketConsumersManager implements Runnable {
             boolean foundResult = false;
             final List<ConsumerKey> consumerKeysToRemove = new ArrayList<>();
 
+            // Loop over each consumer
             for (final Map.Entry<ConsumerKey, ConsumerEntry> entry : consumers.entrySet()) {
 
                 try {
@@ -176,10 +181,10 @@ public class WebSocketConsumersManager implements Runnable {
                     // Flip flag to true
                     foundResult = true;
 
-
                     // publish
                     final String target = "/topic/view/" + consumerKey.getViewId() + "/" + consumerKey.getUserId();
 
+                    // Define header so we can send the message to a specific session id.
                     final SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
                     headerAccessor.setSessionId(consumerKey.getSessionId());
                     headerAccessor.setLeaveMutable(true);
@@ -201,8 +206,9 @@ public class WebSocketConsumersManager implements Runnable {
             for (final ConsumerKey consumerKey: consumerKeysToRemove) {
                 consumers.remove(consumerKey);
 
-                // Add logger statement
-                logger.info("Removed web socket consumer, now has {}/{} running consumers",
+                // Add logger statement, this isn't completely accurate because the thread
+                // may not have shut down yet..
+                logger.info("Removed web socket consumer, now has ~ {}/{} running consumers",
                     threadPoolExecutor.getActiveCount(),
                     threadPoolExecutor.getMaximumPoolSize()
                 );
@@ -219,7 +225,6 @@ public class WebSocketConsumersManager implements Runnable {
         } while(true);
 
         // Shut down
-        // TODO Handle shutdown.
         threadPoolExecutor.shutdown();
     }
 

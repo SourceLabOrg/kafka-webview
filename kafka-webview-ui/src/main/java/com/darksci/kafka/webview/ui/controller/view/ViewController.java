@@ -1,10 +1,10 @@
 package com.darksci.kafka.webview.ui.controller.view;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
-import com.darksci.kafka.webview.ui.model.Cluster;
-import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
+import com.darksci.kafka.webview.ui.model.Cluster;
+import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.repository.ClusterRepository;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;

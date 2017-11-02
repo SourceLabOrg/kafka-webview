@@ -1,8 +1,8 @@
 package com.darksci.kafka.webview.ui.configuration;
 
-import com.darksci.kafka.webview.ui.model.UserRole;
 import com.darksci.kafka.webview.ui.manager.user.UserManager;
 import com.darksci.kafka.webview.ui.model.MessageFormat;
+import com.darksci.kafka.webview.ui.model.UserRole;
 import com.darksci.kafka.webview.ui.repository.MessageFormatRepository;
 import com.darksci.kafka.webview.ui.repository.UserRepository;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;

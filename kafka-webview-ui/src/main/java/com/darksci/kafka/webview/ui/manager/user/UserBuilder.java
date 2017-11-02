@@ -1,7 +1,7 @@
 package com.darksci.kafka.webview.ui.manager.user;
 
-import com.darksci.kafka.webview.ui.model.UserRole;
 import com.darksci.kafka.webview.ui.model.User;
+import com.darksci.kafka.webview.ui.model.UserRole;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 

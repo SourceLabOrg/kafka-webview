@@ -1,10 +1,10 @@
 package com.darksci.kafka.webview.ui.controller.login;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
-import com.darksci.kafka.webview.ui.manager.user.CustomUserDetails;
 import com.darksci.kafka.webview.ui.controller.login.forms.LostPasswordForm;
 import com.darksci.kafka.webview.ui.controller.login.forms.ResetPasswordForm;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
+import com.darksci.kafka.webview.ui.manager.user.CustomUserDetails;
 import com.darksci.kafka.webview.ui.model.User;
 import com.darksci.kafka.webview.ui.repository.UserRepository;
 import org.slf4j.Logger;

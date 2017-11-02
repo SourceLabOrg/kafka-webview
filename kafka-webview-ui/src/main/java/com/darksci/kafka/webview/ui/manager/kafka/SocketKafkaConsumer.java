@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -27,6 +26,11 @@ public class SocketKafkaConsumer implements Runnable {
     // Define max timeout
     private static final long POLL_TIMEOUT_MS = 3000L;
     private static final long DWELL_TIME_MS = 300L;
+
+    // This defines how many messages can be in the queue before it blocks.
+    // Setting this too high means when a consumer hits pause/resume, they'll instantly
+    // get a large flood of messages, which maybe is a good thing? Or bad? Unsure.
+    private static final int maxQueueCapacity = 25;
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
@@ -43,7 +47,7 @@ public class SocketKafkaConsumer implements Runnable {
     public SocketKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
-        this.outputQueue = new LinkedBlockingQueue<>(256);
+        this.outputQueue = new LinkedBlockingQueue<>(maxQueueCapacity);
     }
 
     /**
@@ -69,8 +73,7 @@ public class SocketKafkaConsumer implements Runnable {
         logger.info("Starting socket consumer for {}", clientConfig.getConsumerId());
 
         // Start at tail
-        // TODO change this to tail, set to head for testing.
-        toHead();
+        toTail();
 
         do {
             // Start trying to consume messages from kafka

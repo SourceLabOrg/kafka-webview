@@ -1,11 +1,15 @@
 package com.darksci.kafka.webview.ui.manager.plugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.net.URLClassLoader;
-
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.jar.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 public class NewClassLoader extends URLClassLoader
 {

@@ -1,10 +1,10 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
-import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
-import com.darksci.kafka.webview.ui.manager.kafka.dto.PartitionOffset;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.ConsumerState;
+import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResults;
+import com.darksci.kafka.webview.ui.manager.kafka.dto.PartitionOffset;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;

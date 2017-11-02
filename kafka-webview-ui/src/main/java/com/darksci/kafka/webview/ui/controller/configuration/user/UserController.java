@@ -2,11 +2,11 @@ package com.darksci.kafka.webview.ui.controller.configuration.user;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
 import com.darksci.kafka.webview.ui.controller.configuration.user.forms.UserForm;
-import com.darksci.kafka.webview.ui.model.UserRole;
 import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
 import com.darksci.kafka.webview.ui.manager.user.UserManager;
 import com.darksci.kafka.webview.ui.model.User;
+import com.darksci.kafka.webview.ui.model.UserRole;
 import com.darksci.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

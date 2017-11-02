@@ -5,10 +5,10 @@ import com.darksci.kafka.webview.ui.controller.configuration.cluster.forms.Clust
 import com.darksci.kafka.webview.ui.manager.encryption.SecretManager;
 import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperations;
 import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
+import com.darksci.kafka.webview.ui.manager.plugin.UploadManager;
 import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
 import com.darksci.kafka.webview.ui.model.Cluster;
-import com.darksci.kafka.webview.ui.manager.plugin.UploadManager;
 import com.darksci.kafka.webview.ui.repository.ClusterRepository;
 import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;

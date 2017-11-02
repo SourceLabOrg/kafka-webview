@@ -8,8 +8,6 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import java.security.Principal;
-
 /**
  * Listens for when clients disconnect, and shuts down any consumers they have running.
  */
@@ -39,14 +37,18 @@ public class PresenceEventListener {
         logger.info("Disconnect event: {}", headers.getUser().getName());
 
         // Determine which user this is
-        final long userId = getLoggedInUserId(headers);
+        final String sessionId = getLoggedInSessionId(headers);
 
         // Disconnect their consumers
-        webSocketConsumersManager.removeConsumersForUser(userId);
+        webSocketConsumersManager.removeConsumersForSessionId(sessionId);
     }
 
     private long getLoggedInUserId(final SimpMessageHeaderAccessor headers) {
         return getLoggedInUser(headers).getUserId();
+    }
+
+    private String getLoggedInSessionId(final SimpMessageHeaderAccessor headers) {
+        return headers.getSessionId();
     }
 
     private CustomUserDetails getLoggedInUser(final SimpMessageHeaderAccessor headers) {

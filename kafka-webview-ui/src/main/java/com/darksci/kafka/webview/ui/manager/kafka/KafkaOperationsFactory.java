@@ -1,8 +1,8 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
 import com.darksci.kafka.webview.ui.manager.encryption.SecretManager;
-import com.darksci.kafka.webview.ui.model.Cluster;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClusterConfig;
+import com.darksci.kafka.webview.ui.model.Cluster;
 import org.apache.kafka.clients.admin.AdminClient;
 
 public class KafkaOperationsFactory {

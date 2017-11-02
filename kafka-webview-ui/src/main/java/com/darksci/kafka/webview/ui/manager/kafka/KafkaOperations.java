@@ -1,12 +1,12 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
-import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicConfig;
-import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.NodeList;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
+import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicConfig;
+import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;

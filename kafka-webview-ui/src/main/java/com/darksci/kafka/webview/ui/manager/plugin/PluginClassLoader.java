@@ -1,17 +1,9 @@
 package com.darksci.kafka.webview.ui.manager.plugin;
 
-import java.io.File;
-import java.lang.reflect.ReflectPermission;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 /**
  * Marker or Wrapper around URLClassLoader so we can easily determine what instances were

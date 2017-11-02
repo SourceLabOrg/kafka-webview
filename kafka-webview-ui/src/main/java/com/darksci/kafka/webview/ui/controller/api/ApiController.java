@@ -1,10 +1,9 @@
 package com.darksci.kafka.webview.ui.controller.api;
 
-import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
-import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.controller.BaseController;
 import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperations;
 import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
+import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
@@ -17,6 +16,7 @@ import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicList;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicListing;
 import com.darksci.kafka.webview.ui.model.Cluster;
+import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.repository.ClusterRepository;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;

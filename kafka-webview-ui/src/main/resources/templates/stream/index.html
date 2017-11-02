@@ -43,10 +43,23 @@
                             </div>
                         </div><br/>
 
+                        <!-- Show connect information -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <!-- No Results Found -->
+                                <div class="alert alert-light" role="alert" id="notConnected" style="display: block;">
+                                    <h4 class="alert-heading">Stream Disconnected</h4>
+                                    <p>
+                                        Press <i><strong>Connect</strong></i> to start the streaming consumer.<br/>
+                                        Consumer will start from the <strong>END</strong> of the configured topic.</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Stream Results -->
                         <div class="row">
                             <div class="col-md-12">
-                                <table class="table table-bordered table-striped table-sm" id="results">
+                                <table class="table table-bordered table-striped table-sm" id="results" style="display: none;">
                                     <thead>
                                     <tr>
                                         <th>Partition</th>
@@ -127,19 +140,31 @@
 
             // Mark as connected
             setConnected: function(connected) {
-                $("#connect").prop("disabled", connected);
-                $("#disconnect").prop("disabled", !connected);
+                jQuery("#connect").prop("disabled", connected);
+                jQuery("#disconnect").prop("disabled", !connected);
                 if (connected) {
-                    $('#resume').prop("disabled", true);
-                    $('#pause').prop("disabled", false);
-                    $("#results").show();
+                    // Hide not connected
+                    jQuery('#notConnected').toggle(false);
+
+                    // Show results
+                    jQuery('#results').toggle(true);
+
+                    jQuery('#resume').prop("disabled", true);
+                    jQuery('#pause').prop("disabled", false);
+                    jQuery("#results").show();
                 }
                 else {
-                    $('#resume').prop("disabled", true);;
-                    $('#pause').prop("disabled", true);;
-                    $("#results").hide();
+                    // Show not connected
+                    jQuery('#notConnected').toggle(true);
+
+                    // Show results
+                    jQuery('#results').toggle(false);
+
+                    jQuery('#resume').prop("disabled", true);;
+                    jQuery('#pause').prop("disabled", true);;
+                    jQuery("#results").hide();
                 }
-                $("#results-tbody").html("");
+                jQuery("#results-tbody").html("");
             },
 
             // Disconnect from web socket

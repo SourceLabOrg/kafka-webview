@@ -1,9 +1,6 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
 import com.darksci.kafka.webview.ui.manager.encryption.SecretManager;
-import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
-import com.darksci.kafka.webview.ui.model.Cluster;
-import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
@@ -11,6 +8,8 @@ import com.darksci.kafka.webview.ui.manager.kafka.config.FilterConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.TopicConfig;
 import com.darksci.kafka.webview.ui.manager.plugin.PluginFactory;
 import com.darksci.kafka.webview.ui.manager.plugin.exception.LoaderException;
+import com.darksci.kafka.webview.ui.model.Cluster;
+import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.model.MessageFormat;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
@@ -20,7 +19,6 @@ import org.apache.kafka.common.serialization.Deserializer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Queue;
 
 public class WebKafkaConsumerFactory {
     /**
