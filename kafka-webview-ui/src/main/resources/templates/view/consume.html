@@ -52,7 +52,7 @@
                 });
 
                 jQuery('#dateFormatToggle').change(function() {
-                    ConsumerInfo.formatDates = jQuery(this).is(":checked");
+                    ConsumerInfo.formatDates = ViewDetails.displayPrettyDates();
 
                     // Reload results by calling previous + cancelSearch
                     ConsumerInfo.cancelSearch = true;

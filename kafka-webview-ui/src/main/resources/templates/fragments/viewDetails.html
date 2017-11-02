@@ -137,93 +137,99 @@
             // Request Topic Information
             ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', function (results) {
                 // Handle results
-                handleTopicDetailResults(results);
+                ViewDetails.handleTopicDetailResults(results);
 
                 // Request Cluster Information
                 ApiClient.getClusterNodes('[[${cluster.id}]]', function (results) {
                     // Handle results
-                    handleClusterNodeResults(results);
+                    ViewDetails.handleClusterNodeResults(results);
                 });
             });
         });
 
-        function handleClusterNodeResults(results) {
-            var brokerList = jQuery('#broker-list');
-            jQuery(brokerList).empty();
-            jQuery.each(results, function(index, result) {
-                jQuery(brokerList).append('<tr><td>' + result.id + '</td><td>' + result.host + ':' + result.port + '</td></tr>');
-            });
-        }
+        var ViewDetails = {
+            handleClusterNodeResults: function(results) {
+                var brokerList = jQuery('#broker-list');
+                jQuery(brokerList).empty();
+                jQuery.each(results, function(index, result) {
+                    jQuery(brokerList).append('<tr><td>' + result.id + '</td><td>' + result.host + ':' + result.port + '</td></tr>');
+                });
+            },
 
-        function handleTopicDetailResults(results) {
-            // Get and compile template
-            var source   = jQuery('#partition-details-template').html();
-            var template = Handlebars.compile(source);
-            var table    = jQuery('#partition-details');
+            handleTopicDetailResults: function (results) {
+                // Get and compile template
+                var source   = jQuery('#partition-details-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#partition-details');
 
-            // Clear table
-            jQuery(table).empty();
+                // Clear table
+                jQuery(table).empty();
 
-            // List Partition Details
-            jQuery.each(results.partitions, function(index, result) {
+                // List Partition Details
+                jQuery.each(results.partitions, function(index, result) {
 
-                var isrNodes = [];
-                jQuery(result.isr).each(function(i, isr) {
-                    isrNodes.push(isr.host);
+                    var isrNodes = [];
+                    jQuery(result.isr).each(function(i, isr) {
+                        isrNodes.push(isr.host);
+                    });
+
+                    var replicaNodes = [];
+                    jQuery(result.replicas).each(function(i, replica) {
+                        replicaNodes.push(replica.host);
+                    });
+
+                    // Build properties
+                    var properties = {
+                        partition: result.partition,
+                        replicas_count: result.replicas.length,
+                        isr_count: result.isr.length,
+                        replica_nodes: replicaNodes.join(', '),
+                        isr_nodes: isrNodes.join(', ')
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
                 });
 
-                var replicaNodes = [];
-                jQuery(result.replicas).each(function(i, replica) {
-                    replicaNodes.push(replica.host);
+                // Get and compile template
+                var source   = jQuery('#partition-toggle-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#partitionSelectorTable');
+
+                // Show Partition Toggles
+                jQuery(table).empty();
+
+                // If we have no enforced partition filters
+                var partitions = [];
+                if ('[[${view.partitions}]]'.length == 0) {
+                    // Build from results
+                    jQuery.each(results.partitions, function (index, result) {
+                        partitions.push(result.partition);
+                    });
+                } else {
+                    jQuery(ConsumerInfo.partitions.split(',')).each(function(index, partition) {
+                        partitions.push(partition);
+                    });
+                }
+
+                // Build and append template for each partition
+                jQuery(partitions).each(function(index, partition) {
+                    var properties = {
+                        partition: partition,
+                        enabled: true
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
                 });
-
-                // Build properties
-                var properties = {
-                    partition: result.partition,
-                    replicas_count: result.replicas.length,
-                    isr_count: result.isr.length,
-                    replica_nodes: replicaNodes.join(', '),
-                    isr_nodes: isrNodes.join(', ')
-                };
-                var resultHtml = template(properties);
-
-                // Append it to our table
-                jQuery(table).append(resultHtml);
-            });
-
-            // Get and compile template
-            var source   = jQuery('#partition-toggle-template').html();
-            var template = Handlebars.compile(source);
-            var table    = jQuery('#partitionSelectorTable');
-
-            // Show Partition Toggles
-            jQuery(table).empty();
-
-            // If we have no enforced partition filters
-            var partitions = [];
-            if ('[[${view.partitions}]]'.length == 0) {
-                // Build from results
-                jQuery.each(results.partitions, function (index, result) {
-                    partitions.push(result.partition);
-                });
-            } else {
-                jQuery(ConsumerInfo.partitions.split(',')).each(function(index, partition) {
-                    partitions.push(partition);
-                });
+            },
+            // Determine if we should format timestamps or not.
+            displayPrettyDates: function() {
+                return jQuery('#dateFormatToggle').is(":checked");
             }
-
-            // Build and append template for each partition
-            jQuery(partitions).each(function(index, partition) {
-                var properties = {
-                    partition: partition,
-                    enabled: true
-                };
-                var resultHtml = template(properties);
-
-                // Append it to our table
-                jQuery(table).append(resultHtml);
-            });
-        }
+        };
     </script>
 
     <!-- Partition Details Template -->

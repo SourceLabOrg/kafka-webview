@@ -186,7 +186,7 @@
                     timestamp: result.timestamp,
                     date: DateTools.displayTimestamp(result.timestamp),
                     timezone: DateTools.localTimezone,
-                    showPrettyDates: SocketDetails.displayPrettyDates()
+                    showPrettyDates: ViewDetails.displayPrettyDates()
                 };
                 var resultHtml = SocketDetails.resultsTemplate(properties);
 
@@ -198,10 +198,6 @@
                 if (resultRows.length > SocketDetails.maxResults) {
                     resultRows.last().remove();
                 }
-            },
-            // Function to determine if we should format timestamps or not.
-            displayPrettyDates: function() {
-                return jQuery('#dateFormatToggle').is(":checked");
             }
         };
 
