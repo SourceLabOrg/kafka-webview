@@ -13,16 +13,17 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 - Web Based Consumer Supports
   - Seeking to offsets
   - Seeking to timestamps
-  - Filtering by Partition
+  - Filtering by partition
   - Configurable server-side filtering logic
+- "Live" web socket based streaming consumer
   
-### Coming Soon
-Web socket streaming consumer.
-
 ### Screen Shots
 
 #### Web Consumer
 ![Web Consumer Screenshot](images/webconsumer.png)
+
+#### Streaming Consumer
+![Streaming Consumer Screenshot](images/streamingConsumer.png)
 
 #### Configuration
 ![Configuration Screenshot](images/configuration.png)
