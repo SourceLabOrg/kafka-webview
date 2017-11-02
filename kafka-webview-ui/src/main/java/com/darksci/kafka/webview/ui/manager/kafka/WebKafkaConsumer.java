@@ -156,7 +156,6 @@ public class WebKafkaConsumer implements AutoCloseable {
         return new ConsumerState(clientConfig.getTopicConfig().getTopicName(), offsets);
     }
 
-    // TODO we should probably cache this result.
     private List<TopicPartition> getAllPartitions() {
         // If we have not pulled this yet
         if (cachedTopicsAndPartitions == null) {

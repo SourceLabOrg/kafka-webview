@@ -32,7 +32,7 @@ public class ClientConfig {
     /**
      * Turn auto commit on/off.
      */
-    private boolean isAutoCommitEnabled = false;
+    private final boolean isAutoCommitEnabled;
 
     /**
      * How long to timeout poll requests.
@@ -40,7 +40,7 @@ public class ClientConfig {
     private long pollTimeoutMs = 2000;
 
     public ClientConfig(final TopicConfig topicConfig, final FilterConfig filterConfig, final String consumerId) {
-        this(topicConfig, filterConfig, consumerId, new ArrayList<>(), 10);
+        this(topicConfig, filterConfig, consumerId, new ArrayList<>(), 10, true);
     }
 
     public ClientConfig(
@@ -48,7 +48,9 @@ public class ClientConfig {
         final FilterConfig filterConfig,
         final String consumerId,
         final Collection<Integer> partitionIds,
-        final int maxResultsPerPartition) {
+        final int maxResultsPerPartition,
+        final boolean isAutoCommitEnabled) {
+
         this.topicConfig = topicConfig;
         this.filterConfig = filterConfig;
         this.consumerId = consumerId;
@@ -56,6 +58,7 @@ public class ClientConfig {
         tempSet.addAll(partitionIds);
         this.partitionIds = Collections.unmodifiableSet(tempSet);
         this.maxResultsPerPartition = maxResultsPerPartition;
+        this.isAutoCommitEnabled = isAutoCommitEnabled;
     }
 
     public TopicConfig getTopicConfig() {
@@ -120,6 +123,7 @@ public class ClientConfig {
         private String consumerId;
         private Set<Integer> limitPartitions = new HashSet<>();
         private int maxResultsPerPartition = 10;
+        private boolean autoCommit = true;
 
         private Builder() {
 
@@ -159,8 +163,18 @@ public class ClientConfig {
             return this;
         }
 
+        public Builder withAutoCommitEnabled() {
+            this.autoCommit = true;
+            return this;
+        }
+
+        public Builder withAutoCommitDisabled() {
+            this.autoCommit = false;
+            return this;
+        }
+
         public ClientConfig build() {
-            return new ClientConfig(topicConfig, filterConfig, consumerId, limitPartitions, maxResultsPerPartition);
+            return new ClientConfig(topicConfig, filterConfig, consumerId, limitPartitions, maxResultsPerPartition, autoCommit);
         }
     }
 }

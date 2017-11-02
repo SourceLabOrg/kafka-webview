@@ -59,7 +59,7 @@ public class ClusterConfigController extends BaseController {
     }
 
     /**
-     * GET Displays createConsumer cluster form.
+     * GET Displays create cluster form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createClusterForm(final ClusterForm clusterForm, final Model model) {

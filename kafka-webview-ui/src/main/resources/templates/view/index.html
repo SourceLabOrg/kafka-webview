@@ -45,15 +45,19 @@
                         <table class="table table-bordered table-striped table-sm">
                             <thead>
                             <tr>
-                                <th>Name</th>
+                                <th>View</th>
+                                <th></th>
                                 <th>Topic</th>
                                 <th>Partitions</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:unless="${viewsByClusterId.get(cluster.getId()).isEmpty()}" th:each="view : ${viewsByClusterId.get(cluster.getId())}">
+                                <td th:text="${view.name}">
+                                </td>
                                 <td>
-                                    <a th:href="'/view/' + ${view.id}" th:text="${view.name}"></a>
+                                    <a th:href="'/view/' + ${view.id}">Browse</a> |
+                                    <a th:href="'/stream/' + ${view.id}">Stream</a>
                                 </td>
                                 <td th:text="${view.topic}"></td>
                                 <td th:text="${view.partitions.isEmpty()} ? 'All' : ${view.partitions}"></td>

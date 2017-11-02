@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html
+    lang="en"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+<head>
+    <title>Welcome!</title>
+</head>
+
+<body>
+<!-- Main Content -->
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <form class="form-inline">
+                    <div class="form-group">
+                        <label for="connect">Streaming Connection: </label>
+                        <button id="connect" class="btn btn-default" type="submit">Connect</button>
+                        <button id="pause" class="btn btn-default" type="submit" disabled="disabled">Pause</button>
+                        <button id="resume" class="btn btn-default" type="submit" disabled="disabled">Resume</button>
+                        <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <table id="results" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Partition</th>
+                        <th>Offset</th>
+                        <th>Timestamp</th>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="/webjars/sockjs-client/1.1.2/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+    <script type="application/javascript">
+        var SocketDetails = {
+            // Logged in userdId
+            userId: '[[${userId}]]',
+            viewId: '[[${viewId}]]',
+
+            // How many rows to display before removing the oldest
+            maxResults: 50,
+
+            // Should we format timestamps?
+            formatDates: false,
+
+            // Holds results template
+            resultsTemplate: '',
+
+            // Holds reference to results table
+            resultsTable: null,
+
+            // Our stomp client
+            stompClient: null,
+
+            // End point to connect
+            socketUrl: "/websocket",
+
+            // End point to consume a view
+            consumerBaseUrl: "/user/topic/view",
+
+            getConsumerUrl : function() {
+                return SocketDetails.consumerBaseUrl + '/' + SocketDetails.viewId + '/' + SocketDetails.userId;
+            },
+
+            getSubscribeUrl: function() {
+                return SocketDetails.socketUrl + '/consume/' + SocketDetails.viewId;
+            },
+
+            getPauseUrl: function() {
+                return SocketDetails.socketUrl + '/pause/' + SocketDetails.viewId;
+            },
+
+            getResumeUrl: function() {
+                return SocketDetails.socketUrl + '/resume/' + SocketDetails.viewId;
+            },
+
+            // Connect to web socket
+            connect: function() {
+                var socket = new SockJS(SocketDetails.socketUrl);
+                SocketDetails.stompClient = Stomp.over(socket);
+                SocketDetails.stompClient.connect({}, function (frame) {
+                    SocketDetails.setConnected(true);
+                    console.log('Connected: ' + frame);
+
+                    // Request subscription
+                    SocketDetails.subscribeResults();
+                    SocketDetails.requestSubscription();
+                });
+            },
+
+            // Mark as connected
+            setConnected: function(connected) {
+                $("#connect").prop("disabled", connected);
+                $("#disconnect").prop("disabled", !connected);
+                if (connected) {
+                    $('#resume').prop("disabled", true);
+                    $('#pause').prop("disabled", false);
+                    $("#results").show();
+                }
+                else {
+                    $('#resume').prop("disabled", true);;
+                    $('#pause').prop("disabled", true);;
+                    $("#results").hide();
+                }
+                $("#results-tbody").html("");
+            },
+
+            // Disconnect from web socket
+            disconnect: function() {
+                if (SocketDetails.stompClient !== null) {
+                    SocketDetails.stompClient.disconnect();
+                }
+                SocketDetails.setConnected(false);
+                console.log("Disconnected");
+            },
+
+            // Pause the stream
+            pause: function() {
+                SocketDetails.stompClient.send(SocketDetails.getPauseUrl(), {}, JSON.stringify({}));
+
+                // Flip button state
+                $('#resume').prop("disabled", false);
+                $('#pause').prop("disabled", true);
+            },
+
+            // Pause the stream
+            resume: function() {
+                SocketDetails.stompClient.send(SocketDetails.getResumeUrl(), {}, JSON.stringify({}));
+
+                // Flip button state
+                $('#resume').prop("disabled", true);
+                $('#pause').prop("disabled", false);
+            },
+
+            // Subscribe to a specific view
+            requestSubscription: function() {
+                SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify({}));
+            },
+
+            subscribeResults: function() {
+                var topic = SocketDetails.getConsumerUrl();
+                console.log("Subscribing to Topic " + topic);
+                SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
+                    var json = JSON.parse(incomingMessage.body);
+                    console.log(json);
+                    SocketDetails.appendResult(json);
+                });
+            },
+
+            // Append results to browser
+            appendResult: function(result) {
+                // Generate html from template
+                var properties = {
+                    partition: result.partition,
+                    offset: result.offset,
+                    key: result.key,
+                    value: result.value,
+                    timestamp: result.timestamp,
+                    date: DateTools.displayTimestamp(result.timestamp),
+                    timezone: DateTools.localTimezone,
+                    showPrettyDates: SocketDetails.formatDates
+                };
+                var resultHtml = SocketDetails.resultsTemplate(properties);
+
+                // Prepend it to the top of our table
+                SocketDetails.resultsTable.prepend(resultHtml);
+
+                // Remove rows > max results from the end
+                var resultRows = SocketDetails.resultsTable.children();
+                if (resultRows.length > SocketDetails.maxResults) {
+                    resultRows.last().remove();
+                }
+            }
+        };
+
+        $(function () {
+            // Get and compile template
+            var source   = jQuery('#results-template').html();
+            var template = Handlebars.compile(source);
+            SocketDetails.resultsTable = jQuery('#results-tbody');
+            SocketDetails.resultsTemplate = template;
+
+            // Setup event handlers
+            $("form").on('submit', function (e) {
+                e.preventDefault();
+            });
+            $( "#connect" ).click(function() { SocketDetails.connect(); });
+            $( "#disconnect" ).click(function() { SocketDetails.disconnect(); });
+            $( "#pause" ).click(function() {
+                SocketDetails.pause();
+            })
+            $( "#resume" ).click(function() {
+                SocketDetails.resume();
+            })
+        });
+    </script>
+
+    <!-- Results Template -->
+    <script id="results-template" type="text/x-handlebars-template">
+        <tr>
+            <td>{{partition}}</td>
+            <td>{{offset}}</td>
+            <td>
+                {{#if showPrettyDates}}
+                <span class="date" title="{{timezone}}">{{date}}</span>
+                {{else}}
+                <span class="timestamp" title="{{date}}">{{timestamp}}</span>
+                {{/if}}
+            </td>
+            <td>{{key}}</td>
+            <td>{{value}}</td>
+        </tr>
+    </script>
+</section>
+
+</body>
+</html>

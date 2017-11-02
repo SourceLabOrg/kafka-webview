@@ -43,3 +43,4 @@ app:
   name: Kafka Web View
   uploadPath: "./data/uploads"
   key: "SuperSecretKey"
+  maxConcurrentWebSocketConsumers: 64
