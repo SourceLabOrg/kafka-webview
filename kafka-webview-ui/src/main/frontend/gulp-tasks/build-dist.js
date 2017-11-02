@@ -40,7 +40,9 @@ var vendorsJS = [
   'node_modules/popper.js/dist/umd/popper.min.js.map',
   'node_modules/select2/dist/js/select2.min.js',
   'node_modules/toastr/toastr.js',
-  'node_modules/handlebars/dist/handlebars.js'
+  'node_modules/handlebars/dist/handlebars.js',
+  'node_modules/sockjs-client/dist/sockjs.min.js',
+  'node_modules/stompjs/lib/stomp.js'
 ]
 
 var vendorsCSS = [

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html
-    lang="en"
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 <head>
-    <title>Welcome!</title>
+    <title th:text="'Streaming ' + ${view.name}"></title>
 </head>
 
 <body>
@@ -12,49 +12,62 @@
 <section layout:fragment="content">
     <div class="container">
         <div class="row">
-            <div class="col-md-6">
-                <form class="form-inline">
-                    <div class="form-group">
-                        <label for="connect">Streaming Connection: </label>
-                        <button id="connect" class="btn btn-default" type="submit">Connect</button>
-                        <button id="pause" class="btn btn-default" type="submit" disabled="disabled">Pause</button>
-                        <button id="resume" class="btn btn-default" type="submit" disabled="disabled">Resume</button>
-                        <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect</button>
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Stream <strong th:text="${view.name}"></strong> over topic <strong th:text="${view.topic}"></strong>
                     </div>
-                </form>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <table id="results" class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>Partition</th>
-                        <th>Offset</th>
-                        <th>Timestamp</th>
-                        <th>Key</th>
-                        <th>Value</th>
-                    </tr>
-                    </thead>
-                    <tbody id="results-tbody">
-                    </tbody>
-                </table>
+                    <div class="card-body">
+
+                        <!-- Stream Controls -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form class="form-inline">
+                                    <div class="form-group">
+                                        <label for="connect" style="padding-right: 15px;">Stream Connection: </label>
+                                        <button id="connect" class="btn btn-sm btn-default" type="submit">Connect</button>
+                                        <button id="pause" class="btn btn-sm btn-default" type="submit" disabled="disabled">Pause</button>
+                                        <button id="resume" class="btn btn-sm btn-default" type="submit" disabled="disabled">Resume</button>
+                                        <button id="disconnect" class="btn btn-sm btn-default" type="submit" disabled="disabled">Disconnect</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div><br/>
+
+                        <!-- Stream Results -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table class="table table-bordered table-striped table-sm" id="results">
+                                    <thead>
+                                    <tr>
+                                        <th>Partition</th>
+                                        <th>Offset</th>
+                                        <th>Timestamp</th>
+                                        <th>Key</th>
+                                        <th>Value</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="results-tbody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <script src="/webjars/sockjs-client/1.1.2/sockjs.min.js"></script>
-    <script src="/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+
+    <!-- Javascript -->
     <script type="application/javascript">
         var SocketDetails = {
             // Logged in userdId
             userId: '[[${userId}]]',
-            viewId: '[[${viewId}]]',
+            viewId: '[[${view.id}]]',
 
             // How many rows to display before removing the oldest
             maxResults: 50,
-
-            // Should we format timestamps?
-            formatDates: false,
 
             // Holds results template
             resultsTemplate: '',
@@ -64,6 +77,9 @@
 
             // Our stomp client
             stompClient: null,
+
+            // Debug handler
+            stompDebug: null,
 
             // End point to connect
             socketUrl: "/websocket",
@@ -91,9 +107,9 @@
             connect: function() {
                 var socket = new SockJS(SocketDetails.socketUrl);
                 SocketDetails.stompClient = Stomp.over(socket);
+                SocketDetails.stompClient.debug = SocketDetails.stompDebug;
                 SocketDetails.stompClient.connect({}, function (frame) {
                     SocketDetails.setConnected(true);
-                    console.log('Connected: ' + frame);
 
                     // Request subscription
                     SocketDetails.subscribeResults();
@@ -155,7 +171,6 @@
                 console.log("Subscribing to Topic " + topic);
                 SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
                     var json = JSON.parse(incomingMessage.body);
-                    console.log(json);
                     SocketDetails.appendResult(json);
                 });
             },
@@ -171,7 +186,7 @@
                     timestamp: result.timestamp,
                     date: DateTools.displayTimestamp(result.timestamp),
                     timezone: DateTools.localTimezone,
-                    showPrettyDates: SocketDetails.formatDates
+                    showPrettyDates: ViewDetails.displayPrettyDates()
                 };
                 var resultHtml = SocketDetails.resultsTemplate(properties);
 
@@ -224,6 +239,30 @@
             <td>{{value}}</td>
         </tr>
     </script>
+</section>
+
+<!-- Right Side Menu -->
+<aside layout:fragment="aside-menu">
+    <!-- Menu -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#viewInfo" role="tab"><i class="icon-list"></i></a>
+        </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <!-- View Details -->
+        <div
+            th:replace="fragments/viewDetails :: viewDetails (view=${view},cluster=${view.cluster})">
+        </div>
+    </div>
+</aside>
+
+<!-- Show Settings Link -->
+<section
+    layout:fragment="breadcrumb-menu"
+    th:insert="fragments/breadCrumbMenuToggle :: menuLink (linkText='Stream Settings')">
 </section>
 
 </body>

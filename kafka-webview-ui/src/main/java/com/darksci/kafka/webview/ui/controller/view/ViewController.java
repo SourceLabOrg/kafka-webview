@@ -76,7 +76,7 @@ public class ViewController extends BaseController {
         // Setup breadcrumbs
         new BreadCrumbManager(model)
             .addCrumb("View", "/view")
-            .addCrumb(view.getName(), "/view/" + view.getId());
+            .addCrumb(view.getName());
 
         // Set model Attributes
         model.addAttribute("view", view);

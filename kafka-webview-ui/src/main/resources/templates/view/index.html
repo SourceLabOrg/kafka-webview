@@ -46,21 +46,23 @@
                             <thead>
                             <tr>
                                 <th>View</th>
-                                <th></th>
                                 <th>Topic</th>
                                 <th>Partitions</th>
+                                <th colspan="2"></th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:unless="${viewsByClusterId.get(cluster.getId()).isEmpty()}" th:each="view : ${viewsByClusterId.get(cluster.getId())}">
                                 <td th:text="${view.name}">
                                 </td>
-                                <td>
-                                    <a th:href="'/view/' + ${view.id}">Browse</a> |
-                                    <a th:href="'/stream/' + ${view.id}">Stream</a>
-                                </td>
                                 <td th:text="${view.topic}"></td>
                                 <td th:text="${view.partitions.isEmpty()} ? 'All' : ${view.partitions}"></td>
+                                <td>
+                                    <a th:href="'/view/' + ${view.id}">Browse</a>
+                                </td>
+                                <td>
+                                    <a th:href="'/stream/' + ${view.id}">Stream</a>
+                                </td>
                             </tr>
                             <!-- Empty List -->
                             <tr th:if="${viewsByClusterId.get(cluster.getId()).isEmpty()}" >

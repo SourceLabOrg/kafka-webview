@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- View Information -->
+<div class="tab-pane active" id="viewInfo" role="tabpanel" th:fragment="viewDetails(view,cluster)">
+    <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
+        <small>
+            <b>View Details</b>
+        </small>
+    </div>
+    <hr class="transparent mx-3 my-0">
+
+    <!-- Cluster Details -->
+    <div class="callout callout-info m-0 py-3">
+        <div>
+            <div
+                style="cursor: pointer;"
+                data-toggle="collapse"
+                href="#collapseCluster"
+                aria-expanded="false" aria-controls="collapseCluster">
+                <strong th:text="'Cluster: ' + ${cluster.name}">Cluster</strong>
+            </div>
+            <div class="collapse" id="collapseCluster">
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Host</th>
+                    </tr>
+                    </thead>
+                    <tbody id="broker-list">
+                    <tr>
+                        <td colspan="2">Loading...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <hr class="mx-3 my-0">
+
+    <!-- Topic Details -->
+    <div class="callout callout-info m-0 py-3">
+        <div>
+            <div
+                style="cursor: pointer;"
+                data-toggle="collapse"
+                href="#collapseTopic"
+                aria-expanded="false" aria-controls="collapseTopic">
+                <strong th:text="'Topic: ' + ${view.topic}">Topic</strong>
+            </div>
+            <div class="collapse" id="collapseTopic">
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th title="Partition Id">Partition</th>
+                        <th title="Replica Count">Replicas</th>
+                        <th title="In Sync Replica Count">ISRs</th>
+                    </tr>
+                    </thead>
+                    <tbody id="partition-details">
+                    <tr>
+                        <td colspan="3">Loading...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <hr class="mx-3 my-0">
+
+    <!-- View Details -->
+    <div class="callout callout-info m-0 py-3">
+        <div>
+            <div
+                    style="cursor: pointer;"
+                    data-toggle="collapse"
+                    href="#collapseView"
+                    aria-expanded="false" aria-controls="collapseView">
+                <strong th:text="'View: ' + ${view.name}">View</strong>
+            </div>
+            <div class="collapse" id="collapseView">
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Value</th>
+                    </tr>
+                    </thead>
+                    <tbody id="view-details">
+                    <tr th:title="${view.keyMessageFormat.classpath}">
+                        <td>Key</td>
+                        <td th:text="${view.keyMessageFormat.name}"></td>
+                    </tr>
+                    <tr th:title="${view.valueMessageFormat.classpath}">
+                        <td>Value</td>
+                        <td th:text="${view.valueMessageFormat.name}"></td>
+                    </tr>
+                    <tr>
+                        <td>Partitions</td>
+                        <td th:text="${view.partitions.isEmpty()}? 'All' : 'Filtered'"></td>
+                    </tr>
+                    <tr th:each="filter : ${view.enforcedFilters}">
+                        <td>Filter</td>
+                        <td th:text="${filter.name}">Name</td>
+                    </tr>
+                    <tr>
+                        <td>Results per Partition</td>
+                        <td>
+                            [[${view.resultsPerPartition}]]
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Format Dates</td>
+                        <td>
+                            <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                <input class="switch-input" checked="" type="checkbox" id="dateFormatToggle" value="1">
+                                <span class="switch-label" data-on="" data-off=""></span>
+                                <span class="switch-handle"></span>
+                            </label>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <hr class="mx-3 my-0">
+
+    <script type="application/javascript">
+        // On load, fire off ajax request to load results.
+        jQuery(document).ready(function() {
+
+            // Chain initial ajax requests.
+            // Request Topic Information
+            ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', function (results) {
+                // Handle results
+                ViewDetails.handleTopicDetailResults(results);
+
+                // Request Cluster Information
+                ApiClient.getClusterNodes('[[${cluster.id}]]', function (results) {
+                    // Handle results
+                    ViewDetails.handleClusterNodeResults(results);
+                });
+            });
+        });
+
+        var ViewDetails = {
+            handleClusterNodeResults: function(results) {
+                var brokerList = jQuery('#broker-list');
+                jQuery(brokerList).empty();
+                jQuery.each(results, function(index, result) {
+                    jQuery(brokerList).append('<tr><td>' + result.id + '</td><td>' + result.host + ':' + result.port + '</td></tr>');
+                });
+            },
+
+            handleTopicDetailResults: function (results) {
+                // Get and compile template
+                var source   = jQuery('#partition-details-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#partition-details');
+
+                // Clear table
+                jQuery(table).empty();
+
+                // List Partition Details
+                jQuery.each(results.partitions, function(index, result) {
+
+                    var isrNodes = [];
+                    jQuery(result.isr).each(function(i, isr) {
+                        isrNodes.push(isr.host);
+                    });
+
+                    var replicaNodes = [];
+                    jQuery(result.replicas).each(function(i, replica) {
+                        replicaNodes.push(replica.host);
+                    });
+
+                    // Build properties
+                    var properties = {
+                        partition: result.partition,
+                        replicas_count: result.replicas.length,
+                        isr_count: result.isr.length,
+                        replica_nodes: replicaNodes.join(', '),
+                        isr_nodes: isrNodes.join(', ')
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
+                });
+
+                // Get and compile template
+                var source   = jQuery('#partition-toggle-template').html();
+                var template = Handlebars.compile(source);
+                var table    = jQuery('#partitionSelectorTable');
+
+                // Show Partition Toggles
+                jQuery(table).empty();
+
+                // If we have no enforced partition filters
+                var partitions = [];
+                if ('[[${view.partitions}]]'.length == 0) {
+                    // Build from results
+                    jQuery.each(results.partitions, function (index, result) {
+                        partitions.push(result.partition);
+                    });
+                } else {
+                    jQuery(ConsumerInfo.partitions.split(',')).each(function(index, partition) {
+                        partitions.push(partition);
+                    });
+                }
+
+                // Build and append template for each partition
+                jQuery(partitions).each(function(index, partition) {
+                    var properties = {
+                        partition: partition,
+                        enabled: true
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
+                });
+            },
+            // Determine if we should format timestamps or not.
+            displayPrettyDates: function() {
+                return jQuery('#dateFormatToggle').is(":checked");
+            }
+        };
+    </script>
+
+    <!-- Partition Details Template -->
+    <script id="partition-details-template" type="text/x-handlebars-template">
+        <tr>
+            <td>{{partition}}</td>
+            <td title="{{replica_nodes}}">{{replicas_count}}</td>
+            <td title="{{isr_nodes}}">{{isr_count}}</td>
+        </tr>
+    </script>
+
+    <!-- Partition Toggle Template -->
+    <script id="partition-toggle-template" type="text/x-handlebars-template">
+        <tr>
+            <td>{{partition}}</td>
+            <td>
+                <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                    <input class="switch-input partition-toggle" checked="{{enabled}}" type="checkbox" id="partitionToggle{{partition}}" value="{{partition}}">
+                    <span class="switch-label" data-on="" data-off=""></span>
+                    <span class="switch-handle"></span>
+                </label>
+            </td>
+        </tr>
+    </script>
+</div>
+
+</body>
+</html>
