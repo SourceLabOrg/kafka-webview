@@ -44,9 +44,13 @@ public class WebKafkaConsumerFactory {
         this.kafkaConsumerFactory = kafkaConsumerFactory;
     }
 
-    public WebKafkaConsumer createWebClient(final View view, final Collection<Filter> filterList, final long userId) {
+    public WebKafkaConsumer createWebClient(
+        final View view,
+        final Collection<Filter> filterList,
+        final SessionIdentifier sessionIdentifier) {
+
         // Create client config builder
-        final ClientConfig clientConfig = createClientConfig(view, filterList, userId).build();
+        final ClientConfig clientConfig = createClientConfig(view, filterList, sessionIdentifier).build();
 
         // Create kafka consumer
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
@@ -55,9 +59,12 @@ public class WebKafkaConsumerFactory {
         return new WebKafkaConsumer(kafkaConsumer, clientConfig);
     }
 
-    public SocketKafkaConsumer createWebSocketClient(final View view, final Collection<Filter> filterList, final long userId) {
+    public SocketKafkaConsumer createWebSocketClient(
+        final View view,
+        final Collection<Filter> filterList,
+        final SessionIdentifier sessionIdentifier) {
         // Create client config builder
-        final ClientConfig clientConfig = createClientConfig(view, filterList, userId).build();
+        final ClientConfig clientConfig = createClientConfig(view, filterList, sessionIdentifier).build();
 
         // Create kafka consumer
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
@@ -66,9 +73,12 @@ public class WebKafkaConsumerFactory {
         return new SocketKafkaConsumer(kafkaConsumer, clientConfig);
     }
 
-    private ClientConfig.Builder createClientConfig(final View view, final Collection<Filter> filterList, final long userId) {
+    private ClientConfig.Builder createClientConfig(
+        final View view,
+        final Collection<Filter> filterList,
+        final SessionIdentifier sessionIdentifier) {
         // Construct a consumerId based on user
-        final String consumerId = consumerIdPrefix + userId;
+        final String consumerId = consumerIdPrefix + sessionIdentifier.toString();
 
         // Grab our relevant bits
         final Cluster cluster = view.getCluster();
