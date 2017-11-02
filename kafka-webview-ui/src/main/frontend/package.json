@@ -13,7 +13,7 @@
     "popper.js": "^1.12.5",
     "simple-line-icons": "^2.4.1",
     "sockjs-client": "^1.1.4",
-    "stomp-websocket-js": "^1.0.0"
+    "stompjs": "^2.3.3"
   },
   "devDependencies": {
     "browser-sync": "^2.16.0",

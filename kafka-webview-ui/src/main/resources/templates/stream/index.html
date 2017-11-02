@@ -80,6 +80,9 @@
             // Our stomp client
             stompClient: null,
 
+            // Debug handler
+            stompDebug: null,
+
             // End point to connect
             socketUrl: "/websocket",
 
@@ -106,9 +109,9 @@
             connect: function() {
                 var socket = new SockJS(SocketDetails.socketUrl);
                 SocketDetails.stompClient = Stomp.over(socket);
+                SocketDetails.stompClient.debug = SocketDetails.stompDebug;
                 SocketDetails.stompClient.connect({}, function (frame) {
                     SocketDetails.setConnected(true);
-                    console.log('Connected: ' + frame);
 
                     // Request subscription
                     SocketDetails.subscribeResults();
@@ -170,7 +173,6 @@
                 console.log("Subscribing to Topic " + topic);
                 SocketDetails.stompClient.subscribe(topic, function (incomingMessage) {
                     var json = JSON.parse(incomingMessage.body);
-                    console.log(json);
                     SocketDetails.appendResult(json);
                 });
             },

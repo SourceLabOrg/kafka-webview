@@ -102,7 +102,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        
+
         <!-- Allows for auto-reloading resources -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

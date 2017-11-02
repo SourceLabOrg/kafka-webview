@@ -42,7 +42,7 @@ var vendorsJS = [
   'node_modules/toastr/toastr.js',
   'node_modules/handlebars/dist/handlebars.js',
   'node_modules/sockjs-client/dist/sockjs.min.js',
-  'node_modules/stomp-websocket-js/lib/stomp.js'
+  'node_modules/stompjs/lib/stomp.js'
 ]
 
 var vendorsCSS = [
