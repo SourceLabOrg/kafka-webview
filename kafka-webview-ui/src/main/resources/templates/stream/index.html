@@ -4,7 +4,7 @@
     xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 <head>
-    <title>Welcome!</title>
+    <title th:text="'Streaming ' + ${view.name}"></title>
 </head>
 
 <body>
@@ -25,7 +25,7 @@
                             <div class="col-md-6">
                                 <form class="form-inline">
                                     <div class="form-group">
-                                        <label for="connect">Streaming Connection: </label>
+                                        <label for="connect" style="padding-right: 15px;">Stream Connection: </label>
                                         <button id="connect" class="btn btn-sm btn-default" type="submit">Connect</button>
                                         <button id="pause" class="btn btn-sm btn-default" type="submit" disabled="disabled">Pause</button>
                                         <button id="resume" class="btn btn-sm btn-default" type="submit" disabled="disabled">Resume</button>
