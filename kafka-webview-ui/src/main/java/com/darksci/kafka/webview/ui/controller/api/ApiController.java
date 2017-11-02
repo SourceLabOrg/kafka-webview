@@ -1,5 +1,6 @@
 package com.darksci.kafka.webview.ui.controller.api;
 
+import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.controller.BaseController;
 import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperations;
@@ -361,7 +362,8 @@ public class ApiController extends BaseController {
      * Creates a WebKafkaConsumer instance.
      */
     private WebKafkaConsumer setup(final View view, final Collection<Filter> filterList) {
-        return webKafkaConsumerFactory.createWebClient(view, filterList, getLoggedInUserId());
+        final SessionIdentifier sessionIdentifier = new SessionIdentifier(getLoggedInUserId(), getLoggedInUserSessionId());
+        return webKafkaConsumerFactory.createWebClient(view, filterList, sessionIdentifier);
     }
 
     /**

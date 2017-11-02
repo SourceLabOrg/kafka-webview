@@ -201,7 +201,7 @@
             }
         };
 
-        $(function () {
+        jQuery(function () {
             // Get and compile template
             var source   = jQuery('#results-template').html();
             var template = Handlebars.compile(source);
@@ -209,15 +209,15 @@
             SocketDetails.resultsTemplate = template;
 
             // Setup event handlers
-            $("form").on('submit', function (e) {
+            jQuery("form").on('submit', function (e) {
                 e.preventDefault();
             });
-            $( "#connect" ).click(function() { SocketDetails.connect(); });
-            $( "#disconnect" ).click(function() { SocketDetails.disconnect(); });
-            $( "#pause" ).click(function() {
+            jQuery( "#connect" ).click(function() { SocketDetails.connect(); });
+            jQuery( "#disconnect" ).click(function() { SocketDetails.disconnect(); });
+            jQuery( "#pause" ).click(function() {
                 SocketDetails.pause();
             })
-            $( "#resume" ).click(function() {
+            jQuery( "#resume" ).click(function() {
                 SocketDetails.resume();
             })
         });

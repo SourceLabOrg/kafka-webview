@@ -1,6 +1,7 @@
 package com.darksci.kafka.webview.ui.controller.stream;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
+import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import com.darksci.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
 import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
@@ -10,7 +11,9 @@ import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,7 +87,7 @@ public class StreamController extends BaseController {
     @Transactional
     public String newConsumer(
         final @DestinationVariable Long viewId,
-        final Authentication auth) {
+        final SimpMessageHeaderAccessor headerAccessor) {
 
         // Retrieve view
         final View view = viewRepository.findOne(viewId);
@@ -93,9 +96,9 @@ public class StreamController extends BaseController {
         }
 
         // Subscribe
-        final long userId = getLoggedInUserId(auth);
-        final String username = auth.getName();
-        webSocketConsumersManager.addNewConsumer(view, userId, username);
+        final long userId = getLoggedInUserId(headerAccessor);
+        final String sessionId = headerAccessor.getSessionId();
+        webSocketConsumersManager.addNewConsumer(view, new SessionIdentifier(userId, sessionId));
         return "{success: true}";
     }
 
@@ -106,11 +109,12 @@ public class StreamController extends BaseController {
     @Transactional
     public String pauseConsumer(
         final @DestinationVariable Long viewId,
-        final Authentication auth) {
+        final SimpMessageHeaderAccessor headerAccessor) {
 
         // Request a pause
-        final long userId = getLoggedInUserId(auth);
-        webSocketConsumersManager.pauseConsumer(viewId, userId);
+        final long userId = getLoggedInUserId(headerAccessor);
+        final String sessionId = headerAccessor.getSessionId();
+        webSocketConsumersManager.pauseConsumer(viewId, new SessionIdentifier(userId, sessionId));
         return "{success: true}";
     }
 
@@ -121,25 +125,26 @@ public class StreamController extends BaseController {
     @Transactional
     public String resumeConsumer(
         final @DestinationVariable Long viewId,
-        final Authentication auth) {
+        final SimpMessageHeaderAccessor headerAccessor) {
 
         // Request Resume
-        final long userId = getLoggedInUserId(auth);
-        webSocketConsumersManager.resumeConsumer(viewId, userId);
+        final long userId = getLoggedInUserId(headerAccessor);
+        final String sessionId = headerAccessor.getSessionId();
+        webSocketConsumersManager.resumeConsumer(viewId, new SessionIdentifier(userId, sessionId));
         return "{success: true}";
     }
 
     /**
      * @return Currently logged in user Id.
      */
-    private long getLoggedInUserId(final Authentication authentication) {
-        return getLoggedInUser(authentication).getUserId();
+    private long getLoggedInUserId(final SimpMessageHeaderAccessor headerAccessor) {
+        return getLoggedInUser(headerAccessor).getUserId();
     }
 
     /**
      * @return Currently logged in user's details.
      */
-    private CustomUserDetails getLoggedInUser(final Authentication authentication) {
-        return ((CustomUserDetails) authentication.getPrincipal());
+    private CustomUserDetails getLoggedInUser(final SimpMessageHeaderAccessor headerAccessor) {
+        return (CustomUserDetails) ((Authentication)headerAccessor.getUser()).getPrincipal();
     }
 }

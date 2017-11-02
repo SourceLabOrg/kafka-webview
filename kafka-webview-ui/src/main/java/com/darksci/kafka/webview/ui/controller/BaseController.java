@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -51,6 +52,13 @@ public abstract class BaseController {
      */
     protected long getLoggedInUserId() {
         return getLoggedInUser().getUserId();
+    }
+
+    /**
+     * @return Currently logged in user's session id.
+     */
+    protected String getLoggedInUserSessionId() {
+        return ((WebAuthenticationDetails)SecurityContextHolder.getContext().getAuthentication().getDetails()).getSessionId();
     }
 
     /**

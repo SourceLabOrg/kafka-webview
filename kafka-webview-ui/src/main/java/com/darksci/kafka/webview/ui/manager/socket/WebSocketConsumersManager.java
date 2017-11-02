@@ -1,11 +1,14 @@
 package com.darksci.kafka.webview.ui.manager.socket;
 
+import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import com.darksci.kafka.webview.ui.manager.kafka.SocketKafkaConsumer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import com.darksci.kafka.webview.ui.model.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.ArrayList;
@@ -55,10 +58,10 @@ public class WebSocketConsumersManager implements Runnable {
         );
     }
 
-    public void addNewConsumer(final View view, final long userId, final String username) {
+    public void addNewConsumer(final View view, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
-            final ConsumerKey consumerKey = new ConsumerKey(view.getId(), userId);
+            final ConsumerKey consumerKey = new ConsumerKey(view.getId(), sessionIdentifier);
 
             if (consumers.containsKey(consumerKey)) {
                 // TODO handle better
@@ -69,11 +72,11 @@ public class WebSocketConsumersManager implements Runnable {
             final SocketKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.createWebSocketClient(
                 view,
                 new ArrayList<>(),
-                userId
+                sessionIdentifier
             );
 
             // Create entry
-            final ConsumerEntry consumerEntry = new ConsumerEntry(username, webKafkaConsumer);
+            final ConsumerEntry consumerEntry = new ConsumerEntry(webKafkaConsumer);
             consumers.put(consumerKey, consumerEntry);
 
             // Toss into executor
@@ -98,10 +101,10 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
-    public void removeConsumerForUserAndView(final long viewId, final long userId) {
+    public void removeConsumerForUserAndView(final long viewId, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
-            final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
+            final ConsumerKey consumerKey = new ConsumerKey(viewId, sessionIdentifier);
             if (!consumers.containsKey(consumerKey)) {
                 return;
             }
@@ -114,10 +117,10 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
-    public void pauseConsumer(final long viewId, final long userId) {
+    public void pauseConsumer(final long viewId, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
-            final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
+            final ConsumerKey consumerKey = new ConsumerKey(viewId, sessionIdentifier);
             if (!consumers.containsKey(consumerKey)) {
                 return;
             }
@@ -130,10 +133,10 @@ public class WebSocketConsumersManager implements Runnable {
         }
     }
 
-    public void resumeConsumer(final long viewId, final long userId) {
+    public void resumeConsumer(final long viewId, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
-            final ConsumerKey consumerKey = new ConsumerKey(viewId, userId);
+            final ConsumerKey consumerKey = new ConsumerKey(viewId, sessionIdentifier);
             if (!consumers.containsKey(consumerKey)) {
                 return;
             }
@@ -175,9 +178,19 @@ public class WebSocketConsumersManager implements Runnable {
 
 
                     // publish
-                    final String username = consumerEntry.getUsername();
                     final String target = "/topic/view/" + consumerKey.getViewId() + "/" + consumerKey.getUserId();
-                    simpMessagingTemplate.convertAndSendToUser(username, target, kafkaResult.get());
+
+                    final SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
+                    headerAccessor.setSessionId(consumerKey.getSessionId());
+                    headerAccessor.setLeaveMutable(true);
+
+                    // Only send it to the specific user's sesison Id.
+                    simpMessagingTemplate.convertAndSendToUser(
+                        consumerKey.getSessionId(),
+                        target,
+                        kafkaResult.get(),
+                        headerAccessor.getMessageHeaders()
+                    );
                 } catch (final Exception exception) {
                     // Handle
                     logger.error(exception.getMessage(), exception);
@@ -211,7 +224,6 @@ public class WebSocketConsumersManager implements Runnable {
     }
 
     private static class ConsumerEntry {
-        private final String username;
         private final SocketKafkaConsumer socketKafkaConsumer;
 
         /**
@@ -224,10 +236,7 @@ public class WebSocketConsumersManager implements Runnable {
          */
         private boolean isPaused = false;
 
-        public ConsumerEntry(
-            final String username,
-            final SocketKafkaConsumer socketKafkaConsumer) {
-            this.username = username;
+        public ConsumerEntry(final SocketKafkaConsumer socketKafkaConsumer) {
             this.socketKafkaConsumer = socketKafkaConsumer;
         }
 
@@ -257,10 +266,6 @@ public class WebSocketConsumersManager implements Runnable {
         public synchronized void requestResume() {
             this.isPaused = false;
         }
-
-        public String getUsername() {
-            return username;
-        }
     }
 
     /**
@@ -269,10 +274,12 @@ public class WebSocketConsumersManager implements Runnable {
     private static class ConsumerKey {
         private final long viewId;
         private final long userId;
+        private final String sessionId;
 
-        public ConsumerKey(final long viewId, final long userId) {
+        public ConsumerKey(final long viewId, final SessionIdentifier sessionIdentifier) {
             this.viewId = viewId;
-            this.userId = userId;
+            this.userId = sessionIdentifier.getUserId();
+            this.sessionId = sessionIdentifier.getSessionId();
         }
 
         public long getViewId() {
@@ -283,6 +290,10 @@ public class WebSocketConsumersManager implements Runnable {
             return userId;
         }
 
+        public String getSessionId() {
+            return sessionId;
+        }
+
         @Override
         public boolean equals(final Object o) {
             if (this == o) return true;
@@ -291,13 +302,15 @@ public class WebSocketConsumersManager implements Runnable {
             final ConsumerKey that = (ConsumerKey) o;
 
             if (viewId != that.viewId) return false;
-            return userId == that.userId;
+            if (userId != that.userId) return false;
+            return sessionId.equals(that.sessionId);
         }
 
         @Override
         public int hashCode() {
             int result = (int) (viewId ^ (viewId >>> 32));
             result = 31 * result + (int) (userId ^ (userId >>> 32));
+            result = 31 * result + sessionId.hashCode();
             return result;
         }
     }
