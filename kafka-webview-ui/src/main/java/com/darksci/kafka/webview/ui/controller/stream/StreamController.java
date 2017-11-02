@@ -2,6 +2,7 @@ package com.darksci.kafka.webview.ui.controller.stream;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
 import com.darksci.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
+import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
 import com.darksci.kafka.webview.ui.manager.user.CustomUserDetails;
 import com.darksci.kafka.webview.ui.model.View;
@@ -36,7 +37,11 @@ public class StreamController extends BaseController {
      * Just redirects to view index for now?
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index() {
+    public String index(final Model model) {
+        // Setup breadcrumbs
+        new BreadCrumbManager(model)
+            .addCrumb("Stream", null);
+
         return "redirect:/view";
     }
 
@@ -58,7 +63,13 @@ public class StreamController extends BaseController {
             return "redirect:/";
         }
 
-        // Fixed for now
+        // Setup breadcrumbs
+        new BreadCrumbManager(model)
+            .addCrumb("Stream", "/stream")
+            .addCrumb(view.getName());
+
+        // Set view attributes
+        model.addAttribute("view", view);
         model.addAttribute("viewId", view.getId());
         model.addAttribute("userId", getLoggedInUserId());
 

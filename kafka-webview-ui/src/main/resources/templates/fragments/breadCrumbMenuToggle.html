@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+    <!-- Handles showing settings menu toggle -->
+    <li class="breadcrumb-menu d-md-down-none" th:fragment="menuLink(linkText)">
+        <div class="btn-group" role="group" aria-label="Button group">
+            <a class="btn aside-menu-toggler" href="#"><i class="icon-settings"></i> &nbsp;[[${linkText}]]</a>
+        </div>
+    </li>
+
+</body>
+</html>

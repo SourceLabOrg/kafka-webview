@@ -1,6 +1,7 @@
 package com.darksci.kafka.webview.ui.controller.home;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
+import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.repository.ClusterRepository;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class HomeController extends BaseController {
             return "redirect:/view";
         }
 
+        // Setup breadcrumbs
+        new BreadCrumbManager(model);
+
         // Look for clusters
         final long numberOfClusters = clusterRepository.count();
 
@@ -44,7 +48,11 @@ public class HomeController extends BaseController {
      * Provides in App Help documentation.
      */
     @RequestMapping(path = "/help", method = RequestMethod.GET)
-    public String help() {
+    public String help(final Model model) {
+        // Setup breadcrumbs
+        new BreadCrumbManager(model)
+            .addCrumb("Help");
+
         return "home/help";
     }
 }
