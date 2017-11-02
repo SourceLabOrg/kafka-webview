@@ -70,7 +70,6 @@ public class StreamController extends BaseController {
 
         // Set view attributes
         model.addAttribute("view", view);
-        model.addAttribute("viewId", view.getId());
         model.addAttribute("userId", getLoggedInUserId());
 
         return "stream/index";
