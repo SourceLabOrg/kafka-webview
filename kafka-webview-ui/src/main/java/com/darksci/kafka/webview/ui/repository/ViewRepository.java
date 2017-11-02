@@ -28,4 +28,9 @@ public interface ViewRepository extends CrudRepository<View, Long> {
      * Count how many views exist for a given clusterId.
      */
     Long countByClusterId(final long clusterId);
+
+    /**
+     * Find any views that use the specified message format.
+     */
+    Iterable<View> findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(final long messageFormatId, final long messageFormatId2);
 }

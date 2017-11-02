@@ -7,8 +7,10 @@ import com.darksci.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
 import com.darksci.kafka.webview.ui.model.MessageFormat;
+import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.repository.MessageFormatRepository;
 import com.darksci.kafka.webview.ui.controller.configuration.messageFormat.forms.MessageFormatForm;
+import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,6 +27,8 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/configuration/messageFormat")
@@ -39,6 +43,9 @@ public class MessageFormatController extends BaseController {
     @Autowired
     private MessageFormatRepository messageFormatRepository;
 
+    @Autowired
+    private ViewRepository viewRepository;
+
     /**
      * GET Displays main message format index.
      */
@@ -47,9 +54,15 @@ public class MessageFormatController extends BaseController {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
 
-        // Retrieve all message formats
-        final Iterable<MessageFormat> messageFormatList = messageFormatRepository.findAllByOrderByNameAsc();
-        model.addAttribute("messageFormats", messageFormatList);
+        // Retrieve all default formats
+        final Iterable<MessageFormat> defaultMessageFormats = messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(true);
+
+        // Retrieve all custom formats
+        final Iterable<MessageFormat> customMessageFormats = messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(false);
+
+        // Set view attributes
+        model.addAttribute("defaultMessageFormats", defaultMessageFormats);
+        model.addAttribute("customMessageFormats", customMessageFormats);
 
         return "configuration/messageFormat/index";
     }
@@ -136,26 +149,41 @@ public class MessageFormatController extends BaseController {
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String deleteCluster(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+        // Where to redirect.
+        final String redirectUrl = "redirect:/configuration/messageFormat";
+
         // Retrieve it
         final MessageFormat messageFormat = messageFormatRepository.findOne(id);
         if (messageFormat == null || messageFormat.isDefaultFormat()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to remove message format!"));
-        } else {
-            try {
-                // Delete jar from disk
-                Files.delete(deserializerLoader.getPathForJar(messageFormat.getJar()));
+            return redirectUrl;
+        }
+        // See if its in use by any views
+        final Iterable<View> views = viewRepository.findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(messageFormat.getId(), messageFormat.getId());
+        final List<String> viewNames = new ArrayList<>();
+        for (final View view: views) {
+            viewNames.add(view.getName());
+        }
+        if (!viewNames.isEmpty()) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Message format in use by views: " + viewNames.toString()));
+            return redirectUrl;
+        }
 
-                // Delete entity
-                messageFormatRepository.delete(id);
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted message format!"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            // Delete entity
+            messageFormatRepository.delete(id);
+
+            // Delete jar from disk
+            Files.delete(deserializerLoader.getPathForJar(messageFormat.getJar()));
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted message format!"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         // redirect to cluster index
-        return "redirect:/configuration/messageFormat";
+        return redirectUrl;
     }
 
     private void setupBreadCrumbs(final Model model, String name, String url) {

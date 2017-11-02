@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
 <head>
@@ -10,14 +11,16 @@
 <body>
 <section layout:fragment="content">
     <div class="container">
+
+        <!-- Custom Message Formats -->
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Message Formats
+                        Custom Message Formats
                         <div class="btn-group float-right" role="group" aria-label="Button group">
-                            <a class="btn" href="/configuration/messageFormat/create">
+                            <a class="btn" href="/configuration/messageFormat/create" style="padding-bottom: 0;">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
                             </a>
@@ -34,7 +37,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="messageFormat : ${messageFormats}">
+                            <tr th:if="${customMessageFormats.isEmpty()}">
+                                <td colspan="4" align="center">
+                                    No Custom Message Formats Found.
+                                </td>
+                            </tr>
+                            <tr th:unless="${customMessageFormats.isEmpty()}" th:each="messageFormat : ${customMessageFormats}">
                                 <td th:text="${messageFormat.name}"></td>
                                 <td th:text="${messageFormat.classpath}"></td>
                                 <td th:text="${messageFormat.isDefaultFormat()} ? 'Default' : 'Custom'"></td>
@@ -53,6 +61,37 @@
                                         </div>
                                     </div>
                                 </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--/.col-->
+        </div>
+
+        <!-- Default Message Formats -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Default Message Formats
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Class</th>
+                                <th>Type</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="messageFormat : ${defaultMessageFormats}">
+                                <td th:text="${messageFormat.name}"></td>
+                                <td th:text="${messageFormat.classpath}"></td>
+                                <td th:text="${messageFormat.isDefaultFormat()} ? 'Default' : 'Custom'"></td>
                             </tr>
                             </tbody>
                         </table>

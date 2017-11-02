@@ -326,7 +326,15 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        View <strong>[[${view.name}]]</strong> over topic <strong>[[${view.topic}]]</strong>
+                        View <strong th:text="${view.name}"></strong> over topic <strong th:text="${view.topic}"></strong>
+
+                        <!-- Link to Stream -->
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a class="btn" th:href="'/stream/' + ${view.id}" style="padding-bottom: 0;">
+                                <i class="icon-feed"></i>
+                                &nbsp;Stream
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
 
