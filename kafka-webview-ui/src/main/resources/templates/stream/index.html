@@ -107,7 +107,7 @@
             connect: function() {
                 var socket = new SockJS(SocketDetails.socketUrl);
                 SocketDetails.stompClient = Stomp.over(socket);
-                //SocketDetails.stompClient.debug = SocketDetails.stompDebug;
+                SocketDetails.stompClient.debug = SocketDetails.stompDebug;
                 SocketDetails.stompClient.connect({}, function (frame) {
                     SocketDetails.setConnected(true);
 
