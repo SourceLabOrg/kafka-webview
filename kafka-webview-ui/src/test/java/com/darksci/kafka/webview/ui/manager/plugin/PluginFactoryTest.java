@@ -3,6 +3,7 @@ package com.darksci.kafka.webview.ui.manager.plugin;
 import com.darksci.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.Test;
 
 import java.io.File;
@@ -40,7 +41,6 @@ public class PluginFactoryTest {
         assertNotNull(pluginFilterClass);
         assertEquals("Has expected name", classPath, pluginFilterClass.getName());
         assertTrue("Validate came from correct class loader", pluginFilterClass.getClassLoader() instanceof PluginClassLoader);
-        pluginFilterClass.getClassLoader();
 
         // Crete filter instance
         final RecordFilter recordFilter = factory.getPlugin(jarFilename, classPath);
@@ -77,7 +77,6 @@ public class PluginFactoryTest {
         assertNotNull(pluginFilterClass);
         assertEquals("Has expected name", classPath, pluginFilterClass.getName());
         assertTrue("Validate came from correct class loader", pluginFilterClass.getClassLoader() instanceof PluginClassLoader);
-        pluginFilterClass.getClassLoader();
 
         // Crete filter instance
         final Deserializer deserializer = factory.getPlugin(jarFilename, classPath);
@@ -87,5 +86,23 @@ public class PluginFactoryTest {
         // Call method on interface
         final String value = "MyValue";
         final String result = (String) deserializer.deserialize("MyTopic", value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Tests loading a deserializer not from an external jar.
+     */
+    @Test
+    public void testLoadingDefaultDeserializer() throws LoaderException {
+        final String classPath = StringDeserializer.class.getName();
+
+        // Create factory
+        final PluginFactory<Deserializer> factory = new PluginFactory<>("/tmp", Deserializer.class);
+
+        // Get class instance
+        final Class<? extends Deserializer> pluginFilterClass = factory.getPluginClass(classPath);
+
+        // Validate
+        assertNotNull(pluginFilterClass);
+        assertEquals("Has expected name", classPath, pluginFilterClass.getName());
     }
 }

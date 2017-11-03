@@ -19,7 +19,7 @@ import java.util.Arrays;
  */
 public class SecretManager {
     /**
-     * Passphrase.
+     * Passphrase used for encryption.
      */
     private final String passphrase;
 
@@ -39,14 +39,14 @@ public class SecretManager {
      * @param str Plaintext to encrypt
      * @return Cipher text
      */
-    public String encrypt(String str) {
+    public String encrypt(final String str) {
         if (str == null) {
             throw new NullPointerException("Argument cannot be null");
         }
 
         try {
             final SecureRandom random = new SecureRandom();
-            byte[] salt = new byte[16];
+            final byte[] salt = new byte[16];
             random.nextBytes(salt);
 
             final SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
@@ -67,19 +67,19 @@ public class SecretManager {
             outputStream.write(iv);
             outputStream.write(encryptedText);
 
-            // properly encode the complete ciphertext
+            // properly encode the complete cipher text
             return DatatypeConverter.printBase64Binary(outputStream.toByteArray());
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
         }
     }
 
     /**
      * Decrypt cipher text.
-     * @param str
+     * @param str Cipher text to decrypt.
      * @return Decrypted plain text.
      */
-    public String decrypt(String str) {
+    public String decrypt(final String str) {
         // Handle null or empty string decryption more gracefully
         if (str == null || str.isEmpty()) {
             return str;
@@ -104,9 +104,8 @@ public class SecretManager {
             final byte[] plaintext = cipher.doFinal(ct);
 
             return new String(plaintext, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
         }
-        return null;
     }
 }

@@ -43,8 +43,6 @@ public class PluginFactory<T> {
      * @param classpath Classpath to class to load.
      * @return Class instance of the given classpath.
      * @throws LoaderException When we run into issues loading the class.
-     *
-     * TODO we may want to not use this and only load via our class loader?
      */
     public Class<? extends T> getPluginClass(final String classpath) throws LoaderException {
         return getPluginClass(getClass().getClassLoader(), classpath);
@@ -102,34 +100,6 @@ public class PluginFactory<T> {
             return dClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new LoaderException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Create an instance of the class given at the classpath loaded from the JVM's ClassLoader.
-     * @param classpath Classpath to class.
-     * @return Instance of the class.
-     * @throws LoaderException When we run into issues.
-     *
-     * TODO - Remove this method?
-     */
-    private T getPlugin(final String classpath) throws LoaderException {
-        Class<? extends T> dClass = getPluginClass(classpath);
-        try {
-            return dClass.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new LoaderException(e.getMessage(), e);
-        }
-    }
-
-    private String getJarDirectory() {
-        return jarDirectory;
-    }
-
-    private void checkSecurityManager() {
-        // Sanity test of environment?
-        if (System.getSecurityManager() == null) {
-            throw new RuntimeException("You should have a security manager loaded!");
         }
     }
 
