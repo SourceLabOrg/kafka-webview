@@ -45,22 +45,6 @@ public class PluginConfig {
     }
 
     /**
-     * For creating instances of AdminClient.
-     */
-    @Bean
-    public KafkaAdminFactory getKafkaAdminFactory(final AppProperties appProperties) {
-        return new KafkaAdminFactory(appProperties.getUploadPath() + "/keyStores");
-    }
-
-    /**
-     * For creating instances of KafkaConsumers.
-     */
-    @Bean
-    public KafkaConsumerFactory getKafkaConsumerFactory(final AppProperties appProperties) {
-        return new KafkaConsumerFactory(appProperties.getUploadPath() + "/keyStores");
-    }
-
-    /**
      * For handling secrets, symmetrical encryption.
      */
     @Bean
@@ -90,5 +74,19 @@ public class PluginConfig {
             getSecretManager(appProperties),
             getKafkaAdminFactory(appProperties)
         );
+    }
+
+    /**
+     * For creating instances of AdminClient.
+     */
+    private KafkaAdminFactory getKafkaAdminFactory(final AppProperties appProperties) {
+        return new KafkaAdminFactory(appProperties.getUploadPath() + "/keyStores");
+    }
+
+    /**
+     * For creating instances of KafkaConsumers.
+     */
+    private KafkaConsumerFactory getKafkaConsumerFactory(final AppProperties appProperties) {
+        return new KafkaConsumerFactory(appProperties.getUploadPath() + "/keyStores");
     }
 }

@@ -1,4 +1,4 @@
-package com.darksci.kafka.webview.ui.controller.configuration.messageFormat.forms;
+package com.darksci.kafka.webview.ui.controller.configuration.messageformat.forms;
 
 import org.springframework.web.multipart.MultipartFile;
 

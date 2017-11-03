@@ -1,7 +1,7 @@
-package com.darksci.kafka.webview.ui.controller.configuration.messageFormat;
+package com.darksci.kafka.webview.ui.controller.configuration.messageformat;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
-import com.darksci.kafka.webview.ui.controller.configuration.messageFormat.forms.MessageFormatForm;
+import com.darksci.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
 import com.darksci.kafka.webview.ui.manager.plugin.PluginFactory;
 import com.darksci.kafka.webview.ui.manager.plugin.UploadManager;
 import com.darksci.kafka.webview.ui.manager.plugin.exception.LoaderException;

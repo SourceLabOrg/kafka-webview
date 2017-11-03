@@ -36,7 +36,7 @@ public class KafkaAdminFactory {
         config.put(AdminClientConfig.CLIENT_ID_CONFIG, clientId);
         config.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeout);
 
-        if (clusterConfig.isUseSSL()) {
+        if (clusterConfig.isUseSsl()) {
             config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
             config.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
             config.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());

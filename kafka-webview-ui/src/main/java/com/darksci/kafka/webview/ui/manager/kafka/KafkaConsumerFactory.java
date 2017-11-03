@@ -93,7 +93,7 @@ public class KafkaConsumerFactory {
 
         // Use SSL?
         final ClusterConfig clusterConfig = clientConfig.getTopicConfig().getClusterConfig();
-        if (clusterConfig.isUseSSL()) {
+        if (clusterConfig.isUseSsl()) {
             configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
             configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
             configMap.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
