@@ -21,7 +21,8 @@ public class PresenceEventListener {
     }
 
     /**
-     * Called when a websocket disconnects.  We'll close out any consumers that websocket client had running.
+     * Called when a web socket disconnects.  We'll close out any consumers that web socket client had running
+     * based on their sessionId.
      */
     @EventListener
     void handleSessionDisconnect(final SessionDisconnectEvent event) {
