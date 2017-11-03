@@ -13,17 +13,17 @@ public class TopicConfig {
      * Constructor.
      */
     public TopicConfig(final List<ConfigItem> configEntries) {
-        this.configEntries = configEntries;
+        this.configEntries = Collections.unmodifiableList(configEntries);
     }
 
     public List<ConfigItem> getConfigEntries() {
-        return Collections.unmodifiableList(configEntries);
+        return configEntries;
     }
 
     @Override
     public String toString() {
         return "TopicConfig{"
-            + "+ configEntries=" + configEntries
+            + "configEntries=" + configEntries
             + '}';
     }
 }

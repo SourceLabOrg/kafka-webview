@@ -18,6 +18,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controller for consuming/browsing a topic/view.
+ */
 @Controller
 @RequestMapping("/view")
 public class ViewController extends BaseController {
@@ -59,7 +62,7 @@ public class ViewController extends BaseController {
      */
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
     public String index(
-        final @PathVariable Long id,
+        @PathVariable final Long id,
         final RedirectAttributes redirectAttributes,
         final Model model) {
 

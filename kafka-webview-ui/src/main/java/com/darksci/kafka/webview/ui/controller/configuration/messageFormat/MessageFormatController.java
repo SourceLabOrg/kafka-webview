@@ -30,6 +30,9 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Controller for MessageFormat CRUD operations.
+ */
 @Controller
 @RequestMapping("/configuration/messageFormat")
 public class MessageFormatController extends BaseController {
@@ -68,7 +71,7 @@ public class MessageFormatController extends BaseController {
     }
 
     /**
-     * GET Displays create cluster form.
+     * GET Displays create message format form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createMessageFormat(final MessageFormatForm messageFormatForm, final Model model) {
@@ -78,6 +81,9 @@ public class MessageFormatController extends BaseController {
         return "configuration/messageFormat/create";
     }
 
+    /**
+     * POST create new MessageFormat.
+     */
     @RequestMapping(path = "/create", method = RequestMethod.POST)
     public String create(
         @Valid final MessageFormatForm messageFormatForm,
@@ -145,10 +151,10 @@ public class MessageFormatController extends BaseController {
     }
 
     /**
-     * POST deletes the selected message format
+     * POST deletes the selected message format.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
-    public String deleteCluster(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+    public String deleteCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Where to redirect.
         final String redirectUrl = "redirect:/configuration/messageFormat";
 
@@ -156,18 +162,23 @@ public class MessageFormatController extends BaseController {
         final MessageFormat messageFormat = messageFormatRepository.findOne(id);
         if (messageFormat == null || messageFormat.isDefaultFormat()) {
             // Set flash message & redirect
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to remove message format!"));
+            redirectAttributes.addFlashAttribute(
+                "FlashMessage",
+                FlashMessage.newWarning("Unable to remove message format!"));
             return redirectUrl;
         }
         // See if its in use by any views
-        final Iterable<View> views = viewRepository.findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(messageFormat.getId(), messageFormat.getId());
+        final Iterable<View> views = viewRepository
+            .findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(messageFormat.getId(), messageFormat.getId());
         final List<String> viewNames = new ArrayList<>();
         for (final View view: views) {
             viewNames.add(view.getName());
         }
         if (!viewNames.isEmpty()) {
             // Set flash message & redirect
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Message format in use by views: " + viewNames.toString()));
+            redirectAttributes.addFlashAttribute(
+                "FlashMessage",
+                FlashMessage.newWarning("Message format in use by views: " + viewNames.toString()));
             return redirectUrl;
         }
 
@@ -177,7 +188,10 @@ public class MessageFormatController extends BaseController {
 
             // Delete jar from disk
             Files.delete(deserializerLoader.getPathForJar(messageFormat.getJar()));
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted message format!"));
+            redirectAttributes.addFlashAttribute(
+                "FlashMessage",
+                FlashMessage.newSuccess("Deleted message format!"));
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -186,7 +200,7 @@ public class MessageFormatController extends BaseController {
         return redirectUrl;
     }
 
-    private void setupBreadCrumbs(final Model model, String name, String url) {
+    private void setupBreadCrumbs(final Model model, final String name, final String url) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model)
             .addCrumb("Configuration", "/configuration");

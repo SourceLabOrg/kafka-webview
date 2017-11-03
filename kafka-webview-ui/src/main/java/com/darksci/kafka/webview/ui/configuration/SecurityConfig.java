@@ -27,15 +27,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SecurityProperties securityProperties;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
         return passwordEncoder;
     }
-
-    @Autowired
-    private SecurityProperties securityProperties;
 
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
@@ -84,16 +84,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         }
     }
 
-    @Bean
-    public RequestContextListener requestContextListener() {
-        return new RequestContextListener();
-    }
-
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth
             // Define our custom user details service.
             .userDetailsService(new CustomUserDetailsService(userRepository))
             .passwordEncoder(getPasswordEncoder());
+    }
+
+    @Bean
+    public RequestContextListener requestContextListener() {
+        return new RequestContextListener();
     }
 }

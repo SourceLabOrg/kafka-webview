@@ -5,6 +5,9 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+/**
+ * Application configuration for Web resources.
+ */
 @Configuration
 @EnableWebMvc
 public class WebConfig extends WebMvcConfigurerAdapter {
@@ -29,10 +32,5 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         registry
             .addResourceHandler("/img/**")
             .addResourceLocations("classpath:/static/img/");
-
-        // Webjars resources.
-        registry
-            .addResourceHandler("/webjars/**")
-            .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 }

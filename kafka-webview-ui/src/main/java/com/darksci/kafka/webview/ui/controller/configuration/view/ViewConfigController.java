@@ -33,6 +33,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Controller for CRUD over View entities.
+ */
 @Controller
 @RequestMapping("/configuration/view")
 public class ViewConfigController extends BaseController {
@@ -68,7 +71,7 @@ public class ViewConfigController extends BaseController {
     }
 
     /**
-     * GET Displays create view form
+     * GET Displays create view form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createViewForm(final ViewForm viewForm, final Model model) {
@@ -117,7 +120,7 @@ public class ViewConfigController extends BaseController {
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
     public String editViewForm(
-        final @PathVariable Long id,
+        @PathVariable final Long id,
         final ViewForm viewForm,
         final RedirectAttributes redirectAttributes,
         final Model model) {
@@ -179,8 +182,8 @@ public class ViewConfigController extends BaseController {
         final View existingView = viewRepository.findByName(viewForm.getName());
         if (existingView != null) {
             // If we're updating, exclude our own id.
-            if (!updateExisting ||
-                (updateExisting && !viewForm.getId().equals(existingView.getId()))) {
+            if (!updateExisting
+                || (updateExisting && !viewForm.getId().equals(existingView.getId()))) {
                 bindingResult.addError(new FieldError(
                     "viewForm", "name", viewForm.getName(), true, null, null, "Name is already used")
                 );
@@ -281,10 +284,10 @@ public class ViewConfigController extends BaseController {
     }
 
     /**
-     * POST deletes the selected view
+     * POST deletes the selected view.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
-    public String deleteView(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+    public String deleteView(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final View view = viewRepository.findOne(id);
         if (view == null) {

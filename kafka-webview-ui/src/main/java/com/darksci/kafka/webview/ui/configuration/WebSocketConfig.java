@@ -14,6 +14,9 @@ import org.springframework.web.socket.config.annotation.AbstractWebSocketMessage
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
+/**
+ * Application Configuration for Web Sockets.
+ */
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
@@ -79,5 +82,4 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
 
         return manager;
     }
-
 }

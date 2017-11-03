@@ -5,6 +5,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ * Represents create/update a Filter form.
+ */
 public class FilterForm {
     private Long id = null;
 
@@ -50,15 +53,20 @@ public class FilterForm {
         this.file = file;
     }
 
+    /**
+     * Does the filter that this form represents already exist.
+     */
     public boolean exists() {
         return getId() != null;
     }
 
     @Override
     public String toString() {
-        return "FilterForm{" +
-            "name='" + name + '\'' +
-            ", classpath='" + classpath + '\'' +
-            '}';
+        return "FilterForm{"
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", classpath='" + classpath + '\''
+            + ", file=" + file
+            + '}';
     }
 }

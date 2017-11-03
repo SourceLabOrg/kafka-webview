@@ -21,6 +21,9 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Called on startup to ensure we have sane default data loaded.
+ */
 @Component
 public final class DataLoaderConfig implements ApplicationRunner {
 
@@ -31,7 +34,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
      * Constructor.
      */
     @Autowired
-    public DataLoaderConfig(final MessageFormatRepository messageFormatRepository, final UserRepository userRepository) {
+    private DataLoaderConfig(final MessageFormatRepository messageFormatRepository, final UserRepository userRepository) {
         this.messageFormatRepository = messageFormatRepository;
         this.userRepository = userRepository;
     }
@@ -39,7 +42,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
     /**
      * Define the default MessageFormats and create if needed.
      */
-    public final void createData() {
+    private void createData() {
         createDefaultUser();
         createDefaultMessageFormats();
     }

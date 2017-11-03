@@ -5,6 +5,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ * Represents the form for creating/updating the Cluster entity.
+ */
 public class ClusterForm {
     private Long id = null;
 
@@ -69,6 +72,9 @@ public class ClusterForm {
         this.trustStoreFile = trustStoreFile;
     }
 
+    /**
+     * @return filename for the truststore.
+     */
     public String getTrustStoreFilename() {
         if (getTrustStoreFile() != null && !getTrustStoreFile().isEmpty()) {
             return trustStoreFilename;
@@ -97,6 +103,9 @@ public class ClusterForm {
         this.keyStoreFile = keyStoreFile;
     }
 
+    /**
+     * @return filename for the keystore.
+     */
     public String getKeyStoreFilename() {
         if (getKeyStoreFile() != null && !getKeyStoreFile().isEmpty()) {
             return getKeyStoreFile().getOriginalFilename();
@@ -123,9 +132,15 @@ public class ClusterForm {
 
     @Override
     public String toString() {
-        return "ClusterForm{" +
-            "name='" + name + '\'' +
-            ", brokerHosts='" + brokerHosts + '\'' +
-            '}';
+        return "ClusterForm{"
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", brokerHosts='" + brokerHosts + '\''
+            + ", ssl=" + ssl
+            + ", trustStoreFile=" + trustStoreFile
+            + ", trustStoreFilename='" + trustStoreFilename + '\''
+            + ", keyStoreFile=" + keyStoreFile
+            + ", keyStoreFilename='" + keyStoreFilename + '\''
+            + '}';
     }
 }

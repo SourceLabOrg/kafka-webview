@@ -12,41 +12,65 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+/**
+ * Application Configuration for Plugin beans.
+ */
 @Component
 public class PluginConfig {
 
+    /**
+     * Upload manager, for handling uploads of Plugins and Keystores.
+     */
     @Bean
     public UploadManager getPluginUploadManager(final AppProperties appProperties) {
         return new UploadManager(appProperties.getUploadPath());
     }
 
+    /**
+     * PluginFactory for creating instances of Deserializers.
+     */
     @Bean
     public PluginFactory<Deserializer> getDeserializerPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/deserializers";
         return new PluginFactory<>(jarDirectory, Deserializer.class);
     }
 
+    /**
+     * PluginFactory for creating instances of Record Filters.
+     */
     @Bean
     public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/filters";
         return new PluginFactory<>(jarDirectory, RecordFilter.class);
     }
 
+    /**
+     * For creating instances of AdminClient.
+     */
     @Bean
     public KafkaAdminFactory getKafkaAdminFactory(final AppProperties appProperties) {
         return new KafkaAdminFactory(appProperties.getUploadPath() + "/keyStores");
     }
 
+    /**
+     * For creating instances of KafkaConsumers.
+     */
     @Bean
     public KafkaConsumerFactory getKafkaConsumerFactory(final AppProperties appProperties) {
         return new KafkaConsumerFactory(appProperties.getUploadPath() + "/keyStores");
     }
 
+    /**
+     * For handling secrets, symmetrical encryption.
+     */
     @Bean
     public SecretManager getSecretManager(final AppProperties appProperties) {
         return new SecretManager(appProperties.getAppKey());
     }
 
+    /**
+     * For creating Kafka Consumers.
+     */
     @Bean
     public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties) {
         return new WebKafkaConsumerFactory(
@@ -57,6 +81,9 @@ public class PluginConfig {
         );
     }
 
+    /**
+     * For creating Kafka operational consumers.
+     */
     @Bean
     public KafkaOperationsFactory getKafkaOperationsFactory(final AppProperties appProperties) {
         return new KafkaOperationsFactory(

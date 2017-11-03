@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Defines configuration values for consuming from a Kafka cluster.
+ */
 public class ClientConfig {
     /**
      * Holds details about what topic we're consuming from.
@@ -37,12 +40,27 @@ public class ClientConfig {
     /**
      * How long to timeout poll requests.
      */
-    private long pollTimeoutMs = 2000;
+    private final long pollTimeoutMs = 2000;
 
+    /**
+     * Constructor.
+     * @param topicConfig Topic configuration values.
+     * @param filterConfig Filter configuration values.
+     * @param consumerId Consumer identifier.
+     */
     public ClientConfig(final TopicConfig topicConfig, final FilterConfig filterConfig, final String consumerId) {
         this(topicConfig, filterConfig, consumerId, new ArrayList<>(), 10, true);
     }
 
+    /**
+     * Constructor.
+     * @param topicConfig Topic configuration values.
+     * @param filterConfig Filter configuration values.
+     * @param consumerId Consumer identifier.
+     * @param partitionIds List of partitionIds to limit consuming from.
+     * @param maxResultsPerPartition How many records to poll per partition.
+     * @param isAutoCommitEnabled If the consumer should auto commit state or not.
+     */
     public ClientConfig(
         final TopicConfig topicConfig,
         final FilterConfig filterConfig,
@@ -86,13 +104,18 @@ public class ClientConfig {
     }
 
     /**
-     * Should we limit what partitions we read from?
+     * Are we limiting what partitions we read from.
      */
     public boolean hasFilteredPartitions() {
         // Empty means allow all.
         return !partitionIds.isEmpty();
     }
 
+    /**
+     * Utility method to determine if we should consume from a partition or not.
+     * @param partitionId The partition to check.
+     * @return True if so, false if not.
+     */
     public boolean isPartitionFiltered(final int partitionId) {
         if (!hasFilteredPartitions()) {
             return false;
@@ -106,17 +129,27 @@ public class ClientConfig {
 
     @Override
     public String toString() {
-        return "ClientConfig{" +
-            "topicConfig=" + topicConfig +
-            ", filterConfig=" + filterConfig +
-            ", consumerId='" + consumerId + '\'' +
-            '}';
+        return "ClientConfig{"
+            + "topicConfig=" + topicConfig
+            + ", filterConfig=" + filterConfig
+            + ", consumerId='" + consumerId + '\''
+            + ", partitionIds=" + partitionIds
+            + ", maxResultsPerPartition=" + maxResultsPerPartition
+            + ", isAutoCommitEnabled=" + isAutoCommitEnabled
+            + ", pollTimeoutMs=" + pollTimeoutMs
+            + '}';
     }
 
+    /**
+     * Create a new Builder instance.
+     */
     public static Builder newBuilder() {
         return new Builder();
     }
 
+    /**
+     * Builder class for createing new ClientConfig instances.
+     */
     public static class Builder {
         private TopicConfig topicConfig;
         private FilterConfig filterConfig;
@@ -125,54 +158,87 @@ public class ClientConfig {
         private int maxResultsPerPartition = 10;
         private boolean autoCommit = true;
 
+        /**
+         * Private constructor.
+         */
         private Builder() {
 
         }
 
+        /**
+         * Define topic configuration.
+         */
         public Builder withTopicConfig(final TopicConfig topicConfig) {
             this.topicConfig = topicConfig;
             return this;
         }
 
+        /**
+         * Define filter configuration.
+         */
         public Builder withFilterConfig(final FilterConfig filterConfig) {
             this.filterConfig = filterConfig;
             return this;
         }
 
+        /**
+         * Declare there are no filters.
+         */
         public Builder withNoFilters() {
             return withFilterConfig(FilterConfig.withNoFilters());
         }
 
+        /**
+         * Declare the consumerId to use.
+         */
         public Builder withConsumerId(final String consumerId) {
             this.consumerId = consumerId;
             return this;
         }
 
+        /**
+         * Define a partition that should be consumed.
+         */
         public Builder withPartition(final int partitionId) {
             limitPartitions.add(partitionId);
             return this;
         }
 
+        /**
+         * Declare one or more partitions that should be consumed.
+         */
         public Builder withPartitions(final Collection<Integer> partitionIds) {
             limitPartitions.addAll(partitionIds);
             return this;
         }
 
+        /**
+         * Declare how many records should be consumed per partition.
+         */
         public Builder withMaxResultsPerPartition(final int maxResultsPerPartition) {
             this.maxResultsPerPartition = maxResultsPerPartition;
             return this;
         }
 
+        /**
+         * Declare consumer state should be auto committed.
+         */
         public Builder withAutoCommitEnabled() {
             this.autoCommit = true;
             return this;
         }
 
+        /**
+         * Declare consumer state should NOT be auto committed.
+         */
         public Builder withAutoCommitDisabled() {
             this.autoCommit = false;
             return this;
         }
 
+        /**
+         * Create new ClientConfig instance.
+         */
         public ClientConfig build() {
             return new ClientConfig(topicConfig, filterConfig, consumerId, limitPartitions, maxResultsPerPartition, autoCommit);
         }

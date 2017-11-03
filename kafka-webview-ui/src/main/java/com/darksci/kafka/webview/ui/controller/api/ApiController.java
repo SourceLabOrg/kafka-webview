@@ -61,16 +61,16 @@ public class ApiController extends BaseController {
     private KafkaOperationsFactory kafkaOperationsFactory;
 
     /**
-     * GET kafka results
+     * GET kafka results.
      */
     @ResponseBody
     @RequestMapping(path = "/consumer/view/{id}", method = RequestMethod.GET, produces = "application/json")
     public KafkaResults consume(
-        final @PathVariable Long id,
-        final @RequestParam(name = "action", required = false) String action,
-        final @RequestParam(name = "partitions", required = false) String partitions,
-        final @RequestParam(name = "filters", required = false) String filters,
-        final @RequestParam(name = "results_per_partition", required = false) Integer resultsPerPartition) {
+        @PathVariable final Long id,
+        @RequestParam(name = "action", required = false) final String action,
+        @RequestParam(name = "partitions", required = false)final String partitions,
+        @RequestParam(name = "filters", required = false)final String filters,
+        @RequestParam(name = "results_per_partition", required = false) final Integer resultsPerPartition) {
 
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
@@ -78,7 +78,7 @@ public class ApiController extends BaseController {
             throw new NotFoundApiException("Consume", "Unable to find view");
         }
 
-        // Optionally over ride results per partition
+        // Optionally over ride results per partition, within reason.
         if (resultsPerPartition != null && resultsPerPartition > 0 && resultsPerPartition < 500) {
             // Override in view
             view.setResultsPerPartition(resultsPerPartition);
@@ -178,7 +178,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/consumer/view/{id}/offsets", method = RequestMethod.POST, produces = "application/json")
-    public ConsumerState setConsumerOffsets(final @PathVariable Long id, final @RequestBody Map<Integer, Long> partitionOffsetMap) {
+    public ConsumerState setConsumerOffsets(@PathVariable final Long id,  @RequestBody final Map<Integer, Long> partitionOffsetMap) {
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
         if (view == null) {
@@ -194,11 +194,11 @@ public class ApiController extends BaseController {
     }
 
     /**
-     * POST manually set a consumer's offsets using a timestamp
+     * POST manually set a consumer's offsets using a timestamp.
      */
     @ResponseBody
     @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
-    public ConsumerState setConsumerOffsetsByTimestamp(final @PathVariable Long id, final @PathVariable Long timestamp) {
+    public ConsumerState setConsumerOffsetsByTimestamp(@PathVariable final Long id, @PathVariable final Long timestamp) {
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
         if (view == null) {
@@ -218,7 +218,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
-    public List<TopicListing> getTopics(final @PathVariable Long id) {
+    public List<TopicListing> getTopics(@PathVariable final Long id) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -239,7 +239,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
-    public TopicDetails getTopicDetails(final @PathVariable Long id, final @PathVariable String topic) {
+    public TopicDetails getTopicDetails(@PathVariable final Long id, @PathVariable final String topic) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -259,7 +259,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/config", method = RequestMethod.GET, produces = "application/json")
-    public List<ConfigItem> getTopicConfig(final @PathVariable Long id, final @PathVariable String topic) {
+    public List<ConfigItem> getTopicConfig(@PathVariable final Long id, @PathVariable final String topic) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -279,7 +279,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/broker/{brokerId}/config", method = RequestMethod.GET, produces = "application/json")
-    public List<ConfigItem> getBrokerConfig(final @PathVariable Long id, final @PathVariable String brokerId) {
+    public List<ConfigItem> getBrokerConfig(@PathVariable final Long id, @PathVariable final String brokerId) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -299,7 +299,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topics/details", method = RequestMethod.GET, produces = "application/json")
-    public Collection<TopicDetails> getAllTopicsDetails(final @PathVariable Long id) {
+    public Collection<TopicDetails> getAllTopicsDetails(@PathVariable final Long id) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -326,7 +326,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/nodes", method = RequestMethod.GET, produces = "application/json")
-    public List<NodeDetails> getClusterNodes(final @PathVariable Long id) {
+    public List<NodeDetails> getClusterNodes(@PathVariable final Long id) {
         // Retrieve cluster
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -371,7 +371,7 @@ public class ApiController extends BaseController {
      */
     @Override
     @ModelAttribute
-    public void addAttributes(Model model) {
+    public void addAttributes(final Model model) {
         // Do nothing.
     }
 }
