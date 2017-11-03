@@ -3,6 +3,10 @@ package com.darksci.kafka.webview.ui.manager.kafka.dto;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents information about a set of records pulled from Kafka, and associated
+ * metadata.
+ */
 public class KafkaResults {
     private final List<KafkaResult> results;
     private final List<PartitionOffset> consumerOffsets;
@@ -10,6 +14,9 @@ public class KafkaResults {
     private final List<PartitionOffset> tailOffsets;
     private final int numberOfRecords;
 
+    /**
+     * Constructor.
+     */
     public KafkaResults(
         final List<KafkaResult> results,
         final List<PartitionOffset> consumerOffsets,
@@ -45,12 +52,12 @@ public class KafkaResults {
 
     @Override
     public String toString() {
-        return "KafkaResults{" +
-            "results=" + results +
-            ", consumerOffsets=" + consumerOffsets +
-            ", headOffsets=" + headOffsets +
-            ", tailOffsets=" + tailOffsets +
-            ", numberOfRecords=" + numberOfRecords +
-            '}';
+        return "KafkaResults{"
+            + "results=" + results
+            + ", consumerOffsets=" + consumerOffsets
+            + ", headOffsets=" + headOffsets
+            + ", tailOffsets=" + tailOffsets
+            + ", numberOfRecords=" + numberOfRecords
+            + '}';
     }
 }

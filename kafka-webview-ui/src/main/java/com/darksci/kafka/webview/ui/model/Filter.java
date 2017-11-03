@@ -6,6 +6,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+/**
+ * Represents a row in the filter table.
+ */
 @Entity
 public class Filter {
     @Id
@@ -55,11 +58,11 @@ public class Filter {
 
     @Override
     public String toString() {
-        return "Filter{" +
-            "id=" + id +
-            ", name='" + name + '\'' +
-            ", classpath='" + classpath + '\'' +
-            ", jar='" + jar + '\'' +
-            '}';
+        return "Filter{"
+            + "+ id=" + id
+            + ", + name='" + name + '\''
+            + ", + classpath='" + classpath + '\''
+            + ", + jar='" + jar + '\''
+            + '}';
     }
 }

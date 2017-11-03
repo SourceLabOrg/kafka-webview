@@ -14,18 +14,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * RecordFilter Interceptor.  Used to apply 'server-side' filtering.
+ */
 public class RecordFilterInterceptor implements ConsumerInterceptor {
-    private final static Logger logger = LoggerFactory.getLogger(RecordFilterInterceptor.class);
-    public final static String CONFIG_KEY = "RecordFilterInterceptor.Classes";
+    private static final Logger logger = LoggerFactory.getLogger(RecordFilterInterceptor.class);
+    public static final String CONFIG_KEY = "RecordFilterInterceptor.Classes";
 
-    private List<RecordFilter> recordFilters = new ArrayList<>();
-
-    public RecordFilterInterceptor() {
-
-    }
+    private final List<RecordFilter> recordFilters = new ArrayList<>();
 
     @Override
-    public ConsumerRecords onConsume(ConsumerRecords records) {
+    public ConsumerRecords onConsume(final ConsumerRecords records) {
 
         final Map<TopicPartition, List<ConsumerRecord>> filteredRecords = new HashMap<>();
 
@@ -90,8 +89,8 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
 
                 // Add to list
                 recordFilters.add(recordFilter);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+            } catch (final Exception exception) {
+                logger.error(exception.getMessage(), exception);
             }
         }
     }

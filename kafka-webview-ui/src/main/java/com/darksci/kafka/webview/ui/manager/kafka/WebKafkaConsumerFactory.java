@@ -20,17 +20,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Factory class for creating new Kafka Consumers to be used by WebRequests.
+ */
 public class WebKafkaConsumerFactory {
     /**
-     * Defines the consumerId.
+     * Defines the consumerId prefix pre-pended to all consumers.
      */
-    private final static String consumerIdPrefix = "KafkaWebView-Consumer-UserId";
+    private static final String consumerIdPrefix = "KafkaWebView-Consumer-UserId";
 
     private final PluginFactory<Deserializer> deserializerPluginFactory;
     private final PluginFactory<RecordFilter> recordFilterPluginFactory;
     private final SecretManager secretManager;
     private final KafkaConsumerFactory kafkaConsumerFactory;
 
+    /**
+     * Constructor.
+     */
     public WebKafkaConsumerFactory(
         final PluginFactory<Deserializer> deserializerPluginFactory,
         final PluginFactory<RecordFilter> recordFilterPluginFactory,
@@ -42,6 +48,13 @@ public class WebKafkaConsumerFactory {
         this.kafkaConsumerFactory = kafkaConsumerFactory;
     }
 
+    /**
+     * Create a Web Consumer Client.  These instances are not intended to live beyond
+     * the length of the web request using it.
+     * @param view What view to consume from.
+     * @param filterList Any additional filters to apply.
+     * @param sessionIdentifier An identifier for the consumer.
+     */
     public WebKafkaConsumer createWebClient(
         final View view,
         final Collection<Filter> filterList,
@@ -57,6 +70,13 @@ public class WebKafkaConsumerFactory {
         return new WebKafkaConsumer(kafkaConsumer, clientConfig);
     }
 
+    /**
+     * Create a WebSocket Consumer Client.  These instances are intended to be long lived
+     * and run in the background, streaming consumed records to a Web Socket.
+     * @param view What view to consume from.
+     * @param filterList Any additional filters to apply/
+     * @param sessionIdentifier An identifier for the consumer.
+     */
     public SocketKafkaConsumer createWebSocketClient(
         final View view,
         final Collection<Filter> filterList,
@@ -83,28 +103,8 @@ public class WebKafkaConsumerFactory {
         final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
         final MessageFormat valueMessageFormat = view.getValueMessageFormat();
 
-        final Class<? extends Deserializer> keyDeserializerClass;
-        try {
-            if (keyMessageFormat.isDefaultFormat()) {
-                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getClasspath());
-            } else {
-                keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getJar(), keyMessageFormat.getClasspath());
-            }
-        } catch (final LoaderException exception) {
-            throw new RuntimeException(exception.getMessage(), exception);
-        }
-
-        final Class<? extends Deserializer> valueDeserializerClass;
-        try {
-            if (valueMessageFormat.isDefaultFormat()) {
-                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getClasspath());
-            } else {
-                valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getJar(), valueMessageFormat.getClasspath());
-            }
-        } catch (final LoaderException exception) {
-            throw new RuntimeException(exception.getMessage(), exception);
-        }
-
+        final Class<? extends Deserializer> keyDeserializerClass = getDeserializerClass(keyMessageFormat);
+        final Class<? extends Deserializer> valueDeserializerClass = getDeserializerClass(valueMessageFormat);
 
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
         final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
@@ -138,6 +138,18 @@ public class WebKafkaConsumerFactory {
 
         // Create the damn consumer
         return clientConfigBuilder;
+    }
+
+    private Class<? extends Deserializer> getDeserializerClass(final MessageFormat messageFormat) {
+        try {
+            if (messageFormat.isDefaultFormat()) {
+                return deserializerPluginFactory.getPluginClass(messageFormat.getClasspath());
+            } else {
+                return deserializerPluginFactory.getPluginClass(messageFormat.getJar(), messageFormat.getClasspath());
+            }
+        } catch (final LoaderException exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
     }
 
     private KafkaConsumer createKafkaConsumer(final ClientConfig clientConfig) {

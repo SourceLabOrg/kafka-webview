@@ -6,6 +6,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+/**
+ * Represents a Many-to-Many join table between View.id and Filter.id.
+ */
 @Entity
 public class ViewToFilterOptional {
     @Id
@@ -51,5 +54,15 @@ public class ViewToFilterOptional {
 
     public void setSortOrder(final Long sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    @Override
+    public String toString() {
+        return "ViewToFilterOptional{"
+            + "id=" + id
+            + ", filterId=" + filterId
+            + ", viewId=" + viewId
+            + ", sortOrder=" + sortOrder
+            + '}';
     }
 }

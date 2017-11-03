@@ -17,6 +17,9 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Represents a record from the view table.
+ */
 @Entity
 public class View {
     @Id
@@ -44,27 +47,19 @@ public class View {
     @Column(nullable = false)
     private Integer resultsPerPartition = 10;
 
-    @ManyToMany(cascade = {
-        CascadeType.PERSIST,
-        CascadeType.MERGE
-    })
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
         name = "view_to_filter_enforced",
         joinColumns = @JoinColumn(name = "view_id"),
-        inverseJoinColumns = @JoinColumn(name = "filter_id")
-    )
+        inverseJoinColumns = @JoinColumn(name = "filter_id"))
     @OrderColumn(name = "sort_order")
     private Set<Filter> enforcedFilters = new HashSet<>();
 
-    @ManyToMany(cascade = {
-        CascadeType.PERSIST,
-        CascadeType.MERGE
-    })
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
         name = "view_to_filter_optional",
         joinColumns = @JoinColumn(name = "view_id"),
-        inverseJoinColumns = @JoinColumn(name = "filter_id")
-    )
+        inverseJoinColumns = @JoinColumn(name = "filter_id"))
     @OrderColumn(name = "sort_order")
     private Set<Filter> optionalFilters = new HashSet<>();
 
@@ -138,6 +133,9 @@ public class View {
         this.resultsPerPartition = resultsPerPartition;
     }
 
+    /**
+     * @return Returns the defined partitions as a Set.
+     */
     @Transient
     public Set<Integer> getPartitionsAsSet() {
         final Set<Integer> partitionsSet = new HashSet<>();

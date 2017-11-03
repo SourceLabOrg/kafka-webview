@@ -1,5 +1,8 @@
 package com.darksci.kafka.webview.ui.manager.kafka.dto;
 
+/**
+ * Represents a single record pulled from a kafka topic, with associated metadata.
+ */
 public class KafkaResult {
     private final int partition;
     private final long offset;
@@ -7,6 +10,9 @@ public class KafkaResult {
     private final Object key;
     private final Object value;
 
+    /**
+     * Constructor.
+     */
     public KafkaResult(final int partition, final long offset, final long timestamp, final Object key, final Object value) {
         this.partition = partition;
         this.offset = offset;
@@ -37,12 +43,12 @@ public class KafkaResult {
 
     @Override
     public String toString() {
-        return "KafkaResult{" +
-            "partition=" + partition +
-            ", offset=" + offset +
-            ", timestamp=" + timestamp +
-            ", key=" + key +
-            ", value=" + value +
-            '}';
+        return "KafkaResult{"
+            + "partition=" + partition
+            + ", offset=" + offset
+            + ", timestamp=" + timestamp
+            + ", key=" + key
+            + ", value=" + value
+            + '}';
     }
 }

@@ -6,6 +6,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+/**
+ * Represents a record in the message_format table.
+ */
 @Entity
 public class MessageFormat {
     @Id
@@ -66,12 +69,12 @@ public class MessageFormat {
 
     @Override
     public String toString() {
-        return "MessageFormat{" +
-            "id=" + id +
-            ", name='" + name + '\'' +
-            ", classpath='" + classpath + '\'' +
-            ", jar='" + jar + '\'' +
-            ", isDefaultFormat=" + isDefaultFormat +
-            '}';
+        return "MessageFormat{"
+            + "+ id=" + id
+            + ", + name='" + name + '\''
+            + ", + classpath='" + classpath + '\''
+            + ", + jar='" + jar + '\''
+            + ", + isDefaultFormat=" + isDefaultFormat
+            + '}';
     }
 }

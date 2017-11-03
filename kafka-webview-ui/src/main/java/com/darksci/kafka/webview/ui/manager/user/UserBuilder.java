@@ -10,15 +10,20 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
 
+/**
+ * Utility class for building new User entity instances.
+ */
 public final class UserBuilder {
 
+    /**
+     * Used to encode the passwords using one-way hash algorithm.
+     */
     private final PasswordEncoder passwordEncoder;
 
     private String email;
     private String displayName;
     private String password;
     private UserRole role = UserRole.ROLE_USER;
-    private String resetPasswordHash = null;
     private boolean isActive = true;
     private boolean hasPassword = false;
 
@@ -36,32 +41,51 @@ public final class UserBuilder {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserBuilder withEmail(String email) {
+    /**
+     * Set email value.
+     */
+    public UserBuilder withEmail(final String email) {
         this.email = email;
         return this;
     }
 
-    public UserBuilder withDisplayName(String displayName) {
+    /**
+     * Set Display Name value.
+     */
+    public UserBuilder withDisplayName(final String displayName) {
         this.displayName = displayName;
         return this;
     }
 
-    public UserBuilder withPassword(String password) {
+    /**
+     * Set plain text password value.
+     */
+    public UserBuilder withPassword(final String password) {
         this.password = password;
         this.hasPassword = true;
         return this;
     }
 
-    public UserBuilder withRole(UserRole role) {
+    /**
+     * Set User's Role.
+     */
+    public UserBuilder withRole(final UserRole role) {
         this.role = role;
         return this;
     }
 
-    public UserBuilder withIsActive(Boolean isActive) {
+    /**
+     * Set if the user is active or not.
+     */
+    public UserBuilder withIsActive(final Boolean isActive) {
         this.isActive = isActive;
         return this;
     }
 
+    /**
+     * Build the entity.
+     * @return Entity
+     */
     public User build() {
         // Ensure non-null/empty password
         if (password == null || password.isEmpty()) {
@@ -73,13 +97,16 @@ public final class UserBuilder {
         user.setDisplayName(displayName);
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
-        user.setResetPasswordHash(resetPasswordHash);
+        user.setResetPasswordHash(null);
         user.setActive(isActive);
         user.setHasPassword(hasPassword);
         return user;
     }
 
-    public UserBuilder withRandomPassword() {
+    /**
+     * Sets a random password.
+     */
+    private UserBuilder withRandomPassword() {
         // Generate and store random password
         password = passwordEncoder.encode(generateRandomHash("blah"));
         hasPassword = false;
@@ -87,7 +114,7 @@ public final class UserBuilder {
         return this;
     }
 
-    public static String generateRandomHash(final String salt) {
+    private static String generateRandomHash(final String salt) {
         // Use random stuff
         final double random = (Math.random() * 31 + System.currentTimeMillis());
 
@@ -99,13 +126,13 @@ public final class UserBuilder {
 
     private static String sha1(final String input) {
         try {
-            MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+            final MessageDigest crypt = MessageDigest.getInstance("SHA-1");
             crypt.reset();
             crypt.update(input.getBytes("UTF-8"));
             return byteToHex(crypt.digest());
         }
-        catch(NoSuchAlgorithmException | UnsupportedEncodingException e) {
-            throw new RuntimeException(e.getMessage(), e);
+        catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
         }
     }
 
