@@ -83,7 +83,7 @@ public class WebKafkaConsumerFactory {
         final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
         final MessageFormat valueMessageFormat = view.getValueMessageFormat();
 
-        final Class keyDeserializerClass;
+        final Class<? extends Deserializer> keyDeserializerClass;
         try {
             if (keyMessageFormat.isDefaultFormat()) {
                 keyDeserializerClass = deserializerPluginFactory.getPluginClass(keyMessageFormat.getClasspath());
@@ -94,7 +94,7 @@ public class WebKafkaConsumerFactory {
             throw new RuntimeException(exception.getMessage(), exception);
         }
 
-        final Class valueDeserializerClass;
+        final Class<? extends Deserializer> valueDeserializerClass;
         try {
             if (valueMessageFormat.isDefaultFormat()) {
                 valueDeserializerClass = deserializerPluginFactory.getPluginClass(valueMessageFormat.getClasspath());

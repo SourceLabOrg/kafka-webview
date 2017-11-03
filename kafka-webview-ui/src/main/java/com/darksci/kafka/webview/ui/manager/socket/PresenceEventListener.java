@@ -1,19 +1,12 @@
 package com.darksci.kafka.webview.ui.manager.socket;
 
-import com.darksci.kafka.webview.ui.manager.user.CustomUserDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 /**
  * Listens for when clients disconnect, and shuts down any consumers they have running.
  */
 public class PresenceEventListener {
-    private final static Logger logger = LoggerFactory.getLogger(PresenceEventListener.class);
-
     /**
      * This manages any running consumer instances.
      */
@@ -28,30 +21,15 @@ public class PresenceEventListener {
     }
 
     /**
-     * Called when a websocket disconnects.  We'll close out any consumers that websocket client had running.
+     * Called when a web socket disconnects.  We'll close out any consumers that web socket client had running
+     * based on their sessionId.
      */
     @EventListener
-    private void handleSessionDisconnect(final SessionDisconnectEvent event) {
-        // Decode headers
-        final SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.wrap(event.getMessage());
-        logger.info("Disconnect event: {}", headers.getUser().getName());
+    void handleSessionDisconnect(final SessionDisconnectEvent event) {
+        // Grab sessionId from event
+        final String sessionId = event.getSessionId();
 
-        // Determine which user this is
-        final String sessionId = getLoggedInSessionId(headers);
-
-        // Disconnect their consumers
+        // Disconnect that sessionId's consumers
         webSocketConsumersManager.removeConsumersForSessionId(sessionId);
-    }
-
-    private long getLoggedInUserId(final SimpMessageHeaderAccessor headers) {
-        return getLoggedInUser(headers).getUserId();
-    }
-
-    private String getLoggedInSessionId(final SimpMessageHeaderAccessor headers) {
-        return headers.getSessionId();
-    }
-
-    private CustomUserDetails getLoggedInUser(final SimpMessageHeaderAccessor headers) {
-        return (CustomUserDetails)((UsernamePasswordAuthenticationToken)headers.getUser()).getPrincipal();
     }
 }

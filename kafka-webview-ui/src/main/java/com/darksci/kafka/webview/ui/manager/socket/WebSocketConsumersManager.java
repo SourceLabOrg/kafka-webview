@@ -28,7 +28,8 @@ public class WebSocketConsumersManager implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(WebSocketConsumersManager.class);
 
     /**
-     * Holds consumers.
+     * Holds a map of ConsumerKey => ConsumerEntry, which is basically a container
+     * for the running consumers.
      */
     private final Map<ConsumerKey, ConsumerEntry> consumers = new ConcurrentHashMap<>();
 
@@ -43,10 +44,16 @@ public class WebSocketConsumersManager implements Runnable {
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     /**
-     * Threadpool we run consumers within.
+     * Thread pool where we run consumers within background threads.
      */
     private final ThreadPoolExecutor threadPoolExecutor;
 
+    /**
+     * Constructor.
+     * @param webKafkaConsumerFactory For creating new Consumers.
+     * @param messagingTemplate For publishing consumed messages back through the web socket.
+     * @param maxConcurrentConsumers Configuration, how many consumers to run.
+     */
     public WebSocketConsumersManager(
         final WebKafkaConsumerFactory webKafkaConsumerFactory,
         final SimpMessagingTemplate messagingTemplate,
@@ -228,7 +235,13 @@ public class WebSocketConsumersManager implements Runnable {
         threadPoolExecutor.shutdown();
     }
 
+    /**
+     * Small wrapper around the Socket Consumer.
+     */
     private static class ConsumerEntry {
+        /**
+         * Our wrapped SocketKafkaConsumer instance.
+         */
         private final SocketKafkaConsumer socketKafkaConsumer;
 
         /**
@@ -241,10 +254,18 @@ public class WebSocketConsumersManager implements Runnable {
          */
         private boolean isPaused = false;
 
+        /**
+         * Constructor.
+         * @param socketKafkaConsumer The consumer to wrap.
+         */
         public ConsumerEntry(final SocketKafkaConsumer socketKafkaConsumer) {
             this.socketKafkaConsumer = socketKafkaConsumer;
         }
 
+        /**
+         * Retrieve the next record from Kafka.
+         * @return Optional of KafkaResult.  This could return null if there are no new records to consume.
+         */
         public Optional<KafkaResult> nextResult() {
             // If paused
             if (isPaused) {
@@ -255,19 +276,31 @@ public class WebSocketConsumersManager implements Runnable {
             return socketKafkaConsumer.nextResult();
         }
 
+        /**
+         * @return True if a stop has been requested.
+         */
         public synchronized boolean isShouldStop() {
             return shouldStop;
         }
 
+        /**
+         * Request the Consumer to shutdown/stop.
+         */
         public synchronized void requestStop() {
             this.socketKafkaConsumer.requestStop();
             this.shouldStop = true;
         }
 
+        /**
+         * Request the consumer to be paused.
+         */
         public synchronized void requestPause() {
             this.isPaused = true;
         }
 
+        /**
+         * Request the consumer to be resumed.
+         */
         public synchronized void requestResume() {
             this.isPaused = false;
         }
@@ -275,6 +308,7 @@ public class WebSocketConsumersManager implements Runnable {
 
     /**
      * Represents a unique consumer key.
+     * This could probably simplified down to just the sessionId.
      */
     private static class ConsumerKey {
         private final long viewId;
