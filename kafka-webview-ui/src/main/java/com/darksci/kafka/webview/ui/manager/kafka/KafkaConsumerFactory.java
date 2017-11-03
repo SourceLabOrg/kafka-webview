@@ -6,7 +6,6 @@ import com.darksci.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.SslConfigs;
@@ -16,19 +15,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Factory class for creating new KafkaConsumers.
+ */
 public class KafkaConsumerFactory {
 
     private final String keyStoreRootPath;
 
+    /**
+     * Constructor.
+     */
     public KafkaConsumerFactory(final String keyStoreRootPath) {
         this.keyStoreRootPath = keyStoreRootPath;
     }
 
+    /**
+     * Create a new KafkaConsumer based on the passed in ClientConfig.
+     */
     public KafkaConsumer createConsumer(final ClientConfig clientConfig) {
         // Create consumer
         return new KafkaConsumer<>(buildConsumerConfig(clientConfig));
     }
 
+    /**
+     * Create a new KafkaConsumer based on the passed in ClientConfig, and subscribe to the appropriate
+     * partitions.
+     */
     public KafkaConsumer createConsumerAndSubscribe(final ClientConfig clientConfig) {
         final KafkaConsumer kafkaConsumer = createConsumer(clientConfig);
 
@@ -51,17 +63,20 @@ public class KafkaConsumerFactory {
         return kafkaConsumer;
     }
 
-    public KafkaProducer createProducer(final ClientConfig clientConfig) {
-        return new KafkaProducer(buildConsumerConfig(clientConfig));
-    }
-
+    /**
+     * Build an appropriate configuration based on the passed in ClientConfig.
+     */
     public Map<String, Object> buildConsumerConfig(final ClientConfig clientConfig) {
         // Build config
         final Map<String, Object> configMap = new HashMap<>();
         configMap.put(ConsumerConfig.CLIENT_ID_CONFIG, clientConfig.getConsumerId());
         configMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, clientConfig.getTopicConfig().getClusterConfig().getConnectString());
-        configMap.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, clientConfig.getTopicConfig().getDeserializerConfig().getKeyDeserializerClass());
-        configMap.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, clientConfig.getTopicConfig().getDeserializerConfig().getValueDeserializerClass());
+        configMap.put(
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+            clientConfig.getTopicConfig().getDeserializerConfig().getKeyDeserializerClass());
+        configMap.put(
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+            clientConfig.getTopicConfig().getDeserializerConfig().getValueDeserializerClass());
 
         // Enable auto commit
         configMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, clientConfig.isAutoCommitEnabled());
@@ -78,7 +93,7 @@ public class KafkaConsumerFactory {
 
         // Use SSL?
         final ClusterConfig clusterConfig = clientConfig.getTopicConfig().getClusterConfig();
-        if (clusterConfig.isUseSSL()) {
+        if (clusterConfig.isUseSsl()) {
             configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
             configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
             configMap.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());

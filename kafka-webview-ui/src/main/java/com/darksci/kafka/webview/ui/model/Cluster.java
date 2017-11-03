@@ -26,12 +26,16 @@ public class Cluster {
 
     private String trustStoreFile;
 
-    // TODO Encrypt this value?
+    /**
+     * Stored encrypted.
+     */
     private String trustStorePassword;
 
     private String keyStoreFile;
 
-    // TODO Encrypt this value?
+    /**
+     * Stored encrypted.
+     */
     private String keyStorePassword;
 
     @Column(nullable = false)
@@ -111,14 +115,14 @@ public class Cluster {
 
     @Override
     public String toString() {
-        return "Cluster{" +
-            "id=" + id +
-            ", name='" + name + '\'' +
-            ", brokerHosts='" + brokerHosts + '\'' +
-            ", isSslEnabled=" + isSslEnabled +
-            ", trustStoreFile='" + trustStoreFile + '\'' +
-            ", keyStoreFile='" + keyStoreFile + '\'' +
-            ", isValid=" + isValid +
-            '}';
+        return "Cluster{"
+            + "+ id=" + id
+            + ", + name='" + name + '\''
+            + ", + brokerHosts='" + brokerHosts + '\''
+            + ", + isSslEnabled=" + isSslEnabled
+            + ", + trustStoreFile='" + trustStoreFile + '\''
+            + ", + keyStoreFile='" + keyStoreFile + '\''
+            + ", + isValid=" + isValid
+            + '}';
     }
 }

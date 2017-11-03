@@ -22,6 +22,9 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Controller for User entity CRUD.
+ */
 @Controller
 @RequestMapping("/configuration/user")
 public class UserController extends BaseController {
@@ -73,7 +76,7 @@ public class UserController extends BaseController {
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
     public String editUserForm(
-        final @PathVariable Long id,
+        @PathVariable final Long id,
         final UserForm userForm,
         final RedirectAttributes redirectAttributes,
         final Model model) {
@@ -120,7 +123,7 @@ public class UserController extends BaseController {
     }
 
     /**
-     * POST updates a user
+     * POST updates a user.
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
     public String update(
@@ -142,18 +145,30 @@ public class UserController extends BaseController {
 
         // Validate email doesn't already exist!
         final User existingUser = userRepository.findByEmail(userForm.getEmail());
-        if ((userForm.exists() && existingUser != null && existingUser.getId() != userForm.getId()) ||
-            (!userForm.exists() && existingUser != null)){
+        if ((userForm.exists() && existingUser != null && existingUser.getId() != userForm.getId())
+            || (!userForm.exists() && existingUser != null)) {
             bindingResult.addError(new FieldError(
-                "userForm", "email", userForm.getEmail(), true, null, null, "Email is already used")
+                "userForm",
+                "email",
+                userForm.getEmail(),
+                true,
+                null,
+                null,
+                "Email is already used")
             );
         }
 
         if (!userForm.exists() || !userForm.getPassword().isEmpty()) {
             if (userForm.getPassword().length() < 8) {
                 bindingResult.addError(new FieldError(
-                    "userForm", "password", userForm.getPassword(), true, null, null, "Please enter a password of at least 8 characters"
-                ));
+                    "userForm",
+                    "password",
+                    userForm.getPassword(),
+                    true,
+                    null,
+                    null,
+                    "Please enter a password of at least 8 characters")
+                );
             }
         }
 
@@ -162,10 +177,22 @@ public class UserController extends BaseController {
             // Validate password == password2
             if (!userForm.getPassword().equals(userForm.getPassword2())) {
                 bindingResult.addError(new FieldError(
-                    "userForm", "password", userForm.getPassword(), true, null, null, "Passwords do not match")
+                    "userForm",
+                    "password",
+                    userForm.getPassword(),
+                    true,
+                    null,
+                    null,
+                    "Passwords do not match")
                 );
                 bindingResult.addError(new FieldError(
-                    "userForm", "password2", userForm.getPassword(), true, null, null, "Passwords do not match")
+                    "userForm",
+                    "password2",
+                    userForm.getPassword(),
+                    true,
+                    null,
+                    null,
+                    "Passwords do not match")
                 );
             }
         }
@@ -177,14 +204,23 @@ public class UserController extends BaseController {
 
         if (!userForm.exists()) {
             // Create the user
-            final User newUser = userManager.createNewUser(userForm.getEmail(), userForm.getDisplayName(), userForm.getPassword(), userForm.getUserRole());
+            final User newUser = userManager.createNewUser(
+                userForm.getEmail(),
+                userForm.getDisplayName(),
+                userForm.getPassword(),
+                userForm.getUserRole()
+            );
 
             if (newUser == null) {
                 // Add error flash msg
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error creating new user!"));
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newWarning("Error creating new user!"));
             } else {
                 // Add success flash msg
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Created new user " + newUser.getDisplayName() + "!"));
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newSuccess("Created new user " + newUser.getDisplayName() + "!"));
             }
         } else {
             // Update existing user
@@ -213,7 +249,9 @@ public class UserController extends BaseController {
                 userRepository.save(user);
 
                 // Add success flash msg
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Updated user " + user.getDisplayName() + "!"));
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newSuccess("Updated user " + user.getDisplayName() + "!"));
             }
         }
 
@@ -226,10 +264,10 @@ public class UserController extends BaseController {
     }
 
     /**
-     * POST deletes the selected user
+     * POST deletes the selected user.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
-    public String delete(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final User user = userRepository.findOne(id);
         if (user == null) {
@@ -250,7 +288,10 @@ public class UserController extends BaseController {
         return "redirect:/configuration/user";
     }
 
-    private void setupBreadCrumbs(final Model model, String name, String url) {
+    /**
+     * Helper for setting up BreadCrumbs for User actions.
+     */
+    private void setupBreadCrumbs(final Model model, final String name, final String url) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model)
             .addCrumb("Configuration", "/configuration");

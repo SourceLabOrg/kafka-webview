@@ -7,6 +7,9 @@ import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Represents the Create/Update View Form.
+ */
 public class ViewForm {
     private Long id = null;
 
@@ -139,17 +142,17 @@ public class ViewForm {
 
     @Override
     public String toString() {
-        return "ViewForm{" +
-            "id=" + id +
-            ", name='" + name + '\'' +
-            ", clusterId=" + clusterId +
-            ", keyMessageFormatId=" + keyMessageFormatId +
-            ", valueMessageFormatId=" + valueMessageFormatId +
-            ", topic='" + topic + '\'' +
-            ", partitions=" + partitions +
-            ", enforcedFilters=" + enforcedFilters +
-            ", optionalFilters=" + optionalFilters +
-            ", resultsPerPartition=" + resultsPerPartition +
-            '}';
+        return "ViewForm{"
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", clusterId=" + clusterId
+            + ", keyMessageFormatId=" + keyMessageFormatId
+            + ", valueMessageFormatId=" + valueMessageFormatId
+            + ", topic='" + topic + '\''
+            + ", partitions=" + partitions
+            + ", enforcedFilters=" + enforcedFilters
+            + ", optionalFilters=" + optionalFilters
+            + ", resultsPerPartition=" + resultsPerPartition
+            + '}';
     }
 }

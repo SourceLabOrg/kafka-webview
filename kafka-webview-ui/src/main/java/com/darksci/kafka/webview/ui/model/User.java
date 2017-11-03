@@ -99,17 +99,4 @@ public class User {
     public void setHasPassword(final Boolean hasPassword) {
         this.hasPassword = hasPassword;
     }
-
-    @Override
-    public String toString() {
-        return "User{" +
-            "id=" + id +
-            ", email='" + email + '\'' +
-            ", displayName='" + displayName + '\'' +
-            ", password='" + password + '\'' +
-            ", role=" + role +
-            ", resetPasswordHash='" + resetPasswordHash + '\'' +
-            ", isActive=" + isActive +
-            '}';
-    }
 }

@@ -11,9 +11,7 @@ import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
@@ -28,9 +26,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Wrapper for AdminClient.  For doing various 'operational' type commands
+ * against a cluster, or retrieving metadata about a cluster.
+ */
 public class KafkaOperations implements AutoCloseable {
     private final AdminClient adminClient;
 
+    /**
+     * Constructor.
+     * @param adminClient The AdminClient to wrap.
+     */
     public KafkaOperations(final AdminClient adminClient) {
         this.adminClient = adminClient;
     }
@@ -114,16 +120,18 @@ public class KafkaOperations implements AutoCloseable {
                     }
 
                     // Create the details
-                    partitionDetails.add(
-                        new PartitionDetails(
-                            topicDescription.name(),
-                            partitionInfo.partition(),
-                            leaderNode,
-                            replicaNodes,
-                            isrNodes
-                        )
+                    final PartitionDetails partitionDetail = new PartitionDetails(
+                        topicDescription.name(),
+                        partitionInfo.partition(),
+                        leaderNode,
+                        replicaNodes,
+                        isrNodes
                     );
 
+                    // Add to the list.
+                    partitionDetails.add(partitionDetail);
+
+                    // Create new TopicDetails.
                     final TopicDetails topicDetails = new TopicDetails(
                         topicDescription.name(),
                         topicDescription.isInternal(),
@@ -134,9 +142,9 @@ public class KafkaOperations implements AutoCloseable {
             }
             // Return it
             return results;
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (final InterruptedException | ExecutionException exception) {
             // TODO Handle this
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException(exception.getMessage(), exception);
         }
     }
 
@@ -189,16 +197,9 @@ public class KafkaOperations implements AutoCloseable {
         }
     }
 
-    public void createTopic(final String topic, final int numPartitions, final short replicaFactor) {
-        final NewTopic newTopic = new NewTopic(topic, numPartitions, replicaFactor);
-        final CreateTopicsResult result = adminClient.createTopics(Collections.singletonList(newTopic));
-        try {
-            result.all().get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    /**
+     * Close out the Client.
+     */
     public void close() {
         adminClient.close();
     }

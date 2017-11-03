@@ -26,10 +26,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.validation.Valid;
 import java.io.IOException;
 
+/**
+ * Controller for Cluster CRUD operations.
+ */
 @Controller
 @RequestMapping("/configuration/cluster")
 public class ClusterConfigController extends BaseController {
-    private final static Logger logger = LoggerFactory.getLogger(ClusterConfigController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ClusterConfigController.class);
 
     @Autowired
     private ClusterRepository clusterRepository;
@@ -74,7 +77,7 @@ public class ClusterConfigController extends BaseController {
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
     public String editClusterForm(
-        final @PathVariable Long id,
+        @PathVariable final Long id,
         final ClusterForm clusterForm,
         final RedirectAttributes redirectAttributes,
         final Model model) {
@@ -121,8 +124,8 @@ public class ClusterConfigController extends BaseController {
         final Cluster existingCluster = clusterRepository.findByName(clusterForm.getName());
         if (existingCluster != null) {
             // If we're updating, exclude our own id.
-            if (!updateExisting ||
-                (updateExisting && !clusterForm.getId().equals(existingCluster.getId()))) {
+            if (!updateExisting
+                || (updateExisting && !clusterForm.getId().equals(existingCluster.getId()))) {
                 bindingResult.addError(new FieldError(
                     "clusterForm", "name", clusterForm.getName(), true, null, null, "Name is already used")
                 );
@@ -240,7 +243,11 @@ public class ClusterConfigController extends BaseController {
             // Disable SSL options
             cluster.setSslEnabled(false);
 
-            // TODO handle removing keystores
+            // Remove from disk
+            uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+            uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+
+            // Null out fields
             cluster.setKeyStoreFile(null);
             cluster.setKeyStorePassword(null);
             cluster.setTrustStoreFile(null);
@@ -262,10 +269,10 @@ public class ClusterConfigController extends BaseController {
     }
 
     /**
-     * POST deletes the selected cluster
+     * POST deletes the selected cluster.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
-    public String deleteCluster(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+    public String deleteCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -290,8 +297,11 @@ public class ClusterConfigController extends BaseController {
         return "redirect:/configuration/cluster";
     }
 
+    /**
+     * GET for testing if a cluster is configured correctly.
+     */
     @RequestMapping(path = "/test/{id}", method = RequestMethod.GET)
-    public String testCluster(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+    public String testCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final Cluster cluster = clusterRepository.findOne(id);
         if (cluster == null) {
@@ -336,7 +346,7 @@ public class ClusterConfigController extends BaseController {
         return "redirect:/configuration/cluster";
     }
 
-    private void setupBreadCrumbs(final Model model, String name, String url) {
+    private void setupBreadCrumbs(final Model model, final String name, final String url) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model)
             .addCrumb("Configuration", "/configuration");

@@ -6,6 +6,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+/**
+ * Represents a Many-to-Many join table between View.id and Filter.id.
+ */
 @Entity
 public class ViewToFilterEnforced {
     @Id

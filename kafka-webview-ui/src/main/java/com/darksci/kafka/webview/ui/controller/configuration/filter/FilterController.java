@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+/**
+ * Controller for CRUD Operations on Filters.
+ */
 @Controller
 @RequestMapping("/configuration/filter")
 public class FilterController extends BaseController {
@@ -76,6 +79,9 @@ public class FilterController extends BaseController {
         return "configuration/filter/create";
     }
 
+    /**
+     * POST Create a filter.
+     */
     @RequestMapping(path = "/create", method = RequestMethod.POST)
     public String create(
         @Valid final FilterForm filterForm,
@@ -141,10 +147,10 @@ public class FilterController extends BaseController {
     }
 
     /**
-     * POST deletes the selected filter
+     * POST deletes the selected filter.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
-    public String delete(final @PathVariable Long id, final RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final Filter filter = filterRepository.findOne(id);
         if (filter == null) {
@@ -174,7 +180,7 @@ public class FilterController extends BaseController {
         return "redirect:/configuration/filter";
     }
 
-    private void setupBreadCrumbs(final Model model, String name, String url) {
+    private void setupBreadCrumbs(final Model model, final String name, final String url) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model)
             .addCrumb("Configuration", "/configuration");

@@ -1,10 +1,13 @@
-package com.darksci.kafka.webview.ui.controller.configuration.messageFormat.forms;
+package com.darksci.kafka.webview.ui.controller.configuration.messageformat.forms;
 
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ * Represents the form to create/update a MessageFormat.
+ */
 public class MessageFormatForm {
     private Long id = null;
 
@@ -50,15 +53,20 @@ public class MessageFormatForm {
         this.file = file;
     }
 
+    /**
+     * Does the MessageFormat that this form represents already exist in the database.
+     */
     public boolean exists() {
         return getId() != null;
     }
 
     @Override
     public String toString() {
-        return "MessageFormatForm{" +
-            "name='" + name + '\'' +
-            ", classpath='" + classpath + '\'' +
-            '}';
+        return "MessageFormatForm{"
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", classpath='" + classpath + '\''
+            + ", file=" + file
+            + '}';
     }
 }

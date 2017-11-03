@@ -7,6 +7,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+/**
+ * Controller for Configuration top level actions.
+ */
 @Controller
 @RequestMapping("/configuration")
 public class ConfigurationController extends BaseController {

@@ -55,6 +55,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+
+        <!-- test toggling -->
+        <skipTests>false</skipTests>
+        <skipCheckStyle>false</skipCheckStyle>
     </properties>
 
     <!-- Use Spring Boot Starter as Parent -->
@@ -92,6 +96,38 @@
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>false</autoReleaseAfterClose>
                 </configuration>
+            </plugin>
+
+            <!-- Enforce Checkstyles Validation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.17</version>
+                <executions>
+                    <execution>
+                        <id>checkstyle-validate</id>
+                        <phase>validate</phase><!-- when we need to run checkstyle::check -->
+                        <configuration>
+                            <configLocation>checkstyle.xml</configLocation>
+                            <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                            <encoding>utf-8</encoding>
+                            <consoleOutput>true</consoleOutput>
+                            <violationSeverity>warning</violationSeverity>
+                            <failsOnError>true</failsOnError>
+                            <enableRSS>false</enableRSS>
+
+                            <!-- By default we enable checkstyle validation -->
+                            <skip>${skipCheckStyle}</skip>
+                        </configuration>
+                        <goals>
+                            <!-- Generate site/html report -->
+                            <goal>checkstyle</goal>
+
+                            <!-- Enforce failing build on checkstyle failure -->
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -5,6 +5,9 @@ import com.darksci.kafka.webview.ui.model.UserRole;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+/**
+ * Represents the User create/update form.
+ */
 public class UserForm {
     private Long id = null;
 
@@ -71,16 +74,22 @@ public class UserForm {
         this.userRole = userRole;
     }
 
+    /**
+     * Does the User represented on the form already exist in the database.
+     */
     public boolean exists() {
         return getId() != null;
     }
 
     @Override
     public String toString() {
-        return "UserForm{" +
-            "id=" + id +
-            ", email='" + email + '\'' +
-            ", userRole=" + userRole +
-            '}';
+        return "UserForm{"
+            + "id=" + id
+            + ", email='" + email + '\''
+            + ", displayName='" + displayName + '\''
+            + ", password='" + password + '\''
+            + ", password2='" + password2 + '\''
+            + ", userRole=" + userRole
+            + '}';
     }
 }

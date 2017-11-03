@@ -23,7 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.transaction.Transactional;
 
 /**
- * Websocket controller end points.
+ * Web socket controller end points.
  */
 @Controller
 @RequestMapping("/stream")
@@ -34,9 +34,8 @@ public class StreamController extends BaseController {
     @Autowired
     private WebSocketConsumersManager webSocketConsumersManager;
 
-
     /**
-     * Just redirects to view index for now?
+     * Just redirects to view index for now.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
     public String index(final Model model) {
@@ -52,7 +51,7 @@ public class StreamController extends BaseController {
      */
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
     public String stream(
-        final @PathVariable Long id,
+        @PathVariable final Long id,
         final Model model,
         final RedirectAttributes redirectAttributes) {
         // Retrieve view
@@ -85,7 +84,7 @@ public class StreamController extends BaseController {
     @MessageMapping("/consume/{viewId}")
     @Transactional
     public String newConsumer(
-        final @DestinationVariable Long viewId,
+        @DestinationVariable final Long viewId,
         final SimpMessageHeaderAccessor headerAccessor) {
 
         // Retrieve view
@@ -107,7 +106,7 @@ public class StreamController extends BaseController {
     @MessageMapping("/pause/{viewId}")
     @Transactional
     public String pauseConsumer(
-        final @DestinationVariable Long viewId,
+        @DestinationVariable final Long viewId,
         final SimpMessageHeaderAccessor headerAccessor) {
 
         // Request a pause
@@ -123,7 +122,7 @@ public class StreamController extends BaseController {
     @MessageMapping("/resume/{viewId}")
     @Transactional
     public String resumeConsumer(
-        final @DestinationVariable Long viewId,
+        @DestinationVariable final Long viewId,
         final SimpMessageHeaderAccessor headerAccessor) {
 
         // Request Resume

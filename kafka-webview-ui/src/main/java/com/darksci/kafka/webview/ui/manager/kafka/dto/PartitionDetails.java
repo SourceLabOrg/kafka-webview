@@ -3,6 +3,9 @@ package com.darksci.kafka.webview.ui.manager.kafka.dto;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represent details about a specific partition.
+ */
 public class PartitionDetails {
     private final String topic;
     private final int partition;
@@ -10,7 +13,16 @@ public class PartitionDetails {
     private final List<NodeDetails> replicas;
     private final List<NodeDetails> isr;
 
-    public PartitionDetails(final String topic, final int partition, final NodeDetails leader, final List<NodeDetails> replicas, final List<NodeDetails> isr) {
+    /**
+     * Constructor.
+     */
+    public PartitionDetails(
+        final String topic,
+        final int partition,
+        final NodeDetails leader,
+        final List<NodeDetails> replicas,
+        final List<NodeDetails> isr
+    ) {
         this.topic = topic;
         this.partition = partition;
         this.leader = leader;
@@ -40,12 +52,12 @@ public class PartitionDetails {
 
     @Override
     public String toString() {
-        return "PartitionDetails{" +
-            "topic='" + topic + '\'' +
-            ", partition=" + partition +
-            ", leader=" + leader +
-            ", replicas=" + replicas +
-            ", isr=" + isr +
-            '}';
+        return "PartitionDetails{"
+            + "topic='" + topic + '\''
+            + ", partition=" + partition
+            + ", leader=" + leader
+            + ", replicas=" + replicas
+            + ", isr=" + isr
+            + '}';
     }
 }

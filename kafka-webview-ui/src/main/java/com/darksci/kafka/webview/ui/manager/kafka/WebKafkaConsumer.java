@@ -22,13 +22,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Wrapper around KafkaConsumer.  This instance is intended to be short lived and only live
+ * during the life-time of a single web request.
+ */
 public class WebKafkaConsumer implements AutoCloseable {
-    private final static Logger logger = LoggerFactory.getLogger(WebKafkaConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebKafkaConsumer.class);
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
     private List<TopicPartition> cachedTopicsAndPartitions = null;
 
+    /**
+     * Constructor.
+     * @param kafkaConsumer The underlying/wrapped KafkaConsumer instance.
+     * @param clientConfig The client configuration.
+     */
     public WebKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
@@ -41,16 +50,20 @@ public class WebKafkaConsumer implements AutoCloseable {
         logger.info("Consumed {} records", consumerRecords.count());
         final Iterator<ConsumerRecord> recordIterator = consumerRecords.iterator();
         while (recordIterator.hasNext()) {
+            // Get next record
             final ConsumerRecord consumerRecord = recordIterator.next();
-            kafkaResultList.add(
-                new KafkaResult(
-                    consumerRecord.partition(),
-                    consumerRecord.offset(),
-                    consumerRecord.timestamp(),
-                    consumerRecord.key(),
-                    consumerRecord.value()
-                )
+
+            // Convert to KafkaResult.
+            final KafkaResult kafkaResult = new KafkaResult(
+                consumerRecord.partition(),
+                consumerRecord.offset(),
+                consumerRecord.timestamp(),
+                consumerRecord.key(),
+                consumerRecord.value()
             );
+
+            // Add to list.
+            kafkaResultList.add(kafkaResult);
         }
 
         // Commit offsets
@@ -58,6 +71,10 @@ public class WebKafkaConsumer implements AutoCloseable {
         return kafkaResultList;
     }
 
+    /**
+     * Retrieves next batch of records per partition.
+     * @return KafkaResults object containing any found records.
+     */
     public KafkaResults consumePerPartition() {
         final Map<Integer, List<KafkaResult>> resultsByPartition = new TreeMap<>();
         for (final TopicPartition topicPartition: getAllPartitions()) {
@@ -89,6 +106,11 @@ public class WebKafkaConsumer implements AutoCloseable {
         );
     }
 
+    /**
+     * Seek to the specified offsets.
+     * @param partitionOffsetMap Map of PartitionId => Offset to seek to.
+     * @return ConsumerState representing the consumer's positions.
+     */
     public ConsumerState seek(final Map<Integer, Long> partitionOffsetMap) {
         for (final Map.Entry<Integer, Long> entry: partitionOffsetMap.entrySet()) {
             kafkaConsumer.seek(
@@ -102,7 +124,7 @@ public class WebKafkaConsumer implements AutoCloseable {
 
     /**
      * Seek consumer to specific timestamp
-     * @param timestamp
+     * @param timestamp Unix timestamp in milliseconds to seek to.
      */
     public ConsumerState seek(final long timestamp) {
         // Find offsets for timestamp
@@ -122,8 +144,7 @@ public class WebKafkaConsumer implements AutoCloseable {
         return seek(partitionOffsetMap);
     }
 
-    // Unsure if this should be exposed
-    public List<PartitionOffset> getHeadOffsets() {
+    private List<PartitionOffset> getHeadOffsets() {
         final Map<TopicPartition, Long> results = kafkaConsumer.beginningOffsets(getAllPartitions());
 
         final List<PartitionOffset> offsets = new ArrayList<>();
@@ -133,8 +154,7 @@ public class WebKafkaConsumer implements AutoCloseable {
         return offsets;
     }
 
-    // Unsure if this should be exposed
-    public List<PartitionOffset> getTailOffsets() {
+    private List<PartitionOffset> getTailOffsets() {
         final Map<TopicPartition, Long> results = kafkaConsumer.endOffsets(getAllPartitions());
 
         final List<PartitionOffset> offsets = new ArrayList<>();
@@ -144,8 +164,7 @@ public class WebKafkaConsumer implements AutoCloseable {
         return offsets;
     }
 
-
-    public ConsumerState getConsumerState() {
+    private ConsumerState getConsumerState() {
         final List<PartitionOffset> offsets = new ArrayList<>();
 
         for (final TopicPartition topicPartition: getAllPartitions()) {
@@ -174,14 +193,20 @@ public class WebKafkaConsumer implements AutoCloseable {
         return cachedTopicsAndPartitions;
     }
 
-    public void commit() {
+    private void commit() {
         kafkaConsumer.commitSync();
     }
 
+    /**
+     * Closes out the consumer.
+     */
     public void close() {
         kafkaConsumer.close();
     }
 
+    /**
+     * Seek to the previous 'page' of records.
+     */
     public void previous() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();
@@ -209,6 +234,9 @@ public class WebKafkaConsumer implements AutoCloseable {
         commit();
     }
 
+    /**
+     * Seek to the next 'page' of records.
+     */
     public void next() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();
@@ -234,6 +262,9 @@ public class WebKafkaConsumer implements AutoCloseable {
         commit();
     }
 
+    /**
+     * Seek to the HEAD of a topic.
+     */
     public ConsumerState toHead() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();
@@ -254,6 +285,9 @@ public class WebKafkaConsumer implements AutoCloseable {
         return getConsumerState();
     }
 
+    /**
+     * Seek to the TAIL of a topic.
+     */
     public ConsumerState toTail() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();

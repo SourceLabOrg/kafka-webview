@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * corresponding WebSocket connections.
  */
 public class WebSocketConsumersManager implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger(WebSocketConsumersManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketConsumersManager.class);
 
     /**
      * Holds a map of ConsumerKey => ConsumerEntry, which is basically a container
@@ -229,7 +229,7 @@ public class WebSocketConsumersManager implements Runnable {
                     break;
                 }
             }
-        } while(true);
+        } while (true);
 
         // Shut down
         threadPoolExecutor.shutdown();
@@ -334,14 +334,22 @@ public class WebSocketConsumersManager implements Runnable {
         }
 
         @Override
-        public boolean equals(final Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object other) {
+            if (this == other) {
+                return true;
+            }
+            if (other == null || getClass() != other.getClass()) {
+                return false;
+            }
 
-            final ConsumerKey that = (ConsumerKey) o;
+            final ConsumerKey that = (ConsumerKey) other;
 
-            if (viewId != that.viewId) return false;
-            if (userId != that.userId) return false;
+            if (viewId != that.viewId) {
+                return false;
+            }
+            if (userId != that.userId) {
+                return false;
+            }
             return sessionId.equals(that.sessionId);
         }
 

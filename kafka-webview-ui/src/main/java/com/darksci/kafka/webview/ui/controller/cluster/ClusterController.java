@@ -17,6 +17,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controller for viewing Cluster details.
+ */
 @Controller
 @RequestMapping("/cluster")
 public class ClusterController extends BaseController {
@@ -58,7 +61,7 @@ public class ClusterController extends BaseController {
      */
     @RequestMapping(path = "/{clusterId}", method = RequestMethod.GET)
     public String readCluster(
-        final @PathVariable Long clusterId,
+        @PathVariable final Long clusterId,
         final Model model,
         final RedirectAttributes redirectAttributes) {
 
@@ -83,8 +86,8 @@ public class ClusterController extends BaseController {
      */
     @RequestMapping(path = "/{clusterId}/broker/{brokerId}", method = RequestMethod.GET)
     public String readBroker(
-        final @PathVariable Long clusterId,
-        final @PathVariable Integer brokerId,
+        @PathVariable final Long clusterId,
+        @PathVariable final Integer brokerId,
         final Model model,
         final RedirectAttributes redirectAttributes) {
 
@@ -112,8 +115,8 @@ public class ClusterController extends BaseController {
      */
     @RequestMapping(path = "/{clusterId}/topic/{topic:.+}", method = RequestMethod.GET)
     public String readTopic(
-        final @PathVariable Long clusterId,
-        final @PathVariable String topic,
+        @PathVariable final Long clusterId,
+        @PathVariable final String topic,
         final Model model,
         final RedirectAttributes redirectAttributes) {
 

@@ -96,6 +96,11 @@ public class UploadManager {
             return true;
         }
 
+        // Only remove files
+        if (!fullOutputPath.toFile().isFile()) {
+            return false;
+        }
+
         try {
             Files.delete(fullOutputPath);
         } catch (IOException ex) {

@@ -18,7 +18,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Consumer for publishing to a websocket.
+ * Consumer for publishing to a web socket.
+ * Intended to be long running.
  */
 public class SocketKafkaConsumer implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(SocketKafkaConsumer.class);
@@ -37,7 +38,6 @@ public class SocketKafkaConsumer implements Runnable {
     private final BlockingQueue<KafkaResult> outputQueue;
 
     private volatile boolean requestStop = false;
-
 
     /**
      * Constructor.
@@ -81,11 +81,11 @@ public class SocketKafkaConsumer implements Runnable {
 
             // If no records found
             if (consumerRecords.isEmpty()) {
-                    // Sleep for a bit
-                    sleep(POLL_TIMEOUT_MS);
+                // Sleep for a bit
+                sleep(POLL_TIMEOUT_MS);
 
-                    // Skip to next iteration of loop.
-                    continue;
+                // Skip to next iteration of loop.
+                continue;
             }
 
             // Push messages onto output queue

@@ -13,26 +13,33 @@ import java.util.stream.Collectors;
  */
 public class ClusterConfig {
     private final Set<String> brokerHosts;
-    private final boolean useSSL;
+    private final boolean useSsl;
     private final String keyStoreFile;
     private final String keyStorePassword;
     private final String trustStoreFile;
     private final String trustStorePassword;
 
+    /**
+     * Private Constructor for connecting to NON-SSL brokers.
+     * @param brokerHosts List of one or more broker hosts.
+     */
     private ClusterConfig(final Set<String> brokerHosts) {
         this(brokerHosts, false, null, null, null, null);
     }
 
+    /**
+     * Private constructor for connecting to SSL brokers.
+     */
     private ClusterConfig(
         final Set<String> brokerHosts,
-        final boolean useSSL,
+        final boolean useSsl,
         final String keyStoreFile,
         final String keyStorePassword,
         final String trustStoreFile,
         final String trustStorePassword) {
 
         this.brokerHosts = brokerHosts;
-        this.useSSL = useSSL;
+        this.useSsl = useSsl;
         this.keyStoreFile = keyStoreFile;
         this.keyStorePassword = keyStorePassword;
         this.trustStoreFile = trustStoreFile;
@@ -43,8 +50,8 @@ public class ClusterConfig {
         return brokerHosts;
     }
 
-    public boolean isUseSSL() {
-        return useSSL;
+    public boolean isUseSsl() {
+        return useSsl;
     }
 
     public String getConnectString() {
@@ -69,12 +76,12 @@ public class ClusterConfig {
 
     @Override
     public String toString() {
-        return "ClusterConfig{" +
-            "brokerHosts=" + brokerHosts +
-            ", useSSL=" + useSSL +
-            ", keyStoreFile='" + keyStoreFile + '\'' +
-            ", trustStoreFile='" + trustStoreFile + '\'' +
-            '}';
+        return "ClusterConfig{"
+            + "brokerHosts=" + brokerHosts
+            + ", useSsl=" + useSsl
+            + ", keyStoreFile='" + keyStoreFile + '\''
+            + ", trustStoreFile='" + trustStoreFile + '\''
+            + '}';
     }
 
     /**
@@ -93,28 +100,29 @@ public class ClusterConfig {
      * @return Builder instance.
      */
     public static Builder newBuilder(final Cluster cluster, final SecretManager secretManager) {
-        // Create new Operational Client
         final ClusterConfig.Builder builder = ClusterConfig.newBuilder()
             .withBrokerHosts(cluster.getBrokerHosts());
 
         if (cluster.isSslEnabled()) {
             builder
-                .withUseSSL(cluster.isSslEnabled())
+                .withUseSsl(cluster.isSslEnabled())
                 .withKeyStoreFile(cluster.getKeyStoreFile())
                 .withKeyStorePassword(secretManager.decrypt(cluster.getKeyStorePassword()))
                 .withTrustStoreFile(cluster.getTrustStoreFile())
                 .withTrustStorePassword(secretManager.decrypt(cluster.getTrustStorePassword()));
         } else {
-            builder.withUseSSL(false);
+            builder.withUseSsl(false);
         }
 
         return builder;
     }
 
-
+    /**
+     * Builder instance for ClusterConfig.
+     */
     public static final class Builder {
         private Set<String> brokerHosts;
-        private boolean useSSL = false;
+        private boolean useSsl = false;
         private String keyStoreFile;
         private String keyStorePassword;
         private String trustStoreFile;
@@ -123,44 +131,68 @@ public class ClusterConfig {
         private Builder() {
         }
 
-        public Builder withBrokerHosts(Set<String> brokerHosts) {
+        /**
+         * Set broker hosts.
+         */
+        public Builder withBrokerHosts(final Set<String> brokerHosts) {
             this.brokerHosts = brokerHosts;
             return this;
         }
 
+        /**
+         * Set broker hosts.
+         */
         public Builder withBrokerHosts(final String... brokerHosts) {
             this.brokerHosts = new HashSet<>();
             this.brokerHosts.addAll(Arrays.asList(brokerHosts));
             return this;
         }
 
-        public Builder withUseSSL(boolean useSSL) {
-            this.useSSL = useSSL;
+        /**
+         * Declare if the brokers use SSL.
+         */
+        public Builder withUseSsl(final boolean useSsl) {
+            this.useSsl = useSsl;
             return this;
         }
 
-        public Builder withKeyStoreFile(String keyStoreFile) {
+        /**
+         * Declare keystore file if using SSL.
+         */
+        public Builder withKeyStoreFile(final String keyStoreFile) {
             this.keyStoreFile = keyStoreFile;
             return this;
         }
 
-        public Builder withKeyStorePassword(String keyStorePassword) {
+        /**
+         * Declare keystore password if using SSL.
+         */
+        public Builder withKeyStorePassword(final String keyStorePassword) {
             this.keyStorePassword = keyStorePassword;
             return this;
         }
 
-        public Builder withTrustStoreFile(String trustStoreFile) {
+        /**
+         * Declare truststore file if using SSL.
+         */
+        public Builder withTrustStoreFile(final String trustStoreFile) {
             this.trustStoreFile = trustStoreFile;
             return this;
         }
 
-        public Builder withTrustStorePassword(String trustStorePassword) {
+        /**
+         * Declare truststore password if using SSL.
+         */
+        public Builder withTrustStorePassword(final String trustStorePassword) {
             this.trustStorePassword = trustStorePassword;
             return this;
         }
 
+        /**
+         * Create ClusterConfig instance from builder values.
+         */
         public ClusterConfig build() {
-            if (!useSSL) {
+            if (!useSsl) {
                 return new ClusterConfig(brokerHosts);
             }
             return new ClusterConfig(brokerHosts, true, keyStoreFile, keyStorePassword, trustStoreFile, trustStorePassword);

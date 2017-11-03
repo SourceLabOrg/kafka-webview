@@ -3,6 +3,9 @@ package com.darksci.kafka.webview.ui.configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * Value class for configuration values.
+ */
 @Component
 public class AppProperties {
 
@@ -36,11 +39,11 @@ public class AppProperties {
 
     @Override
     public String toString() {
-        return "AppProperties{" +
-            "name='" + name + '\'' +
-            ", uploadPath='" + uploadPath + '\'' +
-            ", appKey='" + appKey + '\'' +
-            ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers +
-            '}';
+        return "AppProperties{"
+            + "name='" + name + '\''
+            + ", uploadPath='" + uploadPath + '\''
+            + ", appKey='" + appKey + '\''
+            + ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers
+            + '}';
     }
 }

@@ -35,7 +35,7 @@ public class LoginController extends BaseController {
      * GET Displays the Login Form.
      */
     @RequestMapping(path = "/login", method = RequestMethod.GET)
-    public String loginForm(final Model model, final @RequestParam(value = "error", required = false) String isError) {
+    public String loginForm(final Model model, @RequestParam(value = "error", required = false) final String isError) {
         // Redirect to home
         if (isLoggedIn()) {
             return "redirect:/";
@@ -71,8 +71,8 @@ public class LoginController extends BaseController {
         @Valid final LostPasswordForm lostPasswordForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
-        final Model model
-        ) {
+        final Model model) {
+
         // Redirect to home if already logged in
         if (isLoggedIn()) {
             return "redirect:/";
