@@ -1,7 +1,6 @@
 package com.darksci.kafka.webview.ui.manager.kafka.config;
 
 import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 
 /**
  * Configuration defining how to Deserialize values from Kafka.
