@@ -8,9 +8,10 @@ import java.util.Map;
 public interface RecordFilter {
     /**
      * Configure this class.
-     * @param configs configs in key/value pairs
+     * @param consumerConfigs Consumer configuration in key/value pairs
+     * @param filterOptions User defined filter options.
      */
-    void configure(final Map<String, ?> configs);
+    void configure(final Map<String, ?> consumerConfigs, final Map<String, ?> filterOptions);
 
     /**
      * Define the filter behavior.
@@ -25,4 +26,9 @@ public interface RecordFilter {
      * @return True means the record WILL be shown.  False means the record will NOT be shown.
      */
     boolean filter(final String topic, final int partition, final long offset, final Object key, final Object value);
+
+    /**
+     * Called on closing.
+     */
+    void close();
 }

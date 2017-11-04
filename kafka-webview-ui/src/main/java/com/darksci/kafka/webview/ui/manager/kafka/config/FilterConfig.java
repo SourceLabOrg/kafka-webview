@@ -11,22 +11,22 @@ import java.util.List;
  * Configuration defining any Filters that should be applied.
  */
 public class FilterConfig {
-    private List<RecordFilter> recordFilters;
+    private List<FilterDefinition> filterDefinitions;
 
     /**
      * Constructor.
-     * @param recordFilters Which filters to apply.
+     * @param filterDefinitions Which filters to apply.
      */
-    public FilterConfig(final List<RecordFilter> recordFilters) {
-        this.recordFilters = Collections.unmodifiableList(recordFilters);
+    public FilterConfig(final List<FilterDefinition> filterDefinitions) {
+        this.filterDefinitions = Collections.unmodifiableList(filterDefinitions);
     }
 
     private FilterConfig() {
-        recordFilters = new ArrayList<>();
+        filterDefinitions = new ArrayList<>();
     }
 
-    public List<RecordFilter> getFilters() {
-        return recordFilters;
+    public List<FilterDefinition> getFilters() {
+        return filterDefinitions;
     }
 
     /**
@@ -39,21 +39,21 @@ public class FilterConfig {
     /**
      * Factory method for creating an instance with one or more filters.
      */
-    public static FilterConfig withFilters(final RecordFilter... recordFilters) {
-        return new FilterConfig(Arrays.asList(recordFilters));
+    public static FilterConfig withFilters(final FilterDefinition... filterDefinitions) {
+        return new FilterConfig(Arrays.asList(filterDefinitions));
     }
 
     /**
      * Factory method to create an instance with one or more filters.
      */
-    public static FilterConfig withFilters(final List<RecordFilter> recordFilters) {
-        return new FilterConfig(recordFilters);
+    public static FilterConfig withFilters(final List<FilterDefinition> filterDefinitions) {
+        return new FilterConfig(filterDefinitions);
     }
 
     @Override
     public String toString() {
         return "FilterConfig{"
-            + "recordFilters=" + recordFilters
+            + "filterDefinitions=" + filterDefinitions
             + '}';
     }
 }

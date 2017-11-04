@@ -1,5 +1,6 @@
 package com.darksci.kafka.webview.ui.manager.kafka.filter;
 
+import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -19,9 +20,9 @@ import java.util.Map;
  */
 public class RecordFilterInterceptor implements ConsumerInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(RecordFilterInterceptor.class);
-    public static final String CONFIG_KEY = "RecordFilterInterceptor.Classes";
+    public static final String CONFIG_KEY = "RecordFilterInterceptor.filterDefinitions";
 
-    private final List<RecordFilter> recordFilters = new ArrayList<>();
+    private final List<FilterDefinition> filterDefinitions = new ArrayList<>();
 
     @Override
     public ConsumerRecords onConsume(final ConsumerRecords records) {
@@ -35,10 +36,10 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
 
             boolean result = true;
 
-            // Iterate thru filters
-            for (final RecordFilter recordFilter: recordFilters) {
+            // Iterate through filters
+            for (final FilterDefinition filterDefinition: filterDefinitions) {
                 // Pass through filter
-                result = recordFilter.filter(
+                result = filterDefinition.getRecordFilter().filter(
                     record.topic(),
                     record.partition(),
                     record.offset(),
@@ -68,27 +69,34 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
 
     @Override
     public void close() {
-        // Not needed?
+        // Call close on each filter.
+        for (final FilterDefinition filterDefinition: filterDefinitions) {
+            filterDefinition.getRecordFilter().close();
+        }
     }
 
     @Override
     public void onCommit(final Map offsets) {
-        // Dunno yet.
+        // Nothing!
     }
 
     @Override
-    public void configure(final Map<String, ?> configs) {
-        // Grab classes from config
-        final Iterable<RecordFilter> filters = (Iterable<RecordFilter>) configs.get(CONFIG_KEY);
+    public void configure(final Map<String, ?> consumerConfigs) {
+        // Grab definitions out of config
+        final Iterable<FilterDefinition> filterDefinitionsCfg = (Iterable<FilterDefinition>) consumerConfigs.get(CONFIG_KEY);
 
-        // Create instances fo filters
-        for (final RecordFilter recordFilter : filters) {
+        // Loop over
+        for (final FilterDefinition filterDefinition : filterDefinitionsCfg) {
             try {
-                // Configure
-                recordFilter.configure(configs);
+                // Grab filter and options
+                final RecordFilter recordFilter = filterDefinition.getRecordFilter();
+                final Map<String, ?> filterOptions = filterDefinition.getOptions();
+
+                // Configure it
+                recordFilter.configure(consumerConfigs, filterOptions);
 
                 // Add to list
-                recordFilters.add(recordFilter);
+                filterDefinitions.add(filterDefinition);
             } catch (final Exception exception) {
                 logger.error(exception.getMessage(), exception);
             }

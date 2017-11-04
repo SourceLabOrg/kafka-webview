@@ -5,6 +5,7 @@ import com.darksci.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.FilterConfig;
+import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import com.darksci.kafka.webview.ui.manager.kafka.config.TopicConfig;
 import com.darksci.kafka.webview.ui.manager.plugin.PluginFactory;
 import com.darksci.kafka.webview.ui.manager.plugin.exception.LoaderException;
@@ -13,12 +14,15 @@ import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.model.MessageFormat;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.Deserializer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Factory class for creating new Kafka Consumers to be used by WebRequests.
@@ -122,18 +126,29 @@ public class WebKafkaConsumerFactory {
         if (filterList.isEmpty()) {
             clientConfigBuilder.withNoFilters();
         } else {
-            final List<RecordFilter> recordFilters = new ArrayList<>();
+            final List<FilterDefinition> filterDefinitions = new ArrayList<>();
+
+            // For parsing json options
+            final ObjectMapper mapper = new ObjectMapper();
+
             // Build filter list
             for (final Filter filter: filterList) {
                 // Build it
                 try {
+                    // Create instance.
                     final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(filter.getJar(), filter.getClasspath());
-                    recordFilters.add(recordFilter);
-                } catch (LoaderException e) {
+
+                    // Parse options
+                    final Map<String, ?> options = mapper.readValue(filter.getOptions(), Map.class);
+
+                    // Create definition
+                    final FilterDefinition filterDefinition = new FilterDefinition(recordFilter, options);
+                    filterDefinitions.add(filterDefinition);
+                } catch (IOException | LoaderException e) {
                     throw new RuntimeException(e);
                 }
             }
-            clientConfigBuilder.withFilterConfig(FilterConfig.withFilters(recordFilters));
+            clientConfigBuilder.withFilterConfig(FilterConfig.withFilters(filterDefinitions));
         }
 
         // Create the damn consumer
