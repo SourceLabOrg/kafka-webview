@@ -42,6 +42,10 @@
                                             Actions
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <a class="dropdown-item" th:href="@{/configuration/filter/edit/{id}(id=${filter.id})}">
+                                                <i class="fa fa-edit"></i>
+                                                Edit
+                                            </a>
                                             <form th:action="@{/configuration/filter/delete/{id}(id=${filter.id})}" method="post">
                                                 <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
                                                     <i class="fa fa-remove"></i>

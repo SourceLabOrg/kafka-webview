@@ -24,6 +24,9 @@ public class Filter {
     @Column(nullable = false, unique = true)
     private String jar;
 
+    @Column(nullable = false)
+    private String options = "{}";
+
     public long getId() {
         return id;
     }
@@ -56,13 +59,22 @@ public class Filter {
         this.jar = jar;
     }
 
+    public String getOptions() {
+        return options;
+    }
+
+    public void setOptions(final String options) {
+        this.options = options;
+    }
+
     @Override
     public String toString() {
         return "Filter{"
-            + "+ id=" + id
-            + ", + name='" + name + '\''
-            + ", + classpath='" + classpath + '\''
-            + ", + jar='" + jar + '\''
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", classpath='" + classpath + '\''
+            + ", jar='" + jar + '\''
+            + ", options='" + options + '\''
             + '}';
     }
 }

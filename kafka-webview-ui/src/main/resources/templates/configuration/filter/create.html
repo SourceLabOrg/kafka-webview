@@ -16,12 +16,12 @@
                 <div class="card">
                     <div class="card-header">
                         <strong th:text="${filterForm.exists()} ? 'Edit' : 'Create'">Create</strong>
-                        <span th:text="${filterForm.exists()} ? ${filter.name} : 'New Filter'"></span>
+                        <span th:text="${filterForm.exists()} ? ${filterForm.name} : 'New Filter'"></span>
                     </div>
                     <form
-                        th:action="@{/configuration/filter/create}"
+                        th:action="@{/configuration/filter/update}"
                         th:object="${filterForm}"
-                        method="post" class="form-horizontal" enctype="multipart/form-data">
+                        id="filter-form" method="post" class="form-horizontal" enctype="multipart/form-data">
                         <div class="card-body">
                             <!-- Name -->
                             <div class="form-group row">
@@ -67,9 +67,21 @@
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('classpath')}" th:errors="*{classpath}"/>
                                 </div>
                             </div>
+
+                            <!-- Options -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label">
+                                    Options (Optional)
+                                </label>
+                                <div class="col-md-9">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('classpath')}" th:errors="*{optionsJsonStr}"/>
+                                    <div id="jsonEditor" style="width: 100%; height: 250px;"></div>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer">
-                            <input type="hidden" name="id" th:if="${filterForm.exists()}" th:field="*{id}"></input>
+                            <input type="hidden" name="id" th:if="${filterForm.exists()}" th:field="*{id}">
+                            <input type="hidden" name="options" id="options" th:field="*{optionsJsonStr}">
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="fa fa-dot-circle-o"></i>
                                 Submit
@@ -84,6 +96,32 @@
             </div>
         </div>
     </div>
+
+    <script type="application/javascript" th:inline="javascript">
+        var editor = null;
+        var jsonContent = [[${filterForm.optionsJsonStr}]];
+
+        // On load, parse json for editor.
+        jQuery(document).ready(function() {
+            // Create editor
+            editor = new JSONEditor(document.getElementById('jsonEditor'), []);
+
+            // Load with JSON
+            editor.set(jQuery.parseJSON(jsonContent));
+
+            // Hook into form submit.
+            jQuery('#filter-form').submit(function(event) {
+                // Pull out json from editor
+                var jsonStr = JSON.stringify(editor.get(), null, 2);
+
+                // Drop into input
+                jQuery('#options').val(jsonStr);
+
+                // Submit form.
+                return true;
+            });
+        });
+    </script>
 </section>
 
 </body>
