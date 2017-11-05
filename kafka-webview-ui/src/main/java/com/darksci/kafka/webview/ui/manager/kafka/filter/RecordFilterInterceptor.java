@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -82,6 +83,9 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
 
     @Override
     public void configure(final Map<String, ?> consumerConfigs) {
+        // Make immutable copy.
+        final Map<String, ?> immutableConsumerConfigs = Collections.unmodifiableMap(consumerConfigs);
+
         // Grab definitions out of config
         final Iterable<FilterDefinition> filterDefinitionsCfg = (Iterable<FilterDefinition>) consumerConfigs.get(CONFIG_KEY);
 
@@ -93,7 +97,7 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
                 final Map<String, ?> filterOptions = filterDefinition.getOptions();
 
                 // Configure it
-                recordFilter.configure(consumerConfigs, filterOptions);
+                recordFilter.configure(immutableConsumerConfigs, filterOptions);
 
                 // Add to list
                 filterDefinitions.add(filterDefinition);
