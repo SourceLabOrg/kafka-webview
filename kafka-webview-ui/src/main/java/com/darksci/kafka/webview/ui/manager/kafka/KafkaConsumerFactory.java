@@ -4,8 +4,6 @@ import com.darksci.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import com.darksci.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor;
-import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -27,6 +25,7 @@ public class KafkaConsumerFactory {
 
     /**
      * Constructor.
+     * @param keyStoreRootPath Parent path to where JKS key/trust stores are saved on disk.
      */
     public KafkaConsumerFactory(final String keyStoreRootPath) {
         this.keyStoreRootPath = keyStoreRootPath;
