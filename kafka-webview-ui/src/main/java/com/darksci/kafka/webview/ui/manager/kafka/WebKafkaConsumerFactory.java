@@ -15,6 +15,8 @@ import com.darksci.kafka.webview.ui.model.MessageFormat;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.model.ViewToFilterEnforced;
 import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -123,47 +125,50 @@ public class WebKafkaConsumerFactory {
             .withPartitions(view.getPartitionsAsSet())
             .withMaxResultsPerPartition(view.getResultsPerPartition());
 
+        final List<FilterDefinition> filterDefinitions = new ArrayList<>();
+
         // Add enforced filters to our filterList
-        // TODO REFACTOR
         final Set<ViewToFilterEnforced> enforcedFilters = view.getEnforcedFilters();
         for (final ViewToFilterEnforced enforcedFilter: enforcedFilters) {
             // Grab filter, add to list
-            //final FilterDefinition filterDefinition = new FilterDefinition()
-            //filterList.add(null);
+            filterDefinitions.add(buildFilterDefinition(enforcedFilter.getFilter(), enforcedFilter.getOptionParameters()));
         }
-        //filterList.addAll(view.getEnforcedFilters());
 
-        if (filterList.isEmpty()) {
+        // Loop over each passed in filter.
+        for (final Filter filter: filterList) {
+            // Build it
+            // TODO require options to be passed in somehow
+            filterDefinitions.add(buildFilterDefinition(filter, ""));
+        }
+        clientConfigBuilder.withFilterConfig(FilterConfig.withFilters(filterDefinitions));
+
+        if (filterDefinitions.isEmpty()) {
             clientConfigBuilder.withNoFilters();
         } else {
-            final List<FilterDefinition> filterDefinitions = new ArrayList<>();
-
-            // For parsing json options
-            final ObjectMapper mapper = new ObjectMapper();
-
-            // Build filter list
-            for (final Filter filter: filterList) {
-                // Build it
-                try {
-                    // Create instance.
-                    final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(filter.getJar(), filter.getClasspath());
-
-                    // Parse options
-                    // TODO parse options?
-                    final Map<String, String> options = new HashMap<>();
-
-                    // Create definition
-                    final FilterDefinition filterDefinition = new FilterDefinition(recordFilter, options);
-                    filterDefinitions.add(filterDefinition);
-                } catch (LoaderException e) {
-                    throw new RuntimeException(e);
-                }
-            }
             clientConfigBuilder.withFilterConfig(FilterConfig.withFilters(filterDefinitions));
         }
 
         // Create the damn consumer
         return clientConfigBuilder;
+    }
+
+    private FilterDefinition buildFilterDefinition(final Filter filter, final String optionParametersJsonStr) {
+        // For parsing json options
+        final ObjectMapper mapper = new ObjectMapper();
+
+        // Build it
+        try {
+            // Create instance.
+            final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(filter.getJar(), filter.getClasspath());
+
+            // Parse options from string
+            final Map<String, String> options = mapper.readValue(optionParametersJsonStr, Map.class);
+
+            // Create definition
+            return new FilterDefinition(recordFilter, options);
+        } catch (LoaderException|IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Class<? extends Deserializer> getDeserializerClass(final MessageFormat messageFormat) {

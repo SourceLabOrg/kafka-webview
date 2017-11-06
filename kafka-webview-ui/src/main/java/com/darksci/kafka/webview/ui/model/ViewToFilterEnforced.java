@@ -6,7 +6,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 /**
  * Represents a Many-to-Many join table between View.id and Filter.id.
@@ -17,8 +19,8 @@ public class ViewToFilterEnforced {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "filter_id", nullable = false)
-    private Long filterId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private Filter filter;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private View view;
@@ -37,12 +39,12 @@ public class ViewToFilterEnforced {
         this.id = id;
     }
 
-    public Long getFilterId() {
-        return filterId;
+    public Filter getFilter() {
+        return filter;
     }
 
-    public void setFilterId(final Long filterId) {
-        this.filterId = filterId;
+    public void setFilter(final Filter filter) {
+        this.filter = filter;
     }
 
     public View getView() {
@@ -73,7 +75,6 @@ public class ViewToFilterEnforced {
     public String toString() {
         return "ViewToFilterEnforced{"
             + "id=" + id
-            + ", filterId=" + filterId
             + ", sortOrder=" + sortOrder
             + ", optionParameters='" + optionParameters + '\''
             + '}';

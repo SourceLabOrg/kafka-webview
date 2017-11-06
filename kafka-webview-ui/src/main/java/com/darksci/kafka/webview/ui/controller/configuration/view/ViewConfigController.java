@@ -166,12 +166,12 @@ public class ViewConfigController extends BaseController {
         final Map<Long, Map<String, String>> filterParameters = new HashMap<>();
         final Set<Long> enforcedFilterIds = new HashSet<>();
         for (final ViewToFilterEnforced enforcedFilter: view.getEnforcedFilters()) {
-            enforcedFilterIds.add(enforcedFilter.getFilterId());
+            enforcedFilterIds.add(enforcedFilter.getFilter().getId());
 
             // Get options
             try {
                 final Map<String, String> optionParameters = objectMapper.readValue(enforcedFilter.getOptionParameters(), Map.class);
-                filterParameters.put(enforcedFilter.getFilterId(), optionParameters);
+                filterParameters.put(enforcedFilter.getFilter().getId(), optionParameters);
             } catch (IOException e) {
                 // Failed to parse?  Wipe out value
                 enforcedFilter.setOptionParameters("{}");
@@ -366,7 +366,7 @@ public class ViewConfigController extends BaseController {
 
             ViewToFilterEnforced viewToFilterEnforced = null;
             for (final ViewToFilterEnforced currentEntry: currentlySetFilters) {
-                if (currentEntry.getFilterId().equals(filterId)) {
+                if (currentEntry.getFilter().getId() == filterId) {
                     viewToFilterEnforced = currentEntry;
                     break;
                 }
@@ -390,7 +390,7 @@ public class ViewConfigController extends BaseController {
             }
 
             // Update properties
-            viewToFilterEnforced.setFilterId(filterId);
+            viewToFilterEnforced.setFilter(filter);
             viewToFilterEnforced.setView(view);
             viewToFilterEnforced.setSortOrder(sortOrder++);
 
@@ -410,7 +410,7 @@ public class ViewConfigController extends BaseController {
 
         final Set<ViewToFilterEnforced> toRemoveFilters = new HashSet<>();
         for (final ViewToFilterEnforced enforcedFilter: currentlySetFilters) {
-            if (!enabledFilterIds.contains(enforcedFilter.getFilterId())) {
+            if (!enabledFilterIds.contains(enforcedFilter.getFilter().getId())) {
                 toRemoveFilters.add(enforcedFilter);
             }
         }

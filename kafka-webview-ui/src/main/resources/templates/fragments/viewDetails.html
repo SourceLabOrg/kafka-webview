@@ -102,9 +102,9 @@
                         <td>Partitions</td>
                         <td th:text="${view.partitions.isEmpty()}? 'All' : 'Filtered'"></td>
                     </tr>
-                    <tr th:each="filter : ${view.enforcedFilters}">
+                    <tr th:each="enforcedFilter : ${view.enforcedFilters}">
                         <td>Filter</td>
-                        <td th:text="${filter.name}">Name</td>
+                        <td th:text="${enforcedFilter.filter.name}">Name</td>
                     </tr>
                     <tr>
                         <td>Results per Partition</td>

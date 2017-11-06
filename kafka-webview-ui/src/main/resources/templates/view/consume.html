@@ -602,11 +602,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="filter : ${view.optionalFilters}">
-                                    <td th:text="${filter.name}">Name</td>
+                                <tr th:each="optionalFilter : ${view.optionalFilters}">
+                                    <td th:text="${optionalFilter.filter.name}">Name</td>
                                     <td>
                                         <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                            <input class="switch-input filter-toggle" type="checkbox" id="" th:value="${filter.id}">
+                                            <input class="switch-input filter-toggle" type="checkbox" id="" th:value="${optionalFilter.filter.id}">
                                             <span class="switch-label" data-on="" data-off=""></span>
                                             <span class="switch-handle"></span>
                                         </label>
