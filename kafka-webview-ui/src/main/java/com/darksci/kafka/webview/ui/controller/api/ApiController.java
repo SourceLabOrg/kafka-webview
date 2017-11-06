@@ -69,13 +69,14 @@ public class ApiController extends BaseController {
      * GET kafka results.
      */
     @ResponseBody
-    @RequestMapping(path = "/consumer/view/{id}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(path = "/consumer/view/{id}", method = RequestMethod.POST, produces = "application/json")
     public KafkaResults consume(
         @PathVariable final Long id,
         @RequestParam(name = "action", required = false) final String action,
-        @RequestParam(name = "partitions", required = false)final String partitions,
-        @RequestParam(name = "filters", required = false)final String filters,
-        @RequestParam(name = "results_per_partition", required = false) final Integer resultsPerPartition) {
+        @RequestParam(name = "partitions", required = false) final String partitions,
+        @RequestParam(name = "filters", required = false) final String filters,
+        @RequestParam(name = "results_per_partition", required = false) final Integer resultsPerPartition,
+        @RequestParam(name = "filterOptions[]", required = false) final Map<Long, Map<String, String>> filterOptions) {
 
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);

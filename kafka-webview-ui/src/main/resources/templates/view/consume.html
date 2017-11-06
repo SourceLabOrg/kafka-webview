@@ -136,14 +136,32 @@
                 // Record state
                 ConsumerInfo.direction = action;
 
+                // Get the enabled filters
+                var filterIds = getToggledFilters();
+
+                var filterOptionParameters = {};
+                jQuery(filterIds).each(function(index, filterId) {
+                    filterOptionParameters['filter' + filterId] = getFilterOptions(filterId);
+                });
+
                 // Build request params
                 var params = {
                     action: action,
                     partitions: getToggledPartitions().join(),
-                    filters: getToggledFilters().join()
+                    filters: filterIds.join(),
+                    filterOptions: filterOptionParameters
                 };
 
-                ApiClient.consume(ConsumerInfo.viewId, params, handleConsumeResults);
+                //ApiClient.consumePost(ConsumerInfo.viewId, params, handleConsumeResults);
+                jQuery.ajax({
+                    type: 'POST',
+                    url: '/api/consumer/view/' + ConsumerInfo.viewId,
+                    dataType: 'json',
+                    data: params,
+                    success: handleConsumeResults,
+                    headers: ApiClient.getCsrfHeader(),
+                    error: ApiClient.defaultErrorHandler
+                });
             }
 
             function handleConsumeResults(results) {
@@ -318,6 +336,22 @@
                     enabledFilters.push(jQuery(checkboxEl).val());
                 });
                 return enabledFilters;
+            }
+
+            /**
+             * Returns a map of all of the options and configured values.
+             * @param filterId
+             * @returns {{}}
+             */
+            function getFilterOptions(filterId) {
+                var optionInputs = jQuery('input.filter' + filterId);
+                var options = {};
+                jQuery(optionInputs).each(function(index, inputEl) {
+                    var optionName = jQuery(inputEl).attr('name');
+                    var optionValue = jQuery(inputEl).val();
+                    options[optionName] = optionValue;
+                });
+                return options;
             }
 
         </script>
@@ -602,16 +636,27 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="optionalFilter : ${view.optionalFilters}">
-                                    <td th:text="${optionalFilter.filter.name}">Name</td>
-                                    <td>
-                                        <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                            <input class="switch-input filter-toggle" type="checkbox" id="" th:value="${optionalFilter.filter.id}">
-                                            <span class="switch-label" data-on="" data-off=""></span>
-                                            <span class="switch-handle"></span>
-                                        </label>
-                                    </td>
-                                </tr>
+                                <th:block th:each="optionalFilter : ${view.optionalFilters}">
+                                    <tr>
+                                        <td th:text="${optionalFilter.filter.name}">Name</td>
+                                        <td>
+                                            <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                                <input class="switch-input filter-toggle" type="checkbox" id="" th:value="${optionalFilter.filter.id}">
+                                                <span class="switch-label" data-on="" data-off=""></span>
+                                                <span class="switch-handle"></span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr th:each="option : ${optionalFilter.filter.getOptionsAsSet()}">
+                                        <td colspan="2">
+                                            <input
+                                                class="form-control" type="text" name="option"
+                                                th:name="${option}"
+                                                th:class="'filterOption filter' + ${optionalFilter.filter.id}"
+                                                th:placeholder="${option}">
+                                        </td>
+                                    </tr>
+                                </th:block>
                             </tbody>
                         </table>
                     </div>
