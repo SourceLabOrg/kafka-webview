@@ -18,6 +18,7 @@ import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicListing;
 import com.darksci.kafka.webview.ui.model.Cluster;
 import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.model.View;
+import com.darksci.kafka.webview.ui.model.ViewToFilterOptional;
 import com.darksci.kafka.webview.ui.repository.ClusterRepository;
 import com.darksci.kafka.webview.ui.repository.FilterRepository;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
@@ -131,8 +132,9 @@ public class ApiController extends BaseController {
             final Map<Long, Filter> allowedFilters = new HashMap<>();
 
             // Build list of allowed filters
-            for (final Filter allowedFilter : view.getOptionalFilters()) {
-                allowedFilters.put(allowedFilter.getId(), allowedFilter);
+            for (final ViewToFilterOptional allowedFilter : view.getOptionalFilters()) {
+                final Filter filter = filterRepository.findOne(allowedFilter.getFilterId());
+                allowedFilters.put(allowedFilter.getFilterId(), filter);
             }
 
             // Convert the String array into an actual array

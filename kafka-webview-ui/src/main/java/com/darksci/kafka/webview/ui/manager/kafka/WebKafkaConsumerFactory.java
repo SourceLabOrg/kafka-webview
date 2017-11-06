@@ -13,6 +13,7 @@ import com.darksci.kafka.webview.ui.model.Cluster;
 import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.model.MessageFormat;
 import com.darksci.kafka.webview.ui.model.View;
+import com.darksci.kafka.webview.ui.model.ViewToFilterEnforced;
 import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Factory class for creating new Kafka Consumers to be used by WebRequests.
@@ -122,7 +124,14 @@ public class WebKafkaConsumerFactory {
             .withMaxResultsPerPartition(view.getResultsPerPartition());
 
         // Add enforced filters to our filterList
-        filterList.addAll(view.getEnforcedFilters());
+        // TODO REFACTOR
+        final Set<ViewToFilterEnforced> enforcedFilters = view.getEnforcedFilters();
+        for (final ViewToFilterEnforced enforcedFilter: enforcedFilters) {
+            // Grab filter, add to list
+            //final FilterDefinition filterDefinition = new FilterDefinition()
+            //filterList.add(null);
+        }
+        //filterList.addAll(view.getEnforcedFilters());
 
         if (filterList.isEmpty()) {
             clientConfigBuilder.withNoFilters();

@@ -11,6 +11,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Transient;
 import java.sql.Timestamp;
@@ -47,21 +48,21 @@ public class View {
     @Column(nullable = false)
     private Integer resultsPerPartition = 10;
 
-    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinTable(
-        name = "view_to_filter_enforced",
-        joinColumns = @JoinColumn(name = "view_id"),
-        inverseJoinColumns = @JoinColumn(name = "filter_id"))
+    @OneToMany(
+        fetch=FetchType.LAZY,
+        cascade = { CascadeType.PERSIST, CascadeType.MERGE },
+        mappedBy="view",
+        orphanRemoval = true)
     @OrderColumn(name = "sort_order")
-    private Set<Filter> enforcedFilters = new HashSet<>();
+    private Set<ViewToFilterEnforced> enforcedFilters = new HashSet<>();
 
-    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinTable(
-        name = "view_to_filter_optional",
-        joinColumns = @JoinColumn(name = "view_id"),
-        inverseJoinColumns = @JoinColumn(name = "filter_id"))
+    @OneToMany(
+        fetch=FetchType.LAZY,
+        cascade = { CascadeType.PERSIST, CascadeType.MERGE },
+        mappedBy="view",
+        orphanRemoval = true)
     @OrderColumn(name = "sort_order")
-    private Set<Filter> optionalFilters = new HashSet<>();
+    private Set<ViewToFilterOptional> optionalFilters = new HashSet<>();
 
     @Column(nullable = false)
     private Timestamp createdAt;
@@ -151,19 +152,19 @@ public class View {
         return partitionsSet;
     }
 
-    public Set<Filter> getEnforcedFilters() {
+    public Set<ViewToFilterEnforced> getEnforcedFilters() {
         return enforcedFilters;
     }
 
-    public void setEnforcedFilters(final Set<Filter> filters) {
+    public void setEnforcedFilters(final Set<ViewToFilterEnforced> filters) {
         this.enforcedFilters = filters;
     }
 
-    public Set<Filter> getOptionalFilters() {
+    public Set<ViewToFilterOptional> getOptionalFilters() {
         return optionalFilters;
     }
 
-    public void setOptionalFilters(final Set<Filter> optionalFilters) {
+    public void setOptionalFilters(final Set<ViewToFilterOptional> optionalFilters) {
         this.optionalFilters = optionalFilters;
     }
 

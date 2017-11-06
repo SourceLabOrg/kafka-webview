@@ -2,9 +2,11 @@ package com.darksci.kafka.webview.ui.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 /**
  * Represents a Many-to-Many join table between View.id and Filter.id.
@@ -18,14 +20,14 @@ public class ViewToFilterEnforced {
     @Column(name = "filter_id", nullable = false)
     private Long filterId;
 
-    @Column(name = "view_id", nullable = false)
-    private Long viewId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private View view;
 
     @Column(nullable = false)
     private Long sortOrder;
 
     @Column(nullable = false)
-    private String options = "";
+    private String optionParameters = "";
 
     public Long getId() {
         return id;
@@ -43,12 +45,12 @@ public class ViewToFilterEnforced {
         this.filterId = filterId;
     }
 
-    public Long getViewId() {
-        return viewId;
+    public View getView() {
+        return view;
     }
 
-    public void setViewId(final Long viewId) {
-        this.viewId = viewId;
+    public void setView(final View view) {
+        this.view = view;
     }
 
     public Long getSortOrder() {
@@ -59,12 +61,12 @@ public class ViewToFilterEnforced {
         this.sortOrder = sortOrder;
     }
 
-    public String getOptions() {
-        return options;
+    public String getOptionParameters() {
+        return optionParameters;
     }
 
-    public void setOptions(final String options) {
-        this.options = options;
+    public void setOptionParameters(final String optionParameters) {
+        this.optionParameters = optionParameters;
     }
 
     @Override
@@ -72,9 +74,8 @@ public class ViewToFilterEnforced {
         return "ViewToFilterEnforced{"
             + "id=" + id
             + ", filterId=" + filterId
-            + ", viewId=" + viewId
             + ", sortOrder=" + sortOrder
-            + ", options='" + options + '\''
+            + ", optionParameters='" + optionParameters + '\''
             + '}';
     }
 }
