@@ -29,7 +29,7 @@ public class ViewToFilterEnforced {
     private Long sortOrder;
 
     @Column(nullable = false)
-    private String optionParameters = "";
+    private String optionParameters = "{}";
 
     public Long getId() {
         return id;

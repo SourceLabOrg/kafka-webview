@@ -138,7 +138,7 @@ public class WebKafkaConsumerFactory {
         for (final Filter filter: filterList) {
             // Build it
             // TODO require options to be passed in somehow
-            filterDefinitions.add(buildFilterDefinition(filter, ""));
+            filterDefinitions.add(buildFilterDefinition(filter, "{}"));
         }
         clientConfigBuilder.withFilterConfig(FilterConfig.withFilters(filterDefinitions));
 

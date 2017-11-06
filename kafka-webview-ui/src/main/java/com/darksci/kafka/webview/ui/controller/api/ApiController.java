@@ -133,8 +133,7 @@ public class ApiController extends BaseController {
 
             // Build list of allowed filters
             for (final ViewToFilterOptional allowedFilter : view.getOptionalFilters()) {
-                final Filter filter = filterRepository.findOne(allowedFilter.getFilterId());
-                allowedFilters.put(allowedFilter.getFilterId(), filter);
+                allowedFilters.put(allowedFilter.getFilter().getId(), allowedFilter.getFilter());
             }
 
             // Convert the String array into an actual array

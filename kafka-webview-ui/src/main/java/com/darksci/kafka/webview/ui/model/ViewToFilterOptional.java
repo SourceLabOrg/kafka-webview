@@ -17,8 +17,8 @@ public class ViewToFilterOptional {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "filter_id", nullable = false)
-    private Long filterId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private Filter filter;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private View view;
@@ -34,12 +34,12 @@ public class ViewToFilterOptional {
         this.id = id;
     }
 
-    public Long getFilterId() {
-        return filterId;
+    public Filter getFilter() {
+        return filter;
     }
 
-    public void setFilterId(final Long filterId) {
-        this.filterId = filterId;
+    public void setFilter(final Filter filter) {
+        this.filter = filter;
     }
 
     public View getView() {
@@ -62,7 +62,6 @@ public class ViewToFilterOptional {
     public String toString() {
         return "ViewToFilterOptional{"
             + "id=" + id
-            + ", filterId=" + filterId
             + ", sortOrder=" + sortOrder
             + '}';
     }

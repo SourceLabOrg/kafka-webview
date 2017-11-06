@@ -183,7 +183,7 @@ public class ViewConfigController extends BaseController {
         // Set optional filters
         final Set<Long> optionalFilterIds = new HashSet<>();
         for (final ViewToFilterOptional optionalFilter: view.getOptionalFilters()) {
-            optionalFilterIds.add(optionalFilter.getFilterId());
+            optionalFilterIds.add(optionalFilter.getFilter().getId());
         }
         viewForm.setOptionalFilters(optionalFilterIds);
 
@@ -305,7 +305,7 @@ public class ViewConfigController extends BaseController {
 
             ViewToFilterOptional viewToFilterOptional = null;
             for (final ViewToFilterOptional currentEntry: currentlySetFilters) {
-                if (currentEntry.getFilterId().equals(filterId)) {
+                if (currentEntry.getFilter().getId() == filterId) {
                     // Update existing
                     viewToFilterOptional = currentEntry;
                     break;
@@ -316,7 +316,7 @@ public class ViewConfigController extends BaseController {
                 viewToFilterOptional = new ViewToFilterOptional();
             }
 
-            viewToFilterOptional.setFilterId(filterId);
+            viewToFilterOptional.setFilter(filter);
             viewToFilterOptional.setView(view);
             viewToFilterOptional.setSortOrder(sortOrder++);
 
@@ -326,7 +326,7 @@ public class ViewConfigController extends BaseController {
 
         final Set<ViewToFilterOptional> toRemoveFilters = new HashSet<>();
         for (final ViewToFilterOptional optionalFilter: currentlySetFilters) {
-            if (!enabledFilterIds.contains(optionalFilter.getFilterId())) {
+            if (!enabledFilterIds.contains(optionalFilter.getFilter().getId())) {
                 toRemoveFilters.add(optionalFilter);
             }
         }
