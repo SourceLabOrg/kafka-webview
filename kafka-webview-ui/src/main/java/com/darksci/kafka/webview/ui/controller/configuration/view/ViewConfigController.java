@@ -24,12 +24,15 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -173,7 +176,8 @@ public class ViewConfigController extends BaseController {
         @Valid final ViewForm viewForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
-        final Model model) {
+        final Model model,
+        @RequestParam final Map<String, String> allRequestParams) {
 
         // Determine if we're updating or creating
         final boolean updateExisting = viewForm.exists();
@@ -233,7 +237,7 @@ public class ViewConfigController extends BaseController {
         view.setPartitions(partitionsStr);
 
         // Handle enforced filters
-        handleFilterSubmission(view.getEnforcedFilters(), viewForm.getEnforcedFilters());
+        handleEnforcedFilterSubmission(view.getEnforcedFilters(), viewForm.getEnforcedFilters(), allRequestParams);
 
         // Handle optional filters
         handleFilterSubmission(view.getOptionalFilters(), viewForm.getOptionalFilters());
@@ -268,6 +272,58 @@ public class ViewConfigController extends BaseController {
             if (filter == null) {
                 continue;
             }
+            currentlySetFilters.add(filter);
+            enabledFilterIds.add(filterId);
+        }
+
+        final Set<Filter> toRemoveFilters = new HashSet<>();
+        for (final Filter filter: currentlySetFilters) {
+            if (!enabledFilterIds.contains(filter.getId())) {
+                toRemoveFilters.add(filter);
+            }
+        }
+        if (!toRemoveFilters.isEmpty()) {
+            currentlySetFilters.removeAll(toRemoveFilters);
+        }
+    }
+
+    /**
+     * Handle adding/removing filters submitted.
+     * @param currentlySetFilters Set of Filters currently set on the view.
+     * @param submittedFilterIds Set of FilterIds submitted with the form.
+     */
+    private void handleEnforcedFilterSubmission(
+        final Set<Filter> currentlySetFilters,
+        final Set<Long> submittedFilterIds,
+        final Map<String, String> allRequestParameters) {
+
+        // Loop over filters submitted
+        final Set<Long> enabledFilterIds = new HashSet<>();
+        for (final Long filterId : submittedFilterIds) {
+            // Skip invalids
+            if (filterId == null || filterId.equals(0)) {
+                continue;
+            }
+
+            // Retrieve filter
+            final Filter filter = filterRepository.findOne(filterId);
+            if (filter == null) {
+                continue;
+            }
+
+            // Grab options
+            final Set<String> optionNames = filter.getOptionsAsSet();
+            final Map<String, String> optionValues = new HashMap<>();
+            for (final String optionName: optionNames) {
+                // Generate the name of the request parameter
+                final String requestParamName = filter.getId() + "-" + optionName;
+                if (allRequestParameters.containsKey(requestParamName)) {
+                    optionValues.put(optionName, allRequestParameters.get(requestParamName));
+                } else {
+                    optionValues.put(optionName, "");
+                }
+            }
+            // Convert to json and store on the relationship
             currentlySetFilters.add(filter);
             enabledFilterIds.add(filterId);
         }

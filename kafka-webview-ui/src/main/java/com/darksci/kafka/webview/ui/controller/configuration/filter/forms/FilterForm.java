@@ -21,8 +21,6 @@ public class FilterForm {
 
     private MultipartFile file;
 
-    private String optionsJsonStr = "{}";
-
     public Long getId() {
         return id;
     }
@@ -53,14 +51,6 @@ public class FilterForm {
 
     public void setFile(final MultipartFile file) {
         this.file = file;
-    }
-
-    public String getOptionsJsonStr() {
-        return optionsJsonStr;
-    }
-
-    public void setOptionsJsonStr(final String optionsJsonStr) {
-        this.optionsJsonStr = optionsJsonStr;
     }
 
     /**

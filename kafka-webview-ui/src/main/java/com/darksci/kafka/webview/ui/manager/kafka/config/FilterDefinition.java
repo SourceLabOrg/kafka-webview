@@ -10,14 +10,14 @@ import java.util.Map;
  */
 public class FilterDefinition {
     private final RecordFilter recordFilter;
-    private final Map<String, ?> options;
+    private final Map<String, String> options;
 
     /**
      * Constructor.
      * @param recordFilter The record filter instance.
      * @param options Any user defined options for the instance.
      */
-    public FilterDefinition(final RecordFilter recordFilter, final Map<String, ?> options) {
+    public FilterDefinition(final RecordFilter recordFilter, final Map<String, String> options) {
         this.recordFilter = recordFilter;
         this.options = Collections.unmodifiableMap(options);
     }
@@ -26,7 +26,7 @@ public class FilterDefinition {
         return recordFilter;
     }
 
-    public Map<String, ?> getOptions() {
+    public Map<String, String> getOptions() {
         return options;
     }
 

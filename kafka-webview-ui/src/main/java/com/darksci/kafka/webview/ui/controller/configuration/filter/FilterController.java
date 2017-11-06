@@ -33,6 +33,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * Controller for CRUD Operations on Filters.
@@ -106,7 +109,6 @@ public class FilterController extends BaseController {
         filterForm.setId(filter.getId());
         filterForm.setName(filter.getName());
         filterForm.setClasspath(filter.getClasspath());
-        filterForm.setOptionsJsonStr(filter.getOptions());
 
         return "configuration/filter/create";
     }
@@ -172,27 +174,8 @@ public class FilterController extends BaseController {
             }
         }
 
-        // Validate we have proper JSON
-        final ObjectMapper mapper = new ObjectMapper();
-        try {
-            mapper.readValue(filterForm.getOptionsJsonStr(), Map.class);
-        } catch (final IOException exception) {
-            // Name is in use!
-            bindingResult.addError(new FieldError(
-                "filterForm",
-                "optionsJsonStr",
-                filterForm.getOptionsJsonStr(),
-                true,
-                null,
-                null,
-                "Invalid JSON: " + exception.getMessage())
-            );
-            return "/configuration/filter/create";
-        }
-
         // Set properties.
         filter.setName(filterForm.getName());
-        filter.setOptions(filterForm.getOptionsJsonStr());
 
         // If they uploaded a file.
         if (!file.isEmpty()) {
@@ -214,8 +197,13 @@ public class FilterController extends BaseController {
                 final String finalJarLocation = tmpJarLocation.substring(0, tmpJarLocation.lastIndexOf(".tmp"));
 
                 // Attempt to load jar?
+                final String filterOptionNames;
                 try {
-                    recordFilterPluginFactory.getPlugin(tmpFilename, filterForm.getClasspath());
+                    final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(tmpFilename, filterForm.getClasspath());
+                    final Set<String> filterOptions = recordFilter.getOptionNames();
+
+                    // Makes assumption strings contain no commas!
+                    filterOptionNames = filterOptions.stream().collect(Collectors.joining(","));
                 } catch (final LoaderException exception) {
                     // Remove jar
                     Files.delete(new File(tmpJarLocation).toPath());
@@ -235,6 +223,7 @@ public class FilterController extends BaseController {
                 // Set properties
                 filter.setClasspath(filterForm.getClasspath());
                 filter.setJar(filename);
+                filter.setOptions(filterOptionNames);
             } catch (IOException e) {
                 // Set flash message
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));

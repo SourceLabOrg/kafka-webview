@@ -94,7 +94,7 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
             try {
                 // Grab filter and options
                 final RecordFilter recordFilter = filterDefinition.getRecordFilter();
-                final Map<String, ?> filterOptions = filterDefinition.getOptions();
+                final Map<String, String> filterOptions = filterDefinition.getOptions();
 
                 // Configure it
                 recordFilter.configure(immutableConsumerConfigs, filterOptions);

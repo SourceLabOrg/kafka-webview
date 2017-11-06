@@ -16,15 +16,43 @@
             jQuery(document).ready(function() {
 
                 // Enable fancy multi-select
-                $('#enforced_filters_available').multiselect({
-                    right: '#enforced_filters',
-                    sort: false,
-                    submitAllLeft: false,
-                    submitAllRight: true
+                jQuery('#enforced_filters_available')
+                    .multiselect({
+                        right: '#enforced_filters',
+                        sort: false,
+                        submitAllLeft: false,
+                        submitAllRight: true,
+                        afterMoveToRight: function(t,e,o) {
+                            // grab filterId
+                            var filterId = o.val();
+
+                            // Define parent container
+                            var parentContainerId = '#filterOptions' + filterId;
+
+                            // Toggle display on
+                            jQuery('#filterOptions' + filterId).toggle(true);
+
+                            // Mark all inputs as enabled
+                            jQuery(parentContainerId + ' input').removeAttr("disabled");
+                        },
+                        afterMoveToLeft: function(t,e,o) {
+                            // grab filterId
+                            var filterId = o.val();
+
+                            // Define parent container
+                            var parentContainerId = '#filterOptions' + filterId;
+
+                            // Toggle display off
+                            jQuery(parentContainerId).toggle(false);
+
+                            // Mark all inputs as disabled
+                            jQuery(parentContainerId + ' input').attr("disabled", true);
+                        }
                     }
                 );
 
-                $('#optional_filters_available').multiselect({
+                jQuery('#optional_filters_available')
+                    .multiselect({
                         right: '#optional_filters',
                         sort: false,
                         submitAllLeft: false,
@@ -303,6 +331,25 @@
                                     </select>
                                 </div>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('enforcedFilters')}" th:errors="*{enforcedFilters}"></div>
+                            </div>
+
+                            <!-- Start and filter options -->
+                            <div th:id="'filterOptions' + ${filter.id}" style="display: none;" th:each="filter : ${filterList}">
+                                <h8><strong th:text="${filter.name}"></strong> Options</h8>
+                                <hr>
+
+                                <!-- Loop over each option -->
+                                <div class="form-group row" th:each="option : ${filter.getOptionsAsSet()}">
+                                    <label
+                                        class="col-md-3 form-control-label"
+                                        th:for="${filter.id} + '-' + ${option}"
+                                        th:text="${option}">
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input th:name="${filter.id} + '-' + ${option}" class="form-control" type="text">
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 

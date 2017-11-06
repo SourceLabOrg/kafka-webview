@@ -24,6 +24,9 @@ public class ViewToFilterEnforced {
     @Column(nullable = false)
     private Long sortOrder;
 
+    @Column(nullable = false)
+    private String options = "";
+
     public Long getId() {
         return id;
     }
@@ -54,5 +57,24 @@ public class ViewToFilterEnforced {
 
     public void setSortOrder(final Long sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    public String getOptions() {
+        return options;
+    }
+
+    public void setOptions(final String options) {
+        this.options = options;
+    }
+
+    @Override
+    public String toString() {
+        return "ViewToFilterEnforced{"
+            + "id=" + id
+            + ", filterId=" + filterId
+            + ", viewId=" + viewId
+            + ", sortOrder=" + sortOrder
+            + ", options='" + options + '\''
+            + '}';
     }
 }

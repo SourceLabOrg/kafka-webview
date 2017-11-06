@@ -21,6 +21,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -139,12 +140,13 @@ public class WebKafkaConsumerFactory {
                     final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(filter.getJar(), filter.getClasspath());
 
                     // Parse options
-                    final Map<String, ?> options = mapper.readValue(filter.getOptions(), Map.class);
+                    // TODO parse options?
+                    final Map<String, String> options = new HashMap<>();
 
                     // Create definition
                     final FilterDefinition filterDefinition = new FilterDefinition(recordFilter, options);
                     filterDefinitions.add(filterDefinition);
-                } catch (IOException | LoaderException e) {
+                } catch (LoaderException e) {
                     throw new RuntimeException(e);
                 }
             }

@@ -5,6 +5,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Transient;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a row in the filter table.
@@ -65,6 +68,15 @@ public class Filter {
 
     public void setOptions(final String options) {
         this.options = options;
+    }
+
+    @Transient
+    public Set<String> getOptionsAsSet() {
+        final Set<String> set = new HashSet<String>();
+        for (final String option: getOptions().split(",")) {
+            set.add(option);
+        }
+        return set;
     }
 
     @Override

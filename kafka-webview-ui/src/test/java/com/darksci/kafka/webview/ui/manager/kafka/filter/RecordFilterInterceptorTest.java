@@ -33,7 +33,7 @@ public class RecordFilterInterceptorTest {
     public void testConfigureAndClose() {
         // Create mock Filter
         final RecordFilter mockFilter1 = mock(RecordFilter.class);
-        final Map<String, Object> filterOptions1 = new HashMap<>();
+        final Map<String, String> filterOptions1 = new HashMap<>();
         filterOptions1.put("key1", "value1");
         filterOptions1.put("key2", "value2");
 
@@ -41,7 +41,7 @@ public class RecordFilterInterceptorTest {
 
         // Create 2nd mock Filter
         final RecordFilter mockFilter2 = mock(RecordFilter.class);
-        final Map<String, Object> filterOptions2 = new HashMap<>();
+        final Map<String, String> filterOptions2 = new HashMap<>();
         filterOptions1.put("key3", "value3");
         filterOptions1.put("key4", "value4");
 

@@ -19,6 +19,7 @@ import com.darksci.kafka.webview.ui.model.Cluster;
 import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.model.View;
 import com.darksci.kafka.webview.ui.repository.ClusterRepository;
+import com.darksci.kafka.webview.ui.repository.FilterRepository;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -53,6 +54,9 @@ public class ApiController extends BaseController {
 
     @Autowired
     private ClusterRepository clusterRepository;
+
+    @Autowired
+    private FilterRepository filterRepository;
 
     @Autowired
     private WebKafkaConsumerFactory webKafkaConsumerFactory;
@@ -339,6 +343,22 @@ public class ApiController extends BaseController {
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
         }
+    }
+
+    /**
+     * GET Nodes within a cluster.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/filter/{id}/options", method = RequestMethod.GET, produces = "application/json")
+    public String[] getFilterOptions(@PathVariable final Long id) {
+        // Retrieve cluster
+        final Filter filter = filterRepository.findOne(id);
+        if (filter == null) {
+            throw new NotFoundApiException("FilterOptions", "Unable to find filter");
+        }
+        final String[] options = filter.getOptions().split(",");
+
+        return options;
     }
 
     /**

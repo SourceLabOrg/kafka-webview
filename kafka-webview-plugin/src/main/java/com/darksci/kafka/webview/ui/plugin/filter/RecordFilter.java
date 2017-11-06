@@ -1,17 +1,27 @@
 package com.darksci.kafka.webview.ui.plugin.filter;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface that defines a Record Filter.
  */
 public interface RecordFilter {
     /**
+     * Define any configurable options.
+     * @return Set of option names.
+     */
+    default Set<String> getOptionNames() {
+        return new HashSet<>();
+    }
+
+    /**
      * Configure this class.
      * @param consumerConfigs Consumer configuration in key/value pairs
      * @param filterOptions User defined filter options.
      */
-    void configure(final Map<String, ?> consumerConfigs, final Map<String, ?> filterOptions);
+    void configure(final Map<String, ?> consumerConfigs, final Map<String, String> filterOptions);
 
     /**
      * Define the filter behavior.
