@@ -56,9 +56,17 @@ var vendorsFonts = [
   'node_modules/simple-line-icons/fonts/**'
 ]
 
+var vendorImages = [
+]
+
 gulp.task('copy:vendorsCSS', function() {
   return gulp.src(vendorsCSS)
   .pipe(gulp.dest(paths.vendors + '/css/'));
+});
+
+gulp.task('copy:vendorImages', function() {
+   return gulp.src(vendorImages)
+   .pipe(gulp.dest(paths.vendors + '/img/'));
 });
 
 gulp.task('minify:vendorsCSS', function() {
@@ -118,8 +126,16 @@ gulp.task('replace:node_modules', function(){
     .pipe(gulp.dest('./'));
 });
 
+gulp.task('replace:css', function(){
+    return gulp.src([
+        './dist/vendors/css/*.css',
+    ], {base: './'})
+        .pipe(replace(/img\//g, '\/vendors/img/'))
+        .pipe(gulp.dest('./'));
+});
+
 gulp.task('vendors', function(callback) {
-    runSequence('vendors:css', 'vendors:js', 'copy:vendorsFonts', 'replace:node_modules', callback);
+    runSequence('vendors:css', 'vendors:js', 'copy:vendorsFonts', 'replace:node_modules', 'copy:vendorImages', callback);
 });
 
 gulp.task('clean:dist', function () {

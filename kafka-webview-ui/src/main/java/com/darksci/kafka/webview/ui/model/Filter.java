@@ -5,6 +5,10 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Transient;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a row in the filter table.
@@ -23,6 +27,9 @@ public class Filter {
 
     @Column(nullable = false, unique = true)
     private String jar;
+
+    @Column(nullable = false)
+    private String options = "";
 
     public long getId() {
         return id;
@@ -56,13 +63,32 @@ public class Filter {
         this.jar = jar;
     }
 
+    public String getOptions() {
+        return options;
+    }
+
+    public void setOptions(final String options) {
+        this.options = options;
+    }
+
+    /**
+     * @return All of the option names, as a set.
+     */
+    @Transient
+    public Set<String> getOptionsAsSet() {
+        final Set<String> set = new HashSet<>();
+        Collections.addAll(set, getOptions().split(","));
+        return set;
+    }
+
     @Override
     public String toString() {
         return "Filter{"
-            + "+ id=" + id
-            + ", + name='" + name + '\''
-            + ", + classpath='" + classpath + '\''
-            + ", + jar='" + jar + '\''
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", classpath='" + classpath + '\''
+            + ", jar='" + jar + '\''
+            + ", options='" + options + '\''
             + '}';
     }
 }

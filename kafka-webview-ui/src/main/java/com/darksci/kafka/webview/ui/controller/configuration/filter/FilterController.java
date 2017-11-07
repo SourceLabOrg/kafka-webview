@@ -14,6 +14,7 @@ import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
 import com.darksci.kafka.webview.ui.repository.FilterRepository;
 import com.darksci.kafka.webview.ui.repository.ViewToFilterEnforcedRepository;
 import com.darksci.kafka.webview.ui.repository.ViewToFilterOptionalRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +30,12 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * Controller for CRUD Operations on Filters.
@@ -80,10 +86,38 @@ public class FilterController extends BaseController {
     }
 
     /**
-     * POST Create a filter.
+     * GET Displays edit filter form.
      */
-    @RequestMapping(path = "/create", method = RequestMethod.POST)
-    public String create(
+    @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
+    public String editFilter(
+        @PathVariable final Long id,
+        final FilterForm filterForm,
+        final Model model,
+        final RedirectAttributes redirectAttributes) {
+        // Retrieve it
+        final Filter filter = filterRepository.findOne(id);
+        if (filter == null) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find filter!"));
+            return "redirect:/configuration/filter";
+        }
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Edit " + filter.getName(), null);
+
+        // Setup form
+        filterForm.setId(filter.getId());
+        filterForm.setName(filter.getName());
+        filterForm.setClasspath(filter.getClasspath());
+
+        return "configuration/filter/create";
+    }
+
+    /**
+     * POST Create or Update a filter.
+     */
+    @RequestMapping(path = "/update", method = RequestMethod.POST)
+    public String update(
         @Valid final FilterForm filterForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes) {
@@ -93,54 +127,115 @@ public class FilterController extends BaseController {
             return "configuration/filter/create";
         }
 
+        // Grab uploaded file
         final MultipartFile file = filterForm.getFile();
-        if (file.isEmpty()) {
+
+        // If the filter doesnt exist, and no file uploaded.
+        if (!filterForm.exists() && file.isEmpty()) {
+            // That's an error.
             bindingResult.addError(new FieldError(
                 "filterForm", "file", "", true, null, null, "Select a jar to upload")
             );
             return "/configuration/filter/create";
         }
 
-        // Make sure ends with .jar
-        if (!file.getOriginalFilename().endsWith(".jar")) {
-            bindingResult.addError(new FieldError(
-                "filterForm", "file", "", true, null, null, "File must have a .jar extension")
-            );
-            return "/configuration/filter/create";
+        // If filter exists
+        final Filter filter;
+        if (filterForm.exists()) {
+            // Retrieve Filter
+            filter = filterRepository.findOne(filterForm.getId());
+
+            // If we can't find the filter
+            if (filter == null) {
+                // Set flash message & redirect
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find filter!"));
+                return "redirect:/configuration/filter";
+            }
+        } else {
+            // Creating new filter
+            filter = new Filter();
         }
 
-        try {
-            // Sanitize filename
-            final String filename = filterForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".jar";
-
-            // Persist jar on filesystem
-            final String jarPath = uploadManager.handleFilterUpload(file, filename);
-
-            // Attempt to load jar?
-            try {
-                recordFilterPluginFactory.getPlugin(filename, filterForm.getClasspath());
-            } catch (LoaderException e) {
-                // Remove jar
-                Files.delete(new File(jarPath).toPath());
-
+        // Ensure that filter's name is unique
+        final Filter existingFilter = filterRepository.findByName(filterForm.getName());
+        if (existingFilter != null) {
+            if (!filterForm.exists() || existingFilter.getId() != filterForm.getId()) {
+                // Name is in use!
                 bindingResult.addError(new FieldError(
-                    "filterForm", "file", "", true, null, null, e.getMessage())
+                    "filterForm",
+                    "name",
+                    filterForm.getName(),
+                    true,
+                    null,
+                    null,
+                    "Filter must have unique name")
+                );
+                return "/configuration/filter/create";
+            }
+        }
+
+        // Set properties.
+        filter.setName(filterForm.getName());
+
+        // If they uploaded a file.
+        if (!file.isEmpty()) {
+            // Make sure ends with .jar
+            if (!file.getOriginalFilename().endsWith(".jar")) {
+                bindingResult.addError(new FieldError(
+                    "filterForm", "file", "", true, null, null, "File must have a .jar extension")
                 );
                 return "/configuration/filter/create";
             }
 
-            final Filter filter = new Filter();
-            filter.setName(filterForm.getName());
-            filter.setClasspath(filterForm.getClasspath());
-            filter.setJar(filename);
-            filterRepository.save(filter);
-        } catch (IOException e) {
-            // Set flash message
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
+            try {
+                // Sanitize filename
+                final String filename = filterForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".jar";
+                final String tmpFilename = filename + ".tmp";
 
-            // redirect to filter index
-            return "redirect:/configuration/filter";
+                // Persist jar on filesystem into temp location
+                final String tmpJarLocation = uploadManager.handleFilterUpload(file, tmpFilename);
+                final String finalJarLocation = tmpJarLocation.substring(0, tmpJarLocation.lastIndexOf(".tmp"));
+
+                // Attempt to load jar?
+                final String filterOptionNames;
+                try {
+                    final RecordFilter recordFilter = recordFilterPluginFactory.getPlugin(tmpFilename, filterForm.getClasspath());
+                    final Set<String> filterOptions = recordFilter.getOptionNames();
+
+                    // Makes assumption strings contain no commas!
+                    filterOptionNames = filterOptions.stream().collect(Collectors.joining(","));
+                } catch (final LoaderException exception) {
+                    // Remove jar
+                    Files.delete(new File(tmpJarLocation).toPath());
+
+                    bindingResult.addError(new FieldError(
+                        "filterForm", "file", "", true, null, null, exception.getMessage())
+                    );
+                    return "/configuration/filter/create";
+                }
+
+                // If successful overwrite original jar
+                final Path tmpJarPath = new File(tmpJarLocation).toPath();
+                final Path finalJarPath = new File(finalJarLocation).toPath();
+                Files.deleteIfExists(finalJarPath);
+                Files.move(tmpJarPath, finalJarPath);
+
+                // Set properties
+                filter.setClasspath(filterForm.getClasspath());
+                filter.setJar(filename);
+                filter.setOptions(filterOptionNames);
+            } catch (IOException e) {
+                // Set flash message
+                redirectAttributes
+                    .addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
+
+                // redirect to filter index
+                return "redirect:/configuration/filter";
+            }
         }
+
+        // Save entity
+        filterRepository.save(filter);
 
         redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Successfully created filter!"));
         return "redirect:/configuration/filter";

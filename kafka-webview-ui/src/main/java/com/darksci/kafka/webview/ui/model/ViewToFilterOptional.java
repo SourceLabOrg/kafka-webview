@@ -2,9 +2,11 @@ package com.darksci.kafka.webview.ui.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 /**
  * Represents a Many-to-Many join table between View.id and Filter.id.
@@ -15,11 +17,11 @@ public class ViewToFilterOptional {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "filter_id", nullable = false)
-    private Long filterId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private Filter filter;
 
-    @Column(name = "view_id", nullable = false)
-    private Long viewId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private View view;
 
     @Column(nullable = false)
     private Long sortOrder;
@@ -32,20 +34,20 @@ public class ViewToFilterOptional {
         this.id = id;
     }
 
-    public Long getFilterId() {
-        return filterId;
+    public Filter getFilter() {
+        return filter;
     }
 
-    public void setFilterId(final Long filterId) {
-        this.filterId = filterId;
+    public void setFilter(final Filter filter) {
+        this.filter = filter;
     }
 
-    public Long getViewId() {
-        return viewId;
+    public View getView() {
+        return view;
     }
 
-    public void setViewId(final Long viewId) {
-        this.viewId = viewId;
+    public void setView(final View view) {
+        this.view = view;
     }
 
     public Long getSortOrder() {
@@ -60,8 +62,6 @@ public class ViewToFilterOptional {
     public String toString() {
         return "ViewToFilterOptional{"
             + "id=" + id
-            + ", filterId=" + filterId
-            + ", viewId=" + viewId
             + ", sortOrder=" + sortOrder
             + '}';
     }

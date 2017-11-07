@@ -16,12 +16,12 @@
                 <div class="card">
                     <div class="card-header">
                         <strong th:text="${filterForm.exists()} ? 'Edit' : 'Create'">Create</strong>
-                        <span th:text="${filterForm.exists()} ? ${filter.name} : 'New Filter'"></span>
+                        <span th:text="${filterForm.exists()} ? ${filterForm.name} : 'New Filter'"></span>
                     </div>
                     <form
-                        th:action="@{/configuration/filter/create}"
+                        th:action="@{/configuration/filter/update}"
                         th:object="${filterForm}"
-                        method="post" class="form-horizontal" enctype="multipart/form-data">
+                        id="filter-form" method="post" class="form-horizontal" enctype="multipart/form-data">
                         <div class="card-body">
                             <!-- Name -->
                             <div class="form-group row">
@@ -69,7 +69,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <input type="hidden" name="id" th:if="${filterForm.exists()}" th:field="*{id}"></input>
+                            <input type="hidden" name="id" th:if="${filterForm.exists()}" th:field="*{id}">
                             <button type="submit" class="btn btn-sm btn-primary">
                                 <i class="fa fa-dot-circle-o"></i>
                                 Submit

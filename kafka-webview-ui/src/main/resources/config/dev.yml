@@ -6,7 +6,7 @@ spring:
   h2:
     console:
       ## Disable for release
-      enabled: false
+      enabled: true
       path: /h2
 
   jpa:

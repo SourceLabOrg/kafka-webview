@@ -1,7 +1,5 @@
 package com.darksci.kafka.webview.ui.manager.kafka.config;
 
-import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,22 +9,22 @@ import java.util.List;
  * Configuration defining any Filters that should be applied.
  */
 public class FilterConfig {
-    private List<RecordFilter> recordFilters;
+    private List<RecordFilterDefinition> recordFilterDefinitions;
 
     /**
      * Constructor.
-     * @param recordFilters Which filters to apply.
+     * @param recordFilterDefinitions Which filters to apply.
      */
-    public FilterConfig(final List<RecordFilter> recordFilters) {
-        this.recordFilters = Collections.unmodifiableList(recordFilters);
+    public FilterConfig(final List<RecordFilterDefinition> recordFilterDefinitions) {
+        this.recordFilterDefinitions = Collections.unmodifiableList(recordFilterDefinitions);
     }
 
     private FilterConfig() {
-        recordFilters = new ArrayList<>();
+        recordFilterDefinitions = new ArrayList<>();
     }
 
-    public List<RecordFilter> getFilters() {
-        return recordFilters;
+    public List<RecordFilterDefinition> getFilters() {
+        return recordFilterDefinitions;
     }
 
     /**
@@ -39,21 +37,21 @@ public class FilterConfig {
     /**
      * Factory method for creating an instance with one or more filters.
      */
-    public static FilterConfig withFilters(final RecordFilter... recordFilters) {
-        return new FilterConfig(Arrays.asList(recordFilters));
+    public static FilterConfig withFilters(final RecordFilterDefinition... recordFilterDefinitions) {
+        return new FilterConfig(Arrays.asList(recordFilterDefinitions));
     }
 
     /**
      * Factory method to create an instance with one or more filters.
      */
-    public static FilterConfig withFilters(final List<RecordFilter> recordFilters) {
-        return new FilterConfig(recordFilters);
+    public static FilterConfig withFilters(final List<RecordFilterDefinition> recordFilterDefinitions) {
+        return new FilterConfig(recordFilterDefinitions);
     }
 
     @Override
     public String toString() {
         return "FilterConfig{"
-            + "recordFilters=" + recordFilters
+            + "recordFilterDefinitions=" + recordFilterDefinitions
             + '}';
     }
 }

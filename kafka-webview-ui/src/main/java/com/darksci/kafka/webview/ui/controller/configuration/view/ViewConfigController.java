@@ -12,10 +12,15 @@ import com.darksci.kafka.webview.ui.model.Cluster;
 import com.darksci.kafka.webview.ui.model.Filter;
 import com.darksci.kafka.webview.ui.model.MessageFormat;
 import com.darksci.kafka.webview.ui.model.View;
+import com.darksci.kafka.webview.ui.model.ViewToFilterEnforced;
+import com.darksci.kafka.webview.ui.model.ViewToFilterOptional;
 import com.darksci.kafka.webview.ui.repository.ClusterRepository;
 import com.darksci.kafka.webview.ui.repository.FilterRepository;
 import com.darksci.kafka.webview.ui.repository.MessageFormatRepository;
 import com.darksci.kafka.webview.ui.repository.ViewRepository;
+import com.darksci.kafka.webview.ui.repository.ViewToFilterOptionalRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,12 +29,16 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,6 +57,9 @@ public class ViewConfigController extends BaseController {
 
     @Autowired
     private ViewRepository viewRepository;
+
+    @Autowired
+    private ViewToFilterOptionalRepository viewToFilterOptionalRepository;
 
     @Autowired
     private FilterRepository filterRepository;
@@ -148,17 +160,30 @@ public class ViewConfigController extends BaseController {
         viewForm.setPartitions(view.getPartitionsAsSet());
         viewForm.setResultsPerPartition(view.getResultsPerPartition());
 
+        final ObjectMapper objectMapper = new ObjectMapper();
+
         // Set enforced filters
+        final Map<Long, Map<String, String>> filterParameters = new HashMap<>();
         final Set<Long> enforcedFilterIds = new HashSet<>();
-        for (final Filter filter: view.getEnforcedFilters()) {
-            enforcedFilterIds.add(filter.getId());
+        for (final ViewToFilterEnforced enforcedFilter: view.getEnforcedFilters()) {
+            enforcedFilterIds.add(enforcedFilter.getFilter().getId());
+
+            // Get options
+            try {
+                final Map<String, String> optionParameters = objectMapper.readValue(enforcedFilter.getOptionParameters(), Map.class);
+                filterParameters.put(enforcedFilter.getFilter().getId(), optionParameters);
+            } catch (IOException e) {
+                // Failed to parse?  Wipe out value
+                enforcedFilter.setOptionParameters("{}");
+            }
         }
         viewForm.setEnforcedFilters(enforcedFilterIds);
+        model.addAttribute("filterParameters", filterParameters);
 
         // Set optional filters
         final Set<Long> optionalFilterIds = new HashSet<>();
-        for (final Filter filter: view.getOptionalFilters()) {
-            optionalFilterIds.add(filter.getId());
+        for (final ViewToFilterOptional optionalFilter: view.getOptionalFilters()) {
+            optionalFilterIds.add(optionalFilter.getFilter().getId());
         }
         viewForm.setOptionalFilters(optionalFilterIds);
 
@@ -173,7 +198,8 @@ public class ViewConfigController extends BaseController {
         @Valid final ViewForm viewForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
-        final Model model) {
+        final Model model,
+        @RequestParam final Map<String, String> allRequestParams) {
 
         // Determine if we're updating or creating
         final boolean updateExisting = viewForm.exists();
@@ -233,10 +259,14 @@ public class ViewConfigController extends BaseController {
         view.setPartitions(partitionsStr);
 
         // Handle enforced filters
-        handleFilterSubmission(view.getEnforcedFilters(), viewForm.getEnforcedFilters());
+        handleEnforcedFilterSubmission(
+            view.getEnforcedFilters(),
+            viewForm.getEnforcedFilters(),
+            view,
+            allRequestParams);
 
         // Handle optional filters
-        handleFilterSubmission(view.getOptionalFilters(), viewForm.getOptionalFilters());
+        handleOptionalFilterSubmission(view.getOptionalFilters(), viewForm.getOptionalFilters(), view);
 
         // Persist the view
         view.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
@@ -254,9 +284,13 @@ public class ViewConfigController extends BaseController {
      * @param currentlySetFilters Set of Filters currently set on the view.
      * @param submittedFilterIds Set of FilterIds submitted with the form.
      */
-    private void handleFilterSubmission(final Set<Filter> currentlySetFilters, final Set<Long> submittedFilterIds) {
-        // Loop over filters submitted
+    private void handleOptionalFilterSubmission(
+        final Set<ViewToFilterOptional> currentlySetFilters,
+        final Set<Long> submittedFilterIds,
+        final View view) {
+
         final Set<Long> enabledFilterIds = new HashSet<>();
+        long sortOrder = 0;
         for (final Long filterId : submittedFilterIds) {
             // Skip invalids
             if (filterId == null || filterId.equals(0)) {
@@ -268,14 +302,116 @@ public class ViewConfigController extends BaseController {
             if (filter == null) {
                 continue;
             }
-            currentlySetFilters.add(filter);
+
+            ViewToFilterOptional viewToFilterOptional = null;
+            for (final ViewToFilterOptional currentEntry: currentlySetFilters) {
+                if (currentEntry.getFilter().getId() == filterId) {
+                    // Update existing
+                    viewToFilterOptional = currentEntry;
+                    break;
+                }
+            }
+            if (viewToFilterOptional == null) {
+                // Create new entry
+                viewToFilterOptional = new ViewToFilterOptional();
+            }
+
+            viewToFilterOptional.setFilter(filter);
+            viewToFilterOptional.setView(view);
+            viewToFilterOptional.setSortOrder(sortOrder++);
+
+            currentlySetFilters.add(viewToFilterOptional);
             enabledFilterIds.add(filterId);
         }
 
-        final Set<Filter> toRemoveFilters = new HashSet<>();
-        for (final Filter filter: currentlySetFilters) {
-            if (!enabledFilterIds.contains(filter.getId())) {
-                toRemoveFilters.add(filter);
+        final Set<ViewToFilterOptional> toRemoveFilters = new HashSet<>();
+        for (final ViewToFilterOptional optionalFilter: currentlySetFilters) {
+            if (!enabledFilterIds.contains(optionalFilter.getFilter().getId())) {
+                toRemoveFilters.add(optionalFilter);
+            }
+        }
+        if (!toRemoveFilters.isEmpty()) {
+            currentlySetFilters.removeAll(toRemoveFilters);
+        }
+    }
+
+    /**
+     * Handle adding/removing filters submitted.
+     * @param currentlySetFilters Set of Filters currently set on the view.
+     * @param submittedFilterIds Set of FilterIds submitted with the form.
+     */
+    private void handleEnforcedFilterSubmission(
+        final Set<ViewToFilterEnforced> currentlySetFilters,
+        final Set<Long> submittedFilterIds,
+        final View view,
+        final Map<String, String> allRequestParameters) {
+
+        // For converting map to json string
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        // Loop over filters submitted
+        final Set<Long> enabledFilterIds = new HashSet<>();
+        long sortOrder = 0;
+        for (final Long filterId : submittedFilterIds) {
+            // Skip invalids
+            if (filterId == null || filterId.equals(0)) {
+                continue;
+            }
+
+            // Retrieve filter
+            final Filter filter = filterRepository.findOne(filterId);
+            if (filter == null) {
+                continue;
+            }
+
+            ViewToFilterEnforced viewToFilterEnforced = null;
+            for (final ViewToFilterEnforced currentEntry: currentlySetFilters) {
+                if (currentEntry.getFilter().getId() == filterId) {
+                    viewToFilterEnforced = currentEntry;
+                    break;
+                }
+            }
+            if (viewToFilterEnforced == null) {
+                // Create new entry
+                viewToFilterEnforced = new ViewToFilterEnforced();
+            }
+
+            // Grab options
+            final Set<String> optionNames = filter.getOptionsAsSet();
+            final Map<String, String> optionValues = new HashMap<>();
+            for (final String optionName: optionNames) {
+                // Generate the name of the request parameter
+                final String requestParamName = filter.getId() + "-" + optionName;
+                if (allRequestParameters.containsKey(requestParamName)) {
+                    optionValues.put(optionName, allRequestParameters.get(requestParamName));
+                } else {
+                    optionValues.put(optionName, "");
+                }
+            }
+
+            // Update properties
+            viewToFilterEnforced.setFilter(filter);
+            viewToFilterEnforced.setView(view);
+            viewToFilterEnforced.setSortOrder(sortOrder++);
+
+            // Convert to json and store on the relationship
+
+            final String jsonStr;
+            try {
+                jsonStr = objectMapper.writeValueAsString(optionValues);
+                viewToFilterEnforced.setOptionParameters(jsonStr);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+
+            currentlySetFilters.add(viewToFilterEnforced);
+            enabledFilterIds.add(filterId);
+        }
+
+        final Set<ViewToFilterEnforced> toRemoveFilters = new HashSet<>();
+        for (final ViewToFilterEnforced enforcedFilter: currentlySetFilters) {
+            if (!enabledFilterIds.contains(enforcedFilter.getFilter().getId())) {
+                toRemoveFilters.add(enforcedFilter);
             }
         }
         if (!toRemoveFilters.isEmpty()) {

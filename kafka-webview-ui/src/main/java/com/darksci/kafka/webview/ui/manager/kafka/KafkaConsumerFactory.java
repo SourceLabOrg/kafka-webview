@@ -2,6 +2,7 @@ package com.darksci.kafka.webview.ui.manager.kafka;
 
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.config.ClusterConfig;
+import com.darksci.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
 import com.darksci.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -24,6 +25,7 @@ public class KafkaConsumerFactory {
 
     /**
      * Constructor.
+     * @param keyStoreRootPath Parent path to where JKS key/trust stores are saved on disk.
      */
     public KafkaConsumerFactory(final String keyStoreRootPath) {
         this.keyStoreRootPath = keyStoreRootPath;
@@ -85,10 +87,11 @@ public class KafkaConsumerFactory {
         configMap.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, clientConfig.getMaxResultsPerPartition());
 
         // If we have any filters
-        if (!clientConfig.getFilterConfig().getFilters().isEmpty()) {
+        final List<RecordFilterDefinition> recordFilterDefinitions = clientConfig.getFilterConfig().getFilters();
+        if (!recordFilterDefinitions.isEmpty()) {
             // Create interceptor
             configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, RecordFilterInterceptor.class.getName());
-            configMap.put(RecordFilterInterceptor.CONFIG_KEY, clientConfig.getFilterConfig().getFilters());
+            configMap.put(RecordFilterInterceptor.CONFIG_KEY, recordFilterDefinitions);
         }
 
         // Use SSL?

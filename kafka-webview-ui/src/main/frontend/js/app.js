@@ -160,12 +160,17 @@ var ApiClient = {
     },
     consume: function(viewId, params, successCallback) {
         jQuery.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '/api/consumer/view/' + viewId,
             dataType: 'json',
-            data: params,
+            contentType: 'application/json',
+            data: JSON.stringify(params),
+            headers: ApiClient.getCsrfHeader(),
             success: successCallback,
-            error: ApiClient.defaultErrorHandler
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
         });
     },
     consumeNext: function(viewId, callback) {

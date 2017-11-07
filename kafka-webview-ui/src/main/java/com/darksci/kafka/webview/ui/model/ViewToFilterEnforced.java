@@ -2,9 +2,13 @@ package com.darksci.kafka.webview.ui.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 /**
  * Represents a Many-to-Many join table between View.id and Filter.id.
@@ -15,14 +19,17 @@ public class ViewToFilterEnforced {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "filter_id", nullable = false)
-    private Long filterId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private Filter filter;
 
-    @Column(name = "view_id", nullable = false)
-    private Long viewId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private View view;
 
     @Column(nullable = false)
     private Long sortOrder;
+
+    @Column(nullable = false)
+    private String optionParameters = "{}";
 
     public Long getId() {
         return id;
@@ -32,20 +39,20 @@ public class ViewToFilterEnforced {
         this.id = id;
     }
 
-    public Long getFilterId() {
-        return filterId;
+    public Filter getFilter() {
+        return filter;
     }
 
-    public void setFilterId(final Long filterId) {
-        this.filterId = filterId;
+    public void setFilter(final Filter filter) {
+        this.filter = filter;
     }
 
-    public Long getViewId() {
-        return viewId;
+    public View getView() {
+        return view;
     }
 
-    public void setViewId(final Long viewId) {
-        this.viewId = viewId;
+    public void setView(final View view) {
+        this.view = view;
     }
 
     public Long getSortOrder() {
@@ -54,5 +61,22 @@ public class ViewToFilterEnforced {
 
     public void setSortOrder(final Long sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    public String getOptionParameters() {
+        return optionParameters;
+    }
+
+    public void setOptionParameters(final String optionParameters) {
+        this.optionParameters = optionParameters;
+    }
+
+    @Override
+    public String toString() {
+        return "ViewToFilterEnforced{"
+            + "id=" + id
+            + ", sortOrder=" + sortOrder
+            + ", optionParameters='" + optionParameters + '\''
+            + '}';
     }
 }
