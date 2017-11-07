@@ -161,7 +161,8 @@ public class ApiController extends BaseController {
                     continue;
                 }
                 // Define it
-                final FilterDefinition filterDefinition = new FilterDefinition(allowedFilters.get(requestedFilterId), requestedFilterOptions);
+                final Filter filter = allowedFilters.get(requestedFilterId);
+                final FilterDefinition filterDefinition = new FilterDefinition(filter, requestedFilterOptions);
 
                 // Configure it
                 configuredFilters.add(filterDefinition);

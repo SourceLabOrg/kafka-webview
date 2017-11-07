@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -70,12 +71,13 @@ public class Filter {
         this.options = options;
     }
 
+    /**
+     * @return All of the option names, as a set.
+     */
     @Transient
     public Set<String> getOptionsAsSet() {
-        final Set<String> set = new HashSet<String>();
-        for (final String option: getOptions().split(",")) {
-            set.add(option);
-        }
+        final Set<String> set = new HashSet<>();
+        Collections.addAll(set, getOptions().split(","));
         return set;
     }
 

@@ -44,6 +44,9 @@ public class ConsumeRequest {
         this.filters = filters;
     }
 
+    /**
+     * Represents a Filter with its parameters as requested.
+     */
     public static class Filter {
         private Long filterId;
         private Map<String, String> options;

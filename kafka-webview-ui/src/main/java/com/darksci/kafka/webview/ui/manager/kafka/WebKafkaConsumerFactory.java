@@ -129,14 +129,16 @@ public class WebKafkaConsumerFactory {
         final Set<ViewToFilterEnforced> enforcedFilters = view.getEnforcedFilters();
         for (final ViewToFilterEnforced enforcedFilter: enforcedFilters) {
             // Grab filter, add to list
-            final RecordFilterDefinition recordFilterDefinition = buildRecordFilterDefinition(enforcedFilter.getFilter(), enforcedFilter.getOptionParameters());
+            final RecordFilterDefinition recordFilterDefinition =
+                buildRecordFilterDefinition(enforcedFilter.getFilter(), enforcedFilter.getOptionParameters());
             recordFilterDefinitions.add(recordFilterDefinition);
         }
 
         // Loop over each passed in filter.
         for (final FilterDefinition filterDefinition: filterDefinitions) {
             // Build it
-            final RecordFilterDefinition recordFilterDefinition = buildRecordFilterDefinition(filterDefinition.getFilter(), filterDefinition.getOptions());
+            final RecordFilterDefinition recordFilterDefinition =
+                buildRecordFilterDefinition(filterDefinition.getFilter(), filterDefinition.getOptions());
             recordFilterDefinitions.add(recordFilterDefinition);
         }
         clientConfigBuilder.withFilterConfig(FilterConfig.withFilters(recordFilterDefinitions));

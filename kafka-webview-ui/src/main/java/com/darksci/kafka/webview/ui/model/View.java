@@ -7,9 +7,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
@@ -49,17 +46,17 @@ public class View {
     private Integer resultsPerPartition = 10;
 
     @OneToMany(
-        fetch=FetchType.LAZY,
+        fetch = FetchType.LAZY,
         cascade = { CascadeType.PERSIST, CascadeType.MERGE },
-        mappedBy="view",
+        mappedBy = "view",
         orphanRemoval = true)
     @OrderColumn(name = "sort_order")
     private Set<ViewToFilterEnforced> enforcedFilters = new HashSet<>();
 
     @OneToMany(
-        fetch=FetchType.LAZY,
+        fetch = FetchType.LAZY,
         cascade = { CascadeType.PERSIST, CascadeType.MERGE },
-        mappedBy="view",
+        mappedBy = "view",
         orphanRemoval = true)
     @OrderColumn(name = "sort_order")
     private Set<ViewToFilterOptional> optionalFilters = new HashSet<>();

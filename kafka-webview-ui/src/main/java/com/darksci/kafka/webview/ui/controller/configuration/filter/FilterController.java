@@ -226,7 +226,8 @@ public class FilterController extends BaseController {
                 filter.setOptions(filterOptionNames);
             } catch (IOException e) {
                 // Set flash message
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
+                redirectAttributes
+                    .addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
 
                 // redirect to filter index
                 return "redirect:/configuration/filter";
