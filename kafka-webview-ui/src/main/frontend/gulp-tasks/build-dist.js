@@ -42,15 +42,13 @@ var vendorsJS = [
   'node_modules/toastr/toastr.js',
   'node_modules/handlebars/dist/handlebars.js',
   'node_modules/sockjs-client/dist/sockjs.min.js',
-  'node_modules/stompjs/lib/stomp.js',
-  'node_modules/jsoneditor/dist/jsoneditor.js'
+  'node_modules/stompjs/lib/stomp.js'
 ]
 
 var vendorsCSS = [
   'node_modules/font-awesome/css/font-awesome.min.css',
   'node_modules/font-awesome/css/font-awesome.css.map',
-  'node_modules/simple-line-icons/css/simple-line-icons.css',
-  'node_modules/jsoneditor/dist/jsoneditor.css'
+  'node_modules/simple-line-icons/css/simple-line-icons.css'
 ]
 
 var vendorsFonts = [
@@ -59,7 +57,6 @@ var vendorsFonts = [
 ]
 
 var vendorImages = [
-  'node_modules/jsoneditor/dist/img/jsoneditor-icons.svg'
 ]
 
 gulp.task('copy:vendorsCSS', function() {
@@ -138,7 +135,7 @@ gulp.task('replace:css', function(){
 });
 
 gulp.task('vendors', function(callback) {
-    runSequence('vendors:css', 'vendors:js', 'copy:vendorsFonts', 'replace:node_modules', 'copy:vendorImages', 'replace:css', callback);
+    runSequence('vendors:css', 'vendors:js', 'copy:vendorsFonts', 'replace:node_modules', 'copy:vendorImages', callback);
 });
 
 gulp.task('clean:dist', function () {

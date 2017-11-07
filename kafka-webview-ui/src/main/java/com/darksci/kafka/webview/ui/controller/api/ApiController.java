@@ -359,12 +359,12 @@ public class ApiController extends BaseController {
     }
 
     /**
-     * GET Nodes within a cluster.
+     * GET Options for a specific filter.
      */
     @ResponseBody
     @RequestMapping(path = "/filter/{id}/options", method = RequestMethod.GET, produces = "application/json")
     public String[] getFilterOptions(@PathVariable final Long id) {
-        // Retrieve cluster
+        // Retrieve Filter
         final Filter filter = filterRepository.findOne(id);
         if (filter == null) {
             throw new NotFoundApiException("FilterOptions", "Unable to find filter");
@@ -394,9 +394,9 @@ public class ApiController extends BaseController {
     /**
      * Creates a WebKafkaConsumer instance.
      */
-    private WebKafkaConsumer setup(final View view, final Collection<FilterDefinition> filterDefinitionList) {
+    private WebKafkaConsumer setup(final View view, final Collection<FilterDefinition> filterDefinitions) {
         final SessionIdentifier sessionIdentifier = new SessionIdentifier(getLoggedInUserId(), getLoggedInUserSessionId());
-        return webKafkaConsumerFactory.createWebClient(view, filterDefinitionList, sessionIdentifier);
+        return webKafkaConsumerFactory.createWebClient(view, filterDefinitions, sessionIdentifier);
     }
 
     /**

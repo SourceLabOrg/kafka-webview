@@ -103,7 +103,7 @@ public class FilterController extends BaseController {
         }
 
         // Setup breadcrumbs
-        setupBreadCrumbs(model, "Edit: " + filter.getName(), null);
+        setupBreadCrumbs(model, "Edit " + filter.getName(), null);
 
         // Setup form
         filterForm.setId(filter.getId());

@@ -29,7 +29,7 @@ public class Filter {
     private String jar;
 
     @Column(nullable = false)
-    private String options = "{}";
+    private String options = "";
 
     public long getId() {
         return id;
