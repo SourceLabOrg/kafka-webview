@@ -1,29 +1,29 @@
 package com.darksci.kafka.webview.ui.manager.kafka.config;
 
-import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
+import com.darksci.kafka.webview.ui.model.Filter;
 
 import java.util.Collections;
 import java.util.Map;
 
 /**
- * Represents a Filter definition, the pairing of the RecordFilter instance plus any user defined options.
+ * Represents a Filter and its options to be configured with a view.
  */
 public class FilterDefinition {
-    private final RecordFilter recordFilter;
+    private final Filter filter;
     private final Map<String, String> options;
 
     /**
      * Constructor.
-     * @param recordFilter The record filter instance.
+     * @param filter The filter entity..
      * @param options Any user defined options for the instance.
      */
-    public FilterDefinition(final RecordFilter recordFilter, final Map<String, String> options) {
-        this.recordFilter = recordFilter;
+    public FilterDefinition(final Filter filter, final Map<String, String> options) {
+        this.filter = filter;
         this.options = Collections.unmodifiableMap(options);
     }
 
-    public RecordFilter getRecordFilter() {
-        return recordFilter;
+    public Filter getFilter() {
+        return filter;
     }
 
     public Map<String, String> getOptions() {
@@ -33,7 +33,7 @@ public class FilterDefinition {
     @Override
     public String toString() {
         return "FilterDefinition{"
-            + "recordFilter=" + recordFilter
+            + "filter=" + filter
             + ", options=" + options
             + '}';
     }

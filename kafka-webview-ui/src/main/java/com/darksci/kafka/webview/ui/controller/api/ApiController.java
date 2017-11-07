@@ -6,6 +6,7 @@ import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
+import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.ConsumerState;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,17 +68,27 @@ public class ApiController extends BaseController {
     private KafkaOperationsFactory kafkaOperationsFactory;
 
     /**
-     * GET kafka results.
+     * POST kafka results.
      */
     @ResponseBody
     @RequestMapping(path = "/consumer/view/{id}", method = RequestMethod.POST, produces = "application/json")
     public KafkaResults consume(
         @PathVariable final Long id,
-        @RequestParam(name = "action", required = false) final String action,
-        @RequestParam(name = "partitions", required = false) final String partitions,
-        @RequestParam(name = "filters", required = false) final String filters,
-        @RequestParam(name = "results_per_partition", required = false) final Integer resultsPerPartition,
-        @RequestParam(name = "filterOptions[]", required = false) final Map<Long, Map<String, String>> filterOptions) {
+        @RequestBody final ConsumeRequest consumeRequest) {
+
+        // How many results per partition to consume
+        // Null means use whatever is configured in the view.
+        final Integer resultsPerPartition = consumeRequest.getResultsPerPartition();
+
+        // Comma separated list of partitions to consume from.
+        // Null or empty string means use whatever is configured in the View.
+        final String partitions = consumeRequest.getPartitions();
+
+        // Action describes what to consume 'next', 'prev', 'head', 'tail'
+        final String action = consumeRequest.getAction();
+
+        // Any custom configured filters
+        final List<ConsumeRequest.Filter> requestFilters = consumeRequest.getFilters();
 
         // Retrieve the view definition
         final View view = viewRepository.findOne(id);
@@ -127,8 +139,8 @@ public class ApiController extends BaseController {
 
         // Determine if we should apply record filters
         // but if the view has enforced record filtering, don't bypass its logic, add onto it.
-        final Set<Filter> configuredFilters = new HashSet<>();
-        if (filters != null && !filters.isEmpty()) {
+        final List<FilterDefinition> configuredFilters = new ArrayList<>();
+        if (requestFilters != null && !requestFilters.isEmpty()) {
             // Retrieve all available filters
             final Map<Long, Filter> allowedFilters = new HashMap<>();
 
@@ -138,23 +150,21 @@ public class ApiController extends BaseController {
             }
 
             // Convert the String array into an actual array
-            for (final String requestedFilterStr: filters.split(",")) {
-                // Convert to a Long
-                try {
-                    // Convert to a long
-                    final Long requestedFilterId = Long.parseLong(requestedFilterStr);
+            for (final ConsumeRequest.Filter requestedFilter: requestFilters) {
+                // Convert to a long
+                final Long requestedFilterId = requestedFilter.getFilterId();
+                final Map<String, String> requestedFilterOptions = requestedFilter.getOptions();
 
-                    // See if its an allowed filter
-                    if (!allowedFilters.containsKey(requestedFilterId)) {
-                        // Skip not allowed filters
-                        continue;
-                    }
-                    // Configure it
-                    configuredFilters.add(allowedFilters.get(requestedFilterId));
-                } catch (NumberFormatException e) {
-                    // Skip invalid values
+                // See if its an allowed filter
+                if (!allowedFilters.containsKey(requestedFilterId)) {
+                    // Skip not allowed filters
                     continue;
                 }
+                // Define it
+                final FilterDefinition filterDefinition = new FilterDefinition(allowedFilters.get(requestedFilterId), requestedFilterOptions);
+
+                // Configure it
+                configuredFilters.add(filterDefinition);
             }
         }
 
@@ -383,9 +393,9 @@ public class ApiController extends BaseController {
     /**
      * Creates a WebKafkaConsumer instance.
      */
-    private WebKafkaConsumer setup(final View view, final Collection<Filter> filterList) {
+    private WebKafkaConsumer setup(final View view, final Collection<FilterDefinition> filterDefinitionList) {
         final SessionIdentifier sessionIdentifier = new SessionIdentifier(getLoggedInUserId(), getLoggedInUserSessionId());
-        return webKafkaConsumerFactory.createWebClient(view, filterList, sessionIdentifier);
+        return webKafkaConsumerFactory.createWebClient(view, filterDefinitionList, sessionIdentifier);
     }
 
     /**

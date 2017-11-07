@@ -51,12 +51,25 @@
                     ConsumerInfo.cancelSearch = true;
                 });
 
+                /**
+                 * Called when you flip the date format switch
+                 */
                 jQuery('#dateFormatToggle').change(function() {
                     ConsumerInfo.formatDates = ViewDetails.displayPrettyDates();
 
                     // Reload results by calling previous + cancelSearch
                     ConsumerInfo.cancelSearch = true;
                     executeConsume('previous');
+                });
+
+                /**
+                 * Called when you enable/disable a filter.
+                 * This shows/hides the filter options.
+                 */
+                jQuery('input.filter-toggle').change(function() {
+                    var filterId = jQuery(this).val();
+                    var checked = jQuery(this).is(':checked');
+                    jQuery('.filter-options' + filterId).toggle(checked);
                 });
 
                 jQuery('#datetime-seek').datetimepicker({
@@ -139,29 +152,23 @@
                 // Get the enabled filters
                 var filterIds = getToggledFilters();
 
-                var filterOptionParameters = {};
+                var recordFilterDefinitions = [];
                 jQuery(filterIds).each(function(index, filterId) {
-                    filterOptionParameters['filter' + filterId] = getFilterOptions(filterId);
+                    var recordFilterDefinition = {
+                        filterId: filterId,
+                        options: getFilterOptions(filterId)
+                    };
+                    recordFilterDefinitions.push(recordFilterDefinition);
                 });
 
                 // Build request params
                 var params = {
                     action: action,
                     partitions: getToggledPartitions().join(),
-                    filters: filterIds.join(),
-                    filterOptions: filterOptionParameters
+                    filters: recordFilterDefinitions
                 };
 
-                //ApiClient.consumePost(ConsumerInfo.viewId, params, handleConsumeResults);
-                jQuery.ajax({
-                    type: 'POST',
-                    url: '/api/consumer/view/' + ConsumerInfo.viewId,
-                    dataType: 'json',
-                    data: params,
-                    success: handleConsumeResults,
-                    headers: ApiClient.getCsrfHeader(),
-                    error: ApiClient.defaultErrorHandler
-                });
+                ApiClient.consume(ConsumerInfo.viewId, params, handleConsumeResults);
             }
 
             function handleConsumeResults(results) {
@@ -264,7 +271,6 @@
 
                     // Fire next api call
                     executeConsume(ConsumerInfo.direction);
-                    //ApiClient.consume(ConsumerInfo.viewId, ConsumerInfo.direction, handleConsumeResults);
                 } else {
                     // Show in UI that no results found.
                     var positionStr = 'Tail';
@@ -641,13 +647,15 @@
                                         <td th:text="${optionalFilter.filter.name}">Name</td>
                                         <td>
                                             <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                                <input class="switch-input filter-toggle" type="checkbox" id="" th:value="${optionalFilter.filter.id}">
+                                                <input class="switch-input filter-toggle" type="checkbox" th:value="${optionalFilter.filter.id}">
                                                 <span class="switch-label" data-on="" data-off=""></span>
                                                 <span class="switch-handle"></span>
                                             </label>
                                         </td>
                                     </tr>
-                                    <tr th:each="option : ${optionalFilter.filter.getOptionsAsSet()}">
+                                    <tr
+                                        th:class="'filter-options' + ${optionalFilter.filter.id}" style="display: none;"
+                                        th:each="option : ${optionalFilter.filter.getOptionsAsSet()}">
                                         <td colspan="2">
                                             <input
                                                 class="form-control" type="text" name="option"

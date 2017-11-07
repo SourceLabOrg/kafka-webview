@@ -1,6 +1,6 @@
 package com.darksci.kafka.webview.ui.manager.kafka.filter;
 
-import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
+import com.darksci.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
 import com.darksci.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -37,7 +37,7 @@ public class RecordFilterInterceptorTest {
         filterOptions1.put("key1", "value1");
         filterOptions1.put("key2", "value2");
 
-        final FilterDefinition filterDefinition1 = new FilterDefinition(mockFilter1, filterOptions1);
+        final RecordFilterDefinition recordFilterDefinition1 = new RecordFilterDefinition(mockFilter1, filterOptions1);
 
         // Create 2nd mock Filter
         final RecordFilter mockFilter2 = mock(RecordFilter.class);
@@ -45,11 +45,11 @@ public class RecordFilterInterceptorTest {
         filterOptions1.put("key3", "value3");
         filterOptions1.put("key4", "value4");
 
-        final FilterDefinition filterDefinition2 = new FilterDefinition(mockFilter2, filterOptions2);
+        final RecordFilterDefinition recordFilterDefinition2 = new RecordFilterDefinition(mockFilter2, filterOptions2);
 
         // Create ConsumerConfigs
         final Map<String, Object> consumerConfigs = new HashMap<>();
-        consumerConfigs.put(RecordFilterInterceptor.CONFIG_KEY, Lists.newArrayList(filterDefinition1, filterDefinition2));
+        consumerConfigs.put(RecordFilterInterceptor.CONFIG_KEY, Lists.newArrayList(recordFilterDefinition1, recordFilterDefinition2));
 
         // Create interceptor.
         final RecordFilterInterceptor interceptor = new RecordFilterInterceptor();
@@ -83,12 +83,12 @@ public class RecordFilterInterceptorTest {
         when(mockFilter1.filter(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
         when(mockFilter2.filter(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
 
-        final FilterDefinition filterDefinition1 = new FilterDefinition(mockFilter1, new HashMap<>());
-        final FilterDefinition filterDefinition2 = new FilterDefinition(mockFilter2, new HashMap<>());
+        final RecordFilterDefinition recordFilterDefinition1 = new RecordFilterDefinition(mockFilter1, new HashMap<>());
+        final RecordFilterDefinition recordFilterDefinition2 = new RecordFilterDefinition(mockFilter2, new HashMap<>());
 
         // Create ConsumerConfigs
         final Map<String, Object> consumerConfigs = new HashMap<>();
-        consumerConfigs.put(RecordFilterInterceptor.CONFIG_KEY, Lists.newArrayList(filterDefinition1, filterDefinition2));
+        consumerConfigs.put(RecordFilterInterceptor.CONFIG_KEY, Lists.newArrayList(recordFilterDefinition1, recordFilterDefinition2));
 
         // Create interceptor.
         final RecordFilterInterceptor interceptor = new RecordFilterInterceptor();
@@ -128,12 +128,12 @@ public class RecordFilterInterceptorTest {
         when(mockFilter2.filter(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject()))
             .thenReturn(true, true, false, true);
 
-        final FilterDefinition filterDefinition1 = new FilterDefinition(mockFilter1, new HashMap<>());
-        final FilterDefinition filterDefinition2 = new FilterDefinition(mockFilter2, new HashMap<>());
+        final RecordFilterDefinition recordFilterDefinition1 = new RecordFilterDefinition(mockFilter1, new HashMap<>());
+        final RecordFilterDefinition recordFilterDefinition2 = new RecordFilterDefinition(mockFilter2, new HashMap<>());
 
         // Create ConsumerConfigs
         final Map<String, Object> consumerConfigs = new HashMap<>();
-        consumerConfigs.put(RecordFilterInterceptor.CONFIG_KEY, Lists.newArrayList(filterDefinition1, filterDefinition2));
+        consumerConfigs.put(RecordFilterInterceptor.CONFIG_KEY, Lists.newArrayList(recordFilterDefinition1, recordFilterDefinition2));
 
         // Create interceptor.
         final RecordFilterInterceptor interceptor = new RecordFilterInterceptor();
