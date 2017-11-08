@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+    <html
+        xmlns:th="http://www.thymeleaf.org">
+    <head/>
+    <body>
+
+    <!-- Partition Filter -->
+    <div th:fragment="partitionFilter">
+        <hr class="mx-3 my-0">
+        <div class="callout callout-info m-0 py-3">
+            <div>
+                <div
+                    style="cursor: pointer;"
+                    data-toggle="collapse"
+                    href="#collapsePartitions"
+                    aria-expanded="false" aria-controls="collapsePartitions">
+                    <strong>Partitions</strong>
+                </div>
+                <div class="collapse" id="collapsePartitions">
+                    <table class="table table-sm">
+                        <thead>
+                        <tr>
+                            <th>Partition</th>
+                            <th>Enabled</th>
+                        </tr>
+                        </thead>
+                        <tbody id="partitionSelectorTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <hr class="mx-3 my-0">
+
+        <script type="application/javascript">
+
+            var PartitionFilter = {
+                /**
+                 * Returns partitions that are toggled as enabled.
+                 * @returns {Array}
+                 */
+                getToggledPartitions: function() {
+                    var enabledPartitions = [];
+                    jQuery('input.partition-toggle:checked').each(function(index, checkboxEl) {
+                        enabledPartitions.push(jQuery(checkboxEl).val());
+                    });
+                    return enabledPartitions;
+                }
+            };
+
+        </script>
+    </div>
+
+    </body>
+</html>

@@ -281,6 +281,9 @@
         <li class="nav-item">
             <a class="nav-link active" data-toggle="tab" href="#viewInfo" role="tab"><i class="icon-list"></i></a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#search" role="tab"><i class="icon-magnifier"></i></a>
+        </li>
     </ul>
 
     <!-- Tab panes -->
@@ -288,6 +291,26 @@
         <!-- View Details -->
         <div
             th:replace="fragments/viewDetails :: viewDetails (view=${view},cluster=${view.cluster})">
+        </div>
+
+        <!-- Search & Filtering-->
+        <div class="tab-pane" id="search" role="tabpanel">
+            <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
+                <small><b>Search and Filtering</b>
+                </small>
+            </div>
+            <hr class="transparent mx-3 my-0">
+
+            <!-- Partition Filter -->
+            <div
+                th:replace="fragments/consumerSetting/partitionFilter :: partitionFilter">
+            </div>
+
+            <!-- Record Filters -->
+            <div
+                th:replace="fragments/consumerSetting/recordFilter :: recordFilter (view=${view})">
+            </div>
+
         </div>
     </div>
 </aside>

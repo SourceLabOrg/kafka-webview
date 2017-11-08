@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Record Filters -->
+<div th:fragment="recordFilter(view)">
+    <!-- Optional Record Filters -->
+    <hr class="mx-3 my-0">
+    <div class="callout callout-info m-0 py-3">
+        <div>
+            <div
+                style="cursor: pointer;"
+                data-toggle="collapse"
+                href="#collapseFilters"
+                aria-expanded="false" aria-controls="collapseFilters">
+                <strong>Record Filters</strong>
+            </div>
+            <div class="collapse" id="collapseFilters">
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Filter</th>
+                        <th>Enabled</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <th:block th:each="optionalFilter : ${view.optionalFilters}">
+                        <tr>
+                            <td th:text="${optionalFilter.filter.name}">Name</td>
+                            <td>
+                                <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                                    <input class="switch-input filter-toggle" type="checkbox" th:value="${optionalFilter.filter.id}">
+                                    <span class="switch-label" data-on="" data-off=""></span>
+                                    <span class="switch-handle"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr
+                            th:class="'filter-options' + ${optionalFilter.filter.id}" style="display: none;"
+                            th:each="option : ${optionalFilter.filter.getOptionsAsSet()}">
+                            <td colspan="2">
+                                <input
+                                    class="form-control" type="text" name="option"
+                                    th:name="${option}"
+                                    th:class="'filterOption filter' + ${optionalFilter.filter.id}"
+                                    th:placeholder="${option}">
+                            </td>
+                        </tr>
+                    </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <hr class="mx-3 my-0">
+
+    <script type="application/javascript">
+
+        // On load, fire off ajax request to load results.
+        jQuery(document).ready(function() {
+            /**
+             * Called when you enable/disable a filter.
+             * This shows/hides the filter options.
+             */
+            jQuery('input.filter-toggle').change(function() {
+                var filterId = jQuery(this).val();
+                var checked = jQuery(this).is(':checked');
+                jQuery('.filter-options' + filterId).toggle(checked);
+            });
+        });
+
+        var RecordFilter = {
+            /**
+             * Returns filter Ids that are toggled as enabled.
+             * @returns {Array}
+             */
+            getToggledFilters: function() {
+                var enabledFilters = [];
+                jQuery('input.filter-toggle:checked').each(function(index, checkboxEl) {
+                    enabledFilters.push(jQuery(checkboxEl).val());
+                });
+                return enabledFilters;
+            },
+
+            /**
+             * Returns a map of all of the options and configured values.
+             * @param filterId
+             * @returns {{}}
+             */
+            getFilterOptions: function(filterId) {
+                var optionInputs = jQuery('input.filter' + filterId);
+                var options = {};
+                jQuery(optionInputs).each(function(index, inputEl) {
+                    var optionName = jQuery(inputEl).attr('name');
+                    options[optionName] = jQuery(inputEl).val();
+                });
+                return options;
+            },
+
+            /**
+             * Used to build request json parameters for filters.
+             */
+            buildFilterParameters: function() {
+                // Get the enabled filters
+                var filterIds = RecordFilter.getToggledFilters();
+
+                var recordFilterDefinitions = [];
+                jQuery(filterIds).each(function(index, filterId) {
+                    var recordFilterDefinition = {
+                        filterId: filterId,
+                        options: RecordFilter.getFilterOptions(filterId)
+                    };
+                    recordFilterDefinitions.push(recordFilterDefinition);
+                });
+                return recordFilterDefinitions;
+            }
+        };
+
+    </script>
+</div>
+
+</body>
+</html>
