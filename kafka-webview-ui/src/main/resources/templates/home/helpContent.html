@@ -83,12 +83,12 @@
                 <div class="list-group-item">
                     <h5 class="mb-1">4. Configure Filters. (Optional)</h5>
                     <p class="mb-1">
-                        Filters are an optional construct unique to WebView.  Filters allow you to implement
+                        Filters are a construct unique to WebView.  Filters allow you to implement
                         an Interface that can be used on the <strong>server side</strong> to filter messages coming from Kafka.  There are several benefits to doing
                         filtering on the server side in this way.  You can use these as a simple search-like filter and avoid passing large amounts of data
                         to the client web browser when you're looking for a small subset of messages.  Filters could also be used to enforce a filtered view of data from a Topic.<br/>
                         <br/>
-                        Read more about implementing <a href="#filters" onclick="showTab('#filters');">custom Filters</a>.<br/>
+                        Read more about implementing <a href="#filters" onclick="showTab('#filters');">Filters</a>.<br/>
                         <br/>
                         <a class="btn btn-primary" role="button" href="/configuration/filter">Setup Filters</a>
                     </p>
@@ -176,11 +176,27 @@
 </em><em style="color:#629755; font-style:italic"> * Interface that defines a Record Filter.
 </em><em style="color:#629755; font-style:italic"> */
 </em><span style="color:#cc7832">public interface </span>RecordFilter {
-<em style="color:#629755; font-style:italic">/**
-</em><em style="color:#629755; font-style:italic">     * Configure this class.
-</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">configs </em><em style="color:#629755; font-style:italic">configs in key/value pairs
+    <em style="color:#629755; font-style:italic">/**
+</em><em style="color:#629755; font-style:italic">     * Define names of configurable options.
+</em><em style="color:#629755; font-style:italic">     * These names will be passed up to the User Interface and allow the user to define them.
+</em><em style="color:#629755; font-style:italic">     * When configure() is called below, these same names will be returned, along with the user defined values,
+</em><em style="color:#629755; font-style:italic">     * in the filterOptions argument.
+</em><em style="color:#629755; font-style:italic">     *
+</em><em style="color:#629755; font-style:italic">     * Since the UI provides no validation on these user defined values, best practices dictate that your implementation
+</em><em style="color:#629755; font-style:italic">     * should gracefully handle when these are not set.
+</em><em style="color:#629755; font-style:italic">     *
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@return </em><em style="color:#629755; font-style:italic">Set of option names.
 </em><em style="color:#629755; font-style:italic">     */
-</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">void </span><span style="color:#ffc66d">configure</span>(<span style="color:#cc7832">final </span>Map&lt;String<span style="color:#cc7832">, </span>?&gt; configs)<span style="color:#cc7832">;
+</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">default </span>Set&lt;String&gt; <span style="color:#ffc66d">getOptionNames</span>() {
+        <span style="color:#cc7832">return new </span>HashSet&lt;&gt;()<span style="color:#cc7832">;
+</span><span style="color:#cc7832">    </span>}
+
+    <em style="color:#629755; font-style:italic">/**
+</em><em style="color:#629755; font-style:italic">     * Configure this class.
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">consumerConfigs </em><em style="color:#629755; font-style:italic">Consumer configuration in key/value pairs
+</em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">filterOptions </em><em style="color:#629755; font-style:italic">User defined filter options.
+</em><em style="color:#629755; font-style:italic">     */
+</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">void </span><span style="color:#ffc66d">configure</span>(<span style="color:#cc7832">final </span>Map&lt;String<span style="color:#cc7832">, </span>?&gt; consumerConfigs<span style="color:#cc7832">, final </span>Map&lt;String<span style="color:#cc7832">, </span>String&gt; filterOptions)<span style="color:#cc7832">;
 </span>
 <span style="color:#cc7832">    </span><em style="color:#629755; font-style:italic">/**
 </em><em style="color:#629755; font-style:italic">     * Define the filter behavior.
@@ -195,8 +211,14 @@
 </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@return </em><em style="color:#629755; font-style:italic">True means the record WILL be shown.  False means the record will NOT be shown.
 </em><em style="color:#629755; font-style:italic">     */
 </em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">boolean </span><span style="color:#ffc66d">filter</span>(<span style="color:#cc7832">final </span>String topic<span style="color:#cc7832">, final int </span>partition<span style="color:#cc7832">, final long </span>offset<span style="color:#cc7832">, final </span>Object key<span style="color:#cc7832">, final </span>Object value)<span style="color:#cc7832">;
+</span>
+<span style="color:#cc7832">    </span><em style="color:#629755; font-style:italic">/**
+</em><em style="color:#629755; font-style:italic">     * Called on closing.
+</em><em style="color:#629755; font-style:italic">     */
+</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">void </span><span style="color:#ffc66d">close</span>()<span style="color:#cc7832">;
 </span>}
-                                </pre>
+            </pre>
+
             <br/>
             <h2>Example Project</h2>
             <p class="mb-1">
