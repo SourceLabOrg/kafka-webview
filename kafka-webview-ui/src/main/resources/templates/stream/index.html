@@ -148,8 +148,7 @@
 
                     // Disable Search Options
                     jQuery('div#search-disabled').remove();
-                    jQuery('div#search').fadeTo('slow', .3);
-                    jQuery('div#search').append('<div id="search-disabled" title="Cannot modify while connected to stream" style="cursor: no-drop; position: absolute;top:0;left:0;width: 100%;height:100%;z-index:2;opacity:0.4;filter: alpha(opacity = 50)"></div>');
+                    jQuery('div#search').append('<div id="search-disabled" title="Cannot modify while connected to stream" style="cursor: no-drop; position: absolute; background-color: grey; top:0;left:0;width: 100%;height:100%;z-index:2;opacity:0.4;filter: alpha(opacity = 50)"></div>');
 
                     // Show results
                     jQuery('#results').toggle(true);
@@ -171,7 +170,6 @@
 
                     // Re-enable Search Options
                     jQuery('div#search-disabled').remove();
-                    jQuery('div#search').fadeTo('slow', 1);
                 }
                 jQuery("#results-tbody").html("");
             },

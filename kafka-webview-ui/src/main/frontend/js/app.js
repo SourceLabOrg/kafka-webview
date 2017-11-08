@@ -144,6 +144,9 @@ function init(url) {
   $('[rel="popover"],[data-rel="popover"],[data-toggle="popover"]').popover();
 }
 
+/**
+ * Handles API Requests.
+ */
 var ApiClient = {
     // Returns the CSRF Token
     getCsrfToken: function() {
@@ -247,6 +250,9 @@ var ApiClient = {
     }
 };
 
+/**
+ * Common UI Tooling.
+ */
 var UITools = {
     alertContainerId: "#AlertContainer",
     showAlert: function(message, timeoutInSecs) {
@@ -264,6 +270,9 @@ var UITools = {
     }
 };
 
+/**
+ * Common Date Tooling.
+ */
 var DateTools = {
     localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     displayTimestamp: function(timestampMs) {
