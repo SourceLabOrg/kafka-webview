@@ -62,16 +62,6 @@
                     executeConsume('previous');
                 });
 
-                /**
-                 * Called when you enable/disable a filter.
-                 * This shows/hides the filter options.
-                 */
-                jQuery('input.filter-toggle').change(function() {
-                    var filterId = jQuery(this).val();
-                    var checked = jQuery(this).is(':checked');
-                    jQuery('.filter-options' + filterId).toggle(checked);
-                });
-
                 jQuery('#datetime-seek').datetimepicker({
                     timeFormat: 'HH:mm:ssZ',
                     dateFormat: "yy-mm-dd",
@@ -149,23 +139,11 @@
                 // Record state
                 ConsumerInfo.direction = action;
 
-                // Get the enabled filters
-                var filterIds = getToggledFilters();
-
-                var recordFilterDefinitions = [];
-                jQuery(filterIds).each(function(index, filterId) {
-                    var recordFilterDefinition = {
-                        filterId: filterId,
-                        options: getFilterOptions(filterId)
-                    };
-                    recordFilterDefinitions.push(recordFilterDefinition);
-                });
-
                 // Build request params
                 var params = {
                     action: action,
-                    partitions: getToggledPartitions().join(),
-                    filters: recordFilterDefinitions
+                    partitions: PartitionFilter.getToggledPartitions().join(),
+                    filters: RecordFilter.buildFilterParameters()
                 };
 
                 ApiClient.consume(ConsumerInfo.viewId, params, handleConsumeResults);
@@ -319,47 +297,6 @@
                     jQuery(consumerState).append('<tr><td>' + partitionOffset.partition + '</td><td>' + partitionOffset.offset + '</td></tr>');
                 });
             }
-
-            /**
-             * Returns partitions that are toggled as enabled.
-             * @returns {Array}
-             */
-            function getToggledPartitions() {
-                var enabledPartitions = [];
-                jQuery('input.partition-toggle:checked').each(function(index, checkboxEl) {
-                    enabledPartitions.push(jQuery(checkboxEl).val());
-                });
-                return enabledPartitions;
-            }
-
-            /**
-             * Returns filter Ids that are toggled as enabled.
-             * @returns {Array}
-             */
-            function getToggledFilters() {
-                var enabledFilters = [];
-                jQuery('input.filter-toggle:checked').each(function(index, checkboxEl) {
-                    enabledFilters.push(jQuery(checkboxEl).val());
-                });
-                return enabledFilters;
-            }
-
-            /**
-             * Returns a map of all of the options and configured values.
-             * @param filterId
-             * @returns {{}}
-             */
-            function getFilterOptions(filterId) {
-                var optionInputs = jQuery('input.filter' + filterId);
-                var options = {};
-                jQuery(optionInputs).each(function(index, inputEl) {
-                    var optionName = jQuery(inputEl).attr('name');
-                    var optionValue = jQuery(inputEl).val();
-                    options[optionName] = optionValue;
-                });
-                return options;
-            }
-
         </script>
         <div class="row">
             <div class="col-lg-12">
@@ -372,7 +309,7 @@
                         <div class="btn-group float-right" role="group" aria-label="Button group">
                             <a class="btn" th:href="'/stream/' + ${view.id}" style="padding-bottom: 0;">
                                 <i class="icon-feed"></i>
-                                &nbsp;Stream
+                                &nbsp;Switch to Stream
                             </a>
                         </div>
                     </div>
@@ -471,29 +408,6 @@
                 </td>
                 <td>{{key}}</td>
                 <td>{{value}}</td>
-            </tr>
-        </script>
-
-        <!-- Partition Details Template -->
-        <script id="partition-details-template" type="text/x-handlebars-template">
-            <tr>
-                <td>{{partition}}</td>
-                <td title="{{replica_nodes}}">{{replicas_count}}</td>
-                <td title="{{isr_nodes}}">{{isr_count}}</td>
-            </tr>
-        </script>
-
-        <!-- Partition Toggle Template -->
-        <script id="partition-toggle-template" type="text/x-handlebars-template">
-            <tr>
-                <td>{{partition}}</td>
-                <td>
-                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                        <input class="switch-input partition-toggle" checked="{{enabled}}" type="checkbox" id="partitionToggle{{partition}}" value="{{partition}}">
-                        <span class="switch-label" data-on="" data-off=""></span>
-                        <span class="switch-handle"></span>
-                    </label>
-                </td>
             </tr>
         </script>
     </div>
@@ -596,81 +510,14 @@
             <hr class="mx-3 my-0">
 
             <!-- Partition Filter -->
-            <hr class="mx-3 my-0">
-            <div class="callout callout-info m-0 py-3">
-                <div>
-                    <div
-                        style="cursor: pointer;"
-                        data-toggle="collapse"
-                        href="#collapsePartitions"
-                        aria-expanded="false" aria-controls="collapsePartitions">
-                        <strong>Partitions</strong>
-                    </div>
-                    <div class="collapse" id="collapsePartitions">
-                        <table class="table table-sm">
-                            <thead>
-                            <tr>
-                                <th>Partition</th>
-                                <th>Enabled</th>
-                            </tr>
-                            </thead>
-                            <tbody id="partitionSelectorTable">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div
+                th:replace="fragments/consumerSetting/partitionFilter :: partitionFilter">
             </div>
-            <hr class="mx-3 my-0">
 
-            <!-- Optional Record Filters -->
-            <hr class="mx-3 my-0">
-            <div class="callout callout-info m-0 py-3">
-                <div>
-                    <div
-                        style="cursor: pointer;"
-                        data-toggle="collapse"
-                        href="#collapseFilters"
-                        aria-expanded="false" aria-controls="collapseFilters">
-                        <strong>Record Filters</strong>
-                    </div>
-                    <div class="collapse" id="collapseFilters">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Filter</th>
-                                    <th>Enabled</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <th:block th:each="optionalFilter : ${view.optionalFilters}">
-                                    <tr>
-                                        <td th:text="${optionalFilter.filter.name}">Name</td>
-                                        <td>
-                                            <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                                                <input class="switch-input filter-toggle" type="checkbox" th:value="${optionalFilter.filter.id}">
-                                                <span class="switch-label" data-on="" data-off=""></span>
-                                                <span class="switch-handle"></span>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                    <tr
-                                        th:class="'filter-options' + ${optionalFilter.filter.id}" style="display: none;"
-                                        th:each="option : ${optionalFilter.filter.getOptionsAsSet()}">
-                                        <td colspan="2">
-                                            <input
-                                                class="form-control" type="text" name="option"
-                                                th:name="${option}"
-                                                th:class="'filterOption filter' + ${optionalFilter.filter.id}"
-                                                th:placeholder="${option}">
-                                        </td>
-                                    </tr>
-                                </th:block>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <!-- Record Filters -->
+            <div
+                th:replace="fragments/consumerSetting/recordFilter :: recordFilter (view=${view})">
             </div>
-            <hr class="mx-3 my-0">
         </div>
     </div>
 </aside>

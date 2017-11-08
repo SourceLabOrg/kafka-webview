@@ -1,7 +1,10 @@
 package com.darksci.kafka.webview.ui.controller.stream;
 
 import com.darksci.kafka.webview.ui.controller.BaseController;
+import com.darksci.kafka.webview.ui.controller.api.ConsumeRequest;
 import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
+import com.darksci.kafka.webview.ui.manager.kafka.ViewCustomizer;
+import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import com.darksci.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
 import com.darksci.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import com.darksci.kafka.webview.ui.manager.ui.FlashMessage;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 /**
  * Web socket controller end points.
@@ -85,6 +89,7 @@ public class StreamController extends BaseController {
     @Transactional
     public String newConsumer(
         @DestinationVariable final Long viewId,
+        final ConsumeRequest consumeRequest,
         final SimpMessageHeaderAccessor headerAccessor) {
 
         // Retrieve view
@@ -93,10 +98,17 @@ public class StreamController extends BaseController {
             return "{success: false}";
         }
 
-        // Subscribe
+        // Build a session identifier
         final long userId = getLoggedInUserId(headerAccessor);
         final String sessionId = headerAccessor.getSessionId();
-        webSocketConsumersManager.addNewConsumer(view, new SessionIdentifier(userId, sessionId));
+        final SessionIdentifier sessionIdentifier = new SessionIdentifier(userId, sessionId);
+
+        // Override settings
+        final ViewCustomizer viewCustomizer = new ViewCustomizer(view, consumeRequest);
+        viewCustomizer.overrideViewSettings();
+        final List<FilterDefinition> configuredFilters = viewCustomizer.getFilterDefinitions();
+
+        webSocketConsumersManager.addNewConsumer(view, configuredFilters, sessionIdentifier);
         return "{success: true}";
     }
 

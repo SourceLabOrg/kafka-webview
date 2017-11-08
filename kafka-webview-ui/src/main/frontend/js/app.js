@@ -144,6 +144,9 @@ function init(url) {
   $('[rel="popover"],[data-rel="popover"],[data-toggle="popover"]').popover();
 }
 
+/**
+ * Handles API Requests.
+ */
 var ApiClient = {
     // Returns the CSRF Token
     getCsrfToken: function() {
@@ -209,6 +212,17 @@ var ApiClient = {
             }
         });
     },
+    /**
+     * Retrieve which partitions are available for the given view.
+     * @param viewId id of view
+     * @param callback Call back to pass the results
+     */
+    getPartitionsForView: function(viewId, callback) {
+        jQuery
+            .getJSON('/api/view/' + viewId + '/partitions', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+
     // Retrieve cluster node info
     getClusterNodes: function(clusterId, callback) {
         jQuery
@@ -247,6 +261,9 @@ var ApiClient = {
     }
 };
 
+/**
+ * Common UI Tooling.
+ */
 var UITools = {
     alertContainerId: "#AlertContainer",
     showAlert: function(message, timeoutInSecs) {
@@ -264,6 +281,9 @@ var UITools = {
     }
 };
 
+/**
+ * Common Date Tooling.
+ */
 var DateTools = {
     localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     displayTimestamp: function(timestampMs) {

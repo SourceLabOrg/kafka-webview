@@ -3,6 +3,7 @@ package com.darksci.kafka.webview.ui.manager.socket;
 import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import com.darksci.kafka.webview.ui.manager.kafka.SocketKafkaConsumer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
+import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import com.darksci.kafka.webview.ui.model.View;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,7 +75,7 @@ public class WebSocketConsumersManager implements Runnable {
      * @param view The view to consume from
      * @param sessionIdentifier The user who is consuming.
      */
-    public void addNewConsumer(final View view, final SessionIdentifier sessionIdentifier) {
+    public void addNewConsumer(final View view, final Collection<FilterDefinition> filters, final SessionIdentifier sessionIdentifier) {
         synchronized (consumers) {
             // createWebClient a key
             final ConsumerKey consumerKey = new ConsumerKey(view.getId(), sessionIdentifier);
@@ -86,7 +88,7 @@ public class WebSocketConsumersManager implements Runnable {
             // Create consumer
             final SocketKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.createWebSocketClient(
                 view,
-                new ArrayList<>(),
+                filters,
                 sessionIdentifier
             );
 

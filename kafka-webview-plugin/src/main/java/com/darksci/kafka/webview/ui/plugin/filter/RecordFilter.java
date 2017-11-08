@@ -9,7 +9,14 @@ import java.util.Set;
  */
 public interface RecordFilter {
     /**
-     * Define any configurable options.
+     * Define names of configurable options.
+     * These names will be passed up to the User Interface and allow the user to define them.
+     * When configure() is called below, these same names will be returned, along with the user defined values,
+     * in the filterOptions argument.
+     *
+     * Since the UI provides no validation on these user defined values, best practices dictate that your implementation
+     * should gracefully handle when these are not set.
+     *
      * @return Set of option names.
      */
     default Set<String> getOptionNames() {

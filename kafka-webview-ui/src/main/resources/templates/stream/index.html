@@ -22,7 +22,7 @@
                         <div class="btn-group float-right" role="group" aria-label="Button group">
                             <a class="btn" th:href="'/view/' + ${view.id}" style="padding-bottom: 0;">
                                 <i class="icon-eye"></i>
-                                &nbsp;View
+                                &nbsp;Switch to View
                             </a>
                         </div>
                     </div>
@@ -146,6 +146,10 @@
                     // Hide not connected
                     jQuery('#notConnected').toggle(false);
 
+                    // Disable Search Options
+                    jQuery('div#search-disabled').remove();
+                    jQuery('div#search').append('<div id="search-disabled" title="Cannot modify while connected to stream" style="cursor: no-drop; position: absolute; background-color: grey; top:0;left:0;width: 100%;height:100%;z-index:2;opacity:0.4;filter: alpha(opacity = 50)"></div>');
+
                     // Show results
                     jQuery('#results').toggle(true);
 
@@ -163,6 +167,9 @@
                     jQuery('#resume').prop("disabled", true);;
                     jQuery('#pause').prop("disabled", true);;
                     jQuery("#results").hide();
+
+                    // Re-enable Search Options
+                    jQuery('div#search-disabled').remove();
                 }
                 jQuery("#results-tbody").html("");
             },
@@ -196,7 +203,14 @@
 
             // Subscribe to a specific view
             requestSubscription: function() {
-                SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify({}));
+                // Build request params
+                var params = {
+                    action: 'head',
+                    partitions: PartitionFilter.getToggledPartitions().join(),
+                    filters: RecordFilter.buildFilterParameters()
+                };
+
+                SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify(params));
             },
 
             subscribeResults: function() {
@@ -249,10 +263,10 @@
             jQuery( "#disconnect" ).click(function() { SocketDetails.disconnect(); });
             jQuery( "#pause" ).click(function() {
                 SocketDetails.pause();
-            })
+            });
             jQuery( "#resume" ).click(function() {
                 SocketDetails.resume();
-            })
+            });
         });
     </script>
 
@@ -281,6 +295,9 @@
         <li class="nav-item">
             <a class="nav-link active" data-toggle="tab" href="#viewInfo" role="tab"><i class="icon-list"></i></a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#search" role="tab"><i class="icon-magnifier"></i></a>
+        </li>
     </ul>
 
     <!-- Tab panes -->
@@ -288,6 +305,26 @@
         <!-- View Details -->
         <div
             th:replace="fragments/viewDetails :: viewDetails (view=${view},cluster=${view.cluster})">
+        </div>
+
+        <!-- Search & Filtering-->
+        <div class="tab-pane" id="search" role="tabpanel">
+            <div class="callout m-0 py-2 text-muted text-center bg-light text-uppercase">
+                <small><b>Search and Filtering</b>
+                </small>
+            </div>
+            <hr class="transparent mx-3 my-0">
+
+            <!-- Partition Filter -->
+            <div
+                th:replace="fragments/consumerSetting/partitionFilter :: partitionFilter">
+            </div>
+
+            <!-- Record Filters -->
+            <div
+                th:replace="fragments/consumerSetting/recordFilter :: recordFilter (view=${view})">
+            </div>
+
         </div>
     </div>
 </aside>
