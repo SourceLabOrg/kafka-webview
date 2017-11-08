@@ -36,6 +36,38 @@
 
             var PartitionFilter = {
                 /**
+                 * Hit API to determine which views are avialable
+                 */
+                loadPartitionsForView: function(viewId) {
+                    ApiClient.getPartitionsForView(viewId, PartitionFilter.loadUi);
+                },
+
+                /**
+                 * Load UI based on partitionIds parameter.
+                 */
+                loadUi: function(partitionIds) {
+                    // Get and compile template
+                    var source   = jQuery('#partition-toggle-template').html();
+                    var template = Handlebars.compile(source);
+                    var table    = jQuery('#partitionSelectorTable');
+
+                    // Empty Partition Toggles
+                    jQuery(table).empty();
+
+                    // Build and append template for each partition
+                    jQuery(partitionIds).each(function(index, partition) {
+                        var properties = {
+                            partition: partition,
+                            enabled: true
+                        };
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+                },
+
+                /**
                  * Returns partitions that are toggled as enabled.
                  * @returns {Array}
                  */
@@ -47,7 +79,20 @@
                     return enabledPartitions;
                 }
             };
+        </script>
 
+        <!-- Partition Toggle Template -->
+        <script id="partition-toggle-template" type="text/x-handlebars-template">
+            <tr>
+                <td>{{partition}}</td>
+                <td>
+                    <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
+                        <input class="switch-input partition-toggle" checked="{{enabled}}" type="checkbox" id="partitionToggle{{partition}}" value="{{partition}}">
+                        <span class="switch-label" data-on="" data-off=""></span>
+                        <span class="switch-handle"></span>
+                    </label>
+                </td>
+            </tr>
         </script>
     </div>
 

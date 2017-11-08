@@ -14,6 +14,7 @@ import com.darksci.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.NodeList;
+import com.darksci.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicList;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.TopicListing;
@@ -161,6 +162,37 @@ public class ApiController extends BaseController {
         } catch (final Exception e) {
             throw new ApiException("OffsetsByTimestamp", e);
         }
+    }
+
+    /**
+     * GET all available partitions for a given view.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/view/{id}/partitions", method = RequestMethod.GET, produces = "application/json")
+    public Collection<Integer> getPartitionsForView(@PathVariable final Long id) {
+        // Retrieve View
+        final View view = viewRepository.findOne(id);
+        if (view == null) {
+            throw new NotFoundApiException("Partitions", "Unable to find view");
+        }
+
+        // If the view has defined partitions, we'll return them
+        if (!view.getPartitionsAsSet().isEmpty()) {
+            return view.getPartitionsAsSet();
+        }
+
+        // Otherwise ask the cluster for what partitions.
+        // Create new Operational Client
+        final Set<Integer> partitionIds = new HashSet<>();
+        try (final KafkaOperations operations = createOperationsClient(view.getCluster())) {
+            final TopicDetails topicDetails = operations.getTopicDetails(view.getTopic());
+            for (final PartitionDetails partitionDetail : topicDetails.getPartitions()) {
+                partitionIds.add(partitionDetail.getPartition());
+            }
+        } catch (final Exception e) {
+            throw new ApiException("Topics", e);
+        }
+        return partitionIds;
     }
 
     /**

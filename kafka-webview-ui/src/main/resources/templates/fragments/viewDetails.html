@@ -133,22 +133,28 @@
     <script type="application/javascript">
         // On load, fire off ajax request to load results.
         jQuery(document).ready(function() {
-
-            // Chain initial ajax requests.
-            // Request Topic Information
-            ApiClient.getTopicDetails('[[${cluster.id}]]', '[[${view.topic}]]', function (results) {
-                // Handle results
-                ViewDetails.handleTopicDetailResults(results);
-
-                // Request Cluster Information
-                ApiClient.getClusterNodes('[[${cluster.id}]]', function (results) {
-                    // Handle results
-                    ViewDetails.handleClusterNodeResults(results);
-                });
-            });
+            ViewDetails.load('[[${cluster.id}]]', '[[${view.id}]]', '[[${view.topic}]]');
         });
 
         var ViewDetails = {
+            load: function(clusterId, viewId, topic) {
+                // Chain initial ajax requests.
+                // Request Topic Information
+                ApiClient.getTopicDetails(clusterId, topic, function (results) {
+                    // Handle results
+                    ViewDetails.handleTopicDetailResults(results);
+
+                    // Request Cluster Information
+                    ApiClient.getClusterNodes(clusterId, function (results) {
+                        // Handle results
+                        ViewDetails.handleClusterNodeResults(results);
+
+                        // Load Partition Toggles
+                        PartitionFilter.loadPartitionsForView(viewId);
+                    });
+                });
+            },
+
             handleClusterNodeResults: function(results) {
                 var brokerList = jQuery('#broker-list');
                 jQuery(brokerList).empty();
@@ -192,39 +198,6 @@
                     // Append it to our table
                     jQuery(table).append(resultHtml);
                 });
-
-                // Get and compile template
-                var source   = jQuery('#partition-toggle-template').html();
-                var template = Handlebars.compile(source);
-                var table    = jQuery('#partitionSelectorTable');
-
-                // Show Partition Toggles
-                jQuery(table).empty();
-
-                // If we have no enforced partition filters
-                var partitions = [];
-                if ('[[${view.partitions}]]'.length == 0) {
-                    // Build from results
-                    jQuery.each(results.partitions, function (index, result) {
-                        partitions.push(result.partition);
-                    });
-                } else {
-                    jQuery('[[${view.partitions}]]'.split(',')).each(function(index, partition) {
-                        partitions.push(partition);
-                    });
-                }
-
-                // Build and append template for each partition
-                jQuery(partitions).each(function(index, partition) {
-                    var properties = {
-                        partition: partition,
-                        enabled: true
-                    };
-                    var resultHtml = template(properties);
-
-                    // Append it to our table
-                    jQuery(table).append(resultHtml);
-                });
             },
             // Determine if we should format timestamps or not.
             displayPrettyDates: function() {
@@ -239,20 +212,6 @@
             <td>{{partition}}</td>
             <td title="{{replica_nodes}}">{{replicas_count}}</td>
             <td title="{{isr_nodes}}">{{isr_count}}</td>
-        </tr>
-    </script>
-
-    <!-- Partition Toggle Template -->
-    <script id="partition-toggle-template" type="text/x-handlebars-template">
-        <tr>
-            <td>{{partition}}</td>
-            <td>
-                <label class="switch switch-sm switch-icon switch-pill switch-primary-outline-alt">
-                    <input class="switch-input partition-toggle" checked="{{enabled}}" type="checkbox" id="partitionToggle{{partition}}" value="{{partition}}">
-                    <span class="switch-label" data-on="" data-off=""></span>
-                    <span class="switch-handle"></span>
-                </label>
-            </td>
         </tr>
     </script>
 </div>
