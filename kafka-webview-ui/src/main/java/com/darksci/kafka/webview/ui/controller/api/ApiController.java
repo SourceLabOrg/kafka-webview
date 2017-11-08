@@ -4,6 +4,7 @@ import com.darksci.kafka.webview.ui.controller.BaseController;
 import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperations;
 import com.darksci.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import com.darksci.kafka.webview.ui.manager.kafka.SessionIdentifier;
+import com.darksci.kafka.webview.ui.manager.kafka.ViewCustomizer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumer;
 import com.darksci.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import com.darksci.kafka.webview.ui.manager.kafka.config.FilterDefinition;
@@ -96,78 +97,10 @@ public class ApiController extends BaseController {
             throw new NotFoundApiException("Consume", "Unable to find view");
         }
 
-        // Optionally over ride results per partition, within reason.
-        if (resultsPerPartition != null && resultsPerPartition > 0 && resultsPerPartition < 500) {
-            // Override in view
-            view.setResultsPerPartition(resultsPerPartition);
-        }
-
-        // Determine if we should apply filters over partitions
-        // but if the view has enforced partition filtering, don't bypass its logic.
-        if (partitions != null && !partitions.isEmpty()) {
-            final boolean filterPartitions;
-            if (view.getPartitions() == null || view.getPartitions().isEmpty()) {
-                filterPartitions = false;
-            } else {
-                filterPartitions = true;
-            }
-
-            // Create a string of partitions
-            final Set<Integer> allowedPartitions = view.getPartitionsAsSet();
-            final Set<Integer> configuredPartitions = new HashSet<>();
-
-            // Convert the String array into an actual array
-            for (final String requestedPartitionStr: partitions.split(",")) {
-                try {
-                    // If its not an allowed partition skip it
-                    final Integer requestedPartition = Integer.parseInt(requestedPartitionStr);
-                    if (filterPartitions && !allowedPartitions.contains(requestedPartition)) {
-                        continue;
-                    }
-                    configuredPartitions.add(requestedPartition);
-                } catch (final NumberFormatException e) {
-                    // Skip invalid partitions
-                    continue;
-                }
-            }
-
-            // Finally override config if we have something
-            if (!configuredPartitions.isEmpty()) {
-                view.setPartitions(configuredPartitions.stream().map(Object::toString).collect(Collectors.joining(",")));
-            }
-        }
-
-        // Determine if we should apply record filters
-        // but if the view has enforced record filtering, don't bypass its logic, add onto it.
-        final List<FilterDefinition> configuredFilters = new ArrayList<>();
-        if (requestFilters != null && !requestFilters.isEmpty()) {
-            // Retrieve all available filters
-            final Map<Long, Filter> allowedFilters = new HashMap<>();
-
-            // Build list of allowed filters
-            for (final ViewToFilterOptional allowedFilter : view.getOptionalFilters()) {
-                allowedFilters.put(allowedFilter.getFilter().getId(), allowedFilter.getFilter());
-            }
-
-            // Convert the String array into an actual array
-            for (final ConsumeRequest.Filter requestedFilter: requestFilters) {
-                // Convert to a long
-                final Long requestedFilterId = requestedFilter.getFilterId();
-                final Map<String, String> requestedFilterOptions = requestedFilter.getOptions();
-
-                // See if its an allowed filter
-                if (!allowedFilters.containsKey(requestedFilterId)) {
-                    // Skip not allowed filters
-                    continue;
-                }
-                // Define it
-                final Filter filter = allowedFilters.get(requestedFilterId);
-                final FilterDefinition filterDefinition = new FilterDefinition(filter, requestedFilterOptions);
-
-                // Configure it
-                configuredFilters.add(filterDefinition);
-            }
-        }
+        // Override settings
+        final ViewCustomizer viewCustomizer = new ViewCustomizer(view, consumeRequest);
+        viewCustomizer.overrideViewSettings();
+        final List<FilterDefinition> configuredFilters = viewCustomizer.getFilterDefinitions();
 
         // Create consumer
         try (final WebKafkaConsumer webKafkaConsumer = setup(view, configuredFilters)) {

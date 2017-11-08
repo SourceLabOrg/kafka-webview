@@ -100,7 +100,7 @@
             stompClient: null,
 
             // Debug handler
-            stompDebug: null,
+            stompDebug: console.log,
 
             // End point to connect
             socketUrl: "/websocket",
@@ -146,6 +146,11 @@
                     // Hide not connected
                     jQuery('#notConnected').toggle(false);
 
+                    // Disable Search Options
+                    jQuery('div#search-disabled').remove();
+                    jQuery('div#search').fadeTo('slow', .3);
+                    jQuery('div#search').append('<div id="search-disabled" title="Cannot modify while connected to stream" style="cursor: no-drop; position: absolute;top:0;left:0;width: 100%;height:100%;z-index:2;opacity:0.4;filter: alpha(opacity = 50)"></div>');
+
                     // Show results
                     jQuery('#results').toggle(true);
 
@@ -163,6 +168,10 @@
                     jQuery('#resume').prop("disabled", true);;
                     jQuery('#pause').prop("disabled", true);;
                     jQuery("#results").hide();
+
+                    // Re-enable Search Options
+                    jQuery('div#search-disabled').remove();
+                    jQuery('div#search').fadeTo('slow', 1);
                 }
                 jQuery("#results-tbody").html("");
             },
@@ -196,7 +205,14 @@
 
             // Subscribe to a specific view
             requestSubscription: function() {
-                SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify({}));
+                // Build request params
+                var params = {
+                    action: 'head',
+                    partitions: PartitionFilter.getToggledPartitions().join(),
+                    filters: RecordFilter.buildFilterParameters()
+                };
+
+                SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify(params));
             },
 
             subscribeResults: function() {
@@ -249,10 +265,10 @@
             jQuery( "#disconnect" ).click(function() { SocketDetails.disconnect(); });
             jQuery( "#pause" ).click(function() {
                 SocketDetails.pause();
-            })
+            });
             jQuery( "#resume" ).click(function() {
                 SocketDetails.resume();
-            })
+            });
         });
     </script>
 

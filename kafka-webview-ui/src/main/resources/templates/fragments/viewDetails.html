@@ -209,7 +209,7 @@
                         partitions.push(result.partition);
                     });
                 } else {
-                    jQuery(ConsumerInfo.partitions.split(',')).each(function(index, partition) {
+                    jQuery('[[${view.partitions}]]'.split(',')).each(function(index, partition) {
                         partitions.push(partition);
                     });
                 }
