@@ -68,7 +68,7 @@ public class KafkaConsumerFactory {
     /**
      * Build an appropriate configuration based on the passed in ClientConfig.
      */
-    public Map<String, Object> buildConsumerConfig(final ClientConfig clientConfig) {
+    private Map<String, Object> buildConsumerConfig(final ClientConfig clientConfig) {
         // Build config
         final Map<String, Object> configMap = new HashMap<>();
         configMap.put(ConsumerConfig.CLIENT_ID_CONFIG, clientConfig.getConsumerId());
@@ -79,6 +79,9 @@ public class KafkaConsumerFactory {
         configMap.put(
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
             clientConfig.getTopicConfig().getDeserializerConfig().getValueDeserializerClass());
+
+        // Default to reset to earliest
+        configMap.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         // Enable auto commit
         configMap.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, clientConfig.isAutoCommitEnabled());

@@ -197,6 +197,14 @@ public class ClientConfig {
         }
 
         /**
+         * No limit on what partitions can be consumed.
+         */
+        public Builder withAllPartitions() {
+            limitPartitions.clear();
+            return this;
+        }
+
+        /**
          * Define a partition that should be consumed.
          */
         public Builder withPartition(final int partitionId) {
