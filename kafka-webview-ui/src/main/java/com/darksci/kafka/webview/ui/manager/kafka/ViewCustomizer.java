@@ -21,14 +21,19 @@ public class ViewCustomizer {
     private final View view;
     private final ConsumeRequest consumeRequest;
 
+    /**
+     * Constructor.
+     * @param view The View to customize
+     * @param consumeRequest The request used to override view properties.
+     */
     public ViewCustomizer(final View view, final ConsumeRequest consumeRequest) {
         this.view = view;
         this.consumeRequest = consumeRequest;
     }
 
     /**
-     * Override any settings in the view
-     * @return
+     * Override any settings in the view.
+     * @return overridden view
      */
     public View overrideViewSettings() {
         overrideResultPerPartition();
@@ -36,6 +41,9 @@ public class ViewCustomizer {
         return view;
     }
 
+    /**
+     * @return Return Filter Definitions constructed from a ConsumerRequest.
+     */
     public List<FilterDefinition> getFilterDefinitions() {
         final List<ConsumeRequest.Filter> requestFilters = consumeRequest.getFilters();
 
