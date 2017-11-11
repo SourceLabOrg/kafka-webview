@@ -1,7 +1,6 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
 import com.darksci.kafka.webview.ui.manager.encryption.SecretManager;
-import com.darksci.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import com.darksci.kafka.webview.ui.manager.kafka.dto.NodeList;
 import com.darksci.kafka.webview.ui.model.Cluster;
 import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
