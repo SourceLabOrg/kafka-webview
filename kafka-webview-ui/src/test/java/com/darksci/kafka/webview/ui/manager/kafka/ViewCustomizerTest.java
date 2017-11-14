@@ -154,10 +154,9 @@ public class ViewCustomizerTest {
 
         final ConsumeRequest.Filter uiFilter1 = new ConsumeRequest.Filter();
         uiFilter1.setFilterId(1L);
-        uiFilter1.setOptions(new HashMap<>());
+        uiFilter1.setOptions(uiFilter1Options);
 
         consumeRequest.setFilters(Lists.newArrayList(uiFilter1));
-
 
         // Create instance & override
         final ViewCustomizer viewCustomizer = new ViewCustomizer(view, consumeRequest);
