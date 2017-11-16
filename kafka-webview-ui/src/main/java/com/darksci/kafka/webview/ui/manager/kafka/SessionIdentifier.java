@@ -1,5 +1,7 @@
 package com.darksci.kafka.webview.ui.manager.kafka;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Unique key to represent a session.
  * Combines userId + sessionId.
@@ -11,7 +13,7 @@ public class SessionIdentifier {
     /**
      * Constructor.
      */
-    public SessionIdentifier(final long userId, final String sessionId) {
+    public SessionIdentifier(final long userId, @NotNull final String sessionId) {
         if (sessionId == null) {
             throw new NullPointerException("sessionId cannot be null!");
         }

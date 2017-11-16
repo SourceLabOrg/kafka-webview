@@ -40,7 +40,7 @@ public class View {
     private String topic;
 
     @Column(nullable = false)
-    private String partitions;
+    private String partitions = "";
 
     @Column(nullable = false)
     private Integer resultsPerPartition = 10;
@@ -137,6 +137,12 @@ public class View {
     @Transient
     public Set<Integer> getPartitionsAsSet() {
         final Set<Integer> partitionsSet = new HashSet<>();
+
+        // Avoid NPE.
+        if (getPartitions() == null) {
+            return partitionsSet;
+        }
+
         final String[] partitions = getPartitions().split(",");
 
         for (final String partitionStr: partitions) {
