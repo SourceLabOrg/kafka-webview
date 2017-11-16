@@ -102,6 +102,9 @@ public class KafkaOperationsTest {
         }
     }
 
+    /**
+     * Test retrieving topic details.
+     */
     @Test
     public void testGetTopicDetails() {
         final String[] brokerHostBits = sharedKafkaTestResource.getKafkaConnectString().split(":");
