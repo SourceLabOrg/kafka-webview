@@ -1,0 +1,254 @@
+package org.sourcelab.kafka.webview.ui.manager.kafka.config;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Defines configuration values for consuming from a Kafka cluster.
+ */
+public class ClientConfig {
+    /**
+     * Holds details about what topic we're consuming from.
+     */
+    private final TopicConfig topicConfig;
+
+    /**
+     * Holds details about any filters applied.
+     */
+    private final FilterConfig filterConfig;
+
+    /**
+     * Defines the id of the consumer, which is where offsets/state is stored under.
+     */
+    private final String consumerId;
+
+    private final Set<Integer> partitionIds;
+
+    /**
+     * Defines how many records to retrieve, per partition.
+     */
+    private final int maxResultsPerPartition;
+
+    /**
+     * Turn auto commit on/off.
+     */
+    private final boolean isAutoCommitEnabled;
+
+    /**
+     * How long to timeout poll requests.
+     */
+    private final long pollTimeoutMs = 2000;
+
+    /**
+     * Constructor.
+     * @param topicConfig Topic configuration values.
+     * @param filterConfig Filter configuration values.
+     * @param consumerId Consumer identifier.
+     */
+    public ClientConfig(final TopicConfig topicConfig, final FilterConfig filterConfig, final String consumerId) {
+        this(topicConfig, filterConfig, consumerId, new ArrayList<>(), 10, true);
+    }
+
+    /**
+     * Constructor.
+     * @param topicConfig Topic configuration values.
+     * @param filterConfig Filter configuration values.
+     * @param consumerId Consumer identifier.
+     * @param partitionIds List of partitionIds to limit consuming from.
+     * @param maxResultsPerPartition How many records to poll per partition.
+     * @param isAutoCommitEnabled If the consumer should auto commit state or not.
+     */
+    public ClientConfig(
+        final TopicConfig topicConfig,
+        final FilterConfig filterConfig,
+        final String consumerId,
+        final Collection<Integer> partitionIds,
+        final int maxResultsPerPartition,
+        final boolean isAutoCommitEnabled) {
+
+        this.topicConfig = topicConfig;
+        this.filterConfig = filterConfig;
+        this.consumerId = consumerId;
+        final Set<Integer> tempSet = new HashSet<>();
+        tempSet.addAll(partitionIds);
+        this.partitionIds = Collections.unmodifiableSet(tempSet);
+        this.maxResultsPerPartition = maxResultsPerPartition;
+        this.isAutoCommitEnabled = isAutoCommitEnabled;
+    }
+
+    public TopicConfig getTopicConfig() {
+        return topicConfig;
+    }
+
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public FilterConfig getFilterConfig() {
+        return filterConfig;
+    }
+
+    public boolean isAutoCommitEnabled() {
+        return isAutoCommitEnabled;
+    }
+
+    public int getMaxResultsPerPartition() {
+        return maxResultsPerPartition;
+    }
+
+    public long getPollTimeoutMs() {
+        return pollTimeoutMs;
+    }
+
+    /**
+     * Are we limiting what partitions we read from.
+     */
+    public boolean hasFilteredPartitions() {
+        // Empty means allow all.
+        return !partitionIds.isEmpty();
+    }
+
+    /**
+     * Utility method to determine if we should consume from a partition or not.
+     * @param partitionId The partition to check.
+     * @return True if so, false if not.
+     */
+    public boolean isPartitionFiltered(final int partitionId) {
+        if (!hasFilteredPartitions()) {
+            return false;
+        }
+        return !partitionIds.contains(partitionId);
+    }
+
+    public Set<Integer> getPartitionIds() {
+        return partitionIds;
+    }
+
+    @Override
+    public String toString() {
+        return "ClientConfig{"
+            + "topicConfig=" + topicConfig
+            + ", filterConfig=" + filterConfig
+            + ", consumerId='" + consumerId + '\''
+            + ", partitionIds=" + partitionIds
+            + ", maxResultsPerPartition=" + maxResultsPerPartition
+            + ", isAutoCommitEnabled=" + isAutoCommitEnabled
+            + ", pollTimeoutMs=" + pollTimeoutMs
+            + '}';
+    }
+
+    /**
+     * Create a new Builder instance.
+     */
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
+     * Builder class for createing new ClientConfig instances.
+     */
+    public static class Builder {
+        private TopicConfig topicConfig;
+        private FilterConfig filterConfig;
+        private String consumerId;
+        private Set<Integer> limitPartitions = new HashSet<>();
+        private int maxResultsPerPartition = 10;
+        private boolean autoCommit = true;
+
+        /**
+         * Private constructor.
+         */
+        private Builder() {
+
+        }
+
+        /**
+         * Define topic configuration.
+         */
+        public Builder withTopicConfig(final TopicConfig topicConfig) {
+            this.topicConfig = topicConfig;
+            return this;
+        }
+
+        /**
+         * Define filter configuration.
+         */
+        public Builder withFilterConfig(final FilterConfig filterConfig) {
+            this.filterConfig = filterConfig;
+            return this;
+        }
+
+        /**
+         * Declare there are no filters.
+         */
+        public Builder withNoFilters() {
+            return withFilterConfig(FilterConfig.withNoFilters());
+        }
+
+        /**
+         * Declare the consumerId to use.
+         */
+        public Builder withConsumerId(final String consumerId) {
+            this.consumerId = consumerId;
+            return this;
+        }
+
+        /**
+         * No limit on what partitions can be consumed.
+         */
+        public Builder withAllPartitions() {
+            limitPartitions.clear();
+            return this;
+        }
+
+        /**
+         * Define a partition that should be consumed.
+         */
+        public Builder withPartition(final int partitionId) {
+            limitPartitions.add(partitionId);
+            return this;
+        }
+
+        /**
+         * Declare one or more partitions that should be consumed.
+         */
+        public Builder withPartitions(final Collection<Integer> partitionIds) {
+            limitPartitions.addAll(partitionIds);
+            return this;
+        }
+
+        /**
+         * Declare how many records should be consumed per partition.
+         */
+        public Builder withMaxResultsPerPartition(final int maxResultsPerPartition) {
+            this.maxResultsPerPartition = maxResultsPerPartition;
+            return this;
+        }
+
+        /**
+         * Declare consumer state should be auto committed.
+         */
+        public Builder withAutoCommitEnabled() {
+            this.autoCommit = true;
+            return this;
+        }
+
+        /**
+         * Declare consumer state should NOT be auto committed.
+         */
+        public Builder withAutoCommitDisabled() {
+            this.autoCommit = false;
+            return this;
+        }
+
+        /**
+         * Create new ClientConfig instance.
+         */
+        public ClientConfig build() {
+            return new ClientConfig(topicConfig, filterConfig, consumerId, limitPartitions, maxResultsPerPartition, autoCommit);
+        }
+    }
+}
