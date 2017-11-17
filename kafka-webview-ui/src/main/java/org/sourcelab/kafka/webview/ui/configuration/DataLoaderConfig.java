@@ -1,10 +1,5 @@
 package org.sourcelab.kafka.webview.ui.configuration;
 
-import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
-import org.sourcelab.kafka.webview.ui.model.MessageFormat;
-import org.sourcelab.kafka.webview.ui.model.UserRole;
-import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
-import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.DoubleDeserializer;
@@ -13,6 +8,11 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
+import org.sourcelab.kafka.webview.ui.model.MessageFormat;
+import org.sourcelab.kafka.webview.ui.model.UserRole;
+import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
+import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

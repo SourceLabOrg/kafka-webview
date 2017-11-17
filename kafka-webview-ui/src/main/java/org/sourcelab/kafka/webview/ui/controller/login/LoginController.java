@@ -1,5 +1,7 @@
 package org.sourcelab.kafka.webview.ui.controller.login;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.login.forms.LostPasswordForm;
 import org.sourcelab.kafka.webview.ui.controller.login.forms.ResetPasswordForm;
@@ -7,8 +9,6 @@ import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;

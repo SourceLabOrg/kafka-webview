@@ -1,14 +1,14 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
+import com.google.common.collect.Sets;
+import org.assertj.core.util.Lists;
+import org.junit.Assert;
+import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.controller.api.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.model.ViewToFilterOptional;
-import com.google.common.collect.Sets;
-import org.assertj.core.util.Lists;
-import org.junit.Assert;
-import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;

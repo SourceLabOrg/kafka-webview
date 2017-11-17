@@ -1,12 +1,12 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.filter;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
-import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
+import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,11 +1,11 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
-import org.sourcelab.kafka.webview.ui.model.Cluster;
 import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
+import org.sourcelab.kafka.webview.ui.model.Cluster;
 
 import java.util.concurrent.ExecutionException;
 

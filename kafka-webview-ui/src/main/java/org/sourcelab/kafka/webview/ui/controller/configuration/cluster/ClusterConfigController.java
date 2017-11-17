@@ -1,5 +1,8 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.cluster;
 
+import org.apache.kafka.common.KafkaException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.cluster.forms.ClusterForm;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
@@ -10,9 +13,6 @@ import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
-import org.apache.kafka.common.KafkaException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

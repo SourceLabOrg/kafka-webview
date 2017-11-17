@@ -1,11 +1,11 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.common.config.SslConfigs;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.HashMap;
 import java.util.Map;

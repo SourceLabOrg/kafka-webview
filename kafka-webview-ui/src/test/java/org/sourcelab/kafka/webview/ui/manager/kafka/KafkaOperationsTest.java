@@ -1,5 +1,10 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
+import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
@@ -10,11 +15,6 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
-import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -1,5 +1,8 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
@@ -16,9 +19,6 @@ import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.model.ViewToFilterEnforced;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.Deserializer;
 
 import java.io.IOException;
 import java.util.ArrayList;

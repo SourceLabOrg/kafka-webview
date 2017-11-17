@@ -1,13 +1,13 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.filter;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
-import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
+import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
 import java.util.ArrayList;
 import java.util.Collections;

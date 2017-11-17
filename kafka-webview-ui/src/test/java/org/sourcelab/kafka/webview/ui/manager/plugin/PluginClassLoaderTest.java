@@ -1,14 +1,12 @@
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
-import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.junit.Test;
+import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
 import java.net.URL;
 import java.security.PermissionCollection;
 import java.security.ProtectionDomain;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 

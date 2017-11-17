@@ -1,13 +1,13 @@
 package org.sourcelab.kafka.webview.ui.manager.socket;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SocketKafkaConsumer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.sourcelab.kafka.webview.ui.model.View;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

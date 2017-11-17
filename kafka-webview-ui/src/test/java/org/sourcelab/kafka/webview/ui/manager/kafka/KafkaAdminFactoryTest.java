@@ -1,12 +1,12 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeClusterResult;
 import org.apache.kafka.common.Node;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;

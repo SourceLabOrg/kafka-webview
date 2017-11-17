@@ -1,5 +1,7 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.view;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.view.forms.ViewForm;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
@@ -19,8 +21,6 @@ import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewToFilterOptionalRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

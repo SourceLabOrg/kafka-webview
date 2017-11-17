@@ -1,12 +1,5 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
-import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,6 +7,13 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
+import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
 import java.util.HashMap;
 import java.util.Map;

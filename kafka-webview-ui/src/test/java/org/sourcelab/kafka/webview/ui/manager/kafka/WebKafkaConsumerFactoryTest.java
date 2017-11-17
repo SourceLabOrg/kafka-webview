@@ -1,5 +1,11 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
+import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
@@ -10,12 +16,6 @@ import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
-import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
-import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,15 +1,15 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
-import org.sourcelab.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.SslConfigs;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
+import org.sourcelab.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,13 +1,5 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
@@ -17,6 +9,14 @@ import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 
 import java.util.ArrayList;
 import java.util.Collection;

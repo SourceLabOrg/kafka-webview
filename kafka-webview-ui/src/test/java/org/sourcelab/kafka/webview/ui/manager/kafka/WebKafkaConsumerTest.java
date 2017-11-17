@@ -1,11 +1,5 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -15,6 +9,12 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 
 import java.util.HashMap;
 import java.util.Map;

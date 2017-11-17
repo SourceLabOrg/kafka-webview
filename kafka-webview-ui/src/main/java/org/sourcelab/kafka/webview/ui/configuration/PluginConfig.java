@@ -1,5 +1,6 @@
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaConsumerFactory;
@@ -8,7 +9,6 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 

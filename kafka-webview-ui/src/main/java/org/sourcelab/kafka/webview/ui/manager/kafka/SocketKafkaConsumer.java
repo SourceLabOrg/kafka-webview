@@ -1,7 +1,5 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -9,6 +7,8 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 
 import java.util.ArrayList;
 import java.util.List;

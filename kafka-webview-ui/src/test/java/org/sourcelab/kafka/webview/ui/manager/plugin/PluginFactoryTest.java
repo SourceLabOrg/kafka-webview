@@ -1,17 +1,19 @@
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
-import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
-import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.Test;
+import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
+import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
 import java.io.File;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class PluginFactoryTest {
 

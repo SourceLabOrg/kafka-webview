@@ -1,9 +1,9 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
+import org.apache.kafka.clients.admin.AdminClient;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
-import org.apache.kafka.clients.admin.AdminClient;
 
 /**
  * Factory for creating an AdminClient and wrapping it with KafkaOperations.

@@ -1,5 +1,6 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat;
 
+import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
@@ -11,7 +12,6 @@ import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
