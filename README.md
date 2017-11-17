@@ -42,7 +42,7 @@ If you don't already have an implementation, you can view the [interface here](h
 
 ## Writing Custom Filters
 
-The [RecordFilter Interface](https://github.com/Crim/kafka-webview/blob/master/kafka-webview-plugin/src/main/java/com/darksci/kafkaview/plugin/filter/RecordFilter.java)
+The [RecordFilter Interface](https://github.com/Crim/kafka-webview/blob/master/kafka-webview-plugin/src/main/java/org/sourcelab/kafkaview/plugin/filter/RecordFilter.java)
 is provided by Kafka WebView and is NOT part of the standard Kafka library.
 
 ## Example Deserializer and Filters Project
