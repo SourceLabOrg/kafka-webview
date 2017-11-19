@@ -100,7 +100,12 @@ public class WebSocketConsumersManager implements Runnable {
      * @param startingPosition What position to resume consuming from.
      * @param sessionIdentifier The user who is consuming.
      */
-    public void addNewConsumer(final View view, final Collection<FilterDefinition> filters, final StartingPosition startingPosition, final SessionIdentifier sessionIdentifier) {
+    public void addNewConsumer(
+        final View view,
+        final Collection<FilterDefinition> filters,
+        final StartingPosition startingPosition,
+        final SessionIdentifier sessionIdentifier) {
+
         synchronized (consumers) {
             // createWebClient a key
             final ConsumerKey consumerKey = new ConsumerKey(view.getId(), sessionIdentifier);

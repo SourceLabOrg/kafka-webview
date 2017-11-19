@@ -74,7 +74,11 @@ public class SocketKafkaConsumer implements Runnable {
      * @param clientConfig The client's configuration.
      * @param startingPosition Defines where the socket consumer should start from.
      */
-    public SocketKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig, final StartingPosition startingPosition) {
+    public SocketKafkaConsumer(
+        final KafkaConsumer kafkaConsumer,
+        final ClientConfig clientConfig,
+        final StartingPosition startingPosition) {
+
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
         this.startingPosition = startingPosition;
