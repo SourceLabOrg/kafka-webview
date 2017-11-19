@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -36,6 +38,8 @@ import java.nio.file.Paths;
  * Handles uploading jars from the frontend UI and placing them into the expected locations on disk.
  */
 public class UploadManager {
+    private static final Logger logger = LoggerFactory.getLogger(UploadManager.class);
+
     /**
      * Where to upload JARs associated with a deserializer.
      */
@@ -113,6 +117,11 @@ public class UploadManager {
     }
 
     private boolean deleteFile(final String filename, final String rootPath) {
+        // Handle nulls gracefully.
+        if (filename == null || filename.trim().isEmpty()) {
+            return true;
+        }
+
         // Create final output file name
         final Path fullOutputPath = Paths.get(rootPath, filename).toAbsolutePath();
 
@@ -127,7 +136,8 @@ public class UploadManager {
 
         try {
             Files.delete(fullOutputPath);
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
+            logger.error("Failed to remove file {} - {}", fullOutputPath, ex.getMessage(), ex);
             return false;
         }
         return true;
