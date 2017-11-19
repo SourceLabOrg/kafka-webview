@@ -68,7 +68,12 @@ public class WebKafkaConsumerTest {
         final FilterConfig filterConfig = FilterConfig.withNoFilters();
 
         // Defines our client
-        final ClientConfig clientConfig = new ClientConfig(topicConfig, filterConfig, consumerId);
+        final ClientConfig clientConfig = ClientConfig
+            .newBuilder()
+            .withTopicConfig(topicConfig)
+            .withFilterConfig(filterConfig)
+            .withConsumerId(consumerId)
+            .build();
 
         // Build a consumer
         final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
@@ -107,7 +112,7 @@ public class WebKafkaConsumerTest {
         producer.close();
     }
 
-    //@Test
+//    @Test
     public void publishDummyDataNumbers() {
         final String topic = "NumbersTopic";
 
@@ -118,7 +123,7 @@ public class WebKafkaConsumerTest {
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 
         final KafkaProducer<Integer, Integer> producer = new KafkaProducer<>(config);
-        for (int value = 0; value < 1000; value++) {
+        for (int value = 0; value < 10000; value++) {
             producer.send(new ProducerRecord<>(topic, value, value));
         }
         producer.flush();

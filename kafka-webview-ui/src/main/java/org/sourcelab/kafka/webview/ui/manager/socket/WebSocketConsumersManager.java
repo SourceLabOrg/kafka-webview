@@ -97,9 +97,15 @@ public class WebSocketConsumersManager implements Runnable {
     /**
      * Start up a new consumer for the given view.
      * @param view The view to consume from
+     * @param startingPosition What position to resume consuming from.
      * @param sessionIdentifier The user who is consuming.
      */
-    public void addNewConsumer(final View view, final Collection<FilterDefinition> filters, final SessionIdentifier sessionIdentifier) {
+    public void addNewConsumer(
+        final View view,
+        final Collection<FilterDefinition> filters,
+        final StartingPosition startingPosition,
+        final SessionIdentifier sessionIdentifier) {
+
         synchronized (consumers) {
             // createWebClient a key
             final ConsumerKey consumerKey = new ConsumerKey(view.getId(), sessionIdentifier);
@@ -113,6 +119,7 @@ public class WebSocketConsumersManager implements Runnable {
             final SocketKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.createWebSocketClient(
                 view,
                 filters,
+                startingPosition,
                 sessionIdentifier
             );
 

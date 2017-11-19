@@ -36,6 +36,11 @@ public class ConsumeRequest {
     private Integer resultsPerPartition;
     private List<Filter> filters;
 
+    /**
+     * Represents a starting offset.
+     */
+    private Long timestamp = null;
+
     public String getAction() {
         return action;
     }
@@ -66,6 +71,14 @@ public class ConsumeRequest {
 
     public void setFilters(final List<Filter> filters) {
         this.filters = filters;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(final Long timestamp) {
+        this.timestamp = timestamp;
     }
 
     /**

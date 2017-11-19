@@ -100,7 +100,7 @@
             stompClient: null,
 
             // Debug handler
-            stompDebug: null,
+            stompDebug:  null,
 
             // End point to connect
             socketUrl: "/websocket",
@@ -205,12 +205,32 @@
             requestSubscription: function() {
                 // Build request params
                 var params = {
-                    action: 'head',
                     partitions: PartitionFilter.getToggledPartitions().join(),
                     filters: RecordFilter.buildFilterParameters()
                 };
 
+                // Merge parameters with start position parameters.
+                jQuery.extend(params, SocketDetails.getStartPositionParams());
+
+                // Send request down websocket.
                 SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify(params));
+            },
+
+            /**
+             * @returns String head/tail.
+             */
+            getStartPositionParams: function() {
+                var returnValue = {};
+                returnValue['action'] = 'tail';
+
+                var value = jQuery('#startPositionSelector').val();
+                if (value == 'head') {
+                    returnValue['action'] = 'head';
+                } else if (value == 'timestamp') {
+                    returnValue['action'] = 'timestamp';
+                    returnValue['timestamp'] = jQuery('#timestamp-seek').val();
+                }
+                return returnValue;
             },
 
             subscribeResults: function() {
@@ -267,6 +287,23 @@
             jQuery( "#resume" ).click(function() {
                 SocketDetails.resume();
             });
+
+            /**
+             * Handles changing the start position select box, and showing the appropriate options
+             * for the selected value.
+             */
+            jQuery('#startPositionSelector').change(function(event) {
+                var selected = jQuery(this).val();
+
+                // Hide all options
+                jQuery('.startingPositionOptions').toggle(false);
+
+                if (selected == "timestamp") {
+                    jQuery('#timestampOptions').toggle(true);
+                } else if (selected == "offsets") {
+                    jQuery('#offsetsOptions').toggle(true);
+                }
+            });
         });
     </script>
 
@@ -314,6 +351,42 @@
                 </small>
             </div>
             <hr class="transparent mx-3 my-0">
+
+            <!-- Starting Position-->
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapseStartingPosition"
+                        aria-expanded="false" aria-controls="collapseStartingPosition">
+                        <strong>Starting Position</strong>
+                    </div>
+                    <div class="collapse" id="collapseStartingPosition">
+                        <div class="form-group">
+                            <label for="startPositionSelector">
+                                Position to stream from:
+                            </label>
+                            <select id="startPositionSelector" class="form-control">
+                                <option value="tail">Tail</option>
+                                <option value="head">Head</option>
+                                <option value="timestamp">Timestamp</option>
+                                <!--<option value="offsets">Offsets</option>-->
+                            </select>
+                        </div>
+                        <div id="timestampOptions" class="startingPositionOptions" style="display: none;">
+                            <div
+                                th:replace="fragments/consumerSetting/timestampSeek :: timestampSeek(showButton=false)">
+                            </div>
+                        </div>
+                        <div id="offsetsOptions" class="startingPositionOptions" style="display: none;">
+                            offsets options
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
 
             <!-- Partition Filter -->
             <div

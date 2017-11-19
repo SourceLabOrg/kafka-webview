@@ -62,19 +62,6 @@
                     executeConsume('previous');
                 });
 
-                jQuery('#datetime-seek').datetimepicker({
-                    timeFormat: 'HH:mm:ssZ',
-                    dateFormat: "yy-mm-dd",
-                    gotoCurrent: true,
-                    showOn: "button",
-                    buttonText: "Choose",
-                    onClose: function () {
-                        var dateStr = jQuery('#datetime-seek').val();
-                        var timestamp = Date.parse(dateStr);
-                        jQuery('#timestamp-seek').val(timestamp);
-                    }
-                });
-
                 jQuery('#timestamp-seek-button').click(function() {
                     var timestamp = jQuery('#timestamp-seek').val();
                     ApiClient.seekTimestamp(ConsumerInfo.viewId, timestamp, handleSeekResults);
@@ -484,7 +471,7 @@
                     aria-expanded="false" aria-controls="collapseTimestampSeek">
                     <strong>Timestamp Seek</strong>
                 </div>
-                <div class="collapse" id="collapseTimestampSeek">
+                <div class="collapse" id="collapseTimestampSeek" th:include="fragments/consumerSetting/timestampSeek :: timestampSeek(showButton=true)">
                     <table class="table table-sm">
                         <tbody>
                         <tr>

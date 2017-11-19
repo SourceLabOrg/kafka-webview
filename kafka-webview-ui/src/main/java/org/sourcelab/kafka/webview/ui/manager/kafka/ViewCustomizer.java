@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import org.sourcelab.kafka.webview.ui.controller.api.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
+import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.model.ViewToFilterOptional;
@@ -103,6 +104,28 @@ public class ViewCustomizer {
             }
         }
         return configuredFilters;
+    }
+
+    /**
+     * Determine the appropriate starting position based on the request.
+     * @return Where to resume consuming from.
+     */
+    public StartingPosition getStartingPosition() {
+        final String requestedAction = consumeRequest.getAction();
+
+        switch (requestedAction) {
+            case "head":
+                return StartingPosition.newHeadPosition();
+            case "tail":
+                return StartingPosition.newTailPosition();
+            case "timestamp":
+                return StartingPosition.newPositionFromTimestamp(consumeRequest.getTimestamp());
+            case "offsets":
+                // todo
+            default:
+                // Fall back to resume from existing
+                return StartingPosition.newResumeFromExistingState();
+        }
     }
 
     private void overrideResultPerPartition() {

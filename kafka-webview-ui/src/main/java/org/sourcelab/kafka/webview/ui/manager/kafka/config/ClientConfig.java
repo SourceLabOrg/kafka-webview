@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.config;
 
+import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,7 +51,16 @@ public class ClientConfig {
      */
     private final String consumerId;
 
+    /**
+     * Defines which partitionIds to consume from.
+     * An empty set means consume from ALL partitions.
+     */
     private final Set<Integer> partitionIds;
+
+    /**
+     * Defines where to resume consuming from.
+     */
+    private final StartingPosition startingPosition;
 
     /**
      * Defines how many records to retrieve, per partition.
@@ -71,9 +82,14 @@ public class ClientConfig {
      * @param topicConfig Topic configuration values.
      * @param filterConfig Filter configuration values.
      * @param consumerId Consumer identifier.
+     * @param startingPosition Defines where to resume consuming from.
      */
-    public ClientConfig(final TopicConfig topicConfig, final FilterConfig filterConfig, final String consumerId) {
-        this(topicConfig, filterConfig, consumerId, new ArrayList<>(), 10, true);
+    private ClientConfig(
+        final TopicConfig topicConfig,
+        final FilterConfig filterConfig,
+        final String consumerId,
+        final StartingPosition startingPosition) {
+        this(topicConfig, filterConfig, consumerId, startingPosition, new ArrayList<>(), 10, true);
     }
 
     /**
@@ -81,14 +97,16 @@ public class ClientConfig {
      * @param topicConfig Topic configuration values.
      * @param filterConfig Filter configuration values.
      * @param consumerId Consumer identifier.
+     * @param startingPosition Defines where to resume consuming from.
      * @param partitionIds List of partitionIds to limit consuming from.
      * @param maxResultsPerPartition How many records to poll per partition.
      * @param isAutoCommitEnabled If the consumer should auto commit state or not.
      */
-    public ClientConfig(
+    private ClientConfig(
         final TopicConfig topicConfig,
         final FilterConfig filterConfig,
         final String consumerId,
+        final StartingPosition startingPosition,
         final Collection<Integer> partitionIds,
         final int maxResultsPerPartition,
         final boolean isAutoCommitEnabled) {
@@ -96,6 +114,7 @@ public class ClientConfig {
         this.topicConfig = topicConfig;
         this.filterConfig = filterConfig;
         this.consumerId = consumerId;
+        this.startingPosition = startingPosition;
         final Set<Integer> tempSet = new HashSet<>();
         tempSet.addAll(partitionIds);
         this.partitionIds = Collections.unmodifiableSet(tempSet);
@@ -151,6 +170,10 @@ public class ClientConfig {
         return partitionIds;
     }
 
+    public StartingPosition getStartingPosition() {
+        return startingPosition;
+    }
+
     @Override
     public String toString() {
         return "ClientConfig{"
@@ -158,6 +181,7 @@ public class ClientConfig {
             + ", filterConfig=" + filterConfig
             + ", consumerId='" + consumerId + '\''
             + ", partitionIds=" + partitionIds
+            + ", startingPosition=" + startingPosition
             + ", maxResultsPerPartition=" + maxResultsPerPartition
             + ", isAutoCommitEnabled=" + isAutoCommitEnabled
             + ", pollTimeoutMs=" + pollTimeoutMs
@@ -179,6 +203,7 @@ public class ClientConfig {
         private FilterConfig filterConfig;
         private String consumerId;
         private Set<Integer> limitPartitions = new HashSet<>();
+        private StartingPosition startingPosition = StartingPosition.newResumeFromExistingState();
         private int maxResultsPerPartition = 10;
         private boolean autoCommit = true;
 
@@ -253,6 +278,16 @@ public class ClientConfig {
         }
 
         /**
+         * Declare where to resume consuming from.
+         * @param startingPosition Where to resume consuming from.
+         * @return Builder instance.
+         */
+        public Builder withStartingPosition(final StartingPosition startingPosition) {
+            this.startingPosition = startingPosition;
+            return this;
+        }
+
+        /**
          * Declare consumer state should be auto committed.
          */
         public Builder withAutoCommitEnabled() {
@@ -272,7 +307,8 @@ public class ClientConfig {
          * Create new ClientConfig instance.
          */
         public ClientConfig build() {
-            return new ClientConfig(topicConfig, filterConfig, consumerId, limitPartitions, maxResultsPerPartition, autoCommit);
+            return new ClientConfig(
+                topicConfig, filterConfig, consumerId, startingPosition, limitPartitions, maxResultsPerPartition, autoCommit);
         }
     }
 }
