@@ -32,9 +32,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class UploadManagerTest {
 
@@ -168,4 +170,54 @@ public class UploadManagerTest {
         assertFalse("File no longer exists", Files.exists(filePath));
     }
 
+    /**
+     * Test UploadManager gracefully handles deleting files that don't exist.
+     */
+    @Test
+    public void testDeleteNonExistantFile() throws IOException {
+        // Make a temp directory
+        final Path tempDirectory = Files.createTempDirectory(null);
+
+        // Create manager
+        final UploadManager uploadManager = new UploadManager(tempDirectory.toString());
+
+        final boolean result = uploadManager.deleteKeyStore("This-File-Does-not-exist");
+        assertTrue("Gracefully returns true", result);
+    }
+
+    /**
+     * Test UploadManager gracefully handles deleting empty string filenames that don't exist.
+     */
+    @Test
+    public void testDeleteEmptyFile() throws IOException {
+        // Make a temp directory
+        final Path tempDirectory = Files.createTempDirectory(null);
+
+        // Create manager
+        final UploadManager uploadManager = new UploadManager(tempDirectory.toString());
+
+        final boolean result = uploadManager.deleteKeyStore("");
+        assertTrue("Gracefully returns true", result);
+
+        // Sanity test
+        assertTrue("Temp dir still exists", tempDirectory.toFile().exists());
+    }
+
+    /**
+     * Test UploadManager gracefully handles deleting null string filenames.
+     */
+    @Test
+    public void testDeleteNullFile() throws IOException {
+        // Make a temp directory
+        final Path tempDirectory = Files.createTempDirectory(null);
+
+        // Create manager
+        final UploadManager uploadManager = new UploadManager(tempDirectory.toString());
+
+        final boolean result = uploadManager.deleteKeyStore(null);
+        assertTrue("Gracefully returns true", result);
+
+        // Sanity test
+        assertTrue("Temp dir still exists", tempDirectory.toFile().exists());
+    }
 }
