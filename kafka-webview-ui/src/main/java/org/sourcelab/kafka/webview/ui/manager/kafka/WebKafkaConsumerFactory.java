@@ -93,7 +93,10 @@ public class WebKafkaConsumerFactory {
         final SessionIdentifier sessionIdentifier) {
 
         // Create client config builder
-        final ClientConfig clientConfig = createClientConfig(view, filterDefinitions, sessionIdentifier).build();
+        final ClientConfig clientConfig = createClientConfig(view, filterDefinitions, sessionIdentifier)
+            // Always resume from existing state.
+            .withStartingPosition(StartingPosition.newPositionFromExistingState())
+            .build();
 
         // Create kafka consumer
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
@@ -116,13 +119,15 @@ public class WebKafkaConsumerFactory {
         final StartingPosition startingPosition,
         final SessionIdentifier sessionIdentifier) {
         // Create client config builder
-        final ClientConfig clientConfig = createClientConfig(view, filterDefinitions, sessionIdentifier).build();
+        final ClientConfig clientConfig = createClientConfig(view, filterDefinitions, sessionIdentifier)
+            .withStartingPosition(startingPosition)
+            .build();
 
         // Create kafka consumer
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
 
         // Create consumer
-        return new SocketKafkaConsumer(kafkaConsumer, clientConfig, startingPosition);
+        return new SocketKafkaConsumer(kafkaConsumer, clientConfig);
     }
 
     private ClientConfig.Builder createClientConfig(

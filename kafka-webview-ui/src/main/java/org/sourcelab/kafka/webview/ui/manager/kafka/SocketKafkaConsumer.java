@@ -63,7 +63,6 @@ public class SocketKafkaConsumer implements Runnable {
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
-    private final StartingPosition startingPosition;
     private final BlockingQueue<KafkaResult> outputQueue;
 
     private volatile boolean requestStop = false;
@@ -72,16 +71,13 @@ public class SocketKafkaConsumer implements Runnable {
      * Constructor.
      * @param kafkaConsumer The consumer to consume with.
      * @param clientConfig The client's configuration.
-     * @param startingPosition Defines where the socket consumer should start from.
      */
     public SocketKafkaConsumer(
         final KafkaConsumer kafkaConsumer,
-        final ClientConfig clientConfig,
-        final StartingPosition startingPosition) {
+        final ClientConfig clientConfig) {
 
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
-        this.startingPosition = startingPosition;
         this.outputQueue = new LinkedBlockingQueue<>(maxQueueCapacity);
     }
 
@@ -108,7 +104,7 @@ public class SocketKafkaConsumer implements Runnable {
         logger.info("Starting socket consumer for {}", clientConfig.getConsumerId());
 
         // Determine where to start from.
-        initializeStartingPosition();
+        initializeStartingPosition(clientConfig.getStartingPosition());
 
         do {
             // Start trying to consume messages from kafka
@@ -155,7 +151,7 @@ public class SocketKafkaConsumer implements Runnable {
         logger.info("Shutdown consumer {}", clientConfig.getConsumerId());
     }
 
-    private void initializeStartingPosition() {
+    private void initializeStartingPosition(final StartingPosition startingPosition) {
         if (startingPosition.isStartFromHead()) {
             seekToHead();
             return;

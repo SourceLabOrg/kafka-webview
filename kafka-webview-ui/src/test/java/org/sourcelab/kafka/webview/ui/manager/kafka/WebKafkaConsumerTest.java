@@ -31,7 +31,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
@@ -69,7 +68,12 @@ public class WebKafkaConsumerTest {
         final FilterConfig filterConfig = FilterConfig.withNoFilters();
 
         // Defines our client
-        final ClientConfig clientConfig = new ClientConfig(topicConfig, filterConfig, consumerId);
+        final ClientConfig clientConfig = ClientConfig
+            .newBuilder()
+            .withTopicConfig(topicConfig)
+            .withFilterConfig(filterConfig)
+            .withConsumerId(consumerId)
+            .build();
 
         // Build a consumer
         final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
