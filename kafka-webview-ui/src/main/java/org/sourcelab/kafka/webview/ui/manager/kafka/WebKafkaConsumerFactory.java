@@ -106,8 +106,8 @@ public class WebKafkaConsumerFactory {
      * Create a WebSocket Consumer Client.  These instances are intended to be long lived
      * and run in the background, streaming consumed records to a Web Socket.
      * @param view What view to consume from.
-     * @param filterDefinitions Any additional filters to apply/
-     * @param startingPosition
+     * @param filterDefinitions Any additional filters to apply.
+     * @param startingPosition Defines where the Socket consumer should resume from.
      * @param sessionIdentifier An identifier for the consumer.
      */
     public SocketKafkaConsumer createWebSocketClient(

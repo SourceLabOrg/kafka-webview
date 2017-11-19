@@ -209,8 +209,10 @@
                     filters: RecordFilter.buildFilterParameters()
                 };
 
+                // Merge parameters with start position parameters.
                 jQuery.extend(params, SocketDetails.getStartPositionParams());
 
+                // Send request down websocket.
                 SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify(params));
             },
 
@@ -286,6 +288,10 @@
                 SocketDetails.resume();
             });
 
+            /**
+             * Handles changing the start position select box, and showing the appropriate options
+             * for the selected value.
+             */
             jQuery('#startPositionSelector').change(function(event) {
                 var selected = jQuery(this).val();
 

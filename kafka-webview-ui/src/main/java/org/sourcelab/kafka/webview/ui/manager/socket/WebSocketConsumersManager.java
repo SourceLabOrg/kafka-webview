@@ -97,7 +97,7 @@ public class WebSocketConsumersManager implements Runnable {
     /**
      * Start up a new consumer for the given view.
      * @param view The view to consume from
-     * @param startingPosition
+     * @param startingPosition What position to resume consuming from.
      * @param sessionIdentifier The user who is consuming.
      */
     public void addNewConsumer(final View view, final Collection<FilterDefinition> filters, final StartingPosition startingPosition, final SessionIdentifier sessionIdentifier) {

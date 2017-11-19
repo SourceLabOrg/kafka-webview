@@ -9,8 +9,11 @@ public class StartingPosition {
     private final Position position;
     private final Map<Integer, Long> offsetsMap;
     private final long timestamp;
-    private boolean startFromOffsets;
 
+    /**
+     * Constructor for Tail/Head positions.
+     * @param position Define what position to resume from.
+     */
     private StartingPosition(final Position position) {
         this.position = position;
         this.offsetsMap = null;
@@ -59,39 +62,61 @@ public class StartingPosition {
         return offsetsMap;
     }
 
+    /**
+     * Enumerate the various starting states.
+     */
     private enum Position {
+        // Resume from existing state (falls back to head)
+        EXISTING_STATE,
+
+        // Start from Head of topic.
         HEAD,
+
+        // Start from Tail of topic.
         TAIL,
+
+        // Start from specified offsets.
         OFFSETS,
+
+        // Start from specified timestamp.
         TIMESTAMP;
     }
 
+    /**
+     * @return New StartingPosition instance configured to start from HEAD.
+     */
     public static StartingPosition newHeadPosition() {
         return new StartingPosition(Position.HEAD);
     }
 
     /**
      *
-     * @return
+     * @return New StartingPosition instance configured to start from TAIL.
      */
     public static StartingPosition newTailPosition() {
         return new StartingPosition(Position.TAIL);
     }
 
     /**
-     *
-     * @param timestamp
-     * @return
+     * @param timestamp Unix timestamp (in milliseconds) of where to resume consuming from.
+     * @return New StartingPosition instance configured to start from the supplied timestamp.
      */
     public static StartingPosition newPositionFromTimestamp(final long timestamp) {
         return new StartingPosition(timestamp);
     }
 
     /**
-     * @param offsets
-     * @return
+     * @param offsets Maps from Partition => Offset.  Any not supplied offsets will resume from HEAD.
+     * @return New StartingPosition instance configured to start from the supplied offsets map.
      */
     public static StartingPosition newPositionFromOffsets(final Map<Integer, Long> offsets) {
         return new StartingPosition(offsets);
+    }
+
+    /**
+     * @return New StartingPosition instance configured to start from existing consumer state. Falls back to HEAD.
+     */
+    public static StartingPosition newPositionFromExistingState() {
+        return new StartingPosition(Position.EXISTING_STATE);
     }
 }
