@@ -203,7 +203,7 @@ public class ClientConfig {
         private FilterConfig filterConfig;
         private String consumerId;
         private Set<Integer> limitPartitions = new HashSet<>();
-        private StartingPosition startingPosition = StartingPosition.newPositionFromExistingState();
+        private StartingPosition startingPosition = StartingPosition.newResumeFromExistingState();
         private int maxResultsPerPartition = 10;
         private boolean autoCommit = true;
 

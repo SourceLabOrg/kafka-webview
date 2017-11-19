@@ -95,7 +95,7 @@ public class WebKafkaConsumerFactory {
         // Create client config builder
         final ClientConfig clientConfig = createClientConfig(view, filterDefinitions, sessionIdentifier)
             // Always resume from existing state.
-            .withStartingPosition(StartingPosition.newPositionFromExistingState())
+            .withStartingPosition(StartingPosition.newResumeFromExistingState())
             .build();
 
         // Create kafka consumer

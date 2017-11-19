@@ -134,15 +134,7 @@ public class StreamController extends BaseController {
         final List<FilterDefinition> configuredFilters = viewCustomizer.getFilterDefinitions();
 
         // Configure where to start from
-        final StartingPosition startingPosition;
-        if ("head".equals(consumeRequest.getAction())) {
-            startingPosition = StartingPosition.newHeadPosition();
-        } else if ("timestamp".equals(consumeRequest.getAction()) && consumeRequest.getTimestamp() != null) {
-            startingPosition = StartingPosition.newPositionFromTimestamp(consumeRequest.getTimestamp());
-        } else {
-            // Default to tail
-            startingPosition = StartingPosition.newTailPosition();
-        }
+        final StartingPosition startingPosition = viewCustomizer.getStartingPosition();
 
         webSocketConsumersManager.addNewConsumer(view, configuredFilters, startingPosition, sessionIdentifier);
         return "{success: true}";

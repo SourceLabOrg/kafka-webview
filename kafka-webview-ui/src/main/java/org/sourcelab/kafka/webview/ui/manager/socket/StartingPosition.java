@@ -158,7 +158,7 @@ public class StartingPosition {
     /**
      * @return New StartingPosition instance configured to start from existing consumer state. Falls back to HEAD.
      */
-    public static StartingPosition newPositionFromExistingState() {
+    public static StartingPosition newResumeFromExistingState() {
         return new StartingPosition(Position.EXISTING_STATE);
     }
 }
