@@ -137,7 +137,10 @@ public class StreamController extends BaseController {
         final StartingPosition startingPosition;
         if ("head".equals(consumeRequest.getAction())) {
             startingPosition = StartingPosition.newHeadPosition();
+        } else if ("timestamp".equals(consumeRequest.getAction()) && consumeRequest.getTimestamp() != null) {
+            startingPosition = StartingPosition.newPositionFromTimestamp(consumeRequest.getTimestamp());
         } else {
+            // Default to tail
             startingPosition = StartingPosition.newTailPosition();
         }
 

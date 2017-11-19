@@ -27,15 +27,18 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -100,11 +103,8 @@ public class SocketKafkaConsumer implements Runnable {
         Thread.currentThread().setName("WebSocket Consumer: " + clientConfig.getConsumerId());
         logger.info("Starting socket consumer for {}", clientConfig.getConsumerId());
 
-        if (startingPosition.isStartFromHead()) {
-            toHead();
-        } else {
-            toTail();
-        }
+        // Determine where to start from.
+        initializeStartingPosition();
 
         do {
             // Start trying to consume messages from kafka
@@ -151,6 +151,33 @@ public class SocketKafkaConsumer implements Runnable {
         logger.info("Shutdown consumer {}", clientConfig.getConsumerId());
     }
 
+    private void initializeStartingPosition() {
+        if (startingPosition.isStartFromHead()) {
+            seekToHead();
+            return;
+        }
+
+        if (startingPosition.isStartFromTimestamp()) {
+            seekToTimestamp(startingPosition.getTimestamp());
+            return;
+        }
+
+        if (startingPosition.isStartFromOffsets()) {
+            final Map<TopicPartition, Long> topicPartitionMap = new HashMap<>();
+            for (final Map.Entry<Integer, Long> entry: startingPosition.getOffsetsMap().entrySet()) {
+                topicPartitionMap.put(
+                    new TopicPartition(clientConfig.getTopicConfig().getTopicName(), entry.getKey()),
+                    entry.getValue()
+                );
+            }
+            seek(topicPartitionMap);
+            return;
+        }
+
+        // Default to tail.
+        seekToTail();
+    }
+
     private void sleep(final long timeMs) {
         try {
             // Sleep for a period.
@@ -160,37 +187,57 @@ public class SocketKafkaConsumer implements Runnable {
         }
     }
 
-    private void toHead() {
+    private void seekToHead() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();
 
         // Get head offsets for each partition
         final Map<TopicPartition, Long> headOffsets = kafkaConsumer.beginningOffsets(topicPartitions);
-
-        // Loop over each partition
-        for (final TopicPartition topicPartition: topicPartitions) {
-            final long newOffset = headOffsets.get(topicPartition);
-            logger.info("Resetting Partition: {} To Head Offset: {}", topicPartition.partition(), newOffset);
-
-            // Seek to earlier offset
-            kafkaConsumer.seek(topicPartition, newOffset);
-        }
+        seek(headOffsets);
     }
 
-    private void toTail() {
+    private void seekToTail() {
         // Get all available partitions
         final List<TopicPartition> topicPartitions = getAllPartitions();
 
         // Get head offsets for each partition
         final Map<TopicPartition, Long> tailOffsets = kafkaConsumer.endOffsets(topicPartitions);
+        seek(tailOffsets);
+    }
 
-        // Loop over each partition
-        for (final TopicPartition topicPartition: topicPartitions) {
-            final long newOffset = tailOffsets.get(topicPartition);
-            logger.info("Resetting Partition: {} To Tail Offset: {}", topicPartition.partition(), newOffset);
+    /**
+     * Seek consumer to specific timestamp
+     * @param timestamp Unix timestamp in milliseconds to seek to.
+     */
+    private void seekToTimestamp(final long timestamp) {
+        // Find offsets for timestamp
+        final Map<TopicPartition, Long> timestampMap = new HashMap<>();
+        for (final TopicPartition topicPartition: getAllPartitions()) {
+            timestampMap.put(topicPartition, timestamp);
+        }
+        final Map<TopicPartition, OffsetAndTimestamp> offsetMap = kafkaConsumer.offsetsForTimes(timestampMap);
 
-            // Seek to earlier offset
-            kafkaConsumer.seek(topicPartition, newOffset);
+        // Build map of partition => offset
+        final Map<TopicPartition, Long> partitionOffsetMap = new HashMap<>();
+        for (Map.Entry<TopicPartition, OffsetAndTimestamp> entry: offsetMap.entrySet()) {
+            partitionOffsetMap.put(entry.getKey(), entry.getValue().offset());
+        }
+
+        // Now lets seek to those offsets
+        seek(partitionOffsetMap);
+    }
+
+    /**
+     * Seek to the specified offsets.
+     * @param partitionOffsetMap Map of PartitionId => Offset to seek to.
+     * @return ConsumerState representing the consumer's positions.
+     */
+    private void seek(final Map<TopicPartition, Long> partitionOffsetMap) {
+        for (final Map.Entry<TopicPartition, Long> entry: partitionOffsetMap.entrySet()) {
+            kafkaConsumer.seek(
+                entry.getKey(),
+                entry.getValue()
+            );
         }
     }
 

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Timestamp seek -->
+<div th:fragment="timestampSeek(showButton)">
+    <table class="table table-sm">
+        <tbody>
+        <tr>
+            <td colspan="2">Unix Timestamp</td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input name="timestamp-seek" id="timestamp-seek" size="21">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input name="datetime-seek" id="datetime-seek" size="21" type="hidden">
+            </td>
+            <td th:if="${showButton}">
+                <input type="button" id="timestamp-seek-button" value="Seek">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <script type="application/javascript">
+
+        // On load register event listeners.
+        jQuery(document).ready(function() {
+            jQuery('#datetime-seek').datetimepicker({
+                timeFormat: 'HH:mm:ssZ',
+                dateFormat: "yy-mm-dd",
+                gotoCurrent: true,
+                showOn: "button",
+                buttonText: "Choose",
+                onClose: function () {
+                    var dateStr = jQuery('#datetime-seek').val();
+                    var timestamp = Date.parse(dateStr);
+                    jQuery('#timestamp-seek').val(timestamp);
+                }
+            });
+        });
+    </script>
+</div>
+
+</body>
+</html>
