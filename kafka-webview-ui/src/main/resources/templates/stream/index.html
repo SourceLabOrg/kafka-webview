@@ -100,7 +100,7 @@
             stompClient: null,
 
             // Debug handler
-            stompDebug: null,
+            stompDebug:  null,
 
             // End point to connect
             socketUrl: "/websocket",
@@ -205,12 +205,23 @@
             requestSubscription: function() {
                 // Build request params
                 var params = {
-                    action: 'head',
+                    action: SocketDetails.getStartPositionParam(),
                     partitions: PartitionFilter.getToggledPartitions().join(),
                     filters: RecordFilter.buildFilterParameters()
                 };
 
                 SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify(params));
+            },
+
+            /**
+             * @returns String head/tail.
+             */
+            getStartPositionParam: function() {
+                if (jQuery('#headPositionSelector').hasClass("active")) {
+                    return 'head';
+                } else {
+                    return 'tail';
+                }
             },
 
             subscribeResults: function() {
@@ -314,6 +325,31 @@
                 </small>
             </div>
             <hr class="transparent mx-3 my-0">
+
+            <!-- Starting Position-->
+            <hr class="mx-3 my-0">
+            <div class="callout callout-info m-0 py-3">
+                <div>
+                    <div
+                        style="cursor: pointer;"
+                        data-toggle="collapse"
+                        href="#collapseStartingPosition"
+                        aria-expanded="false" aria-controls="collapseStartingPosition">
+                        <strong>Starting Position</strong>
+                    </div>
+                    <div class="collapse" id="collapseStartingPosition">
+                        <div id="streamPositionSelector" class="list-group">
+                            <button id="tailPositionSelector" type="button" class="list-group-item list-group-item-action active" data-toggle="list" title="Start streaming from tail of kafka topic">
+                                Tail
+                            </button>
+                            <button id="headPositionSelector" type="button" class="list-group-item list-group-item-action" data-toggle="list" title="Start streaming from head of kafka topic">
+                                Head
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr class="mx-3 my-0">
 
             <!-- Partition Filter -->
             <div

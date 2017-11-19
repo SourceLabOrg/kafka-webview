@@ -29,6 +29,7 @@ import org.sourcelab.kafka.webview.ui.controller.api.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.ViewCustomizer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
+import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
@@ -132,7 +133,15 @@ public class StreamController extends BaseController {
         viewCustomizer.overrideViewSettings();
         final List<FilterDefinition> configuredFilters = viewCustomizer.getFilterDefinitions();
 
-        webSocketConsumersManager.addNewConsumer(view, configuredFilters, sessionIdentifier);
+        // Configure where to start from
+        final StartingPosition startingPosition;
+        if ("head".equals(consumeRequest.getAction())) {
+            startingPosition = StartingPosition.newHeadPosition();
+        } else {
+            startingPosition = StartingPosition.newTailPosition();
+        }
+
+        webSocketConsumersManager.addNewConsumer(view, configuredFilters, startingPosition, sessionIdentifier);
         return "{success: true}";
     }
 

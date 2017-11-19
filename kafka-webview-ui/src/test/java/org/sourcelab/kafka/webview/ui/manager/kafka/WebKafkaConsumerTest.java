@@ -31,6 +31,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
@@ -107,7 +108,7 @@ public class WebKafkaConsumerTest {
         producer.close();
     }
 
-    //@Test
+//    @Test
     public void publishDummyDataNumbers() {
         final String topic = "NumbersTopic";
 
@@ -118,7 +119,7 @@ public class WebKafkaConsumerTest {
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 
         final KafkaProducer<Integer, Integer> producer = new KafkaProducer<>(config);
-        for (int value = 0; value < 1000; value++) {
+        for (int value = 0; value < 10000; value++) {
             producer.send(new ProducerRecord<>(topic, value, value));
         }
         producer.flush();

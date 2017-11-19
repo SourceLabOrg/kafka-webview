@@ -37,6 +37,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinitio
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
+import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
@@ -106,11 +107,13 @@ public class WebKafkaConsumerFactory {
      * and run in the background, streaming consumed records to a Web Socket.
      * @param view What view to consume from.
      * @param filterDefinitions Any additional filters to apply/
+     * @param startingPosition
      * @param sessionIdentifier An identifier for the consumer.
      */
     public SocketKafkaConsumer createWebSocketClient(
         final View view,
         final Collection<FilterDefinition> filterDefinitions,
+        final StartingPosition startingPosition,
         final SessionIdentifier sessionIdentifier) {
         // Create client config builder
         final ClientConfig clientConfig = createClientConfig(view, filterDefinitions, sessionIdentifier).build();
@@ -119,7 +122,7 @@ public class WebKafkaConsumerFactory {
         final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
 
         // Create consumer
-        return new SocketKafkaConsumer(kafkaConsumer, clientConfig);
+        return new SocketKafkaConsumer(kafkaConsumer, clientConfig, startingPosition);
     }
 
     private ClientConfig.Builder createClientConfig(

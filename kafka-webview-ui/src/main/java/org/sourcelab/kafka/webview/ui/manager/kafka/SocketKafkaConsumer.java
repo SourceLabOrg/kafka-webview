@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
+import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,7 @@ public class SocketKafkaConsumer implements Runnable {
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
+    private final StartingPosition startingPosition;
     private final BlockingQueue<KafkaResult> outputQueue;
 
     private volatile boolean requestStop = false;
@@ -67,10 +69,12 @@ public class SocketKafkaConsumer implements Runnable {
      * Constructor.
      * @param kafkaConsumer The consumer to consume with.
      * @param clientConfig The client's configuration.
+     * @param startingPosition
      */
-    public SocketKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
+    public SocketKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig, final StartingPosition startingPosition) {
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
+        this.startingPosition = startingPosition;
         this.outputQueue = new LinkedBlockingQueue<>(maxQueueCapacity);
     }
 
@@ -96,8 +100,11 @@ public class SocketKafkaConsumer implements Runnable {
         Thread.currentThread().setName("WebSocket Consumer: " + clientConfig.getConsumerId());
         logger.info("Starting socket consumer for {}", clientConfig.getConsumerId());
 
-        // Start at tail
-        toTail();
+        if (startingPosition.isStartFromHead()) {
+            toHead();
+        } else {
+            toTail();
+        }
 
         do {
             // Start trying to consume messages from kafka
