@@ -1,10 +1,11 @@
-package org.sourcelab.kafka.webview.ui.controller.cluster;
+package org.sourcelab.kafka.webview.ui.controller.configuration.cluster;
 
 import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
+import org.sourcelab.kafka.webview.ui.controller.configuration.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
@@ -45,31 +46,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class ClusterControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private UserTestTools userTestTools;
+public class ClusterConfigControllerTest extends AbstractMvcTest {
 
     @Autowired
     private ClusterTestTools clusterTestTools;
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
-
-    @Autowired
     private ClusterRepository clusterRepository;
-
-    @Autowired
-    private AppProperties appProperties;
-
-    /**
-     * Authentication details.
-     */
-    private UserDetails adminUserDetails;
-    private UserDetails userDetails;
 
     /**
      * Where JKS files are uploaded to.
@@ -77,14 +60,8 @@ public class ClusterControllerTest {
     private String keyStoreUploadPath;
 
     @Before
-    public void setupAuth() {
-        // Create user details for logged in user.
-        adminUserDetails = customUserDetailsService.loadUserByUsername(userTestTools.createAdminUser().getEmail());
-        userDetails = customUserDetailsService.loadUserByUsername(userTestTools.createUser().getEmail());
-
-        // Define where JKS files are uploaded to.
-        final String baseUploadPath = appProperties.getUploadPath();
-        keyStoreUploadPath = baseUploadPath + "/keyStores/";
+    public void setupUploadPath() {
+        keyStoreUploadPath = uploadPath + "/keyStores/";
     }
 
     /**
@@ -108,7 +85,7 @@ public class ClusterControllerTest {
     public void testCreate_withoutAdminRole() throws Exception {
         // Hit index.
         mockMvc
-            .perform(get("/configuration/create").with(user(userDetails)))
+            .perform(get("/configuration/cluster/create").with(user(userDetails)))
             .andDo(print())
             .andExpect(status().isForbidden());
     }
@@ -121,7 +98,7 @@ public class ClusterControllerTest {
     public void testUpdate_withoutAdminRole() throws Exception {
         // Hit index.
         mockMvc
-            .perform(post("/configuration/update").with(user(userDetails)))
+            .perform(post("/configuration/cluster/update").with(user(userDetails)))
             .andDo(print())
             .andExpect(status().isForbidden());
     }

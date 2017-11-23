@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequestMapping("/configuration/filter")
-public class FilterController extends BaseController {
+public class FilterConfigController extends BaseController {
 
     @Autowired
     private UploadManager uploadManager;
