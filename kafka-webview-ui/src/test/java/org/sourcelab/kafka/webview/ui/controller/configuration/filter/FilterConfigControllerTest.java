@@ -3,7 +3,6 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.filter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.configuration.AbstractMvcTest;
-import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.tools.FilterTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +85,7 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testIndex() throws Exception {
-        // Create some dummy clusters
+        // Create some dummy filters
         final Filter filter1 = filterTestTools.createFiler("Filter1");
         final Filter filter2 = filterTestTools.createFiler("Filter2");
 
