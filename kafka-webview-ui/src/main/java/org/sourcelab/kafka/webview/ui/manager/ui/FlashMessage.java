@@ -30,8 +30,9 @@ package org.sourcelab.kafka.webview.ui.manager.ui;
 public class FlashMessage {
     private final String type;
     private final String message;
+    private boolean warning;
 
-    public FlashMessage(final String type, final String message) {
+    private FlashMessage(final String type, final String message) {
         this.type = type;
         this.message = message;
     }
@@ -42,6 +43,22 @@ public class FlashMessage {
 
     public String getMessage() {
         return message;
+    }
+
+    public boolean isWarning() {
+        return "warning".equals(getType());
+    }
+
+    public boolean isInfo() {
+        return "info".equals(getType());
+    }
+
+    public boolean isSuccess() {
+        return "success".equals(getType());
+    }
+
+    public boolean isDanger() {
+        return "danger".equals(getType());
     }
 
     public static FlashMessage newSuccess(final String message) {
@@ -59,4 +76,5 @@ public class FlashMessage {
     public static FlashMessage newDanger(final String message) {
         return new FlashMessage("danger", message);
     }
+
 }

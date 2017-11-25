@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.configuration.AbstractMvcTest;
-import org.sourcelab.kafka.webview.ui.model.Filter;
+import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
@@ -27,6 +28,7 @@ import java.nio.file.Paths;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -37,6 +39,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -135,6 +139,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .param("name", expectedName)
                 .param("classpath", expectedClassPath))
             .andDo(print())
+            .andExpect(model().hasNoErrors())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
@@ -144,12 +149,294 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Has correct name", expectedName, messageFormat.getName());
         assertEquals("Has correct classpath", expectedClassPath, messageFormat.getClasspath());
         assertNotNull("Has jar path", messageFormat.getJar());
+        assertFalse("Should not be a default format", messageFormat.isDefaultFormat());
 
         final boolean doesJarExist = Files.exists(Paths.get(deserializerUploadPath, messageFormat.getJar()));
         assertTrue("Deserializer file should have been uploaded", doesJarExist);
 
         // Cleanup
         Files.deleteIfExists(Paths.get(deserializerUploadPath, messageFormat.getJar()));
+    }
+
+    /**
+     * Test attempting to create a new message format, but don't upload a jar.
+     * This should be kicked back.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_createNewMessageFormatMissingFile() throws Exception {
+        final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
+        final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
+
+        final InputStream fileInputStream = null;
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+
+        // Hit page.
+        mockMvc
+            .perform(fileUpload("/configuration/messageFormat/update")
+                .file(jarUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("name", expectedName)
+                .param("classpath", expectedClassPath))
+            .andDo(print())
+            .andExpect(model().hasErrors())
+            .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
+            .andExpect(status().isOk());
+
+        // Validate
+        final MessageFormat messageFormat = messageFormatRepository.findByName(expectedName);
+        assertNull("Should NOT have message format", messageFormat);
+    }
+
+    /**
+     * Test attempting to create a new message format, but fail to load the deserializer.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_createNewMessageFormatInvalidJar() throws Exception {
+        final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
+        final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
+
+        // This isn't a real jar, will fail validation.
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "contents".getBytes(Charsets.UTF_8));
+
+        // Hit page.
+        mockMvc
+            .perform(fileUpload("/configuration/messageFormat/update")
+                .file(jarUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("name", expectedName)
+                .param("classpath", expectedClassPath))
+            .andDo(print())
+            .andExpect(model().hasErrors())
+            .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
+            .andExpect(status().isOk());
+
+        // Validate
+        final MessageFormat messageFormat = messageFormatRepository.findByName(expectedName);
+        assertNull("Should NOT have message format", messageFormat);
+    }
+
+    /**
+     * Test attempting to update an existing message format, but send over a bad Id.
+     * This should be kicked back as an error.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingButWithBadMessageFormatId() throws Exception {
+        final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
+        final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
+
+        final MockMultipartFile jarUpload =
+            new MockMultipartFile("file", "testPlugins.jar", null, "MyContent".getBytes(Charsets.UTF_8));
+
+        // Hit page.
+        final MvcResult result = mockMvc
+            .perform(fileUpload("/configuration/messageFormat/update")
+                .file(jarUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", "-1000")
+                .param("name", expectedName)
+                .param("classpath", expectedClassPath))
+            .andDo(print())
+            .andExpect(flash().attributeExists("FlashMessage"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/messageFormat"))
+            .andReturn();
+
+        // Grab the flash message
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        assertNotNull("Has flash message", flashMessage);
+        assertTrue("Has error message", flashMessage.isWarning());
+    }
+
+    /**
+     * Test attempting to update an existing message format, but upload a bad jar.
+     * We'd expect it to be kicked back as an error, and keep the existing classpath and jar.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingButWithInvalidJar() throws Exception {
+        final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
+        final String expectedName = messageFormat.getName();
+        final String expectedClasspath = messageFormat.getClasspath();
+        final String expectedJarName = messageFormat.getJar();
+        final String expectedJarContents = "OriginalContents";
+        final Path expectedJarPath = Paths.get(deserializerUploadPath, messageFormat.getJar());
+
+        // Create a dummy jar
+        FileTestTools.createDummyFile(deserializerUploadPath + messageFormat.getJar(), expectedJarContents);
+
+        // This is an invalid jar.
+        final MockMultipartFile jarUpload =
+            new MockMultipartFile("file", "testPlugins.jar", null, "MyContent".getBytes(Charsets.UTF_8));
+
+        // Hit page.
+        mockMvc
+            .perform(fileUpload("/configuration/messageFormat/update")
+                .file(jarUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", String.valueOf(messageFormat.getId()))
+                .param("name", "Updated Name")
+                .param("classpath", "made.up.classpath"))
+            .andDo(print())
+            .andExpect(model().hasErrors())
+            .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
+            .andExpect(status().isOk());
+
+        // Validate message format was not updated.
+        final MessageFormat updatedMessageFormat = messageFormatRepository.findOne(messageFormat.getId());
+        assertNotNull("Has message format", updatedMessageFormat);
+        assertEquals("Name not updated", expectedName, updatedMessageFormat.getName());
+        assertEquals("classpath not updated", expectedClasspath, updatedMessageFormat.getClasspath());
+        assertEquals("Jar name not updated", expectedJarName, updatedMessageFormat.getJar());
+        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+
+        // Validate previous jar not overwritten.
+        assertTrue("File should exist", Files.exists(expectedJarPath));
+        final String jarContents = FileTestTools.readFile(expectedJarPath.toString());
+        assertEquals("Jar contents should not have changed", expectedJarContents, jarContents);
+
+        // Cleanup
+        Files.deleteIfExists(expectedJarPath);
+    }
+
+    /**
+     * Test attempting to update an existing message format, but not providing a jar.
+     * We should change the name, but not touch the jar/classpath at all.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingNoJarUploaded() throws Exception {
+        final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
+        final String originalClasspath = messageFormat.getClasspath();
+        final String originalJarName = messageFormat.getJar();
+        final String originalJarContents = "OriginalContents";
+        final Path originalJarPath = Paths.get(deserializerUploadPath, messageFormat.getJar());
+
+        // Create a dummy jar
+        FileTestTools.createDummyFile(deserializerUploadPath + messageFormat.getJar(), originalJarContents);
+
+        // This is the same as not uploading a jar.
+        final InputStream emptyFile = null;
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, emptyFile);
+
+        final String newName = "MyUpdatedName" + System.currentTimeMillis();
+        final String newClasspath = "my new class path";
+
+        // Hit page.
+        mockMvc
+            .perform(fileUpload("/configuration/messageFormat/update")
+                .file(jarUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", String.valueOf(messageFormat.getId()))
+                .param("name", newName)
+                .param("classpath", newClasspath))
+            .andDo(print())
+            .andExpect(model().hasNoErrors())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/messageFormat"));
+
+        // Validate message format was updated.
+        final MessageFormat updatedMessageFormat = messageFormatRepository.findOne(messageFormat.getId());
+        assertNotNull("Has message format", updatedMessageFormat);
+        assertEquals("Name updated", newName, updatedMessageFormat.getName());
+        assertEquals("classpath was NOT updated", originalClasspath, updatedMessageFormat.getClasspath());
+        assertNotEquals("classpath was NOT updated", newClasspath, updatedMessageFormat.getClasspath());
+        assertEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
+        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+
+        // Validate jar should still exist
+        assertTrue("File should exist", Files.exists(originalJarPath));
+
+        // Jar contents should be unchanged
+        final String jarContents = FileTestTools.readFile(originalJarPath.toString());
+        assertEquals("Jar contents should not have changed", originalJarContents, jarContents);
+
+        // Cleanup
+        Files.deleteIfExists(originalJarPath);
+    }
+
+    /**
+     * Test attempting to update an existing message format, uploading a valid jar.
+     * We change the name.  We expect the old file to be removed, and the new one added.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingWithValidJarSameName() throws Exception {
+        final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
+        final String originalJarName = messageFormat.getJar();
+        final String originalJarContents = "OriginalContents";
+        final Path originalJarPath = Paths.get(deserializerUploadPath, messageFormat.getJar());
+
+        // Create a dummy jar
+        FileTestTools.createDummyFile(deserializerUploadPath + messageFormat.getJar(), originalJarContents);
+
+        // This is a valid jar
+        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+
+        final String newName = "MyUpdatedName" + System.currentTimeMillis();
+        final String newClasspath = "examples.deserializer.ExampleDeserializer";
+
+        // Hit page.
+        mockMvc
+            .perform(fileUpload("/configuration/messageFormat/update")
+                .file(jarUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", String.valueOf(messageFormat.getId()))
+                .param("name", newName)
+                .param("classpath", newClasspath))
+            .andDo(print())
+            .andExpect(model().hasNoErrors())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/messageFormat"));
+
+        // Validate message format was updated.
+        final MessageFormat updatedMessageFormat = messageFormatRepository.findOne(messageFormat.getId());
+        assertNotNull("Has message format", updatedMessageFormat);
+        assertEquals("Name updated", newName, updatedMessageFormat.getName());
+        assertEquals("classpath updated", newClasspath, updatedMessageFormat.getClasspath());
+        assertNotEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
+        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+
+        // Validate previous jar is gone/deleted.
+        assertFalse("File should NOT exist", Files.exists(originalJarPath));
+
+        // Validate new jar is created.
+        final Path newJarPath = Paths.get(deserializerUploadPath, updatedMessageFormat.getJar());
+        assertTrue("New jar should exist", Files.exists(newJarPath));
+
+        // Cleanup
+        Files.deleteIfExists(newJarPath);
+    }
+
+    /**
+     * Test loading edit for existing message format.
+     */
+    @Test
+    @Transactional
+    public void testGetEdit_existingMessageFormat() throws Exception {
+        final MessageFormat format = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
+
+        // Hit edit page.
+        mockMvc
+            .perform(get("/configuration/messageFormat/edit/" + format.getId())
+                .with(user(adminUserDetails)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString(format.getName())))
+            .andExpect(content().string(containsString(format.getClasspath())))
+            .andExpect(content().string(containsString("value=\"" + format.getId() + "\"")));
     }
 
     /**
