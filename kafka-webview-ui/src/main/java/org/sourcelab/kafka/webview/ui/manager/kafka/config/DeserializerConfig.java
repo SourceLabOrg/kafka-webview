@@ -52,9 +52,12 @@ public class DeserializerConfig {
         final Map<String, String> valueDeserializerOptions
     ) {
         this.keyDeserializerClass = keyDeserializerClass;
-        this.keyDeserializerOptions = keyDeserializerOptions;
+        this.keyDeserializerOptions = new HashMap<>();
+        this.keyDeserializerOptions.putAll(keyDeserializerOptions);
+
         this.valueDeserializerClass = valueDeserializerClass;
-        this.valueDeserializerOptions = valueDeserializerOptions;
+        this.valueDeserializerOptions = new HashMap<>();
+        this.valueDeserializerOptions.putAll(valueDeserializerOptions);
     }
 
     public Class<? extends Deserializer> getKeyDeserializerClass() {
@@ -119,36 +122,71 @@ public class DeserializerConfig {
         private Builder() {
         }
 
+        /**
+         * Declare which Deserializer class to use to deserialize message key.
+         * @param keyDeserializerClass Class to use for deserializing message key.
+         * @return Builder instance.
+         */
         public Builder withKeyDeserializerClass(Class<? extends Deserializer> keyDeserializerClass) {
             this.keyDeserializerClass = keyDeserializerClass;
             return this;
         }
 
+        /**
+         * Declare which Deserializer class to use to deserialize message value.
+         * @param valueDeserializerClass Class to use for deserializing message value.
+         * @return Builder instance.
+         */
         public Builder withValueDeserializerClass(Class<? extends Deserializer> valueDeserializerClass) {
             this.valueDeserializerClass = valueDeserializerClass;
             return this;
         }
 
+        /**
+         * Add option to value deserializer.
+         * @param key Key to set.
+         * @param value Value to set.
+         * @return Builder instance.
+         */
         public Builder withValueDeserializerOption(final String key, final String value) {
             valueDeserializerOptions.put(key, value);
             return this;
         }
 
+        /**
+         * Add multiple options to value deserializer.
+         * @param options Options to set.
+         * @return Builder instance.
+         */
         public Builder withValueDeserializerOptions(final Map<String, String> options) {
             valueDeserializerOptions.putAll(options);
             return this;
         }
 
+        /**
+         * Add option to key deserializer.
+         * @param key Key to set.
+         * @param value Value to set.
+         * @return Builder instance.
+         */
         public Builder withKeyDeserializerOption(final String key, final String value) {
             keyDeserializerOptions.put(key, value);
             return this;
         }
 
+        /**
+         * Add multiple options to key deserializer.
+         * @param options Options to set.
+         * @return Builder instance.
+         */
         public Builder withKeyDeserializerOptions(final Map<String, String> options) {
             keyDeserializerOptions.putAll(options);
             return this;
         }
 
+        /**
+         * @return build DeserializerConfig instance.
+         */
         public DeserializerConfig build() {
             return new DeserializerConfig(
                 keyDeserializerClass,

@@ -27,6 +27,8 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
@@ -57,6 +59,8 @@ import java.util.Set;
  * Factory class for creating new Kafka Consumers to be used by WebRequests.
  */
 public class WebKafkaConsumerFactory {
+    private static final Logger logger = LoggerFactory.getLogger(WebKafkaConsumerFactory.class);
+
     /**
      * Defines the consumerId prefix pre-pended to all consumers.
      */
@@ -203,6 +207,19 @@ public class WebKafkaConsumerFactory {
         }
     }
 
+    private RecordFilterDefinition buildRecordFilterDefinition(final Filter filter, final String optionParametersJsonStr) {
+        // Build it
+        try {
+            // Parse options from string
+            final Map<String, String> options = mapper.readValue(optionParametersJsonStr, Map.class);
+
+            // Create definition
+            return buildRecordFilterDefinition(filter, options);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Using the supplied view, build the DeserializerConfig.
      * @param view View to build the DeserializerConfig for.
@@ -222,10 +239,13 @@ public class WebKafkaConsumerFactory {
 
         // Load Key Deserializer options
         try {
-             final Map<String, String> options = mapper.readValue(keyMessageFormat.getOptionParameters(), Map.class);
-             builder.withKeyDeserializerOptions(options);
+            final Map<String, String> options = mapper.readValue(keyMessageFormat.getOptionParameters(), Map.class);
+            builder.withKeyDeserializerOptions(options);
         } catch (final IOException e) {
             // Swallow?
+            logger.error(
+                "Failed to deserialize options for key deserializer: {} with error: {}",
+                keyMessageFormat.getName(), e.getMessage());
         }
 
         // Load Value Deserializer options
@@ -234,23 +254,13 @@ public class WebKafkaConsumerFactory {
             builder.withValueDeserializerOptions(options);
         } catch (final IOException e) {
             // Swallow?
+            logger.error(
+                "Failed to deserialize options for value deserializer: {} with error: {}",
+                valueMessageFormat.getName(), e.getMessage());
         }
 
         // Build deserializer config and return
         return builder.build();
-    }
-
-    private RecordFilterDefinition buildRecordFilterDefinition(final Filter filter, final String optionParametersJsonStr) {
-        // Build it
-        try {
-            // Parse options from string
-            final Map<String, String> options = mapper.readValue(optionParametersJsonStr, Map.class);
-
-            // Create definition
-            return buildRecordFilterDefinition(filter, options);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private Class<? extends Deserializer> getDeserializerClass(final MessageFormat messageFormat) {

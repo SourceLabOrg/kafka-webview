@@ -257,7 +257,9 @@ public class MessageFormatController extends BaseController {
             } catch (final IOException e) {
                 // Set flash message
                 redirectAttributes.addFlashAttribute("exception", e.getMessage());
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
 
                 // redirect to cluster index
                 return "redirect:/configuration/messageFormat";
@@ -270,7 +272,9 @@ public class MessageFormatController extends BaseController {
         messageFormat.setOptionParameters(jsonStr);
         messageFormatRepository.save(messageFormat);
 
-        redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Successfully created message format!"));
+        redirectAttributes.addFlashAttribute(
+            "FlashMessage",
+            FlashMessage.newSuccess("Successfully created message format!"));
         return "redirect:/configuration/messageFormat";
     }
 
