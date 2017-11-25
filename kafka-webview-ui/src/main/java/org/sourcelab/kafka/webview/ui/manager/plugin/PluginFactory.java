@@ -28,7 +28,6 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.UnableToFindClassException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.WrongImplementationException;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;

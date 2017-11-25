@@ -43,7 +43,6 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

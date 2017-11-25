@@ -24,7 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
