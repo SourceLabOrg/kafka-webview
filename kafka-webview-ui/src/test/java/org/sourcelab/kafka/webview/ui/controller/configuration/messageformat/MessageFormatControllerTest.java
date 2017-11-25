@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -130,6 +132,9 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
         final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
 
+        // Define our expected json string
+        final String expectedOptionsJson = "{\"option1\":\"value1\",\"option2\":\"value2\"}";
+
         // Hit index.
         mockMvc
             .perform(fileUpload("/configuration/messageFormat/update")
@@ -137,7 +142,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .with(user(adminUserDetails))
                 .with(csrf())
                 .param("name", expectedName)
-                .param("classpath", expectedClassPath))
+                .param("classpath", expectedClassPath)
+                .param("customOptionNames", "option1")
+                .param("customOptionNames", "option2")
+                .param("customOptionValues", "value1")
+                .param("customOptionValues", "value2"))
             .andDo(print())
             .andExpect(model().hasNoErrors())
             .andExpect(status().is3xxRedirection())
@@ -150,6 +159,9 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Has correct classpath", expectedClassPath, messageFormat.getClasspath());
         assertNotNull("Has jar path", messageFormat.getJar());
         assertFalse("Should not be a default format", messageFormat.isDefaultFormat());
+
+        // Validate that our options got set
+        assertEquals("Got options", expectedOptionsJson, messageFormat.getOptionParameters());
 
         final boolean doesJarExist = Files.exists(Paths.get(deserializerUploadPath, messageFormat.getJar()));
         assertTrue("Deserializer file should have been uploaded", doesJarExist);
@@ -268,6 +280,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         final String expectedClasspath = messageFormat.getClasspath();
         final String expectedJarName = messageFormat.getJar();
         final String expectedJarContents = "OriginalContents";
+        final String expectedParametersJson = messageFormat.getOptionParameters();
         final Path expectedJarPath = Paths.get(deserializerUploadPath, messageFormat.getJar());
 
         // Create a dummy jar
@@ -285,7 +298,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .param("id", String.valueOf(messageFormat.getId()))
                 .param("name", "Updated Name")
-                .param("classpath", "made.up.classpath"))
+                .param("classpath", "made.up.classpath")
+                .param("customOptionNames", "option1")
+                .param("customOptionNames", "option2")
+                .param("customOptionValues", "value1")
+                .param("customOptionValues", "value2"))
             .andDo(print())
             .andExpect(model().hasErrors())
             .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
@@ -298,6 +315,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("classpath not updated", expectedClasspath, updatedMessageFormat.getClasspath());
         assertEquals("Jar name not updated", expectedJarName, updatedMessageFormat.getJar());
         assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+        assertEquals("Parameters not updated", expectedParametersJson, updatedMessageFormat.getOptionParameters());
 
         // Validate previous jar not overwritten.
         assertTrue("File should exist", Files.exists(expectedJarPath));
@@ -339,7 +357,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .param("id", String.valueOf(messageFormat.getId()))
                 .param("name", newName)
-                .param("classpath", newClasspath))
+                .param("classpath", newClasspath)
+                .param("customOptionNames", "option1")
+                .param("customOptionNames", "option2")
+                .param("customOptionValues", "value1")
+                .param("customOptionValues", "value2"))
             .andDo(print())
             .andExpect(model().hasNoErrors())
             .andExpect(status().is3xxRedirection())
@@ -353,6 +375,10 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertNotEquals("classpath was NOT updated", newClasspath, updatedMessageFormat.getClasspath());
         assertEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
         assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+
+        // Define our expected json string
+        final String expectedOptionsJson = "{\"option1\":\"value1\",\"option2\":\"value2\"}";
+        assertEquals("Parameters should have been updated", expectedOptionsJson, updatedMessageFormat.getOptionParameters());
 
         // Validate jar should still exist
         assertTrue("File should exist", Files.exists(originalJarPath));
@@ -409,6 +435,9 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertNotEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
         assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
 
+        // No parameters were posted, so we should have an empty json parameters
+        assertEquals("No parameters should be empty", "{}", updatedMessageFormat.getOptionParameters());
+
         // Validate previous jar is gone/deleted.
         assertFalse("File should NOT exist", Files.exists(originalJarPath));
 
@@ -427,6 +456,8 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Transactional
     public void testGetEdit_existingMessageFormat() throws Exception {
         final MessageFormat format = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
+        format.setOptionParameters("{\"myOption1\":\"myValue1\",\"myOption2\":\"myValue2\",");
+        messageFormatRepository.save(format);
 
         // Hit edit page.
         mockMvc
@@ -436,7 +467,15 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
             .andExpect(content().string(containsString(format.getName())))
             .andExpect(content().string(containsString(format.getClasspath())))
-            .andExpect(content().string(containsString("value=\"" + format.getId() + "\"")));
+
+            // Should have our Id input
+            .andExpect(content().string(containsString("value=\"" + format.getId() + "\"")))
+
+            // Should have our defined options
+            .andExpect(content().string(containsString("myValue1")))
+            .andExpect(content().string(containsString("myValue2")))
+            .andExpect(content().string(containsString("myOption1")))
+            .andExpect(content().string(containsString("myOption2")));
     }
 
     /**

@@ -27,7 +27,7 @@ public class MessageFormatTestTools {
         format.setName(name);
         format.setClasspath("com.example." + name);
         format.setJar(name + ".jar");
-        //format.setOptions("{\"key\": \"value\"}");
+        format.setOptionParameters("{\"key\": \"value\"}");
         messageFormatRepository.save(format);
 
         return format;
