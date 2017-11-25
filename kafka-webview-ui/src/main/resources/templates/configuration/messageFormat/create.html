@@ -68,12 +68,19 @@
                                 </div>
                             </div>
 
+                            <!-- Enforced Filtering Options -->
+                            <h6>
+                                Configuration Options
+                                <small class="form-text text-muted">These options will be passed to the Deserializer</small>
+                            </h6>
+                            <hr>
+
                             <!-- Defined Options -->
                             <div id="optionsContainer">
                                 <!-- Loop over each option -->
                                 <div class="form-group row custom-option" th:each="optionEntry : ${messageFormatForm.getCustomOptionsAsMap().entrySet()}">
                                     <label class="col-md-3 form-control-label" for="classpath">
-                                        Option: "[[${optionEntry.getKey()}]]"
+                                        <i th:text="${optionEntry.getKey()}"></i>
                                     </label>
                                     <div class="col-md-8">
                                         <input
@@ -168,7 +175,7 @@
         <!-- User Defined Option -->
         <div class="form-group row custom-option">
             <label class="col-md-3 form-control-label" for="classpath">
-                Option: "{{optionName}}"
+                <i>{{optionName}}</i>
             </label>
             <div class="col-md-8">
                 <input
