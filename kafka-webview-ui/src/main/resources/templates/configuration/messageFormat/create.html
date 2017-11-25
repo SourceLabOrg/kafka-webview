@@ -67,6 +67,44 @@
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('classpath')}" th:errors="*{classpath}"/>
                                 </div>
                             </div>
+
+                            <!-- Defined Options -->
+                            <div id="optionsContainer">
+                                <!-- Loop over each option -->
+                                <div class="form-group row custom-option" th:each="optionEntry : ${messageFormatForm.getCustomOptionsAsMap().entrySet()}">
+                                    <label class="col-md-3 form-control-label" for="classpath">
+                                        Option: "[[${optionEntry.getKey()}]]"
+                                    </label>
+                                    <div class="col-md-8">
+                                        <input
+                                            th:value="${optionEntry.getValue()}"
+                                            type="text" name="customOptionValues" class="form-control"
+                                            placeholder="Set option value">
+                                        <input
+                                            th:value="${optionEntry.getKey()}"
+                                            type="hidden" name="customOptionNames">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn removeOption" type="button" onclick="removeOption(this);">-</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <!-- Dynamic Fields -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="newOption">
+                                    Add new option
+                                </label>
+                                <div class="col-md-8">
+                                    <input
+                                        autocomplete="off" class="form-control" id="newOption" name="newOption" type="text" placeholder="Name of new option"/>
+                                </div>
+                                <div class="col-md-1">
+                                    <button id="addOption" class="btn add-more" type="button">+</button>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer">
                             <input type="hidden" name="id" th:if="${messageFormatForm.exists()}" th:field="*{id}">
@@ -84,6 +122,66 @@
             </div>
         </div>
     </div>
+
+    <script type="application/javascript">
+        jQuery().ready(function() {
+            jQuery('#addOption').click(function(e) {
+                e.preventDefault();
+
+                // Get and compile template
+                var source   = jQuery('#options-template').html();
+                var template = Handlebars.compile(source);
+
+                // Get name from input
+                var optionName = jQuery('#newOption').val();
+                if (optionName == null || optionName.trim().length == 0) {
+                    alert('Must enter a name for your option');
+                    return;
+                }
+
+                // Generate html from template
+                var properties = {
+                    optionName: optionName,
+                    optionValueFieldName: "",
+                    optionNameFieldName: "customOptionNames"
+                };
+                var optionsHtml = template(properties);
+
+                // Append it to our div
+                jQuery('#optionsContainer').append(optionsHtml);
+
+                // Clear input
+                jQuery('#newOption').val("");
+            });
+        });
+
+        // Handle removing custom options
+        function removeOption(element) {
+            if (confirm('Are you sure you want to remove this option?')) {
+                jQuery(element).closest('.custom-option').remove();
+            }
+        }
+    </script>
+
+    <!-- Options Template -->
+    <script id="options-template" type="text/x-handlebars-template">
+        <!-- User Defined Option -->
+        <div class="form-group row custom-option">
+            <label class="col-md-3 form-control-label" for="classpath">
+                Option: "{{optionName}}"
+            </label>
+            <div class="col-md-8">
+                <input
+                    type="text" name="customOptionValues" class="form-control"
+                    placeholder="Set option value">
+                <input
+                    type="hidden" name="customOptionNames" value="{{optionName}}">
+            </div>
+            <div class="col-md-1">
+                <button class="btn removeOption" type="button" onclick="removeOption(this);">-</button>
+            </div>
+        </div>
+    </script>
 </section>
 
 </body>

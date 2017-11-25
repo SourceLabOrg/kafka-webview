@@ -51,6 +51,9 @@ public class MessageFormat {
     @Column(nullable = false)
     private boolean isDefaultFormat = false;
 
+    @Column(nullable = false)
+    private String optionParameters = "{}";
+
     public long getId() {
         return id;
     }
@@ -91,14 +94,23 @@ public class MessageFormat {
         isDefaultFormat = defaultFormat;
     }
 
+    public String getOptionParameters() {
+        return optionParameters;
+    }
+
+    public void setOptionParameters(final String optionParameters) {
+        this.optionParameters = optionParameters;
+    }
+
     @Override
     public String toString() {
         return "MessageFormat{"
-            + "+ id=" + id
-            + ", + name='" + name + '\''
-            + ", + classpath='" + classpath + '\''
-            + ", + jar='" + jar + '\''
-            + ", + isDefaultFormat=" + isDefaultFormat
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", classpath='" + classpath + '\''
+            + ", jar='" + jar + '\''
+            + ", isDefaultFormat=" + isDefaultFormat
+            + ", optionParameters='" + optionParameters + '\''
             + '}';
     }
 }

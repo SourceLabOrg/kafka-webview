@@ -419,7 +419,6 @@ public class ViewConfigController extends BaseController {
             viewToFilterEnforced.setSortOrder(sortOrder++);
 
             // Convert to json and store on the relationship
-
             final String jsonStr;
             try {
                 jsonStr = objectMapper.writeValueAsString(optionValues);

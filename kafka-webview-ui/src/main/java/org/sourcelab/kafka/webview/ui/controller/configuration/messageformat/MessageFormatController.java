@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
@@ -45,6 +47,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -56,7 +59,10 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller for MessageFormat CRUD operations.
@@ -134,6 +140,22 @@ public class MessageFormatController extends BaseController {
         messageFormatForm.setName(messageFormat.getName());
         messageFormatForm.setClasspath(messageFormat.getClasspath());
 
+        // Deserialize message parameters json string into a map
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, String> customOptions;
+        try {
+            customOptions = objectMapper.readValue(messageFormat.getOptionParameters(), Map.class);
+        } catch (final IOException e) {
+            // Fail safe?
+            customOptions = new HashMap<>();
+        }
+
+        // Update form object with properties.
+        for (final Map.Entry<String, String> entry : customOptions.entrySet()) {
+            messageFormatForm.getCustomOptionNames().add(entry.getKey());
+            messageFormatForm.getCustomOptionValues().add(entry.getValue());
+        }
+
         return "configuration/messageFormat/create";
     }
 
@@ -154,7 +176,8 @@ public class MessageFormatController extends BaseController {
     public String create(
         @Valid final MessageFormatForm messageFormatForm,
         final BindingResult bindingResult,
-        final RedirectAttributes redirectAttributes) {
+        final RedirectAttributes redirectAttributes,
+        @RequestParam final Map<String, String> allRequestParams) {
 
         // If we have errors just display the form again.
         if (bindingResult.hasErrors()) {
@@ -188,6 +211,9 @@ public class MessageFormatController extends BaseController {
             // Creating new message format
             messageFormat = new MessageFormat();
         }
+
+        // Handle custom options, convert into a JSON string.
+        final String jsonStr = handleCustomOptions(messageFormatForm);
 
         // If we have a new file uploaded.
         if (!file.isEmpty()) {
@@ -241,10 +267,30 @@ public class MessageFormatController extends BaseController {
         // If we made it here, write MessageFormat entity.
         messageFormat.setName(messageFormatForm.getName());
         messageFormat.setDefaultFormat(false);
+        messageFormat.setOptionParameters(jsonStr);
         messageFormatRepository.save(messageFormat);
 
         redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Successfully created message format!"));
         return "redirect:/configuration/messageFormat";
+    }
+
+    /**
+     * Handles getting custom defined options and values.
+     * @param messageFormatForm The submitted form.
+     */
+    private String handleCustomOptions(final MessageFormatForm messageFormatForm) {
+        // Build a map of Name => Value
+        final Map<String, String> mappedOptions = messageFormatForm.getCustomOptionsAsMap();
+
+        // For converting map to json string
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            return objectMapper.writeValueAsString(mappedOptions);
+        } catch (final JsonProcessingException e) {
+            // Fail safe?
+            return "{}";
+        }
     }
 
     /**
