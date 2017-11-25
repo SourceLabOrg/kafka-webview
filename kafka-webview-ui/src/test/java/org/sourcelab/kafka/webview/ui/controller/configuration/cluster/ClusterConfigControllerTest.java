@@ -83,42 +83,16 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test cannot load index page w/o admin role.
+     * Test cannot load pages w/o admin role.
      */
     @Test
     @Transactional
-    public void testIndex_withoutAdminRole() throws Exception {
-        // Hit index.
-        mockMvc
-            .perform(get("/configuration/cluster").with(user(userDetails)))
-            .andDo(print())
-            .andExpect(status().isForbidden());
-    }
-
-    /**
-     * Test cannot create page w/o admin role.
-     */
-    @Test
-    @Transactional
-    public void testCreate_withoutAdminRole() throws Exception {
-        // Hit index.
-        mockMvc
-            .perform(get("/configuration/cluster/create").with(user(userDetails)))
-            .andDo(print())
-            .andExpect(status().isForbidden());
-    }
-
-    /**
-     * Test cannot update w/o admin role.
-     */
-    @Test
-    @Transactional
-    public void testUpdate_withoutAdminRole() throws Exception {
-        // Hit index.
-        mockMvc
-            .perform(post("/configuration/cluster/update").with(user(userDetails)))
-            .andDo(print())
-            .andExpect(status().isForbidden());
+    public void test_withoutAdminRole() throws Exception {
+        testUrlWithOutAdminRole("/configuration/cluster", false);
+        testUrlWithOutAdminRole("/configuration/filter/create", false);
+        testUrlWithOutAdminRole("/configuration/filter/edit/1", false);
+        testUrlWithOutAdminRole("/configuration/filter/update", true);
+        testUrlWithOutAdminRole("/configuration/filter/delete/1", true);
     }
 
     /**

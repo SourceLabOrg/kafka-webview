@@ -68,10 +68,12 @@
                                 </div>
                             </div>
 
-                            <!-- Enforced Filtering Options -->
+                            <!-- Custom Settings -->
                             <h6>
                                 Configuration Options
-                                <small class="form-text text-muted">These options will be passed to the Deserializer</small>
+                                <small class="form-text text-muted">
+                                    If your Deserializer requires additional settings you can define them here.
+                                </small>
                             </h6>
                             <hr>
 
@@ -86,7 +88,7 @@
                                         <input
                                             th:value="${optionEntry.getValue()}"
                                             type="text" name="customOptionValues" class="form-control"
-                                            placeholder="Set option value">
+                                            placeholder="Set property value">
                                         <input
                                             th:value="${optionEntry.getKey()}"
                                             type="hidden" name="customOptionNames">
@@ -102,11 +104,12 @@
                             <!-- Dynamic Fields -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="newOption">
-                                    Add new option
+                                    Add new setting property
                                 </label>
                                 <div class="col-md-8">
                                     <input
-                                        autocomplete="off" class="form-control" id="newOption" name="newOption" type="text" placeholder="Name of new option"/>
+                                        autocomplete="off" class="form-control" id="newOption" name="newOption" type="text"
+                                        placeholder="Enter property name"/>
                                 </div>
                                 <div class="col-md-1">
                                     <button id="addOption" class="btn add-more" type="button">+</button>
@@ -142,7 +145,7 @@
                 // Get name from input
                 var optionName = jQuery('#newOption').val();
                 if (optionName == null || optionName.trim().length == 0) {
-                    alert('Must enter a name for your option');
+                    alert('Must enter a name for property');
                     return;
                 }
 
@@ -164,7 +167,7 @@
 
         // Handle removing custom options
         function removeOption(element) {
-            if (confirm('Are you sure you want to remove this option?')) {
+            if (confirm('Are you sure you want to remove this property?')) {
                 jQuery(element).closest('.custom-option').remove();
             }
         }
@@ -180,7 +183,7 @@
             <div class="col-md-8">
                 <input
                     type="text" name="customOptionValues" class="form-control"
-                    placeholder="Set option value">
+                    placeholder="Set property value">
                 <input
                     type="hidden" name="customOptionNames" value="{{optionName}}">
             </div>
