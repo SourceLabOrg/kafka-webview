@@ -26,24 +26,35 @@ package org.sourcelab.kafka.webview.ui.manager.kafka.config;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Configuration defining how to Deserialize values from Kafka.
  */
 public class DeserializerConfig {
     private final Class<? extends Deserializer> keyDeserializerClass;
+    private final Map<String, String> keyDeserializerOptions;
+
     private final Class<? extends Deserializer> valueDeserializerClass;
+    private final Map<String, String> valueDeserializerOptions;
 
     /**
      * Constructor.
      * @param keyDeserializerClass Class for deserializer for keys.
      * @param valueDeserializerClass Class for deserializer for values.
      */
-    public DeserializerConfig(
+    private DeserializerConfig(
         final Class<? extends Deserializer> keyDeserializerClass,
-        final Class<? extends Deserializer> valueDeserializerClass
+        final Map<String, String> keyDeserializerOptions,
+        final Class<? extends Deserializer> valueDeserializerClass,
+        final Map<String, String> valueDeserializerOptions
     ) {
         this.keyDeserializerClass = keyDeserializerClass;
+        this.keyDeserializerOptions = keyDeserializerOptions;
         this.valueDeserializerClass = valueDeserializerClass;
+        this.valueDeserializerOptions = valueDeserializerOptions;
     }
 
     public Class<? extends Deserializer> getKeyDeserializerClass() {
@@ -54,11 +65,97 @@ public class DeserializerConfig {
         return valueDeserializerClass;
     }
 
+    /**
+     * @return Immutable map of options defined for key deserializer.
+     */
+    public Map<String, String> getKeyDeserializerOptions() {
+        return Collections.unmodifiableMap(keyDeserializerOptions);
+    }
+
+    /**
+     * @return Immutable map of options defined for value deserializer.
+     */
+    public Map<String, String> getValueDeserializerOptions() {
+        return Collections.unmodifiableMap(valueDeserializerOptions);
+    }
+
+    /**
+     * @return Mutable map of options defined for both the key and value deserializer.
+     */
+    public Map<String, String> getMergedOptions() {
+        final Map<String, String> mergedOptions = new HashMap<>();
+        mergedOptions.putAll(getKeyDeserializerOptions());
+        mergedOptions.putAll(getValueDeserializerOptions());
+        return mergedOptions;
+    }
+
+    /**
+     * @return Builder instance for DeserializerConfig.
+     */
+    public static DeserializerConfig.Builder newBuilder() {
+        return new Builder();
+    }
+
     @Override
     public String toString() {
         return "DeserializerConfig{"
             + "keyDeserializerClass=" + keyDeserializerClass
+            + ", keyDeserializerOptions=" + keyDeserializerOptions
             + ", valueDeserializerClass=" + valueDeserializerClass
+            + ", valueDeserializerOptions=" + valueDeserializerOptions
             + '}';
+    }
+
+    /**
+     * Builder for DeserializerConfig.
+     */
+    public static final class Builder {
+        private Class<? extends Deserializer> keyDeserializerClass;
+        private Map<String, String> keyDeserializerOptions = new HashMap<>();
+
+        private Class<? extends Deserializer> valueDeserializerClass;
+        private Map<String, String> valueDeserializerOptions = new HashMap<>();
+
+        private Builder() {
+        }
+
+        public Builder withKeyDeserializerClass(Class<? extends Deserializer> keyDeserializerClass) {
+            this.keyDeserializerClass = keyDeserializerClass;
+            return this;
+        }
+
+        public Builder withValueDeserializerClass(Class<? extends Deserializer> valueDeserializerClass) {
+            this.valueDeserializerClass = valueDeserializerClass;
+            return this;
+        }
+
+        public Builder withValueDeserializerOption(final String key, final String value) {
+            valueDeserializerOptions.put(key, value);
+            return this;
+        }
+
+        public Builder withValueDeserializerOptions(final Map<String, String> options) {
+            valueDeserializerOptions.putAll(options);
+            return this;
+        }
+
+        public Builder withKeyDeserializerOption(final String key, final String value) {
+            keyDeserializerOptions.put(key, value);
+            return this;
+        }
+
+        public Builder withKeyDeserializerOptions(final Map<String, String> options) {
+            keyDeserializerOptions.putAll(options);
+            return this;
+        }
+
+        public DeserializerConfig build() {
+            return new DeserializerConfig(
+                keyDeserializerClass,
+                keyDeserializerOptions,
+                valueDeserializerClass,
+                valueDeserializerOptions
+            );
+        }
     }
 }

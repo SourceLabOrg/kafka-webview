@@ -36,6 +36,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinitio
 import org.sourcelab.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class KafkaConsumerFactory {
         final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
 
         // Pull out partitions, convert to topic partitions
-        final List<TopicPartition> topicPartitions = new ArrayList<>();
+        final Collection<TopicPartition> topicPartitions = new ArrayList<>();
         for (final PartitionInfo partitionInfo: partitionInfos) {
             // Skip filtered partitions
             if (!clientConfig.isPartitionFiltered(partitionInfo.partition())) {
@@ -97,6 +98,8 @@ public class KafkaConsumerFactory {
         final Map<String, Object> configMap = new HashMap<>();
         configMap.put(ConsumerConfig.CLIENT_ID_CONFIG, clientConfig.getConsumerId());
         configMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, clientConfig.getTopicConfig().getClusterConfig().getConnectString());
+
+        // Set deserializer classes.
         configMap.put(
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
             clientConfig.getTopicConfig().getDeserializerConfig().getKeyDeserializerClass());
@@ -130,6 +133,19 @@ public class KafkaConsumerFactory {
             configMap.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());
             configMap.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getTrustStoreFile());
             configMap.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clusterConfig.getTrustStorePassword());
+        }
+
+        // Get the Deserializer options
+        final Map<String, String> deserializerOptions = clientConfig.getTopicConfig().getDeserializerConfig().getMergedOptions();
+
+        // Since we basically allow free-form setting options, we want to disallow overwriting already set options
+        // with user defined ones. So lets loop through and only set options that are NOT already set.
+        for (final Map.Entry<String, String> entry: deserializerOptions.entrySet()) {
+            // Skip config items already set.
+            if (configMap.containsKey(entry.getKey())) {
+                continue;
+            }
+            configMap.put(entry.getKey(), entry.getValue());
         }
 
         return configMap;

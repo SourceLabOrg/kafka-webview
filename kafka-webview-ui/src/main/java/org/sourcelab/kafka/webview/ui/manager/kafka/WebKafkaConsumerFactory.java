@@ -48,6 +48,7 @@ import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,6 +66,9 @@ public class WebKafkaConsumerFactory {
     private final PluginFactory<RecordFilter> recordFilterPluginFactory;
     private final SecretManager secretManager;
     private final KafkaConsumerFactory kafkaConsumerFactory;
+
+    // For parsing json options
+    private final ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Constructor.
@@ -139,16 +143,17 @@ public class WebKafkaConsumerFactory {
 
         // Grab our relevant bits
         final Cluster cluster = view.getCluster();
-        final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
-        final MessageFormat valueMessageFormat = view.getValueMessageFormat();
 
-        final Class<? extends Deserializer> keyDeserializerClass = getDeserializerClass(keyMessageFormat);
-        final Class<? extends Deserializer> valueDeserializerClass = getDeserializerClass(valueMessageFormat);
-
+        // Build cluster config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
+
+        // Build Deserializer config.
+        final DeserializerConfig deserializerConfig = buildDeserializerConfig(view);
+
+        // Put together the topic config.
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
 
+        // Build the client config.
         final ClientConfig.Builder clientConfigBuilder = ClientConfig.newBuilder()
             .withTopicConfig(topicConfig)
             .withConsumerId(consumerId)
@@ -198,10 +203,44 @@ public class WebKafkaConsumerFactory {
         }
     }
 
-    private RecordFilterDefinition buildRecordFilterDefinition(final Filter filter, final String optionParametersJsonStr) {
-        // For parsing json options
-        final ObjectMapper mapper = new ObjectMapper();
+    /**
+     * Using the supplied view, build the DeserializerConfig.
+     * @param view View to build the DeserializerConfig for.
+     * @return Properly configured DeserializerConfig.
+     */
+    private DeserializerConfig buildDeserializerConfig(final View view) {
+        final DeserializerConfig.Builder builder = DeserializerConfig.newBuilder();
 
+        // Construct properties for message formats / deserializers
+        final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
+        final MessageFormat valueMessageFormat = view.getValueMessageFormat();
+
+        // Grab class instances for Deserializers
+        builder
+            .withKeyDeserializerClass(getDeserializerClass(keyMessageFormat))
+            .withValueDeserializerClass(getDeserializerClass(valueMessageFormat));
+
+        // Load Key Deserializer options
+        try {
+             final Map<String, String> options = mapper.readValue(keyMessageFormat.getOptionParameters(), Map.class);
+             builder.withKeyDeserializerOptions(options);
+        } catch (final IOException e) {
+            // Swallow?
+        }
+
+        // Load Value Deserializer options
+        try {
+            final Map<String, String> options = mapper.readValue(valueMessageFormat.getOptionParameters(), Map.class);
+            builder.withValueDeserializerOptions(options);
+        } catch (final IOException e) {
+            // Swallow?
+        }
+
+        // Build deserializer config and return
+        return builder.build();
+    }
+
+    private RecordFilterDefinition buildRecordFilterDefinition(final Filter filter, final String optionParametersJsonStr) {
         // Build it
         try {
             // Parse options from string

@@ -25,9 +25,12 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -37,12 +40,15 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
+import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class KafkaConsumerFactoryTest {
@@ -82,7 +88,10 @@ public class KafkaConsumerFactoryTest {
             .build();
 
         // Create Deserializer Config
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(StringDeserializer.class, StringDeserializer.class);
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(StringDeserializer.class)
+            .withValueDeserializerClass(StringDeserializer.class)
+            .build();
 
         // Create Topic Config
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
@@ -140,7 +149,10 @@ public class KafkaConsumerFactoryTest {
             .build();
 
         // Create Deserializer Config
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(StringDeserializer.class, StringDeserializer.class);
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(StringDeserializer.class)
+            .withValueDeserializerClass(StringDeserializer.class)
+            .build();
 
         // Create Topic Config
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
@@ -171,10 +183,10 @@ public class KafkaConsumerFactoryTest {
     }
 
     /**
-     * Simple Smoke Test, using RecordFilter.
+     * Simple Smoke Test, using RecordFilter to filter everything from partition 0.
      */
     @Test
-    public void testBasicConsumerWithRecordFilter() {
+    public void testBasicConsumerWithRecordFilter() throws InterruptedException {
         final int maxRecordsPerPoll = 10;
 
         // Create a topic with 2 partitions, (partitionId 0, 1)
@@ -202,7 +214,10 @@ public class KafkaConsumerFactoryTest {
             .build();
 
         // Create Deserializer Config
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(StringDeserializer.class, StringDeserializer.class);
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(StringDeserializer.class)
+            .withValueDeserializerClass(StringDeserializer.class)
+            .build();
 
         // Create Topic Config
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
@@ -217,14 +232,14 @@ public class KafkaConsumerFactoryTest {
             .withConsumerId("MyConsumerId")
             .withFilterConfig(filterConfig)
             .withAllPartitions()
-            .withMaxResultsPerPartition(10000)
+            .withMaxResultsPerPartition(maxRecordsPerPoll * 100)
             .withTopicConfig(topicConfig)
             .build();
 
         // Create consumer
         try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
             // Attempt to consume, should pull first 10
-            ConsumerRecords<String, String> records = consumer.poll(2000L);
+            ConsumerRecords<String, String> records = consumer.poll(10000L);
             assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records.count());
 
             for (final ConsumerRecord<String, String> record: records) {
@@ -235,6 +250,154 @@ public class KafkaConsumerFactoryTest {
             records = consumer.poll(2000L);
             assertTrue("Should be empty", records.isEmpty());
         }
+    }
+
+    /**
+     * Produce messages into topic, tell consumer to start from TAIL.
+     * We should get no results.
+     */
+    @Test
+    public void testBasicConsumerStartingFromTail() throws InterruptedException {
+        final int recordsPerPartition = 10;
+
+        // Create a topic with 1 partitions, (partitionId 0)
+        final String topicName = "TestTopic" + System.currentTimeMillis();
+        sharedKafkaTestResource
+            .getKafkaTestServer()
+            .createTopic(topicName, 1);
+
+        // Produce 10 records into partition 0 of topic.
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(recordsPerPartition, topicName, 0);
+
+        // Create factory
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used");
+
+        // Create cluster Config
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+
+        // Create Deserializer Config
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(StringDeserializer.class)
+            .withValueDeserializerClass(StringDeserializer.class)
+            .build();
+
+        // Create Topic Config
+        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
+
+        // Create FilterConfig
+        final FilterConfig filterConfig = FilterConfig.withNoFilters();
+
+        // Create ClientConfig, instructing to start from tail.
+        final ClientConfig clientConfig = ClientConfig.newBuilder()
+            .withConsumerId("MyConsumerId")
+            .withFilterConfig(filterConfig)
+            .withAllPartitions()
+            .withStartingPosition(StartingPosition.newTailPosition())
+            .withMaxResultsPerPartition(recordsPerPartition * 100)
+            .withTopicConfig(topicConfig)
+            .build();
+
+        // Create consumer
+        try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
+            // Attempt to consume, should pull nothing
+            ConsumerRecords<String, String> records = consumer.poll(10000L);
+            assertTrue("Should be empty", records.isEmpty());
+
+            // Produce 2 records into partition 0 of topic.
+            sharedKafkaTestResource
+                .getKafkaTestUtils()
+                .produceRecords( 2, topicName, 0);
+
+            // Now attempt to consume again, should get our two entries.
+            records = consumer.poll(10000L);
+            assertEquals("Should have 2 records", 2, records.count());
+        }
+    }
+
+    /**
+     * Produce messages into topic, tell consumer to start from TAIL.
+     * We should get no results.
+     */
+    @Test
+    public void testDeserializerOptions() throws InterruptedException {
+        // Reset state on our Test Deserializer
+        TestDeserializer.reset();
+
+        // Create a topic with 1 partitions, (partitionId 0)
+        final String topicName = "TestTopic" + System.currentTimeMillis();
+        sharedKafkaTestResource
+            .getKafkaTestServer()
+            .createTopic(topicName, 1);
+
+        // Create factory
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used");
+
+        // Create cluster Config
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+
+        // Create Deserializer Config
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(TestDeserializer.class)
+            .withKeyDeserializerOption("key.option", "key.value")
+            .withKeyDeserializerOption("key.option2", "key.value2")
+
+            // Attempt to override a real setting, it should get filtered
+            .withKeyDeserializerOption(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "MadeUpValue")
+
+            .withValueDeserializerClass(TestDeserializer.class)
+            .withValueDeserializerOption("value.option", "value.value")
+            .withValueDeserializerOption("value.option2", "value.value2")
+
+            // Attempt to override a real setting, it should get filtered
+            .withValueDeserializerOption(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "MadeUpValue")
+            .build();
+
+        // Create Topic Config
+        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
+
+        // Create FilterConfig
+        final FilterConfig filterConfig = FilterConfig.withNoFilters();
+
+        // Create ClientConfig, instructing to start from tail.
+        final ClientConfig clientConfig = ClientConfig.newBuilder()
+            .withConsumerId("MyConsumerId")
+            .withFilterConfig(filterConfig)
+            .withAllPartitions()
+            .withStartingPosition(StartingPosition.newTailPosition())
+            .withMaxResultsPerPartition(100)
+            .withTopicConfig(topicConfig)
+            .build();
+
+        // Create consumer
+        try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
+            // We don't actually care to consume anything.  We want to inspect options passed to deserializer.
+            final Map<String, Object> passedConfig = TestDeserializer.getConfig();
+
+            // Validate values got passed
+            assertEquals("Should have expected value", "key.value", passedConfig.get("key.option"));
+            assertEquals("Should have expected value", "key.value2", passedConfig.get("key.option2"));
+            assertEquals("Should have expected value", "value.value", passedConfig.get("value.option"));
+            assertEquals("Should have expected value", "value.value2", passedConfig.get("value.option2"));
+
+            // Validate didn't overwrite others
+            assertNotEquals(
+                "Should not have overridden config",
+                "MadeUpValue",
+                passedConfig.get(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG));
+            assertNotEquals(
+                "Should not have overridden config",
+                "MadeUpValue",
+                passedConfig.get(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG));
+        }
+
+        // Reset state
+        TestDeserializer.reset();
     }
 
     /**
@@ -259,6 +422,43 @@ public class KafkaConsumerFactoryTest {
         @Override
         public void close() {
 
+        }
+    }
+
+    /**
+     * Test Deserializer instance for capturing configs.
+     */
+    public static class TestDeserializer implements Deserializer<String> {
+        private static Map<String, Object> configs = new HashMap<>();
+
+        @Override
+        public void configure(final Map<String, ?> configs, final boolean isKey) {
+            // Save reference
+            synchronized (TestDeserializer.class) {
+                this.configs.putAll(configs);
+            }
+        }
+
+        @Override
+        public String deserialize(final String topic, final byte[] data) {
+            return "Dummy";
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        public static Map<String, Object> getConfig() {
+            synchronized (TestDeserializer.class) {
+                return configs;
+            }
+        }
+
+        public static void reset() {
+            synchronized (TestDeserializer.class) {
+                configs.clear();
+            }
         }
     }
 }
