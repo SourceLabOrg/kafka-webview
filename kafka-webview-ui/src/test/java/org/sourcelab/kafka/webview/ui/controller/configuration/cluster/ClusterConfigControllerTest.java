@@ -10,6 +10,7 @@ import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
+import org.sourcelab.kafka.webview.ui.tools.FileTestTools;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -251,12 +252,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         final boolean doesKeystoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
         assertTrue("KeyStore file should have been uploaded", doesKeystoreFileExist);
-        final String keyStoreContents = readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
+        final String keyStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
         assertEquals("KeyStore file should have correct contents", "KeyStoreFile", keyStoreContents);
 
         final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
         assertTrue("trustStore file should have been uploaded", doesTruststoreFileExist);
-        final String trustStoreContents = readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
+        final String trustStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
         assertEquals("TrustStore file should have correct contents", "TrustStoreFile", trustStoreContents);
 
         // Cleanup
@@ -282,8 +283,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         clusterRepository.save(originalCluster);
 
         // Create dummy JKS files
-        createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
-        createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
 
         // Only update cluster name, brokers, keep SSL enabled.
         final String expectedClusterName = "My Updated Cluster Name" + System.currentTimeMillis();
@@ -318,12 +319,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Validate file exists
         final boolean doesKeystoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
         assertTrue("KeyStore file should have been left untouched", doesKeystoreFileExist);
-        final String keyStoreContents = readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
+        final String keyStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
         assertEquals("KeyStore file should have remained untouched", "KeyStoreFile", keyStoreContents);
 
         final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
         assertTrue("trustStore file should have been left untouched", doesTruststoreFileExist);
-        final String trustStoreContents = readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
+        final String trustStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
         assertEquals("TrustStore file should have remained untouched", "TrustStoreFile", trustStoreContents);
 
         // Cleanup
@@ -349,8 +350,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         clusterRepository.save(originalCluster);
 
         // Create dummy JKS files
-        createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
-        createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
 
         // Only update cluster name, brokers, keep SSL enabled, and TrustStore file + password
         final String expectedClusterName = "UpdatedClusterName" + System.currentTimeMillis();
@@ -387,7 +388,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Keystore should remain
         final boolean doesKeystoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
         assertTrue("KeyStore file should have been left untouched", doesKeystoreFileExist);
-        final String keyStoreContents = readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
+        final String keyStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
         assertEquals("KeyStore file should have remained untouched", "KeyStoreFile", keyStoreContents);
 
         // TrustStore was updated
@@ -396,7 +397,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
         assertTrue("trustStore file should exist", doesTruststoreFileExist);
-        final String trustStoreContents = readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
+        final String trustStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
         assertEquals("TrustStore file should have been updated", "UpdatedTrustStoreFile", trustStoreContents);
 
         // Cleanup
@@ -422,8 +423,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         clusterRepository.save(originalCluster);
 
         // Create dummy JKS files
-        createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
-        createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
 
         // Only update cluster name, brokers, keep SSL enabled, and KeyStore file + password
         final String expectedClusterName = "UpdatedClusterName" + System.currentTimeMillis();
@@ -460,7 +461,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // trust store should remain
         final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
         assertTrue("TrustStore file should have been left untouched", doesTruststoreFileExist);
-        final String trustStoreContents = readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
+        final String trustStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
         assertEquals("TrustStore file should have remained untouched", "TrustStoreFile", trustStoreContents);
 
         // KeyStore was updated
@@ -469,7 +470,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         final boolean doesKeyStoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
         assertTrue("keyStore file should exist", doesKeyStoreFileExist);
-        final String keyStoreContents = readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
+        final String keyStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
         assertEquals("KeyStore file should have been updated", "UpdatedKeyStoreFile", keyStoreContents);
 
         // Cleanup
@@ -494,8 +495,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         clusterRepository.save(originalCluster);
 
         // Create dummy JKS files
-        createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
-        createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
 
         final Path keyStoreFilePath = Paths.get(keyStoreUploadPath + originalCluster.getKeyStoreFile());
         final Path trustStoreFilePath = Paths.get(keyStoreUploadPath + originalCluster.getTrustStoreFile());
@@ -536,26 +537,5 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // KeyStore file should not exist
         final boolean doesKeyStoreFileExist = Files.exists(keyStoreFilePath);
         assertFalse("keyStore file should have been removed", doesKeyStoreFileExist);
-    }
-
-    /**
-     * Helper for writing a dummy file.
-     * @param filename Filename to write
-     * @param contents Contents of the file
-     */
-    private void createDummyFile(final String filename, final String contents) throws IOException {
-        try (final FileOutputStream outputStream = new FileOutputStream(filename)) {
-            outputStream.write(contents.getBytes(Charsets.UTF_8));
-        }
-    }
-
-    /**
-     * Utility method to read the contents of a file.
-     * @param filename Filename to read
-     * @return Contents of the file.
-     * @throws IOException
-     */
-    private String readFile(final String filename) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(filename)), Charsets.UTF_8);
     }
 }

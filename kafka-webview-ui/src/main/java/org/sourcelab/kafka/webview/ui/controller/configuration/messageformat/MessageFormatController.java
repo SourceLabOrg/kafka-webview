@@ -51,7 +51,9 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -105,10 +107,38 @@ public class MessageFormatController extends BaseController {
         return "configuration/messageFormat/create";
     }
 
+//    /**
+//     * GET Displays edit message format form.
+//     */
+//    @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
+//    public String editMessageFormat(
+//        @PathVariable final Long id,
+//        final MessageFormatForm messageFormatForm,
+//        final Model model,
+//        final RedirectAttributes redirectAttributes) {
+//        // Retrieve it
+//        final MessageFormat messageFormat = messageFormatRepository.findOne(id);
+//        if (messageFormat == null) {
+//            // Set flash message & redirect
+//            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find message format!"));
+//            return "redirect:/configuration/messageFormat";
+//        }
+//
+//        // Setup breadcrumbs
+//        setupBreadCrumbs(model, "Edit " + messageFormat.getName(), null);
+//
+//        // Setup form
+//        messageFormatForm.setId(messageFormat.getId());
+//        messageFormatForm.setName(messageFormat.getName());
+//        messageFormatForm.setClasspath(messageFormat.getClasspath());
+//
+//        return "configuration/messageFormat/create";
+//    }
+
     /**
-     * POST create new MessageFormat.
+     * POST create or edit existing MessageFormat.
      */
-    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequestMapping(path = "/update", method = RequestMethod.POST)
     public String create(
         @Valid final MessageFormatForm messageFormatForm,
         final BindingResult bindingResult,
@@ -145,12 +175,12 @@ public class MessageFormatController extends BaseController {
             // Attempt to load jar?
             try {
                 deserializerLoader.getPlugin(filename, messageFormatForm.getClasspath());
-            } catch (LoaderException e) {
+            } catch (final LoaderException exception) {
                 // Remove jar
                 Files.delete(new File(jarPath).toPath());
 
                 bindingResult.addError(new FieldError(
-                    "messageFormatForm", "file", "", true, null, null, e.getMessage())
+                    "messageFormatForm", "file", "", true, null, null, exception.getMessage())
                 );
                 return "/configuration/messageFormat/create";
             }
@@ -161,8 +191,9 @@ public class MessageFormatController extends BaseController {
             messageFormat.setJar(filename);
             messageFormat.setDefaultFormat(false);
             messageFormatRepository.save(messageFormat);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             // Set flash message
+            redirectAttributes.addFlashAttribute("exception", e.getMessage());
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
 
             // redirect to cluster index
@@ -194,7 +225,7 @@ public class MessageFormatController extends BaseController {
         // See if its in use by any views
         final Iterable<View> views = viewRepository
             .findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(messageFormat.getId(), messageFormat.getId());
-        final List<String> viewNames = new ArrayList<>();
+        final Collection<String> viewNames = new ArrayList<>();
         for (final View view: views) {
             viewNames.add(view.getName());
         }
@@ -211,13 +242,19 @@ public class MessageFormatController extends BaseController {
             messageFormatRepository.delete(id);
 
             // Delete jar from disk
-            Files.delete(deserializerLoader.getPathForJar(messageFormat.getJar()));
+            try {
+                Files.delete(deserializerLoader.getPathForJar(messageFormat.getJar()));
+            } catch (final NoSuchFileException exception) {
+                // swallow.
+            }
             redirectAttributes.addFlashAttribute(
                 "FlashMessage",
                 FlashMessage.newSuccess("Deleted message format!"));
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (final IOException e) {
+            redirectAttributes.addFlashAttribute(
+                "FlashMessage",
+                FlashMessage.newWarning("Unable to remove message format! " + e.getMessage()));
+            return redirectUrl;
         }
 
         // redirect to cluster index
