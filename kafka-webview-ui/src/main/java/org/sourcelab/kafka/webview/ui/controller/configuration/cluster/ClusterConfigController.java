@@ -161,12 +161,12 @@ public class ClusterConfigController extends BaseController {
             // If we're creating a new cluster
             if (!clusterForm.exists()) {
                 // Ensure that we have files uploaded
-                if (clusterForm.getTrustStoreFile().isEmpty()) {
+                if (clusterForm.getTrustStoreFile() == null || clusterForm.getTrustStoreFile().isEmpty()) {
                     bindingResult.addError(new FieldError(
                         "clusterForm", "trustStoreFile", null, true, null, null, "Select a TrustStore JKS to upload")
                     );
                 }
-                if (clusterForm.getKeyStoreFile().isEmpty()) {
+                if (clusterForm.getKeyStoreFile() == null || clusterForm.getKeyStoreFile().isEmpty()) {
                     bindingResult.addError(new FieldError(
                         "clusterForm", "keyStoreFile", null, true, null, null, "Select a KeyStore JKS to upload")
                     );
@@ -207,7 +207,7 @@ public class ClusterConfigController extends BaseController {
             cluster.setSslEnabled(true);
 
             // Determine if we should update keystores
-            if (!clusterForm.exists() || !clusterForm.getTrustStoreFile().isEmpty()) {
+            if (!clusterForm.exists() || (clusterForm.getTrustStoreFile() != null && !clusterForm.getTrustStoreFile().isEmpty())) {
                 // Delete previous trust store if updating
                 if (cluster.getTrustStoreFile() != null) {
                     uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
@@ -236,7 +236,7 @@ public class ClusterConfigController extends BaseController {
             }
 
             // Handle key store update
-            if (!clusterForm.exists() || !clusterForm.getKeyStoreFile().isEmpty()) {
+            if (!clusterForm.exists() || (clusterForm.getKeyStoreFile() != null && !clusterForm.getKeyStoreFile().isEmpty())) {
                 // Delete previous key store if updating
                 if (cluster.getKeyStoreFile() != null) {
                     uploadManager.deleteKeyStore(cluster.getKeyStoreFile());

@@ -58,8 +58,11 @@ public class WebKafkaConsumerTest {
         // Defines the Cluster
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder().withBrokerHosts("localhost:9092").build();
 
-        // Define our Deserializer
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(StringDeserializer.class, StringDeserializer.class);
+        // Create Deserializer Config
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(StringDeserializer.class)
+            .withValueDeserializerClass(StringDeserializer.class)
+            .build();
 
         // Defines our Topic
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);

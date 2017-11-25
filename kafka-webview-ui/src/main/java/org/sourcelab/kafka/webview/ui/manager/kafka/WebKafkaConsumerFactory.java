@@ -27,6 +27,8 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
@@ -56,6 +58,8 @@ import java.util.Set;
  * Factory class for creating new Kafka Consumers to be used by WebRequests.
  */
 public class WebKafkaConsumerFactory {
+    private static final Logger logger = LoggerFactory.getLogger(WebKafkaConsumerFactory.class);
+
     /**
      * Defines the consumerId prefix pre-pended to all consumers.
      */
@@ -65,6 +69,9 @@ public class WebKafkaConsumerFactory {
     private final PluginFactory<RecordFilter> recordFilterPluginFactory;
     private final SecretManager secretManager;
     private final KafkaConsumerFactory kafkaConsumerFactory;
+
+    // For parsing json options
+    private final ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Constructor.
@@ -139,16 +146,17 @@ public class WebKafkaConsumerFactory {
 
         // Grab our relevant bits
         final Cluster cluster = view.getCluster();
-        final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
-        final MessageFormat valueMessageFormat = view.getValueMessageFormat();
 
-        final Class<? extends Deserializer> keyDeserializerClass = getDeserializerClass(keyMessageFormat);
-        final Class<? extends Deserializer> valueDeserializerClass = getDeserializerClass(valueMessageFormat);
-
+        // Build cluster config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
-        final DeserializerConfig deserializerConfig = new DeserializerConfig(keyDeserializerClass, valueDeserializerClass);
+
+        // Build Deserializer config.
+        final DeserializerConfig deserializerConfig = buildDeserializerConfig(view);
+
+        // Put together the topic config.
         final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, view.getTopic());
 
+        // Build the client config.
         final ClientConfig.Builder clientConfigBuilder = ClientConfig.newBuilder()
             .withTopicConfig(topicConfig)
             .withConsumerId(consumerId)
@@ -199,9 +207,6 @@ public class WebKafkaConsumerFactory {
     }
 
     private RecordFilterDefinition buildRecordFilterDefinition(final Filter filter, final String optionParametersJsonStr) {
-        // For parsing json options
-        final ObjectMapper mapper = new ObjectMapper();
-
         // Build it
         try {
             // Parse options from string
@@ -212,6 +217,49 @@ public class WebKafkaConsumerFactory {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Using the supplied view, build the DeserializerConfig.
+     * @param view View to build the DeserializerConfig for.
+     * @return Properly configured DeserializerConfig.
+     */
+    private DeserializerConfig buildDeserializerConfig(final View view) {
+        final DeserializerConfig.Builder builder = DeserializerConfig.newBuilder();
+
+        // Construct properties for message formats / deserializers
+        final MessageFormat keyMessageFormat = view.getKeyMessageFormat();
+        final MessageFormat valueMessageFormat = view.getValueMessageFormat();
+
+        // Grab class instances for Deserializers
+        builder
+            .withKeyDeserializerClass(getDeserializerClass(keyMessageFormat))
+            .withValueDeserializerClass(getDeserializerClass(valueMessageFormat));
+
+        // Load Key Deserializer options
+        try {
+            final Map<String, String> options = mapper.readValue(keyMessageFormat.getOptionParameters(), Map.class);
+            builder.withKeyDeserializerOptions(options);
+        } catch (final IOException e) {
+            // Swallow?
+            logger.error(
+                "Failed to deserialize options for key deserializer: {} with error: {}",
+                keyMessageFormat.getName(), e.getMessage());
+        }
+
+        // Load Value Deserializer options
+        try {
+            final Map<String, String> options = mapper.readValue(valueMessageFormat.getOptionParameters(), Map.class);
+            builder.withValueDeserializerOptions(options);
+        } catch (final IOException e) {
+            // Swallow?
+            logger.error(
+                "Failed to deserialize options for value deserializer: {} with error: {}",
+                valueMessageFormat.getName(), e.getMessage());
+        }
+
+        // Build deserializer config and return
+        return builder.build();
     }
 
     private Class<? extends Deserializer> getDeserializerClass(final MessageFormat messageFormat) {

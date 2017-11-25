@@ -31,14 +31,14 @@ import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@DataJpaTest
 public class ModelsTest {
 
     @Autowired

@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `message_format` (
   name VARCHAR(255) UNIQUE NOT NULL,
   classpath TEXT NOT NULL,
   jar TEXT NOT NULL,
+  option_parameters TEXT NOT NULL DEFAULT '{}',
   is_default_format BOOLEAN DEFAULT FALSE NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_by INT(11) UNSIGNED DEFAULT NULL,

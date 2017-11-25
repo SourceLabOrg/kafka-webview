@@ -28,10 +28,10 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.UnableToFindClassException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.WrongImplementationException;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A factory class for creating instances of uploaded plugins.
@@ -132,6 +132,6 @@ public class PluginFactory<T> {
      * @param jarName Jar to lookup full path to.
      */
     public Path getPathForJar(final String jarName) {
-        return new File(jarDirectory + "/" + jarName).toPath().toAbsolutePath();
+        return Paths.get(jarDirectory + "/", jarName).toAbsolutePath();
     }
 }

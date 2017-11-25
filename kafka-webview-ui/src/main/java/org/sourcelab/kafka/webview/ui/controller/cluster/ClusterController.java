@@ -129,7 +129,6 @@ public class ClusterController extends BaseController {
             .addCrumb(cluster.getName(), "/cluster/" + clusterId)
             .addCrumb("Broker " + brokerId, null);
 
-
         // Display template
         return "cluster/readBroker";
     }
