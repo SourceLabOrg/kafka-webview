@@ -28,11 +28,13 @@ var vendorsJS = [
   'node_modules/jquery/dist/jquery.min.js',
   'node_modules/jquery/dist/jquery.min.map',
   'node_modules/jquery-ui-dist/jquery-ui.min.js',
+  'node_modules/jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.js',
   'node_modules/jquery-validation/dist/jquery.validate.min.js',
   'node_modules/jquery.maskedinput/src/jquery.maskedinput.js',
   'node_modules/ladda/dist/ladda.min.js',
   'node_modules/ladda/dist/spin.min.js',
   'node_modules/moment/min/moment.min.js',
+  'node_modules/multiselect-two-sides/dist/js/multiselect.min.js',
   'node_modules/quill/dist/quill.min.js',
   'node_modules/quill/dist/quill.min.js.map',
   'node_modules/pace-progress/pace.min.js',
@@ -43,21 +45,23 @@ var vendorsJS = [
   'node_modules/handlebars/dist/handlebars.js',
   'node_modules/sockjs-client/dist/sockjs.min.js',
   'node_modules/stompjs/lib/stomp.js'
-]
+];
 
 var vendorsCSS = [
   'node_modules/font-awesome/css/font-awesome.min.css',
   'node_modules/font-awesome/css/font-awesome.css.map',
-  'node_modules/simple-line-icons/css/simple-line-icons.css'
-]
+  'node_modules/simple-line-icons/css/simple-line-icons.css',
+  'node_modules/jquery-ui-dist/jquery-ui.css',
+  'node_modules/jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.css'
+];
 
 var vendorsFonts = [
   'node_modules/font-awesome/fonts/**',
   'node_modules/simple-line-icons/fonts/**'
-]
+];
 
 var vendorImages = [
-]
+];
 
 gulp.task('copy:vendorsCSS', function() {
   return gulp.src(vendorsCSS)
@@ -81,7 +85,7 @@ gulp.task('clean:vendorsCSS', function () {
 });
 
 gulp.task('vendors:css', function(callback) {
-    runSequence('copy:vendorsCSS', 'minify:vendorsCSS', 'clean:vendorsCSS', callback);
+    runSequence('copy:vendorsCSS', 'minify:vendorsCSS', 'clean:vendorsCSS', 'replace:vendorsCSS', callback);
 });
 
 gulp.task('copy:vendorsJS', function() {
@@ -126,11 +130,12 @@ gulp.task('replace:node_modules', function(){
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('replace:css', function(){
+gulp.task('replace:vendorsCSS', function(){
     return gulp.src([
         './dist/vendors/css/*.css',
     ], {base: './'})
         .pipe(replace(/img\//g, '\/vendors/img/'))
+        .pipe(replace(/..\/fonts\//g, '\/vendors/fonts/'))
         .pipe(gulp.dest('./'));
 });
 

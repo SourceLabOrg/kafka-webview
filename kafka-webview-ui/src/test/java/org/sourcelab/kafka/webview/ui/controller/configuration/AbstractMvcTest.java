@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller.configuration;
 import org.junit.Before;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
+import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -55,8 +56,11 @@ public abstract class AbstractMvcTest {
     /**
      * Authentication details.
      */
+    protected User adminUser;
     protected UserDetails adminUserDetails;
-    protected UserDetails userDetails;
+
+    protected User nonAdminUser;
+    protected UserDetails nonAdminUserDetials;
 
     /**
      * Where JKS files are uploaded to.
@@ -69,8 +73,12 @@ public abstract class AbstractMvcTest {
     @Before
     public void setupAuth() {
         // Create user details for logged in user.
-        adminUserDetails = customUserDetailsService.loadUserByUsername(userTestTools.createAdminUser().getEmail());
-        userDetails = customUserDetailsService.loadUserByUsername(userTestTools.createUser().getEmail());
+        adminUser = userTestTools.createAdminUser();
+        adminUserDetails = customUserDetailsService.loadUserByUsername(adminUser.getEmail());
+
+        // Create non-admin user
+        nonAdminUser = userTestTools.createUser();
+        nonAdminUserDetials = customUserDetailsService.loadUserByUsername(nonAdminUser.getEmail());
 
         // Define upload path
         uploadPath = appProperties.getUploadPath();
@@ -91,7 +99,7 @@ public abstract class AbstractMvcTest {
         }
 
         mockMvc
-            .perform(action.with(user(userDetails)))
+            .perform(action.with(user(nonAdminUserDetials)))
             .andDo(print())
             .andExpect(status().isForbidden());
     }

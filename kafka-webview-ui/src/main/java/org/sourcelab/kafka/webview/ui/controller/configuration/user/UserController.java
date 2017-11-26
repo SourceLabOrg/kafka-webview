@@ -143,7 +143,7 @@ public class UserController extends BaseController {
         model.addAttribute("userRoles", getUserRoleOptions());
 
         // Display template
-        return "configuration/user/createWebClient";
+        return "configuration/user/create";
     }
 
     /**
