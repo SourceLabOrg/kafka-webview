@@ -33,6 +33,7 @@ var vendorsJS = [
   'node_modules/ladda/dist/ladda.min.js',
   'node_modules/ladda/dist/spin.min.js',
   'node_modules/moment/min/moment.min.js',
+  'node_modules/multiselect-two-sides/dist/js/multiselect.min.js',
   'node_modules/quill/dist/quill.min.js',
   'node_modules/quill/dist/quill.min.js.map',
   'node_modules/pace-progress/pace.min.js',
