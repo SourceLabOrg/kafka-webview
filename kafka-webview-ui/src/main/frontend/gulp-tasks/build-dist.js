@@ -43,21 +43,22 @@ var vendorsJS = [
   'node_modules/handlebars/dist/handlebars.js',
   'node_modules/sockjs-client/dist/sockjs.min.js',
   'node_modules/stompjs/lib/stomp.js'
-]
+];
 
 var vendorsCSS = [
   'node_modules/font-awesome/css/font-awesome.min.css',
   'node_modules/font-awesome/css/font-awesome.css.map',
-  'node_modules/simple-line-icons/css/simple-line-icons.css'
-]
+  'node_modules/simple-line-icons/css/simple-line-icons.css',
+  'node_modules/jquery-ui-dist/jquery-ui.css'
+];
 
 var vendorsFonts = [
   'node_modules/font-awesome/fonts/**',
   'node_modules/simple-line-icons/fonts/**'
-]
+];
 
 var vendorImages = [
-]
+];
 
 gulp.task('copy:vendorsCSS', function() {
   return gulp.src(vendorsCSS)
