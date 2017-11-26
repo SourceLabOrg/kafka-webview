@@ -28,6 +28,7 @@ var vendorsJS = [
   'node_modules/jquery/dist/jquery.min.js',
   'node_modules/jquery/dist/jquery.min.map',
   'node_modules/jquery-ui-dist/jquery-ui.min.js',
+  'node_modules/jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.js',
   'node_modules/jquery-validation/dist/jquery.validate.min.js',
   'node_modules/jquery.maskedinput/src/jquery.maskedinput.js',
   'node_modules/ladda/dist/ladda.min.js',
@@ -50,7 +51,8 @@ var vendorsCSS = [
   'node_modules/font-awesome/css/font-awesome.min.css',
   'node_modules/font-awesome/css/font-awesome.css.map',
   'node_modules/simple-line-icons/css/simple-line-icons.css',
-  'node_modules/jquery-ui-dist/jquery-ui.css'
+  'node_modules/jquery-ui-dist/jquery-ui.css',
+  'node_modules/jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.css'
 ];
 
 var vendorsFonts = [
