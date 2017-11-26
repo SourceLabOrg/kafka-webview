@@ -85,7 +85,7 @@ gulp.task('clean:vendorsCSS', function () {
 });
 
 gulp.task('vendors:css', function(callback) {
-    runSequence('copy:vendorsCSS', 'minify:vendorsCSS', 'clean:vendorsCSS', callback);
+    runSequence('copy:vendorsCSS', 'minify:vendorsCSS', 'clean:vendorsCSS', 'replace:vendorsCSS', callback);
 });
 
 gulp.task('copy:vendorsJS', function() {
@@ -130,11 +130,12 @@ gulp.task('replace:node_modules', function(){
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('replace:css', function(){
+gulp.task('replace:vendorsCSS', function(){
     return gulp.src([
         './dist/vendors/css/*.css',
     ], {base: './'})
         .pipe(replace(/img\//g, '\/vendors/img/'))
+        .pipe(replace(/..\/fonts\//g, '\/vendors/fonts/'))
         .pipe(gulp.dest('./'));
 });
 
