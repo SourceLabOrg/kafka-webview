@@ -11,7 +11,7 @@
 <!-- Main Content -->
 <section layout:fragment="content">
     <div class="container">
-        <div id="root" th:attr="data-user-id=${userId},data-view-id=${view.id}">
+        <div id="root" th:attr="data-user-id=${userId},data-id=${view.id},data-name=${view.name},data-topic=${view.topic}">
         <!-- Our webpack managed modular application, basically where the React stuff will live -->
         <!-- TODO: We need to make this configurable dev/prod, in prod it should just lack the hostname -->
         <script crossorigin src="http://localhost:9000/build/app.js"></script>

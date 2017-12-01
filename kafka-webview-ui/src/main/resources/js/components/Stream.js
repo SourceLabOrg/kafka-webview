@@ -37,6 +37,6 @@ export default class Stream extends React.Component {
   }
 
   render() {
-    return <StreamView messages={this.state.messages} />;
+    return <StreamView messages={this.state.messages} {...this.props} />;
   }
 }
