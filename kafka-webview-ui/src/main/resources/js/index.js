@@ -15,10 +15,12 @@ CustomErrorReporter.propTypes = {
 };
 
 const rootEl = document.getElementById('root');
+const props = Object.assign({}, rootEl.dataset);
+
 const render = Component =>
   ReactDOM.render(
     <AppContainer errorReporter={Redbox}>
-      <Component />
+      <Component {...props} />
     </AppContainer>,
     rootEl
   );

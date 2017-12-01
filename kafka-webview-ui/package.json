@@ -1,7 +1,8 @@
 {
   "name": "kafka-webview",
   "version": "1.0.0",
-  "description": "A full-featured web-based Apache Kafka consumer. Kafka WebView presents an easy-to-use web based interface for reading data out of kafka topics and providing basic filtering and searching capabilities.",
+  "description":
+    "A full-featured web-based Apache Kafka consumer. Kafka WebView presents an easy-to-use web based interface for reading data out of kafka topics and providing basic filtering and searching capabilities.",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -15,9 +16,9 @@
   "homepage": "https://github.com/Crim/kafka-webview#readme",
   "scripts": {
     "start": "webpack-dev-server",
-    "dev": "NODE_ENV=development nodemon app.js",
     "lint": "eslint --ext .jsx --ext .js app.js models/* web/js/**",
-    "prettier": "prettier --write --tab-width 4 --print-width 80 --single-quote --trailing-comma es5 \"{app.js,models/*.js,web/**/*.js,web/**/*.less}\"",
+    "prettier":
+      "prettier --write --tab-width 4 --print-width 80 --single-quote --trailing-comma es5 \"{app.js,models/*.js,web/**/*.js,web/**/*.less}\"",
     "heroku-postbuild": "NODE_ENV=production webpack",
     "watch": "webpack --watch",
     "build": "NODE_ENV=production webpack",

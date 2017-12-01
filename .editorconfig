@@ -1,5 +1,0 @@
-root = true
-
-[{package.json,.editorconfig,.babelrc,.eslintrc}]
-indent_style = space
-indent_size = 2

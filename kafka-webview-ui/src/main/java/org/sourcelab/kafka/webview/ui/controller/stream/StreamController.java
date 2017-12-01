@@ -75,6 +75,7 @@ public class StreamController extends BaseController {
         return "redirect:/view";
     }
 
+
     /**
      * Serves standard http requested page with client JS code.
      */
@@ -103,6 +104,37 @@ public class StreamController extends BaseController {
         model.addAttribute("userId", getLoggedInUserId());
 
         return "stream/index";
+    }
+
+    /**
+     * v2 Serves standard http requested page with client JS code.
+     */
+    @RequestMapping(path = "/v2/{id}", method = RequestMethod.GET)
+    public String streamV2(
+        @PathVariable final Long id,
+        final Model model,
+        final RedirectAttributes redirectAttributes
+    ) {
+        // Retrieve view
+        final View view = viewRepository.findOne(id);
+        if (view == null) {
+            // Set flash message
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
+
+            // redirect to home
+            return "redirect:/";
+        }
+
+        // Setup breadcrumbs
+        new BreadCrumbManager(model)
+            .addCrumb("Stream", "/stream")
+            .addCrumb(view.getName());
+
+        // Set view attributes
+        model.addAttribute("view", view);
+        model.addAttribute("userId", getLoggedInUserId());
+
+        return "stream/v2";
     }
 
 // Here down serves websocket requests
