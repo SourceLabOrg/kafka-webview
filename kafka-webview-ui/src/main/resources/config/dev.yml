@@ -1,3 +1,7 @@
+server:
+  session:
+    persistent: true
+
 security:
   require-ssl: false
 
