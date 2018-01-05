@@ -32,6 +32,22 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 
 TODO
 
+## Setup ##
+
+### Setup users
+                    
+You first need to configure who has access to Kafka WebView.  Kafka WebView provides two roles for users: 
+<strong>Admin</strong> and <strong>User</strong>.
+
+<strong>Admin</strong> users have the ability to Manage and Configure all aspects of WebView, including defining Kafka Clusters,
+add/remove users, define View etc.
+
+<strong>User</strong> users have the ability to view Cluster information, and consume Views.
+
+If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
+and remove the default one.
+
+
 ## Writing Custom Deserializers
 
 The [Deserializer Interface](https://kafka.apache.org/0110/javadoc/org/apache/kafka/common/serialization/Deserializer.html)
