@@ -34,19 +34,50 @@ TODO
 
 ## Setup ##
 
-### Setup users
+### 1. Setup users
                     
 You first need to configure who has access to Kafka WebView.  Kafka WebView provides two roles for users: 
-<strong>Admin</strong> and <strong>User</strong>.
-
-<strong>Admin</strong> users have the ability to Manage and Configure all aspects of WebView, including defining Kafka Clusters,
-add/remove users, define View etc.
-
-<strong>User</strong> users have the ability to view Cluster information, and consume Views.
+<strong>Admin</strong> and <strong>User</strong>.  <strong>Admin</strong> users have the ability to Manage and 
+Configure all aspects of WebView, including defining Kafka Clusters, adding/removing users, defining Views etc.  
+<strong>User</strong> users have the ability to view Cluster information and consume Views.
 
 If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
 and remove the default one.
 
+### 2. Connect Kafka clusters
+
+You'll need to let WebView know about what Kafka clusters you want to connect to.
+
+WebView supports connecting to Clusters using SSL.  You'll need to follow the [standard Kafka consumer client directions](https://kafka.apache.org/documentation.html#security_ssl) to
+create a Java Key Store (JKS) for your Trusted CA (TrustStore), and a JKS for your Consumer Key (KeyStore).
+
+### 3. Configure custom Message Formats (Optional)
+
+Kafka allows you to store data within the Cluster in any data-format and provides an Interface for
+understanding how to Deserialize your data.  Out of the box Kafka WebView supports the following Deserializers that can be
+used for both Keys and Values:
+
+- ByteArray
+- Bytes
+- Double
+- Float
+- Integer
+- Long
+- Short
+- String
+
+Often times data is stored using a custom format such as [Avro](https://avro.apache.org/) or [ProtocolBuffers](https://developers.google.com/protocol-buffers/).
+Admin users can upload a JAR containing custom Deserializer implementations to extend support to WebView to be able to properly deserialize your data format.
+
+### 4. Configure Filters (Optional)
+
+Filters are a construct unique to WebView.  Filters allow you to implement an Interface that can be used on the <strong>server side</strong> to filter messages coming from Kafka.  There are several benefits to doing
+filtering on the server side in this way.  These can be used as a simple search-like filter and avoid passing large amounts of data
+to the client web browser when you're looking for a small subset of messages.  Filters could also be used to enforce a restricted view of data from a Topic.
+
+### 5. Define Views
+
+Views are the last step where you put everything together.  Views let you configure what Topic you want to consume from, configure which Message Formats the Topic uses, and apply any Filters.<br/>
 
 ## Writing Custom Deserializers
 
