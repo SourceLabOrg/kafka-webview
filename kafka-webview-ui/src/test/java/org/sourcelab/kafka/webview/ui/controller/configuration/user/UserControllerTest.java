@@ -67,7 +67,7 @@ public class UserControllerTest extends AbstractMvcTest {
     public void testIndex() throws Exception {
         // Hit index.
         mockMvc
-            .perform(get("/configuration/filter").with(user(adminUserDetails)))
+            .perform(get("/configuration/user").with(user(adminUserDetails)))
             .andDo(print())
             .andExpect(status().isOk())
             // Validate user 1
