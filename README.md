@@ -37,9 +37,10 @@ TODO
 ### 1. Setup users
                     
 You first need to configure who has access to Kafka WebView.  Kafka WebView provides two roles for users: 
-<strong>Admin</strong> and <strong>User</strong>.  <strong>Admin</strong> users have the ability to Manage and 
-Configure all aspects of WebView, including defining Kafka Clusters, adding/removing users, defining Views etc.  
-<strong>User</strong> users have the ability to view Cluster information and consume Views.
+<strong>Admin</strong> and <strong>User</strong>.  
+
+- <strong>Admin</strong> - has the ability to Manage and Configure all aspects of WebView, including defining Kafka Clusters, adding/removing users, defining Views etc.  
+- <strong>User</strong> - has the ability to view Cluster information and consume previously defined Views.
 
 If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
 and remove the default one.
