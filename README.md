@@ -30,7 +30,41 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 
 ## Installation ##
 
-TODO
+Download the latest [release](https://github.com/SourceLabOrg/kafka-webview/releases) package and extract the ZIP file.
+
+### Configuration
+
+Edit the **config.yml** file at the root of the extracted package. 
+
+The **server port** can be modified to set what port Kafka WebView UI will bind to.  
+
+The **app key** should be modified to be unique to your installation.  This key will be used for symmetric encryption of 
+JKS/TrustStore secrets if you configure any SSL enabled Kafka clusters.
+
+By default config.yml will look similar to:
+
+```yml
+server:
+  port: 8080
+
+security:
+  require-ssl: false
+
+## Various App Configs
+app:
+  key: "SuperSecretKey"
+```
+
+### Starting the service
+
+The Kafka WebView UI can be started by running the **start.sh** script from root of the extracted package.
+This should start a webserver running on the port you configured.  
+
+### Logging in for the first time
+
+On first start up a default Administrator user will be created for you.  Login using `admin@example.com` with password `admin`
+
+**NOTE** After logging in you should create your own Administrator user and remove the default account.
 
 ## Setup ##
 
