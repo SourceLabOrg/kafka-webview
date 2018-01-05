@@ -37,26 +37,25 @@ TODO
 ### 1. Setup users
                     
 You first need to configure who has access to Kafka WebView.  Kafka WebView provides two roles for users: 
-<strong>Admin</strong> and <strong>User</strong>.  
+**Admin** and **User**.  
 
-- <strong>Admin</strong> - has the ability to Manage and Configure all aspects of WebView, including defining Kafka Clusters, adding/removing users, defining Views etc.  
-- <strong>User</strong> - has the ability to view Cluster information and consume previously defined Views.
+- **Admin** has the ability to Manage and Configure all aspects of WebView, including defining Kafka Clusters, adding/removing users, defining Views etc.  
+- **User** has the ability to view Cluster information and consume previously defined Views.
 
-If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
+**NOTE** If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
 and remove the default one.
 
 ### 2. Connect Kafka clusters
 
-You'll need to let WebView know about what Kafka clusters you want to connect to.
+You'll need to let WebView know about what Kafka clusters you want to connect.
 
-WebView supports connecting to Clusters using SSL.  You'll need to follow the [standard Kafka consumer client directions](https://kafka.apache.org/documentation.html#security_ssl) to
+WebView supports connecting to Clusters using plaintext or SSL.  You'll need to follow the [standard Kafka consumer client directions](https://kafka.apache.org/documentation.html#security_ssl) to
 create a Java Key Store (JKS) for your Trusted CA (TrustStore), and a JKS for your Consumer Key (KeyStore).
 
 ### 3. Configure custom Message Formats (Optional)
 
-Kafka allows you to store data within the Cluster in any data-format and provides an Interface for
-understanding how to Deserialize your data.  Out of the box Kafka WebView supports the following Deserializers that can be
-used for both Keys and Values:
+Kafka allows you to store data within the Cluster in any data-format and provides an Interface to define how clients should 
+Deserialize your data.  Out of the box Kafka WebView supports the following Deserializers that can be used for both Keys and Values:
 
 - ByteArray
 - Bytes
@@ -72,13 +71,13 @@ Admin users can upload a JAR containing custom Deserializer implementations to e
 
 ### 4. Configure Filters (Optional)
 
-Filters are a construct unique to WebView.  Filters allow you to implement an Interface that can be used on the <strong>server side</strong> to filter messages coming from Kafka.  There are several benefits to doing
+Filters are a construct unique to WebView.  Filters allow you to implement an Interface that can be used on the **server side** to filter messages coming from Kafka.  There are several benefits to doing
 filtering on the server side in this way.  These can be used as a simple search-like filter and avoid passing large amounts of data
 to the client web browser when you're looking for a small subset of messages.  Filters could also be used to enforce a restricted view of data from a Topic.
 
 ### 5. Define Views
 
-Views are the last step where you put everything together.  Views let you configure what Topic you want to consume from, configure which Message Formats the Topic uses, and apply any Filters.<br/>
+Views are the last step putting all of the pieces together.  Views let you configure a Topic to consume from, configure which Message Formats the Topic uses, and optionally apply any Filters.
 
 ## Writing Custom Deserializers
 
@@ -98,14 +97,6 @@ is provided by Kafka WebView and is NOT part of the standard Kafka library.
 To get up and going quickly, the [Kafka-WebView-Example](#) project on GitHub can be cloned and used as a template.
 This Maven based example project is configured with all of the correct dependencies and has a few example 
 implementations.
-
-### Packaging a Jar
-
-If you're using the [Kafka-WebView-Example](#) project, it should be as simple as issuing the command `mvn package` and 
-retrieving the compiled Jar from the target/ directory.
-               
-If you're building from your own project, you'll need to package a Jar that contains your implementation along with
-any of it's required dependencies.
 
 # Changelog
 
