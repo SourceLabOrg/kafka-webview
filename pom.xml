@@ -208,6 +208,9 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                        <keyname>SourceLab.org</keyname>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
