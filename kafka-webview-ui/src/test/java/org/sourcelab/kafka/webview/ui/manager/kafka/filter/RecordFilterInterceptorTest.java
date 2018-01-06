@@ -104,8 +104,8 @@ public class RecordFilterInterceptorTest {
         final RecordFilter mockFilter1 = mock(RecordFilter.class);
         final RecordFilter mockFilter2 = mock(RecordFilter.class);
 
-        when(mockFilter1.displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
-        when(mockFilter2.displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
+        when(mockFilter1.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
+        when(mockFilter2.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
 
         final RecordFilterDefinition recordFilterDefinition1 = new RecordFilterDefinition(mockFilter1, new HashMap<>());
         final RecordFilterDefinition recordFilterDefinition2 = new RecordFilterDefinition(mockFilter2, new HashMap<>());
@@ -131,9 +131,9 @@ public class RecordFilterInterceptorTest {
 
         // Verify mocks
         verify(mockFilter1, times(totalRecords))
-            .displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
         verify(mockFilter2, times(totalRecords))
-            .displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
     }
 
     /**
@@ -147,9 +147,9 @@ public class RecordFilterInterceptorTest {
         final RecordFilter mockFilter1 = mock(RecordFilter.class);
         final RecordFilter mockFilter2 = mock(RecordFilter.class);
 
-        when(mockFilter1.displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject()))
+        when(mockFilter1.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject()))
             .thenReturn(true, false, true, true, true);
-        when(mockFilter2.displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject()))
+        when(mockFilter2.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject()))
             .thenReturn(true, true, false, true);
 
         final RecordFilterDefinition recordFilterDefinition1 = new RecordFilterDefinition(mockFilter1, new HashMap<>());
@@ -182,9 +182,9 @@ public class RecordFilterInterceptorTest {
 
         // Verify mocks
         verify(mockFilter1, times(totalRecords))
-            .displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
         verify(mockFilter2, times(totalRecords - 1))
-            .displayRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
     }
 
     private ConsumerRecords createConsumerRecords(final int count) {

@@ -66,7 +66,7 @@ public interface RecordFilter {
      * @param value Deserialized Value object.
      * @return True means the record WILL be shown.  False means the record will NOT be shown.
      */
-    boolean displayRecord(final String topic, final int partition, final long offset, final Object key, final Object value);
+    boolean includeRecord(final String topic, final int partition, final long offset, final Object key, final Object value);
 
     /**
      * Called on closing.
