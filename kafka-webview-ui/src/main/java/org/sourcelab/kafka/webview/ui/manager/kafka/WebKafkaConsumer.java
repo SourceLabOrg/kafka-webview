@@ -132,7 +132,7 @@ public class WebKafkaConsumer implements AutoCloseable {
 
     /**
      * Seek to the specified offsets.
-     * @param partitionOffsetMap Map of PartitionId => Offset to seek to.
+     * @param partitionOffsetMap Map of PartitionId to Offset to seek to.
      * @return ConsumerState representing the consumer's positions.
      */
     public ConsumerState seek(final Map<Integer, Long> partitionOffsetMap) {

@@ -44,6 +44,8 @@ public class PluginConfig {
 
     /**
      * Upload manager, for handling uploads of Plugins and Keystores.
+     * @param appProperties Definition of app properties.
+     * @return UploadManager for Plugins
      */
     @Bean
     public UploadManager getPluginUploadManager(final AppProperties appProperties) {
@@ -52,6 +54,8 @@ public class PluginConfig {
 
     /**
      * PluginFactory for creating instances of Deserializers.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Deserializers.
      */
     @Bean
     public PluginFactory<Deserializer> getDeserializerPluginFactory(final AppProperties appProperties) {
@@ -61,6 +65,8 @@ public class PluginConfig {
 
     /**
      * PluginFactory for creating instances of Record Filters.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Record Filters.
      */
     @Bean
     public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final AppProperties appProperties) {
@@ -70,6 +76,8 @@ public class PluginConfig {
 
     /**
      * For handling secrets, symmetrical encryption.
+     * @param appProperties Definition of app properties.
+     * @return SecretManager
      */
     @Bean
     public SecretManager getSecretManager(final AppProperties appProperties) {
@@ -78,6 +86,8 @@ public class PluginConfig {
 
     /**
      * For creating Kafka Consumers.
+     * @param appProperties Definition of app properties.
+     * @return Web Kafka Consumer Factory instance.
      */
     @Bean
     public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties) {
@@ -91,6 +101,8 @@ public class PluginConfig {
 
     /**
      * For creating Kafka operational consumers.
+     * @param appProperties Definition of app properties.
+     * @return Web Kafka Operations Client Factory instance.
      */
     @Bean
     public KafkaOperationsFactory getKafkaOperationsFactory(final AppProperties appProperties) {

@@ -37,11 +37,15 @@ import java.util.List;
 public interface ViewToFilterEnforcedRepository extends CrudRepository<ViewToFilterEnforced, Long> {
     /**
      * Retrieve all by FilterId.
+     * @param filterId FilterId to search using
+     * @return All records that match the criteria.
      */
     List<ViewToFilterEnforced> findByFilterId(final Long filterId);
 
     /**
      * Retrieve all by ViewId.
+     * @param viewId viewId to search using.
+     * @return All records that match the criteria.
      */
-    List<ViewToFilterEnforced> findByViewId(final Long viewId);
+    List<ViewToFilterEnforced> findByViewId(final long viewId);
 }

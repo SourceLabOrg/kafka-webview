@@ -35,11 +35,14 @@ import org.springframework.stereotype.Repository;
 public interface FilterRepository extends CrudRepository<Filter, Long> {
     /**
      * Retrieve a Filter by the Name field.
+     * @param name Name of filter to retrieve.
+     * @return Filter, or null of none found.
      */
     Filter findByName(final String name);
 
     /**
      * Retrieve all Filters ordered by Name.
+     * @return all filters ordered by name.
      */
     Iterable<Filter> findAllByOrderByNameAsc();
 }
