@@ -43,6 +43,6 @@ spring:
 ## Various App Configs
 app:
   name: Kafka Web View
-  uploadPath: "./data/uploads"
+  uploadPath: "/tmp/kafka-webview-test/uploads"
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
