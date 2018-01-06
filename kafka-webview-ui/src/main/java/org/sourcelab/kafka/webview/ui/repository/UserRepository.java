@@ -43,6 +43,8 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     /**
      * Find user by email address.
+     * @param email Email to lookup user by
+     * @return User or null if none found.
      */
     User findByEmail(String email);
 }

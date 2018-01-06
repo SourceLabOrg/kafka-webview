@@ -35,26 +35,39 @@ import org.springframework.stereotype.Repository;
 public interface ViewRepository extends CrudRepository<View, Long> {
     /**
      * Retrieve a view by its name.
+     * @param name Name of view to retrieve.
+     * @return View if found, or null if none found.
      */
     View findByName(final String name);
 
     /**
      * Retrieve all views ordered by name.
+     * @return All views ordered by name.
      */
     Iterable<View> findAllByOrderByNameAsc();
 
     /**
      * Retrieve all views ordered by name for a given clusterId.
+     * @param clusterId id of cluster to filter by
+     * @return All views ordered by name for the given clusterId.
      */
     Iterable<View> findAllByClusterIdOrderByNameAsc(final long clusterId);
 
     /**
      * Count how many views exist for a given clusterId.
+     * @param clusterId id of cluster to filter by
+     * @return number of views for the given cluster.
      */
     Long countByClusterId(final long clusterId);
 
     /**
      * Find any views that use the specified message format.
+     * @param keyMessageFormatId id of messageFormat for key.
+     * @param messageMessageFormatId id of messageFormat for message.
+     * @return All views that match the criteria.
      */
-    Iterable<View> findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(final long messageFormatId, final long messageFormatId2);
+    Iterable<View> findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(
+        final long keyMessageFormatId,
+        final long messageMessageFormatId
+    );
 }

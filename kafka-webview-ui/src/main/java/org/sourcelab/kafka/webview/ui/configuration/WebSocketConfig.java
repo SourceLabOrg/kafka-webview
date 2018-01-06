@@ -71,6 +71,7 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
     /**
      * This thread runs the WebSocketConsumerManager, which manages any consumers for web sockets.
      * It only needs a single thread, because the manager starts up its own managed thread pool.
+     * @return new ThreadPool Task executor.
      */
     @Bean
     public TaskExecutor backgroundConsumerExecutor() {
@@ -86,6 +87,11 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
 
     /**
      * Manages kafka consumers running in a background processing thread for websocket consumers.
+     * @param webKafkaConsumerFactory Factory for creating new Consumers
+     * @param messagingTemplate messaging template instance for passing websocket messages.
+     * @param backgroundConsumerExecutor The executor to run our manager in.
+     * @param appProperties defined app properties.
+     * @return manager instance for web socket consumers.
      */
     @Bean
     public WebSocketConsumersManager getWebSocketConsumersManager(

@@ -148,7 +148,7 @@ public class StartingPosition {
     }
 
     /**
-     * @param offsets Maps from Partition => Offset.  Any not supplied offsets will resume from HEAD.
+     * @param offsets Maps from Partition to Offset.  Any not supplied offsets will resume from HEAD.
      * @return New StartingPosition instance configured to start from the supplied offsets map.
      */
     public static StartingPosition newPositionFromOffsets(final Map<Integer, Long> offsets) {

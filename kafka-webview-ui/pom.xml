@@ -103,6 +103,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>javax.interceptor</groupId>
+            <artifactId>javax.interceptor-api</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+
         <!-- Allows for auto-reloading resources -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

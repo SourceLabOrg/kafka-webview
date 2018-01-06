@@ -42,11 +42,13 @@ public interface MessageFormatRepository extends CrudRepository<MessageFormat, L
 
     /**
      * Find all message formats ordered by name.
+     * @return all Message Formats ordered by name.
      */
     Iterable<MessageFormat> findAllByOrderByNameAsc();
 
     /**
      * Find all message formats by type, ordered by name.
+     * @return all message formats ordered by name.
      */
     Iterable<MessageFormat> findByIsDefaultFormatOrderByNameAsc(final boolean isDefaultFormat);
 }

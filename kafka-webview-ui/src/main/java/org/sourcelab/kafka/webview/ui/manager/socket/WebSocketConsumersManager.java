@@ -54,7 +54,7 @@ public class WebSocketConsumersManager implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketConsumersManager.class);
 
     /**
-     * Holds a map of ConsumerKey => ConsumerEntry, which is basically a container
+     * Holds a map of ConsumerKey to ConsumerEntry, which is basically a container
      * for the running consumers.
      */
     private final Map<ConsumerKey, ConsumerEntry> consumers = new ConcurrentHashMap<>();
