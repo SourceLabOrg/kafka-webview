@@ -38,6 +38,9 @@ public class FileTestTools {
      * @param contents Contents of the file
      */
     public static void createDummyFile(final String filename, final String contents) throws IOException {
+        // Ensure parent directories exist
+        Files.createDirectories(Paths.get(filename).getParent());
+
         try (final FileOutputStream outputStream = new FileOutputStream(filename)) {
             outputStream.write(contents.getBytes(Charsets.UTF_8));
         }
