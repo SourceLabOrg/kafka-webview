@@ -61,7 +61,7 @@
                                 <div class="col-md-9">
                                     <input
                                         id="classpath" name="classpath" class="form-control" type="text"
-                                        placeholder="Classpath to deserializer implementation"
+                                        placeholder="Classpath to record filter implementation"
                                         th:errorclass="is-invalid"
                                         th:field="*{classpath}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('classpath')}" th:errors="*{classpath}"/>

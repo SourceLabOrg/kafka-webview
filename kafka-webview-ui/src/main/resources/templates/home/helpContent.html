@@ -167,6 +167,8 @@
         <div class="tab-pane" id="filters" role="tabpanel">
             <h2>Writing Custom Filters</h2>
             <p class="mb-1">
+                Filters allow you to implement an Interface that can be used on the server side to filter messages coming from Kafka. There are several benefits to doing filtering on the server side in this way. You can use these as a simple search-like filter and avoid passing large amounts of data to the client web browser when you're looking for a small subset of messages. Filters could also be used to enforce a filtered view of data from a Topic.
+
                 The <a href="https://github.com/SourceLabOrg/kafka-webview/blob/master/kafka-webview-plugin/src/main/java/org/sourcelab/kafka/webview/ui/plugin/filter/RecordFilter.java" target="_blank">RecordFilter Interface</a>
                 is provided by Kafka WebView and is NOT part of the standard Kafka library.  The interface looks as follows:<br/>
                 <br>
