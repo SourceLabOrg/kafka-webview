@@ -210,7 +210,7 @@
 </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@param </em><em style="color:#8a653b; font-style:italic">value </em><em style="color:#629755; font-style:italic">Deserialized Value object.
 </em><em style="color:#629755; font-style:italic">     * </em><em style="color:#629755; font-style:italic; font-weight:bold">@return </em><em style="color:#629755; font-style:italic">True means the record WILL be shown.  False means the record will NOT be shown.
 </em><em style="color:#629755; font-style:italic">     */
-</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">boolean </span><span style="color:#ffc66d">filter</span>(<span style="color:#cc7832">final </span>String topic<span style="color:#cc7832">, final int </span>partition<span style="color:#cc7832">, final long </span>offset<span style="color:#cc7832">, final </span>Object key<span style="color:#cc7832">, final </span>Object value)<span style="color:#cc7832">;
+</em><em style="color:#629755; font-style:italic">    </em><span style="color:#cc7832">boolean </span><span style="color:#ffc66d">includeRecord</span>(<span style="color:#cc7832">final </span>String topic<span style="color:#cc7832">, final int </span>partition<span style="color:#cc7832">, final long </span>offset<span style="color:#cc7832">, final </span>Object key<span style="color:#cc7832">, final </span>Object value)<span style="color:#cc7832">;
 </span>
 <span style="color:#cc7832">    </span><em style="color:#629755; font-style:italic">/**
 </em><em style="color:#629755; font-style:italic">     * Called on closing.

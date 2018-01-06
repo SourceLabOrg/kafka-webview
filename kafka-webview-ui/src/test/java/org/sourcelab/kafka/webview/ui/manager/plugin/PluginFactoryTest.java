@@ -74,7 +74,7 @@ public class PluginFactoryTest {
         assertEquals("Has correct name", classPath, recordFilter.getClass().getName());
 
         // Call method on interface
-        recordFilter.filter("topic", 1, 1L, "Key", "Value");
+        recordFilter.includeRecord("topic", 1, 1L, "Key", "Value");
     }
 
     /**

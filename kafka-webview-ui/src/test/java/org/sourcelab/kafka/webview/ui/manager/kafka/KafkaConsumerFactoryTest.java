@@ -344,7 +344,7 @@ public class KafkaConsumerFactoryTest {
         }
 
         @Override
-        public boolean filter(final String topic, final int partition, final long offset, final Object key, final Object value) {
+        public boolean includeRecord(final String topic, final int partition, final long offset, final Object key, final Object value) {
             // Filter partition 0 records
             if (partition == 0) {
                 return false;

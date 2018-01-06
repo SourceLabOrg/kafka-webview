@@ -60,7 +60,7 @@ public abstract class AbstractMvcTest {
     protected UserDetails adminUserDetails;
 
     protected User nonAdminUser;
-    protected UserDetails nonAdminUserDetials;
+    protected UserDetails nonAdminUserDetails;
 
     /**
      * Where JKS files are uploaded to.
@@ -78,7 +78,7 @@ public abstract class AbstractMvcTest {
 
         // Create non-admin user
         nonAdminUser = userTestTools.createUser();
-        nonAdminUserDetials = customUserDetailsService.loadUserByUsername(nonAdminUser.getEmail());
+        nonAdminUserDetails = customUserDetailsService.loadUserByUsername(nonAdminUser.getEmail());
 
         // Define upload path
         uploadPath = appProperties.getUploadPath();
@@ -99,7 +99,7 @@ public abstract class AbstractMvcTest {
         }
 
         mockMvc
-            .perform(action.with(user(nonAdminUserDetials)))
+            .perform(action.with(user(nonAdminUserDetails)))
             .andDo(print())
             .andExpect(status().isForbidden());
     }

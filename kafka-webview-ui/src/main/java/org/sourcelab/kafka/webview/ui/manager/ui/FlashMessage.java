@@ -30,7 +30,6 @@ package org.sourcelab.kafka.webview.ui.manager.ui;
 public class FlashMessage {
     private final String type;
     private final String message;
-    private boolean warning;
 
     private FlashMessage(final String type, final String message) {
         this.type = type;
@@ -77,4 +76,11 @@ public class FlashMessage {
         return new FlashMessage("danger", message);
     }
 
+    @Override
+    public String toString() {
+        return "FlashMessage{"
+            + "type='" + type + '\''
+            + ", message='" + message + '\''
+            + '}';
+    }
 }

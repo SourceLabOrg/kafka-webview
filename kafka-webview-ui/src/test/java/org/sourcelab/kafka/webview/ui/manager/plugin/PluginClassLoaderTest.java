@@ -61,7 +61,7 @@ public class PluginClassLoaderTest {
         final long offset = 2423L;
         final Object key = "key";
         final Object value = "{name='Bob', value='value'}";
-        filter.filter(topic, partition, offset, key, value);
+        filter.includeRecord(topic, partition, offset, key, value);
 
         // Validate it came from our classloader, more of a sanity test.
         assertTrue("Should have our parent class loader", filter.getClass().getClassLoader() instanceof PluginClassLoader);
