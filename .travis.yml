@@ -2,3 +2,9 @@ language: java
 sudo: false
 jdk:
   - oraclejdk8
+cache:
+  directories:
+  - $HOME/.m2
+  - kafka-webview-ui/src/main/frontend/node_modules/
+before_script:
+  - mkdir -p ./data/uploads

@@ -123,7 +123,7 @@ public class UserControllerTest extends AbstractMvcTest {
     public void testLoadEditSelfAsNonAdminUser() throws Exception {
         // Hit edit page for same user as logged in with.
         mockMvc
-            .perform(get("/configuration/user/edit/" + nonAdminUser.getId()).with(user(nonAdminUserDetials)))
+            .perform(get("/configuration/user/edit/" + nonAdminUser.getId()).with(user(nonAdminUserDetails)))
             .andDo(print())
             .andExpect(status().isOk())
 
@@ -142,7 +142,7 @@ public class UserControllerTest extends AbstractMvcTest {
     public void testLoadEditAnotherUserAsNonAdminUserIsBlocked() throws Exception {
         // Hit edit page for same user as logged in with.
         mockMvc
-            .perform(get("/configuration/user/edit/" + adminUser.getId()).with(user(nonAdminUserDetials)))
+            .perform(get("/configuration/user/edit/" + adminUser.getId()).with(user(nonAdminUserDetails)))
             .andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/"));
