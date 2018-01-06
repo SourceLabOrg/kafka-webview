@@ -50,7 +50,7 @@ public interface RecordFilter {
     /**
      * Configure this class.
      * @param consumerConfigs Consumer configuration in key/value pairs
-     * @param filterOptions User defined filter options.
+     * @param filterOptions User defined options for the implementation.
      */
     void configure(final Map<String, ?> consumerConfigs, final Map<String, String> filterOptions);
 
@@ -66,7 +66,7 @@ public interface RecordFilter {
      * @param value Deserialized Value object.
      * @return True means the record WILL be shown.  False means the record will NOT be shown.
      */
-    boolean filter(final String topic, final int partition, final long offset, final Object key, final Object value);
+    boolean displayRecord(final String topic, final int partition, final long offset, final Object key, final Object value);
 
     /**
      * Called on closing.

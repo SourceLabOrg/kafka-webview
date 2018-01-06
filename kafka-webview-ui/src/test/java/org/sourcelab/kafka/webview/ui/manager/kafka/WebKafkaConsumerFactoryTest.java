@@ -311,7 +311,7 @@ public class WebKafkaConsumerFactoryTest {
         }
 
         @Override
-        public boolean filter(final String topic, final int partition, final long offset, final Object key, final Object value) {
+        public boolean displayRecord(final String topic, final int partition, final long offset, final Object key, final Object value) {
             return partition != partition;
         }
 

@@ -64,7 +64,7 @@ public class RecordFilterInterceptor implements ConsumerInterceptor {
             // Iterate through filters
             for (final RecordFilterDefinition recordFilterDefinition : recordFilterDefinitions) {
                 // Pass through filter
-                result = recordFilterDefinition.getRecordFilter().filter(
+                result = recordFilterDefinition.getRecordFilter().displayRecord(
                     record.topic(),
                     record.partition(),
                     record.offset(),
