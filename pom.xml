@@ -59,6 +59,7 @@
         <!-- test toggling -->
         <skipTests>false</skipTests>
         <skipCheckStyle>false</skipCheckStyle>
+        <skipLicenseCheck>false</skipLicenseCheck>
     </properties>
 
     <!-- Use Spring Boot Starter as Parent -->
@@ -138,8 +139,9 @@
                 <configuration>
                     <header>LICENSE.txt</header>
                     <includes>
-                        **/**.java
+                        <include>**/**.java</include>
                     </includes>
+                    <skip>${skipLicenseCheck}</skip>
                 </configuration>
                 <executions>
                     <execution>
