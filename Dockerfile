@@ -1,5 +1,5 @@
 # Set the base image
-FROM openjdk:8
+FROM openjdk:8-jre-alpine
 
 # Dockerfile author / maintainer
 MAINTAINER SourceLag.org <stephen.powis@gmail.com>
@@ -10,7 +10,8 @@ ADD kafka-webview-ui/target/kafka-webview-ui-1.0.0-bin.zip /app
 
 # Extract the distribution
 WORKDIR /app
-RUN unzip -x kafka-webview-ui-1.0.0-bin.zip
+RUN unzip -x kafka-webview-ui-*-bin.zip
+RUN rm -f kafka-webview-ui-*-bin.zip
 
 # Expose port
 EXPOSE 8080
