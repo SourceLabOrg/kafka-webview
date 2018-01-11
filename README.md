@@ -30,7 +30,7 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 #### Configuration
 ![Configuration Screenshot](images/configuration.png)
 
-## Installation ##
+## Installation from release distribution 
 
 Download the latest [release](https://github.com/SourceLabOrg/kafka-webview/releases) package and extract the ZIP file.
 
@@ -62,7 +62,13 @@ app:
 The Kafka WebView UI can be started by running the **start.sh** script from root of the extracted package.
 This should start a webserver running on the port you configured.  
 
-### Logging in for the first time
+## Running from docker image
+
+Docker images can be found on [Docker Hub](https://hub.docker.com/r/sourcelaborg/kafka-webview)
+
+Start up the latest docker image by running `docker run -p 8080:8080 sourcelaborg/kafka-webview:latest`
+
+## Logging in for the first time
 
 On first start up a default Administrator user will be created for you.  Login using `admin@example.com` with password `admin`
 
