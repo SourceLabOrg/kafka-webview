@@ -66,9 +66,9 @@ This should start a webserver running on the port you configured.  Point your br
 
 Docker images can be found on [Docker Hub](https://hub.docker.com/r/sourcelaborg/kafka-webview).
 
-Start up the latest docker image by running `docker run -p 8080:8080 sourcelaborg/kafka-webview:latest`
+Start up the latest docker image by running `docker-compose up`
 
-Point your browser at `http://localhost:8080` or the port that you configured and follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
+Point your browser at `http://localhost:8080` and follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
 
 ## Building from source
 
