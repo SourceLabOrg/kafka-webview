@@ -1,6 +1,0 @@
-version: '3'
-services:
-  kafka-weview:
-    image: "kafka-webview"
-    ports:
-     - "8080:8080"
