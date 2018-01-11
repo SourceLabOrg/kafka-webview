@@ -70,7 +70,7 @@ Start up the latest docker image by running `docker run -p 8080:8080 sourcelabor
 
 Point your browser at `http://localhost:8080` or the port that you configured and follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
 
-## Running or building from source
+## Building from source
 
 To build and run from the latest source code requires JDK 1.8 and Maven 3.3.9+.  Clone this project and run the [buildAndRun.sh](https://github.com/SourceLabOrg/kafka-webview/blob/master/buildAndRun.sh) script to compile the project and start the service.
 
