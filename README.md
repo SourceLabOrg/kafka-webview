@@ -60,13 +60,21 @@ app:
 ### Starting the service
 
 The Kafka WebView UI can be started by running the **start.sh** script from root of the extracted package.
-This should start a webserver running on the port you configured.  
+This should start a webserver running on the port you configured.  Point your browser at `http://your.host.name:8080` or the port that you configured and follow the **Logging in for the first time** instructions below.
 
 ## Running from docker image
 
-Docker images can be found on [Docker Hub](https://hub.docker.com/r/sourcelaborg/kafka-webview)
+Docker images can be found on [Docker Hub](https://hub.docker.com/r/sourcelaborg/kafka-webview).
 
 Start up the latest docker image by running `docker run -p 8080:8080 sourcelaborg/kafka-webview:latest`
+
+Point your browser at `http://localhost:8080` or the port that you configured and follow the **Logging in for the first time** instructions below.
+
+## Running or building from source
+
+To build and run from the latest source code required JDK 1.8 and Maven 3.3.9+.  Clone the project and run the [buildAndRun.sh](https://github.com/SourceLabOrg/kafka-webview/blob/master/buildAndRun.sh) script.
+
+Point your browser at `http://your.host.name:8080` follow the **Logging in for the first time** instructions below.
 
 ## Logging in for the first time
 
