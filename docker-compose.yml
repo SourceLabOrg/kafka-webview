@@ -1,0 +1,11 @@
+version: '3'
+services:
+  kafka-weview:
+    image: "sourcelaborg/kafka-webview:latest"
+    ports:
+      - "8080:8080"
+    volumes:
+      - "data:/app/data"
+
+volumes:
+  data:
