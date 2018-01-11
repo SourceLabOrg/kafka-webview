@@ -9,10 +9,8 @@ RUN mkdir -p /app
 WORKDIR /app
 
 # Download latest distribution inside image
-RUN wget https://github.com/SourceLabOrg/kafka-webview/releases/download/v1.0.0/kafka-webview-ui-1.0.0-bin.zip
-
 # Extract package into /app stripping top level directory contained within the zip.
-RUN unzip -d /app kafka-webview-ui-*-bin.zip && rm -f /app/kafka-webview-ui-*-bin.zip && f=`ls` && mv /app/*/* /app && rmdir $f
+RUN wget https://github.com/SourceLabOrg/kafka-webview/releases/download/v1.0.0/kafka-webview-ui-1.0.0-bin.zip && unzip -d /app kafka-webview-ui-*-bin.zip && rm -f /app/kafka-webview-ui-*-bin.zip && f=`ls` && mv /app/*/* /app && rmdir $f && rm -f /app/kafka-webview-ui-*-sources.jar && rm -f /app/kafka-webview-ui-*-javadoc.jar && apk add --update bash && rm -rf /var/cache/apk/*
 
 # Create volume to persist data
 VOLUME /app/data
