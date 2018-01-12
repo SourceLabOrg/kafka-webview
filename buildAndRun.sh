@@ -1,5 +1,6 @@
-## This are the required ENV variables for startup for development
+#!/bin/bash
 
+## These are the required ENV variables for startup for development
 ## Define what configs to load on start
 export SPRING_CONFIG_LOCATION=classpath:/config/base.yml,classpath:/config/dev.yml
 
@@ -7,4 +8,4 @@ export SPRING_CONFIG_LOCATION=classpath:/config/base.yml,classpath:/config/dev.y
 export PORT=8080
 
 ## run application via maven
-mvn -pl kafka-webview-ui spring-boot:run
+mvn -pl kafka-webview-ui spring-boot:run -DskipCheckStyle=true -DskipTests=true -DskipLicenseCheck=true
