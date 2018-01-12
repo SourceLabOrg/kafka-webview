@@ -144,7 +144,7 @@ is provided by Kafka WebView and is NOT part of the standard Kafka library.
 
 ## Example Deserializer and Filters Project
 
-To get up and going quickly, the [Kafka-WebView-Example](#) project on GitHub can be cloned and used as a template.
+To get up and going quickly, the [Kafka-WebView-Example](https://github.com/SourceLabOrg/kafka-webview-examples) project on GitHub can be cloned and used as a template.
 This Maven based example project is configured with all of the correct dependencies and has a few example 
 implementations.
 
