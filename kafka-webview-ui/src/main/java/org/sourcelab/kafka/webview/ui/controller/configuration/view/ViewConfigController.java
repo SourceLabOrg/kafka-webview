@@ -129,6 +129,7 @@ public class ViewConfigController extends BaseController {
 
         // Retrieve all filters
         model.addAttribute("filterList", filterRepository.findAllByOrderByNameAsc());
+        model.addAttribute("filterParameters", new HashMap<Long, Map<String, String>>());
 
         if (viewForm.getClusterId() != null) {
             // Lets load the topics now

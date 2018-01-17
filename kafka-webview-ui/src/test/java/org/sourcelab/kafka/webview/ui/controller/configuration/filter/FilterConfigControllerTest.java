@@ -70,8 +70,8 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
     @Transactional
     public void testIndex() throws Exception {
         // Create some dummy filters
-        final Filter filter1 = filterTestTools.createFiler("Filter1");
-        final Filter filter2 = filterTestTools.createFiler("Filter2");
+        final Filter filter1 = filterTestTools.createFilter("Filter1");
+        final Filter filter2 = filterTestTools.createFilter("Filter2");
 
         // Hit index.
         mockMvc
