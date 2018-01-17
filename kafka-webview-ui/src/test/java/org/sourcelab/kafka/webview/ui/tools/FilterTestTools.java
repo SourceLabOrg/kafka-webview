@@ -24,10 +24,17 @@
 
 package org.sourcelab.kafka.webview.ui.tools;
 
+import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.model.Filter;
+import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Helpful tools for Filters in tests.
@@ -35,10 +42,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class FilterTestTools {
     private final FilterRepository filterRepository;
+    private final PluginFactory<RecordFilter> recordFilterPluginFactory;
 
     @Autowired
-    public FilterTestTools(final FilterRepository filterRepository) {
+    public FilterTestTools(final FilterRepository filterRepository, final PluginFactory<RecordFilter> recordFilterPluginFactory) {
         this.filterRepository = filterRepository;
+        this.recordFilterPluginFactory = recordFilterPluginFactory;
     }
 
     /**
@@ -46,14 +55,46 @@ public class FilterTestTools {
      * @param name Name of the filter.
      * @return Persisted Filter.
      */
-    public Filter createFiler(final String name) {
+    public Filter createFilter(final String name) {
+        return createFilter(name, name, name + ".jar", "{\"key\": \"value\"}");
+    }
+
+    /**
+     * Utility for creating Filters.
+     * @param name Name of the filter.
+     * @param classPath Classpath of filter.
+     * @param jarName name of the resulting jar.
+     * @param options Json formatted string of options.
+     * @return Persisted Filter.
+     */
+    public Filter createFilter(final String name, final String classPath, final String jarName, final String options) {
         final Filter filter = new Filter();
         filter.setName(name);
-        filter.setClasspath("com.example." + name);
-        filter.setJar(name + ".jar");
-        filter.setOptions("{\"key\": \"value\"}");
+        filter.setClasspath(classPath);
+        filter.setJar(jarName);
+        filter.setOptions(options);
         filterRepository.save(filter);
 
         return filter;
+    }
+
+    /**
+     * Using the testPlugins.jar from test resources, create a filter.
+     * @param name Name of the filter.
+     * @param classPath Classpath to filter within the testPlugins.jar
+     * @return Persisted Filter.
+     * @throws IOException on file copy issues.
+     */
+    public Filter createFilterFromTestPlugins(final String name, final String classPath) throws IOException {
+        final String jarFileName = name + ".jar";
+        final Path outputPath = recordFilterPluginFactory.getPathForJar(jarFileName);
+
+        // Copy plugin file over
+        try (final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar")) {
+            Files.createDirectories(outputPath.getParent().toAbsolutePath());
+            Files.copy(fileInputStream, outputPath);
+        }
+
+        return createFilter(name, classPath, jarFileName, "{}");
     }
 }

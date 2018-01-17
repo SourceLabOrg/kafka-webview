@@ -22,13 +22,15 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.configuration.filter;
+package org.sourcelab.kafka.webview.ui.controller.configuration.view;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.configuration.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.model.Filter;
+import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.tools.FilterTestTools;
+import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,10 +47,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class FilterConfigControllerTest extends AbstractMvcTest {
+public class ViewConfigControllerTest extends AbstractMvcTest {
 
     @Autowired
     private FilterTestTools filterTestTools;
+
+    @Autowired
+    private ViewTestTools viewTestTools;
 
     /**
      * Test cannot load pages w/o admin role.
@@ -56,34 +61,68 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void test_withoutAdminRole() throws Exception {
-        testUrlWithOutAdminRole("/configuration/filter", false);
-        testUrlWithOutAdminRole("/configuration/filter/create", false);
-        testUrlWithOutAdminRole("/configuration/filter/edit/1", false);
-        testUrlWithOutAdminRole("/configuration/filter/update", true);
-        testUrlWithOutAdminRole("/configuration/filter/delete/1", true);
+        testUrlWithOutAdminRole("/configuration/view", false);
+        testUrlWithOutAdminRole("/configuration/view/create", false);
+        testUrlWithOutAdminRole("/configuration/view/edit/1", false);
+        testUrlWithOutAdminRole("/configuration/view/update", true);
+        testUrlWithOutAdminRole("/configuration/view/delete/1", true);
     }
 
     /**
-     * Smoke test the Filter Index page.
+     * Smoke test the View Index page.
      */
     @Test
     @Transactional
     public void testIndex() throws Exception {
         // Create some dummy filters
-        final Filter filter1 = filterTestTools.createFilter("Filter1");
-        final Filter filter2 = filterTestTools.createFilter("Filter2");
+        final View view1 = viewTestTools.createView("View 1");
+        final View view2 = viewTestTools.createView("View 2");
 
         // Hit index.
         mockMvc
-            .perform(get("/configuration/filter").with(user(adminUserDetails)))
+            .perform(get("/configuration/view").with(user(adminUserDetails)))
             .andDo(print())
             .andExpect(status().isOk())
-            // Validate cluster 1
-            .andExpect(content().string(containsString(filter1.getName())))
-            .andExpect(content().string(containsString(filter1.getClasspath())))
+            // Validate view 1
+            .andExpect(content().string(containsString(view1.getName())))
 
-            // Validate cluster 2
-            .andExpect(content().string(containsString(filter2.getName())))
-            .andExpect(content().string(containsString(filter2.getClasspath())));
+            // Validate view 2
+            .andExpect(content().string(containsString(view2.getName())));
+    }
+
+    /**
+     * Smoke test the View create page.
+     */
+    @Test
+    @Transactional
+    public void testCreate() throws Exception {
+        // Hit index.
+        mockMvc
+            .perform(get("/configuration/view/create").with(user(adminUserDetails)))
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("type=\"submit\"")));
+    }
+
+    /**
+     * Quick and dirty smoke test the View create page when we have a filter with options.
+     */
+    @Test
+    @Transactional
+    public void testRegressionCreateViewWhenFilterExistsWithOptions() throws Exception {
+        // Create filter that has filter options
+        final String name = "SearchStringFilter" + System.currentTimeMillis();
+        final Filter filter = filterTestTools.createFilterFromTestPlugins(name, "examples.filter.StringSearchFilter");
+
+        // Hit index.
+        mockMvc
+            .perform(get("/configuration/view/create").with(user(adminUserDetails)))
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("type=\"submit\"")));
     }
 }
