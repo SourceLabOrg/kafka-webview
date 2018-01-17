@@ -53,15 +53,15 @@
                                 </div>
                             </div>
 
-                            <!-- Classpath -->
+                            <!-- Fully qualified class name -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="classpath">
-                                    Classpath
+                                    Fully qualified class name
                                 </label>
                                 <div class="col-md-9">
                                     <input
                                         id="classpath" name="classpath" class="form-control" type="text"
-                                        placeholder="Classpath to deserializer implementation"
+                                        placeholder="Fully qualified class name for deserializer implementation"
                                         th:errorclass="is-invalid"
                                         th:field="*{classpath}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('classpath')}" th:errors="*{classpath}"/>
@@ -70,9 +70,9 @@
 
                             <!-- Custom Settings -->
                             <h6>
-                                Configuration Options
+                                Configuration Properties
                                 <small class="form-text text-muted">
-                                    If your Deserializer requires additional settings you can define them here.
+                                    If your Deserializer requires additional settings define them here.
                                 </small>
                             </h6>
                             <hr>
@@ -104,7 +104,7 @@
                             <!-- Dynamic Fields -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="newOption">
-                                    Add new setting property
+                                    Add new property
                                 </label>
                                 <div class="col-md-8">
                                     <input
