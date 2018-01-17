@@ -24,9 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.tools;
 
-import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
-import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
@@ -35,13 +33,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Helpful tools for Filters in tests.
