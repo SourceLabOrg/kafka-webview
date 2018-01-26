@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.0.2 (Unreleased)
+## 1.0.2 (01/26/2018
 - Increase file upload limit from 15MB to 64MB.
 
 ## 1.0.1 (01/17/2018)
