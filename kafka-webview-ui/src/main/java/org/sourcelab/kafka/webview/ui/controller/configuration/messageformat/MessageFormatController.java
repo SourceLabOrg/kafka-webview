@@ -188,7 +188,7 @@ public class MessageFormatController extends BaseController {
             bindingResult.addError(new FieldError(
                 "messageFormatForm", "file", "", true, null, null, "Select a jar to upload")
             );
-            return "/configuration/messageFormat/create";
+            return "configuration/messageFormat/create";
         }
 
         // If filter exists
@@ -233,7 +233,7 @@ public class MessageFormatController extends BaseController {
                         "messageFormatForm", "file", "", true, null, null, exception.getMessage())
                     );
                     // And re-display the form.
-                    return "/configuration/messageFormat/create";
+                    return "configuration/messageFormat/create";
                 }
                 // Ok new JAR looks good.
                 // 1 - remove pre-existing jar if it exists

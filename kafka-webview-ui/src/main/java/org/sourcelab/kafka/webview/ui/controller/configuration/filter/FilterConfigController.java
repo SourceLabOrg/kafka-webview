@@ -157,7 +157,7 @@ public class FilterConfigController extends BaseController {
             bindingResult.addError(new FieldError(
                 "filterForm", "file", "", true, null, null, "Select a jar to upload")
             );
-            return "/configuration/filter/create";
+            return "configuration/filter/create";
         }
 
         // If filter exists
@@ -191,7 +191,7 @@ public class FilterConfigController extends BaseController {
                     null,
                     "Filter must have unique name")
                 );
-                return "/configuration/filter/create";
+                return "configuration/filter/create";
             }
         }
 
@@ -205,7 +205,7 @@ public class FilterConfigController extends BaseController {
                 bindingResult.addError(new FieldError(
                     "filterForm", "file", "", true, null, null, "File must have a .jar extension")
                 );
-                return "/configuration/filter/create";
+                return "configuration/filter/create";
             }
 
             try {
@@ -232,7 +232,7 @@ public class FilterConfigController extends BaseController {
                     bindingResult.addError(new FieldError(
                         "filterForm", "file", "", true, null, null, exception.getMessage())
                     );
-                    return "/configuration/filter/create";
+                    return "configuration/filter/create";
                 }
 
                 // If successful overwrite original jar
