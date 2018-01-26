@@ -2,6 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.0.2 (Unreleased)
+- Increase file upload limit from 15MB to 64MB.
+
 ## 1.0.1 (01/17/2018)
 - Add Dockerfile / Dockerhub images.
 - [Issue#49](https://github.com/SourceLabOrg/kafka-webview/issues/49) Fix bug in View create when a Filter has configurable options.
