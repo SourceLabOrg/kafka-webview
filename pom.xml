@@ -56,6 +56,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
 
+        <!-- Override logback version for security fix -->
+        <!-- https://github.com/spring-projects/spring-boot/issues/8635 -->
+        <logback.version>1.2.3</logback.version>
+
         <!-- test toggling -->
         <skipTests>false</skipTests>
         <skipCheckStyle>false</skipCheckStyle>
