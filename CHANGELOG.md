@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix 500 error unable to find templates when running under windows.
 - Add start.bat script for running under windows.
 - Update SpringBoot dependency from 1.5.6 to 1.5.10.
+- Update logback-core dependency from 1.1.11 to 1.2.3 [details](https://github.com/spring-projects/spring-boot/issues/8635)
 - [Issue#57](https://github.com/SourceLabOrg/kafka-webview/issues/57) Configure consumerId and consumerGroup using a configurable prefix.
 
 ## 1.0.2 (01/26/2018)
