@@ -79,7 +79,7 @@ public class KafkaConsumerFactoryTest {
             .produceRecords(maxRecordsPerPoll, topicName, 1);
 
         // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used");
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
@@ -140,7 +140,7 @@ public class KafkaConsumerFactoryTest {
             .produceRecords(maxRecordsPerPoll, topicName, 1);
 
         // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used");
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
@@ -205,7 +205,7 @@ public class KafkaConsumerFactoryTest {
             .produceRecords(maxRecordsPerPoll, topicName, 1);
 
         // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used");
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
@@ -267,7 +267,7 @@ public class KafkaConsumerFactoryTest {
             .createTopic(topicName, 1);
 
         // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used");
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()

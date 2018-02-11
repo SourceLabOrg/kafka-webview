@@ -45,6 +45,9 @@ public class AppProperties {
     @Value("${app.maxConcurrentWebSocketConsumers}")
     private Integer maxConcurrentWebSocketConsumers = 100;
 
+    @Value("${app.consumerIdPrefix}")
+    private String consumerIdPrefix;
+
     public String getName() {
         return name;
     }
@@ -61,6 +64,10 @@ public class AppProperties {
         return maxConcurrentWebSocketConsumers;
     }
 
+    public String getConsumerIdPrefix() {
+        return consumerIdPrefix;
+    }
+
     @Override
     public String toString() {
         return "AppProperties{"
@@ -68,6 +75,7 @@ public class AppProperties {
             + ", uploadPath='" + uploadPath + '\''
             + ", appKey='" + appKey + '\''
             + ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers
+            + ", consumerIdPrefix='" + consumerIdPrefix + '\''
             + '}';
     }
 }

@@ -6,4 +6,9 @@ security:
 
 ## Various App Configs
 app:
+  ## Should be unique to your installation.
+  ## This key will be used for symmetric encryption of JKS/TrustStore secrets if you configure any SSL enabled Kafka clusters.
   key: "SuperSecretKey"
+
+  ## Defines a prefix prepended to the Id of all consumers.
+  consumerIdPrefix: "KafkaWebViewConsumer"

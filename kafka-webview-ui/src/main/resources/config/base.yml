@@ -46,3 +46,4 @@ app:
   uploadPath: "./data/uploads"
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
+  consumerIdPrefix: "KafkaWebViewConsumer"
