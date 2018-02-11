@@ -123,6 +123,9 @@ public class PluginConfig {
      * For creating instances of KafkaConsumers.
      */
     private KafkaConsumerFactory getKafkaConsumerFactory(final AppProperties appProperties) {
-        return new KafkaConsumerFactory(appProperties.getUploadPath() + "/keyStores");
+        return new KafkaConsumerFactory(
+            appProperties.getUploadPath() + "/keyStores",
+            appProperties.getConsumerIdPrefix()
+        );
     }
 }
