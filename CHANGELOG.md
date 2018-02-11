@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.0.3 (TBD)
+## 1.0.3 (2/11/2018)
 - Fix 500 error unable to find templates when running under windows.
 - Add start.bat script for running under windows.
 - Update SpringBoot dependency from 1.5.6 to 1.5.10.
