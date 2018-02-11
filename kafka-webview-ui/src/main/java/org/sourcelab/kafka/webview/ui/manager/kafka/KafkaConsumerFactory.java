@@ -46,14 +46,28 @@ import java.util.Map;
  */
 public class KafkaConsumerFactory {
 
+    /**
+     * Path on filesystem where keystores are persisted.
+     */
     private final String keyStoreRootPath;
+
+    /**
+     * Static prefix to pre-pend to all consumerIds.
+     */
+    private final String consumerIdPrefix;
 
     /**
      * Constructor.
      * @param keyStoreRootPath Parent path to where JKS key/trust stores are saved on disk.
+     * @param consumerIdPrefix Static prefix to pre-pend to all consumerIds.
      */
-    public KafkaConsumerFactory(final String keyStoreRootPath) {
+    public KafkaConsumerFactory(final String keyStoreRootPath, final String consumerIdPrefix) {
+        if (consumerIdPrefix == null) {
+            throw new IllegalArgumentException("ConsumerIdPrefix must be configured!");
+        }
+
         this.keyStoreRootPath = keyStoreRootPath;
+        this.consumerIdPrefix = consumerIdPrefix;
     }
 
     /**
@@ -94,10 +108,17 @@ public class KafkaConsumerFactory {
      * Build an appropriate configuration based on the passed in ClientConfig.
      */
     private Map<String, Object> buildConsumerConfig(final ClientConfig clientConfig) {
+        // Generate consumerId with our configured static prefix.
+        final String prefixedConsumerId = consumerIdPrefix.concat("-").concat(clientConfig.getConsumerId());
+
         // Build config
         final Map<String, Object> configMap = new HashMap<>();
-        configMap.put(ConsumerConfig.CLIENT_ID_CONFIG, clientConfig.getConsumerId());
         configMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, clientConfig.getTopicConfig().getClusterConfig().getConnectString());
+
+        // ClientId and ConsumerGroupId are intended to be unique for each user session.
+        // See Issue-57 https://github.com/SourceLabOrg/kafka-webview/issues/57#issuecomment-363508531
+        configMap.put(ConsumerConfig.CLIENT_ID_CONFIG, prefixedConsumerId);
+        configMap.put(ConsumerConfig.GROUP_ID_CONFIG, prefixedConsumerId);
 
         // Set deserializer classes.
         configMap.put(

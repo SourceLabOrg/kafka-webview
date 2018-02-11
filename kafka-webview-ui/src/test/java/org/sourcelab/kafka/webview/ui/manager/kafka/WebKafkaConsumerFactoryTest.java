@@ -251,7 +251,7 @@ public class WebKafkaConsumerFactoryTest {
         final PluginFactory<Deserializer> deserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
         final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory = new PluginFactory<>("not/used", RecordFilter.class);
         final SecretManager secretManager = new SecretManager("Passphrase");
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used");
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "MyPrefix");
 
         return new WebKafkaConsumerFactory(
             deserializerPluginFactory,
