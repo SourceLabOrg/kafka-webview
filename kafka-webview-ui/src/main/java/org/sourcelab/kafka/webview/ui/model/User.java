@@ -35,7 +35,7 @@ import java.io.Serializable;
  * User model.
  */
 @Entity(name = "user")
-public class User implements Serializable{
+public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;

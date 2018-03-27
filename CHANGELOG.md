@@ -2,6 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.0.4 (unreleased)
+- Update NPM dependencies for [CVE-2017-18214](https://nvd.nist.gov/vuln/detail/CVE-2017-18214).
+
 ## 1.0.3 (02/11/2018)
 - Fix 500 error unable to find templates when running under windows.
 - Add start.bat script for running under windows.
