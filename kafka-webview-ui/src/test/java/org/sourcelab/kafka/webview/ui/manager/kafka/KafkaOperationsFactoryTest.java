@@ -24,7 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
+import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
