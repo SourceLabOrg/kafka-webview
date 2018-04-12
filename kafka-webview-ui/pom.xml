@@ -132,7 +132,7 @@
         <!-- Kafka-JUnit -->
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
-            <artifactId>kafka-junit</artifactId>
+            <artifactId>kafka-junit4</artifactId>
             <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
