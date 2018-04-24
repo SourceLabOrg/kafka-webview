@@ -111,8 +111,8 @@ public class UserForm {
             + "id=" + id
             + ", email='" + email + '\''
             + ", displayName='" + displayName + '\''
-            + ", password='" + password + '\''
-            + ", password2='" + password2 + '\''
+            + ", password='XXXXX'"
+            + ", password2='XXXXX'"
             + ", userRole=" + userRole
             + '}';
     }
