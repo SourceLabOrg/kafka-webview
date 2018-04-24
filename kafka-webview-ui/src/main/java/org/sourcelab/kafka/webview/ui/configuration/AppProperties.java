@@ -73,7 +73,7 @@ public class AppProperties {
         return "AppProperties{"
             + "name='" + name + '\''
             + ", uploadPath='" + uploadPath + '\''
-            + ", appKey='" + appKey + '\''
+            + ", appKey='XXXXXX'"
             + ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers
             + ", consumerIdPrefix='" + consumerIdPrefix + '\''
             + '}';
