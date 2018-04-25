@@ -49,6 +49,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Controller for Cluster CRUD operations.
@@ -107,8 +108,8 @@ public class ClusterConfigController extends BaseController {
         final Model model) {
 
         // Retrieve by id
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if (!clusterOptional.isPresent()) {
             // redirect
             // Set flash message
             final FlashMessage flashMessage = FlashMessage.newWarning("Unable to find cluster!");
@@ -117,6 +118,7 @@ public class ClusterConfigController extends BaseController {
             // redirect to cluster index
             return "redirect:/configuration/cluster";
         }
+        final Cluster cluster = clusterOptional.get();
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit: " + cluster.getName(), null);
@@ -184,8 +186,8 @@ public class ClusterConfigController extends BaseController {
         final String successMessage;
         if (updateExisting) {
             // Retrieve it
-            cluster = clusterRepository.findOne(clusterForm.getId());
-            if (cluster == null) {
+            final Optional<Cluster> clusterOptional = clusterRepository.findById(clusterForm.getId());
+            if (!clusterOptional.isPresent()) {
                 // redirect
                 // Set flash message
                 final FlashMessage flashMessage = FlashMessage.newWarning("Unable to find cluster!");
@@ -194,6 +196,7 @@ public class ClusterConfigController extends BaseController {
                 // redirect to cluster index
                 return "redirect:/configuration/cluster";
             }
+            cluster = clusterOptional.get();
 
             successMessage = "Updated cluster successfully!";
         } else {
@@ -298,11 +301,13 @@ public class ClusterConfigController extends BaseController {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String deleteCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if (!clusterOptional.isPresent()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
         } else {
+            final Cluster cluster = clusterOptional.get();
+
             // Delete KeyStores
             if (cluster.getTrustStoreFile() != null) {
                 uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
@@ -312,8 +317,7 @@ public class ClusterConfigController extends BaseController {
             }
 
             // Delete it
-            clusterRepository.delete(id);
-
+            clusterRepository.deleteById(id);
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted cluster!"));
         }
 
@@ -327,14 +331,15 @@ public class ClusterConfigController extends BaseController {
     @RequestMapping(path = "/test/{id}", method = RequestMethod.GET)
     public String testCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if (!clusterOptional.isPresent()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
 
             // redirect to cluster index
             return "redirect:/configuration/cluster";
         }
+        final Cluster cluster = clusterOptional.get();
 
         // Build a client
         // TODO use a clientId unique to the client + cluster + topic
