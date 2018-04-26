@@ -40,6 +40,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller for viewing Cluster details.
@@ -164,8 +165,8 @@ public class ClusterController extends BaseController {
 
     private Cluster retrieveCluster(final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve by id
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if (!clusterOptional.isPresent()) {
             // redirect
             // Set flash message
             final FlashMessage flashMessage = FlashMessage.newWarning("Unable to find cluster!");
@@ -174,7 +175,7 @@ public class ClusterController extends BaseController {
             // redirect to cluster index
             return null;
         }
-        return cluster;
+        return clusterOptional.get();
     }
 
     private BreadCrumbManager setupBreadCrumbs(final Model model) {

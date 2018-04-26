@@ -41,6 +41,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller for consuming/browsing a topic/view.
@@ -91,14 +92,15 @@ public class ViewController extends BaseController {
         final Model model) {
 
         // Retrieve the view
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
+        final Optional<View> viewOptional = viewRepository.findById(id);
+        if (!viewOptional.isPresent()) {
             // Set flash message
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
 
             // redirect to home
             return "redirect:/";
         }
+        final View view = viewOptional.get();
 
         // Setup breadcrumbs
         new BreadCrumbManager(model)
