@@ -525,8 +525,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
         // Validate
-        final MessageFormat messageFormat = messageFormatRepository.findById(formatId).get();
-        assertNull("Should NOT have message format", messageFormat);
+        assertFalse("Should NOT have message format", messageFormatRepository.existsById(formatId));
 
         // Jar should have been removed
         assertFalse("Should have been removed", Files.exists(expectedJarPath));
