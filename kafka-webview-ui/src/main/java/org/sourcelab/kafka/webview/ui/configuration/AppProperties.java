@@ -48,6 +48,9 @@ public class AppProperties {
     @Value("${app.consumerIdPrefix}")
     private String consumerIdPrefix;
 
+    @Value("${app.require_ssl:false}")
+    private boolean requireSsl = false;
+
     public String getName() {
         return name;
     }
@@ -68,6 +71,10 @@ public class AppProperties {
         return consumerIdPrefix;
     }
 
+    public boolean isRequireSsl() {
+        return requireSsl;
+    }
+
     @Override
     public String toString() {
         return "AppProperties{"
@@ -76,6 +83,7 @@ public class AppProperties {
             + ", appKey='XXXXXX'"
             + ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers
             + ", consumerIdPrefix='" + consumerIdPrefix + '\''
+            + ", requireSsl='" + requireSsl + '\''
             + '}';
     }
 }

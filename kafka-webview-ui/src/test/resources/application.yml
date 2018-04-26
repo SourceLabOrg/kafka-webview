@@ -6,9 +6,6 @@ server:
     remote_ip_header: x-forwarded-for
     protocol_header: x-forwarded-proto
 
-security:
-  require-ssl: false
-
 spring:
   application:
     name: Kafka Webview
@@ -45,3 +42,4 @@ app:
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"
+  require-ssl: false

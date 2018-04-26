@@ -3,11 +3,9 @@ server:
   tomcat:
     remote_ip_header: x-forwarded-for
     protocol_header: x-forwarded-proto
-  session:
-    persistent: false
-
-security:
-  require-ssl: true
+  servlet:
+    session:
+      persistent: false
 
 spring:
   application:
@@ -19,7 +17,7 @@ spring:
     password:
     driver-class-name: org.h2.Driver
 
-  http:
+  servlet:
     multipart:
       max-file-size: 64MB
       max-request-size: 64MB
@@ -45,3 +43,4 @@ app:
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"
+  require-ssl: true

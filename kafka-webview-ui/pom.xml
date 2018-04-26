@@ -124,13 +124,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- For migration to springboot 2.0 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-properties-migrator</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- For tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

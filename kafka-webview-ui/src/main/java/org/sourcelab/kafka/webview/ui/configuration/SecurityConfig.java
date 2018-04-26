@@ -44,7 +44,6 @@ import org.springframework.web.context.request.RequestContextListener;
  */
 @Configuration
 @EnableWebSecurity
-//@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -54,7 +53,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * Allows for requiring all requests over SSL.
      * If not defined in the config under the key security.require_ssl, we default to false.
      */
-    @Value("${security.require_ssl:false}")
+    @Value("${app.require_ssl:false}")
     private boolean isRequireSsl;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -102,7 +101,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll();
         
         // If require SSL is enabled
-        // TODO validate this.
         if (isRequireSsl) {
             // Ensure its enabled.
             http
