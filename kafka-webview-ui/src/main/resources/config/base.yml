@@ -7,8 +7,6 @@ server:
     persistent: false
 
 security:
-  basic:
-    enabled: true
   require-ssl: true
 
 spring:

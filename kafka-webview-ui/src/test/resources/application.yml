@@ -7,8 +7,6 @@ server:
     protocol_header: x-forwarded-proto
 
 security:
-  basic:
-    enabled: true
   require-ssl: false
 
 spring:
@@ -21,7 +19,7 @@ spring:
     password:
     driver-class-name: org.h2.Driver
 
-  http:
+  servlet:
     multipart:
       max-file-size: 15MB
       max-request-size: 15MB
