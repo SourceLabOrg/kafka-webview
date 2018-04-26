@@ -331,7 +331,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk());
 
         // Validate message format was not updated.
-        final MessageFormat updatedMessageFormat = messageFormatRepository.findOne(messageFormat.getId());
+        final MessageFormat updatedMessageFormat = messageFormatRepository.findById(messageFormat.getId()).get();
         assertNotNull("Has message format", updatedMessageFormat);
         assertEquals("Name not updated", expectedName, updatedMessageFormat.getName());
         assertEquals("classpath not updated", expectedClasspath, updatedMessageFormat.getClasspath());
@@ -390,7 +390,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
         // Validate message format was updated.
-        final MessageFormat updatedMessageFormat = messageFormatRepository.findOne(messageFormat.getId());
+        final MessageFormat updatedMessageFormat = messageFormatRepository.findById(messageFormat.getId()).get();
         assertNotNull("Has message format", updatedMessageFormat);
         assertEquals("Name updated", newName, updatedMessageFormat.getName());
         assertEquals("classpath was NOT updated", originalClasspath, updatedMessageFormat.getClasspath());
@@ -450,7 +450,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
         // Validate message format was updated.
-        final MessageFormat updatedMessageFormat = messageFormatRepository.findOne(messageFormat.getId());
+        final MessageFormat updatedMessageFormat = messageFormatRepository.findById(messageFormat.getId()).get();
         assertNotNull("Has message format", updatedMessageFormat);
         assertEquals("Name updated", newName, updatedMessageFormat.getName());
         assertEquals("classpath updated", newClasspath, updatedMessageFormat.getClasspath());
@@ -525,7 +525,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
         // Validate
-        final MessageFormat messageFormat = messageFormatRepository.findOne(formatId);
+        final MessageFormat messageFormat = messageFormatRepository.findById(formatId).get();
         assertNull("Should NOT have message format", messageFormat);
 
         // Jar should have been removed
@@ -561,7 +561,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
         // Validate
-        final MessageFormat messageFormat = messageFormatRepository.findOne(formatId);
+        final MessageFormat messageFormat = messageFormatRepository.findById(formatId).get();
         assertNotNull("Should NOT have removed message format", messageFormat);
 
         // Jar should still exist
