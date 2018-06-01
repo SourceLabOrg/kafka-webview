@@ -63,12 +63,12 @@ public class KafkaOperationsTest {
 
         // Create two topics
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic1, 2);
+            .getKafkaTestUtils()
+            .createTopic(topic1, 2, (short) 1);
 
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic2, 1);
+            .getKafkaTestUtils()
+            .createTopic(topic2, 1, (short) 1);
 
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
@@ -140,12 +140,12 @@ public class KafkaOperationsTest {
 
         // Create two topics
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic1, 2);
+            .getKafkaTestUtils()
+            .createTopic(topic1, 2, (short) 1);
 
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic2, 1);
+            .getKafkaTestUtils()
+            .createTopic(topic2, 1, (short) 1);
 
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
@@ -196,12 +196,12 @@ public class KafkaOperationsTest {
 
         // Create two topics
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic1, 2);
+            .getKafkaTestUtils()
+            .createTopic(topic1, 2, (short) 1);
 
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic2, 1);
+            .getKafkaTestUtils()
+            .createTopic(topic2, 1, (short) 1);
 
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
