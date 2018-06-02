@@ -85,7 +85,7 @@ public class SecretManager {
             final byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
             final byte[] encryptedText = cipher.doFinal(str.getBytes(StandardCharsets.UTF_8));
 
-            // concatenate salt + iv + ciphertext
+            // concatenate salt + iv + cipher text
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             outputStream.write(salt);
             outputStream.write(iv);

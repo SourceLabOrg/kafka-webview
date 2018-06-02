@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.manager.user;
 
+import org.sourcelab.kafka.webview.ui.manager.encryption.Sha1Tools;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -143,29 +144,7 @@ public final class UserBuilder {
         final double random = (Math.random() * 31 + System.currentTimeMillis());
 
         // Concat to the salt and sha1 it
-        //return DigestUtils.sha1Hex(salt.concat(String.valueOf(random)));
-        return sha1(salt.concat(String.valueOf(random)));
+        return Sha1Tools.sha1(salt.concat(String.valueOf(random)));
 
-    }
-
-    private static String sha1(final String input) {
-        try {
-            final MessageDigest crypt = MessageDigest.getInstance("SHA-1");
-            crypt.reset();
-            crypt.update(input.getBytes("UTF-8"));
-            return byteToHex(crypt.digest());
-        }
-        catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
-            throw new RuntimeException(exception.getMessage(), exception);
-        }
-    }
-
-    private static String byteToHex(final byte[] hash) {
-        try (final Formatter formatter = new Formatter();) {
-            for (final byte bit : hash) {
-                formatter.format("%02x", bit);
-            }
-            return formatter.toString();
-        }
     }
 }
