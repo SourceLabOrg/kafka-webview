@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Update NPM dependencies for [CVE-2017-18214](https://nvd.nist.gov/vuln/detail/CVE-2017-18214).
 - Update [Kafka-JUnit](https://github.com/salesforce/kafka-junit) dependency to [Kafka-JUnit4](https://github.com/salesforce/kafka-junit/tree/master/kafka-junit4).
 - Update SpringBoot dependency from 1.5.10 to 1.5.13.
+- Update start.sh script to allow setting JVM Heap options.
 
 ## 1.0.3 (02/11/2018)
 - Fix 500 error unable to find templates when running under windows.
