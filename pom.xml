@@ -171,7 +171,7 @@
     <!-- release profile for deploying -->
     <profiles>
         <profile>
-            <id>release</id>
+            <id>release-kafka-webview</id>
             <build>
                 <plugins>
                     <!-- Build Sources Jar -->
@@ -215,7 +215,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                        <keyname>SourceLab.org</keyname>
+                                    <keyname>SourceLab.org</keyname>
                                 </configuration>
                             </execution>
                         </executions>
