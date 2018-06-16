@@ -82,7 +82,8 @@ public class UserController extends BaseController {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", "/configuration/user/create");
 
-        // Set user role options.
+        // Set isAdmin attribute
+        model.addAttribute("isAdmin", hasRole("ADMIN"));
         model.addAttribute("userRoles", getUserRoleOptions());
 
         return "configuration/user/create";
