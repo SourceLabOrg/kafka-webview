@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -38,14 +39,18 @@ public class TopicList {
      * Constructor.
      */
     public TopicList(final List<TopicListing> topics) {
-        this.topics = topics;
+        final List<TopicListing> sortedList = new ArrayList<>();
+        sortedList.addAll(topics);
+        Collections.sort(sortedList, Comparator.comparing(TopicListing::getName));
+
+        this.topics = Collections.unmodifiableList(sortedList);
     }
 
     /**
      * @return a List of topics.
      */
     public List<TopicListing> getTopics() {
-        return Collections.unmodifiableList(topics);
+        return topics;
     }
 
     /**
