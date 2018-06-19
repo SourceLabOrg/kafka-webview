@@ -148,6 +148,23 @@ To get up and going quickly, the [Kafka-WebView-Example](https://github.com/Sour
 This Maven based example project is configured with all of the correct dependencies and has a few example 
 implementations.
 
+# Releasing
+Steps for performing a release:
+
+1. Update release version: mvn versions:set -DnewVersion=X.Y.Z
+2. Validate and then commit version: mvn versions:commit
+3. Update CHANGELOG and README files.
+4. Merge to master.
+5. Deploy to Maven Central: mvn clean deploy -P release-kafka-webview
+6. Create release on Github project.
+7 Build and upload new Docker images:
+    - `docker build -t kafka-webview .`
+    - `docker tag kafka-webview sourcelaborg/kafka-webview:latest`
+    - `docker push sourcelaborg/kafka-webview:latest`
+    - `docker tag kafka-webview sourcelaborg/kafka-webview:1.0.VERSIONHERE`
+    - `docker push sourcelaborg/kafka-webview:1.0.VERSIONHERE`
+
+
 # Changelog
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/)

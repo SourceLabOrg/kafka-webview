@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 /**
  * Represents a single record pulled from a kafka topic, with associated metadata.
  */
@@ -31,7 +33,11 @@ public class KafkaResult {
     private final int partition;
     private final long offset;
     private final long timestamp;
+
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Object key;
+
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Object value;
 
     /**
