@@ -122,7 +122,14 @@ public class PluginFactory<T> {
         final Class<? extends T> dClass = getPluginClass(jarName, classpath);
         try {
             return dClass.newInstance();
-        } catch (InstantiationException | IllegalAccessException | NoClassDefFoundError e) {
+        } catch (final NoClassDefFoundError e) {
+            // Typically this happens if the uploaded JAR references some dependency that was
+            // not package in the JAR.  Attempt to provide a useful error msg.
+            final String errorMsg = e.getMessage()
+                + " - Does your JAR include all of its required dependencies? "
+                + "See https://github.com/SourceLabOrg/kafka-webview-examples#packaging-a-jar";
+            throw new LoaderException(errorMsg, e);
+        } catch (final InstantiationException | IllegalAccessException e) {
             throw new LoaderException(e.getMessage(), e);
         }
     }
