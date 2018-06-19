@@ -122,7 +122,7 @@ public class PluginFactory<T> {
         final Class<? extends T> dClass = getPluginClass(jarName, classpath);
         try {
             return dClass.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | NoClassDefFoundError e) {
             throw new LoaderException(e.getMessage(), e);
         }
     }
