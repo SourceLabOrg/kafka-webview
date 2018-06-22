@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.0.5 (UNRELEASED)
+## 1.0.5 (06/22/2018)
 - [Issue#75](https://github.com/SourceLabOrg/kafka-webview/issues/75) Bugfix Add Jackson serializer that falls back to using toString() when consuming entries from Kafka.
 - [Issue#72](https://github.com/SourceLabOrg/kafka-webview/issues/72) Bugfix User role input not displayed when creating new user.
 - [Issue#81](https://github.com/SourceLabOrg/kafka-webview/issues/81) Bugfix Handle NoClassDefFoundError exceptions gracefully.
