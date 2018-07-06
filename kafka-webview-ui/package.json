@@ -1,0 +1,61 @@
+{
+  "name": "kafka-webview",
+  "version": "1.0.0",
+  "description":
+    "A full-featured web-based Apache Kafka consumer. Kafka WebView presents an easy-to-use web based interface for reading data out of kafka topics and providing basic filtering and searching capabilities.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Crim/kafka-webview.git"
+  },
+  "author": "Stephen Powis <stephen.powis@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Crim/kafka-webview/issues"
+  },
+  "homepage": "https://github.com/Crim/kafka-webview#readme",
+  "scripts": {
+    "start": "webpack-dev-server",
+    "lint": "eslint --ext .jsx --ext .js app.js models/* web/js/**",
+    "prettier":
+      "prettier --write --tab-width 4 --print-width 80 --single-quote --trailing-comma es5 \"{app.js,models/*.js,web/**/*.js,web/**/*.less}\"",
+    "heroku-postbuild": "NODE_ENV=production webpack",
+    "watch": "webpack --watch",
+    "build": "NODE_ENV=production webpack",
+    "test": "NODE_ENV=test jest --coverage"
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "printWidth": 80,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "css-loader": "^0.28.7",
+    "eslint": "^4.12.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-prettier": "^2.3.1",
+    "eslint-plugin-react": "^7.5.1",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "file-loader": "^1.1.5",
+    "node-sass": "^4.7.2",
+    "prettier": "^1.8.2",
+    "redbox-react": "^1.5.0",
+    "sass-loader": "^6.0.6",
+    "style-loader": "^0.19.0",
+    "url-loader": "^0.6.2",
+    "webpack": "^3.9.1",
+    "webpack-dev-server": "^2.9.5"
+  },
+  "dependencies": {
+    "prop-types": "^15.6.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-hot-loader": "^3.1.3"
+  }
+}
