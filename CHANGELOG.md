@@ -2,12 +2,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.0.5 (UNRELEASED)
+## 1.0.5 (06/22/2018)
 - [Issue#75](https://github.com/SourceLabOrg/kafka-webview/issues/75) Bugfix Add Jackson serializer that falls back to using toString() when consuming entries from Kafka.
 - [Issue#72](https://github.com/SourceLabOrg/kafka-webview/issues/72) Bugfix User role input not displayed when creating new user.
 - [Issue#81](https://github.com/SourceLabOrg/kafka-webview/issues/81) Bugfix Handle NoClassDefFoundError exceptions gracefully.
 - [Issue#74](https://github.com/SourceLabOrg/kafka-webview/issues/74) Improvement UI Tweak to display large number of partitions in datatable views.
-- [Issue#71](https://github.com/SourceLabOrg/kafka-webview/issues/71) Improvement Topics sorted in select boxes. 
+- [Issue#71](https://github.com/SourceLabOrg/kafka-webview/issues/71) Improvement Topics sorted in select boxes.
+- [Issue#83](https://github.com/SourceLabOrg/kafka-webview/issues/83) Improvement Wrap key and message values in <pre></pre> tags. 
 
 ## 1.0.4 (06/11/2018)
 - Update NPM dependencies for [CVE-2017-18214](https://nvd.nist.gov/vuln/detail/CVE-2017-18214).
