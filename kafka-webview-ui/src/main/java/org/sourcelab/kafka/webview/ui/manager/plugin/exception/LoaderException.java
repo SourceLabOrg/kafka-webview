@@ -31,7 +31,7 @@ public class LoaderException extends Exception {
     /**
      * Constructor.
      */
-    public LoaderException(final String message, final Exception cause) {
+    public LoaderException(final String message, final Throwable cause) {
         super(message, cause);
     }
 

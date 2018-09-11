@@ -56,7 +56,7 @@
                                 <td th:text="${view.name}">
                                 </td>
                                 <td th:text="${view.topic}"></td>
-                                <td th:text="${view.partitions.isEmpty()} ? 'All' : ${view.partitions}"></td>
+                                <td th:text="${view.displayPartitions()}"></td>
                                 <td>
                                     <a th:href="'/view/' + ${view.id}">Browse</a>
                                 </td>

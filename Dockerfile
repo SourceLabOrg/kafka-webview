@@ -5,7 +5,7 @@ FROM openjdk:8-jre-alpine
 MAINTAINER SourceLab.org <stephen.powis@gmail.com>
 
 ## Define version to install
-ENV WV_VER=1.0.3
+ENV WV_VER=1.0.5
 
 # Create app and data directories
 RUN mkdir -p /app
