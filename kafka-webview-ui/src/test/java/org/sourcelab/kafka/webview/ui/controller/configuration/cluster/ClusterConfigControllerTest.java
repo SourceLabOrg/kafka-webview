@@ -28,7 +28,7 @@ import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.sourcelab.kafka.webview.ui.controller.configuration.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
@@ -190,7 +190,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/cluster"));
 
         // Lookup Cluster
-        final Cluster cluster = clusterRepository.findOne(originalCluster.getId());
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
         assertNotNull("Should have cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
@@ -296,7 +296,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/cluster"));
 
         // Lookup Cluster
-        final Cluster cluster = clusterRepository.findOne(originalCluster.getId());
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
@@ -367,7 +367,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/cluster"));
 
         // Lookup Cluster
-        final Cluster cluster = clusterRepository.findOne(originalCluster.getId());
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
@@ -440,7 +440,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/cluster"));
 
         // Lookup Cluster
-        final Cluster cluster = clusterRepository.findOne(originalCluster.getId());
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
@@ -510,7 +510,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl("/configuration/cluster"));
 
         // Lookup Cluster
-        final Cluster cluster = clusterRepository.findOne(originalCluster.getId());
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());

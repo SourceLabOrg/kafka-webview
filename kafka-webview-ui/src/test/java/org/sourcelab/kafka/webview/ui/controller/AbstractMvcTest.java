@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.configuration;
+package org.sourcelab.kafka.webview.ui.controller;
 
 import org.junit.Before;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;

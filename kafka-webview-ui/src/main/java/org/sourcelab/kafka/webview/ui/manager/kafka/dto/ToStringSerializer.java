@@ -24,50 +24,36 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.impl.UnknownSerializer;
+
+import java.io.IOException;
 
 /**
- * Represents a collection of Topics within a Cluster.
+ * Uses object's toString() method to serialize.
  */
-public class TopicList {
-    private final List<TopicListing> topics;
-
-    /**
-     * Constructor.
-     */
-    public TopicList(final List<TopicListing> topics) {
-        final List<TopicListing> sortedList = new ArrayList<>();
-        sortedList.addAll(topics);
-        Collections.sort(sortedList, Comparator.comparing(TopicListing::getName));
-
-        this.topics = Collections.unmodifiableList(sortedList);
-    }
-
-    /**
-     * @return a List of topics.
-     */
-    public List<TopicListing> getTopics() {
-        return topics;
-    }
-
-    /**
-     * @return a List of the topic names.
-     */
-    public List<String> getTopicNames() {
-        final List<String> topicNames = new ArrayList<>();
-        for (final TopicListing topicListing: getTopics()) {
-            topicNames.add(topicListing.getName());
-        }
-        return Collections.unmodifiableList(topicNames);
-    }
-
+public class ToStringSerializer extends JsonSerializer<Object> {
     @Override
-    public String toString() {
-        return "TopicList{"
-            + "+ topics=" + topics
-            + '}';
+    public void serialize(
+        final Object value,
+        final JsonGenerator gen,
+        final SerializerProvider serializers
+    ) throws IOException {
+        if (value == null) {
+            gen.writeString("");
+            return;
+        }
+
+        // See if we have a serializer that is NOT the unknown serializer
+        final JsonSerializer serializer = serializers.findValueSerializer(value.getClass());
+        if (serializer != null && !(serializer instanceof UnknownSerializer)) {
+            serializer.serialize(value, gen, serializers);
+            return;
+        }
+
+        // Fall back to using toString()
+        gen.writeString(value.toString());
     }
 }

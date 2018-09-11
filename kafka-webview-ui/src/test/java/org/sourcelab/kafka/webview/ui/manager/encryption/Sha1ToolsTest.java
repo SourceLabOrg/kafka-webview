@@ -22,46 +22,31 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.tools;
+package org.sourcelab.kafka.webview.ui.manager.encryption;
 
-import org.sourcelab.kafka.webview.ui.model.Cluster;
-import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-/**
- * Helpful tools for Clusters in tests.
- */
-@Component
-public class ClusterTestTools {
-    private final ClusterRepository clusterRepository;
+import static org.junit.Assert.assertEquals;
 
-    @Autowired
-    public ClusterTestTools(final ClusterRepository clusterRepository) {
-        this.clusterRepository = clusterRepository;
-    }
+@RunWith(JUnitParamsRunner.class)
+public class Sha1ToolsTest {
 
     /**
-     * Creates a cluster model entity and persists it.
-     * @param name Name of the cluster.
-     * @return A persisted cluster.
+     * Validate sha1 seems to work.
+     * @param input input value to test.
+     * @param expectedOutput expected output value.
      */
-    public Cluster createCluster(final String name) {
-        final Cluster cluster = new Cluster();
-        cluster.setBrokerHosts("localhost:9092");
-        cluster.setSslEnabled(false);
-        cluster.setName(name);
-        cluster.setValid(true);
-        save(cluster);
-
-        return cluster;
-    }
-
-    /**
-     * Easy access to clusterRepository.
-     * @param cluster Cluster to persist.
-     */
-    public void save(final Cluster cluster) {
-        clusterRepository.save(cluster);
+    @Test
+    @Parameters({
+        "input, 140f86aae51ab9e1cda9b4254fe98a74eb54c1a1",
+        "test, a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+        "this is a much longer test, 30462670fe8243b215e2cf9ff14160811284832d"
+    })
+    public void test_sha1(final String input, final String expectedOutput) {
+        final String output = Sha1Tools.sha1(input);
+        assertEquals(expectedOutput, output);
     }
 }

@@ -22,52 +22,40 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
+package org.sourcelab.kafka.webview.ui.manager.encryption;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
 
 /**
- * Represents a collection of Topics within a Cluster.
+ * Collection of utility methods around calculating SHA1 hashes.
  */
-public class TopicList {
-    private final List<TopicListing> topics;
-
+public class Sha1Tools {
     /**
-     * Constructor.
+     * Given an input, calculate the SHA1 hash of it and return the hash encoded in hex.
+     * @param input input string to hash.
+     * @return HEX'd result of SHA1 calculation.
      */
-    public TopicList(final List<TopicListing> topics) {
-        final List<TopicListing> sortedList = new ArrayList<>();
-        sortedList.addAll(topics);
-        Collections.sort(sortedList, Comparator.comparing(TopicListing::getName));
-
-        this.topics = Collections.unmodifiableList(sortedList);
-    }
-
-    /**
-     * @return a List of topics.
-     */
-    public List<TopicListing> getTopics() {
-        return topics;
-    }
-
-    /**
-     * @return a List of the topic names.
-     */
-    public List<String> getTopicNames() {
-        final List<String> topicNames = new ArrayList<>();
-        for (final TopicListing topicListing: getTopics()) {
-            topicNames.add(topicListing.getName());
+    public static String sha1(final String input) {
+        try {
+            final MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+            crypt.reset();
+            crypt.update(input.getBytes("UTF-8"));
+            return byteToHex(crypt.digest());
         }
-        return Collections.unmodifiableList(topicNames);
+        catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
     }
 
-    @Override
-    public String toString() {
-        return "TopicList{"
-            + "+ topics=" + topics
-            + '}';
+    private static String byteToHex(final byte[] hash) {
+        try (final Formatter formatter = new Formatter();) {
+            for (final byte bit : hash) {
+                formatter.format("%02x", bit);
+            }
+            return formatter.toString();
+        }
     }
 }

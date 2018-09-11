@@ -65,8 +65,8 @@ public class KafkaConsumerFactoryTest {
         // Create a topic with 2 partitions, (partitionId 0, 1)
         final String topicName = "TestTopic";
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topicName, 2);
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
 
         // Produce 10 records into partition 0 of topic.
         sharedKafkaTestResource
@@ -126,8 +126,8 @@ public class KafkaConsumerFactoryTest {
         // Create a topic with 2 partitions, (partitionId 0, 1)
         final String topicName = "TestTopic";
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topicName, 2);
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
 
         // Produce 10 records into partition 0 of topic.
         sharedKafkaTestResource
@@ -191,8 +191,8 @@ public class KafkaConsumerFactoryTest {
         // Create a topic with 2 partitions, (partitionId 0, 1)
         final String topicName = "TestTopic";
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topicName, 2);
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
 
         // Produce 10 records into partition 0 of topic.
         sharedKafkaTestResource
@@ -263,8 +263,8 @@ public class KafkaConsumerFactoryTest {
         // Create a topic with 1 partitions, (partitionId 0)
         final String topicName = "TestTopic" + System.currentTimeMillis();
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topicName, 1);
+            .getKafkaTestUtils()
+            .createTopic(topicName, 1, (short) 1);
 
         // Create factory
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");

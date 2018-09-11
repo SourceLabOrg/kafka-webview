@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.model;
 
+import org.sourcelab.kafka.webview.ui.manager.Utils;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -37,7 +39,9 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Transient;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents a record from the view table.
@@ -45,7 +49,7 @@ import java.util.Set;
 @Entity
 public class View {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -177,6 +181,21 @@ public class View {
             }
         }
         return partitionsSet;
+    }
+
+    /**
+     * @return Display user friend list of partitions.
+     */
+    @Transient
+    public String displayPartitions() {
+        if (getPartitions() == null) {
+            return "All";
+        }
+
+        final List<String> results = Utils.calculateRanges(getPartitionsAsSet());
+
+        return results.stream()
+            .collect(Collectors.joining(", "));
     }
 
     public Set<ViewToFilterEnforced> getEnforcedFilters() {

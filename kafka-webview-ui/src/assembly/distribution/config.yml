@@ -1,9 +1,6 @@
 server:
   port: 8080
 
-security:
-  require-ssl: false
-
 ## Various App Configs
 app:
   ## Should be unique to your installation.
@@ -12,3 +9,6 @@ app:
 
   ## Defines a prefix prepended to the Id of all consumers.
   consumerIdPrefix: "KafkaWebViewConsumer"
+
+  ## Require SSL
+  require-ssl: false

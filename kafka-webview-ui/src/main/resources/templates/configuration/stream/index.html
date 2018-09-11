@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Stream Configuration</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Active Stream Consumers
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>View</th>
+                                <th>Cluster</th>
+                                <th>Active Since</th>
+                                <th>Records Consumed</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="consumer : ${consumers}">
+                                <td th:text="${userMap.get(consumer.getUserId()).getDisplayName()}"></td>
+                                <td>
+                                    <a
+                                        th:href="@{/view/{id}(id=${consumer.getViewId()})}"
+                                        th:text="${viewMap.get(consumer.getViewId()).getName()}">
+                                    </a>
+                                </td>
+                                <td>
+                                    <a
+                                        th:href="@{/cluster/{id}(id=${viewMap.get(consumer.getViewId()).getCluster().getId()})}"
+                                        th:text="${clusterMap.get(
+                                            viewMap.get(consumer.getViewId()).getCluster().getId()
+                                        ).getName()}">
+                                    </a>
+                                </td>
+                                <td
+                                    th:class="relativeUnixTimestamp"
+                                    th:text="${consumer.getStartedAtTimestamp()}"
+                                    >
+                                </td>
+                                <td th:text="${consumer.getRecordCount()}">
+                                </td>
+                                <td class="text-right">
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <form th:action="@{/configuration/stream/close/{hash}(hash=${consumer.getSessionHash()})}" method="post">
+                                                <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
+                                                    <i class="fa fa-remove"></i>
+                                                    Close Consumer
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--/.col-->
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script type="application/javascript">
+        jQuery(document).ready(function() {
+            // Convert timestamps to relative times on load.
+            jQuery('.relativeUnixTimestamp').each(
+                function( index, tdEl ) {
+                    var unixTimestamp = jQuery(tdEl).text();
+                    var momentInstance = moment(unixTimestamp, "x");
+
+                    jQuery(tdEl)
+                        .text(momentInstance.fromNow());
+
+                    jQuery(tdEl)
+                        .attr("title", momentInstance.utc().format())
+                }
+            );
+        });
+    </script>
+</section>
+
+</body>
+</html>

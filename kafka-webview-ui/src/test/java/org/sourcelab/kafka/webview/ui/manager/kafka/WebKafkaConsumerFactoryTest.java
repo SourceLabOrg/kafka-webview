@@ -67,12 +67,12 @@ public class WebKafkaConsumerFactoryTest {
 
         // Create topics
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic1, 2);
+            .getKafkaTestUtils()
+            .createTopic(topic1, 2, (short) 1);
 
         sharedKafkaTestResource
-            .getKafkaTestServer()
-            .createTopic(topic2, 2);
+            .getKafkaTestUtils()
+            .createTopic(topic2, 2, (short) 1);
 
         // Publish data into topics
         sharedKafkaTestResource

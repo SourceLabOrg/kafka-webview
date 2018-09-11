@@ -26,7 +26,7 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.filter;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.sourcelab.kafka.webview.ui.controller.configuration.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.tools.FilterTestTools;
 import org.springframework.beans.factory.annotation.Autowired;

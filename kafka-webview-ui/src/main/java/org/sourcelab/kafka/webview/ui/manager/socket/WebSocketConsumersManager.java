@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.manager.socket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sourcelab.kafka.webview.ui.manager.encryption.Sha1Tools;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SocketKafkaConsumer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
@@ -36,8 +37,10 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +48,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * Manages background kafka consumers and transfers consumed messages from them to their
@@ -83,15 +89,40 @@ public class WebSocketConsumersManager implements Runnable {
     public WebSocketConsumersManager(
         final WebKafkaConsumerFactory webKafkaConsumerFactory,
         final SimpMessagingTemplate messagingTemplate,
-        final int maxConcurrentConsumers) {
+        final int maxConcurrentConsumers
+    ) {
+        this(
+            webKafkaConsumerFactory,
+            messagingTemplate,
+
+            // Setup managed thread pool with number of concurrent threads.
+            new ThreadPoolExecutor(
+                maxConcurrentConsumers,
+                maxConcurrentConsumers,
+                5,
+                TimeUnit.MINUTES,
+                new LinkedBlockingQueue<>(100)
+            )
+        );
+    }
+
+    /**
+     * Constructor for injecting a ThreadPoolExecutor.
+     *
+     * @param webKafkaConsumerFactory For creating new Consumers.
+     * @param messagingTemplate For publishing consumed messages back through the web socket.
+     * @param threadPoolExecutor executor pool for async processing.
+     */
+    public WebSocketConsumersManager(
+        final WebKafkaConsumerFactory webKafkaConsumerFactory,
+        final SimpMessagingTemplate messagingTemplate,
+        final ThreadPoolExecutor threadPoolExecutor
+    ) {
         this.webKafkaConsumerFactory = webKafkaConsumerFactory;
         this.simpMessagingTemplate = messagingTemplate;
 
-        // Setup managed thread pool with number of concurrent threads.
         // TODO add handler for when a new connection comes in that exceeds the maximum running concurrent consumers.
-        this.threadPoolExecutor = new ThreadPoolExecutor(
-            maxConcurrentConsumers, maxConcurrentConsumers, 5, TimeUnit.MINUTES, new LinkedBlockingQueue<>(100)
-        );
+        this.threadPoolExecutor = threadPoolExecutor;
     }
 
     /**
@@ -104,7 +135,8 @@ public class WebSocketConsumersManager implements Runnable {
         final View view,
         final Collection<FilterDefinition> filters,
         final StartingPosition startingPosition,
-        final SessionIdentifier sessionIdentifier) {
+        final SessionIdentifier sessionIdentifier
+    ) {
 
         synchronized (consumers) {
             // createWebClient a key
@@ -139,26 +171,45 @@ public class WebSocketConsumersManager implements Runnable {
     }
 
     /**
-     * Remove consumer based on their session id.
+     * Remove consumer based on their private session id.
+     * Typically this is called when a consumer disconnects from the websocket.
      */
     public void removeConsumersForSessionId(final String sessionId) {
         synchronized (consumers) {
+            consumers
+                .entrySet()
+                .stream()
+                .filter((entry) -> entry.getKey().getSessionId().equals(sessionId))
+                .forEach((entry) -> entry.getValue().requestStop());
+        }
+    }
+
+    /**
+     * Remove consumer based on their public session hash.
+     * Typically this is called when a request to disconnect a consumer is made by the consumer manager
+     * web UI.
+     */
+    public boolean removeConsumersForSessionHash(final String sessionHash) {
+        synchronized (consumers) {
             for (final Map.Entry<ConsumerKey, ConsumerEntry> entry : consumers.entrySet()) {
-                if (! entry.getKey().getSessionId().equals(sessionId)) {
+                if (! entry.getKey().getSessionHash().equals(sessionHash)) {
                     continue;
                 }
                 entry.getValue().requestStop();
+                return true;
             }
         }
+        return false;
     }
 
     /**
      * Pause a consumer.
      */
     public void pauseConsumer(final long viewId, final SessionIdentifier sessionIdentifier) {
+        // createWebClient a key
+        final ConsumerKey consumerKey = new ConsumerKey(viewId, sessionIdentifier);
+
         synchronized (consumers) {
-            // createWebClient a key
-            final ConsumerKey consumerKey = new ConsumerKey(viewId, sessionIdentifier);
             if (!consumers.containsKey(consumerKey)) {
                 return;
             }
@@ -188,6 +239,33 @@ public class WebSocketConsumersManager implements Runnable {
             // Lets pause it
             consumerEntry.requestResume();
         }
+    }
+
+    /**
+     * @return Returns all of the currently active consumers.
+     */
+    public Collection<StreamConsumerDetails> getConsumers() {
+        final Collection<StreamConsumerDetails> details = consumers
+            .entrySet()
+            .stream()
+            .map((entry) -> new StreamConsumerDetails(
+            entry.getKey().getUserId(),
+            entry.getKey().getViewId(),
+            entry.getKey().getSessionHash(),
+            entry.getValue().getStartTimestamp(),
+            entry.getValue().getRecordCount(),
+            entry.getValue().isPaused()))
+            .collect(Collectors.toList());
+
+        // Return immutable
+        return Collections.unmodifiableCollection(details);
+    }
+
+    /**
+     * @return Current number of active consumers.
+     */
+    public int countActiveConsumers() {
+        return consumers.size();
     }
 
     /**
@@ -271,11 +349,21 @@ public class WebSocketConsumersManager implements Runnable {
     /**
      * Small wrapper around the Socket Consumer.
      */
-    private static class ConsumerEntry {
+    private static final class ConsumerEntry {
         /**
          * Our wrapped SocketKafkaConsumer instance.
          */
         private final SocketKafkaConsumer socketKafkaConsumer;
+
+        /**
+         * Holds how many records we have consumed.
+         */
+        private final AtomicLong recordCount = new AtomicLong(0);
+
+        /**
+         * Holds when we started consuming.
+         */
+        private final long startTimestamp = Clock.systemUTC().millis();
 
         /**
          * Flag if we should requestStop.
@@ -285,7 +373,7 @@ public class WebSocketConsumersManager implements Runnable {
         /**
          * Flag if we should be paused.
          */
-        private boolean isPaused = false;
+        private AtomicBoolean isPaused = new AtomicBoolean(false);
 
         /**
          * Constructor.
@@ -301,12 +389,20 @@ public class WebSocketConsumersManager implements Runnable {
          */
         public Optional<KafkaResult> nextResult() {
             // If paused
-            if (isPaused) {
+            if (isPaused.get()) {
                 // always return false.  This will cause the internal buffer to block
                 // on the consumer side.
                 return Optional.empty();
             }
-            return socketKafkaConsumer.nextResult();
+            final Optional<KafkaResult> result = socketKafkaConsumer.nextResult();
+
+            // Increment counter if record returned.
+            result.ifPresent(
+                (record) -> recordCount.incrementAndGet()
+            );
+
+            // Return result
+            return result;
         }
 
         /**
@@ -328,14 +424,26 @@ public class WebSocketConsumersManager implements Runnable {
          * Request the consumer to be paused.
          */
         public synchronized void requestPause() {
-            this.isPaused = true;
+            isPaused.set(true);
         }
 
         /**
          * Request the consumer to be resumed.
          */
         public synchronized void requestResume() {
-            this.isPaused = false;
+            isPaused.set(false);
+        }
+
+        public long getRecordCount() {
+            return recordCount.get();
+        }
+
+        public long getStartTimestamp() {
+            return startTimestamp;
+        }
+
+        public boolean isPaused() {
+            return isPaused.get();
         }
     }
 
@@ -343,15 +451,23 @@ public class WebSocketConsumersManager implements Runnable {
      * Represents a unique consumer key.
      * This could probably simplified down to just the sessionId.
      */
-    private static class ConsumerKey {
+    static final class ConsumerKey {
+        // viewId, userId, and sessionId make a unique consumer key.
         private final long viewId;
         private final long userId;
+
+        // Session id should be considered private and should not be shared with other users.
+        // TODO probably should deprecate this.
         private final String sessionId;
 
-        public ConsumerKey(final long viewId, final SessionIdentifier sessionIdentifier) {
+        // Session hash can be shared publicly to identify a session.
+        private final String sessionHash;
+
+        ConsumerKey(final long viewId, final SessionIdentifier sessionIdentifier) {
             this.viewId = viewId;
             this.userId = sessionIdentifier.getUserId();
             this.sessionId = sessionIdentifier.getSessionId();
+            this.sessionHash = Sha1Tools.sha1(this.sessionId);
         }
 
         public long getViewId() {
@@ -364,6 +480,10 @@ public class WebSocketConsumersManager implements Runnable {
 
         public String getSessionId() {
             return sessionId;
+        }
+
+        public String getSessionHash() {
+            return sessionHash;
         }
 
         @Override

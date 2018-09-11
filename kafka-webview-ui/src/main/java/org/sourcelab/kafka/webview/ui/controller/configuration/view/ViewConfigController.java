@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -134,8 +135,7 @@ public class ViewConfigController extends BaseController {
         if (viewForm.getClusterId() != null) {
             // Lets load the topics now
             // Retrieve cluster
-            final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
-            if (cluster != null) {
+            clusterRepository.findById(viewForm.getClusterId()).ifPresent((cluster) -> {
                 try (final KafkaOperations operations = kafkaOperationsFactory.create(cluster, getLoggedInUserId())) {
                     final TopicList topics = operations.getAvailableTopics();
                     model.addAttribute("topics", topics.getTopics());
@@ -146,7 +146,7 @@ public class ViewConfigController extends BaseController {
                         model.addAttribute("partitions", topicDetails.getPartitions());
                     }
                 }
-            }
+            });
         }
 
         return "configuration/view/create";
@@ -163,14 +163,15 @@ public class ViewConfigController extends BaseController {
         final Model model) {
 
         // Retrieve by id
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
+        final Optional<View> viewOptional = viewRepository.findById(id);
+        if (!viewOptional.isPresent()) {
             // Set flash message
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
 
             // redirect to view index
             return "redirect:/configuration/view";
         }
+        final View view = viewOptional.get();
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit: " + view.getName(), null);
@@ -251,14 +252,15 @@ public class ViewConfigController extends BaseController {
         final String successMessage;
         if (updateExisting) {
             // Retrieve it
-            view = viewRepository.findOne(viewForm.getId());
-            if (view == null) {
+            final Optional<View> viewOptional = viewRepository.findById(viewForm.getId());
+            if (!viewOptional.isPresent()) {
                 // Set flash message and redirect
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
 
                 // redirect to view index
                 return "redirect:/configuration/view";
             }
+            view = viewOptional.get();
 
             successMessage = "Updated view successfully!";
         } else {
@@ -268,9 +270,9 @@ public class ViewConfigController extends BaseController {
         }
 
         // Update properties
-        final MessageFormat keyMessageFormat = messageFormatRepository.findOne(viewForm.getKeyMessageFormatId());
-        final MessageFormat valueMessageFormat = messageFormatRepository.findOne(viewForm.getValueMessageFormatId());
-        final Cluster cluster = clusterRepository.findOne(viewForm.getClusterId());
+        final MessageFormat keyMessageFormat = messageFormatRepository.findById(viewForm.getKeyMessageFormatId()).get();
+        final MessageFormat valueMessageFormat = messageFormatRepository.findById(viewForm.getValueMessageFormatId()).get();
+        final Cluster cluster = clusterRepository.findById(viewForm.getClusterId()).get();
 
         final Set<Integer> partitionIds = viewForm.getPartitions();
         final String partitionsStr = partitionIds.stream().map(Object::toString).collect(Collectors.joining(","));
@@ -323,10 +325,11 @@ public class ViewConfigController extends BaseController {
             }
 
             // Retrieve filter
-            final Filter filter = filterRepository.findOne(filterId);
-            if (filter == null) {
+            final Optional<Filter> filterOptional = filterRepository.findById(filterId);
+            if (!filterOptional.isPresent()) {
                 continue;
             }
+            final Filter filter = filterOptional.get();
 
             ViewToFilterOptional viewToFilterOptional = null;
             for (final ViewToFilterOptional currentEntry: currentlySetFilters) {
@@ -384,10 +387,11 @@ public class ViewConfigController extends BaseController {
             }
 
             // Retrieve filter
-            final Filter filter = filterRepository.findOne(filterId);
-            if (filter == null) {
+            final Optional<Filter> filterOptional = filterRepository.findById(filterId);
+            if (!filterOptional.isPresent()) {
                 continue;
             }
+            final Filter filter = filterOptional.get();
 
             ViewToFilterEnforced viewToFilterEnforced = null;
             for (final ViewToFilterEnforced currentEntry: currentlySetFilters) {
@@ -449,13 +453,12 @@ public class ViewConfigController extends BaseController {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String deleteView(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
+        if (!viewRepository.existsById(id)) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
         } else {
             // Delete it
-            viewRepository.delete(id);
+            viewRepository.deleteById(id);
 
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted view!"));
         }
