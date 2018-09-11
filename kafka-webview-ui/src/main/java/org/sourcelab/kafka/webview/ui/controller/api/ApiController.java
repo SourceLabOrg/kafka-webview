@@ -65,6 +65,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -97,25 +98,11 @@ public class ApiController extends BaseController {
         @PathVariable final Long id,
         @RequestBody final ConsumeRequest consumeRequest) {
 
-        // How many results per partition to consume
-        // Null means use whatever is configured in the view.
-        final Integer resultsPerPartition = consumeRequest.getResultsPerPartition();
-
-        // Comma separated list of partitions to consume from.
-        // Null or empty string means use whatever is configured in the View.
-        final String partitions = consumeRequest.getPartitions();
-
         // Action describes what to consume 'next', 'prev', 'head', 'tail'
         final String action = consumeRequest.getAction();
 
-        // Any custom configured filters
-        final List<ConsumeRequest.Filter> requestFilters = consumeRequest.getFilters();
-
         // Retrieve the view definition
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
-            throw new NotFoundApiException("Consume", "Unable to find view");
-        }
+        final View view = retrieveViewById(id);
 
         // Override settings
         final ViewCustomizer viewCustomizer = new ViewCustomizer(view, consumeRequest);
@@ -149,11 +136,8 @@ public class ApiController extends BaseController {
     @ResponseBody
     @RequestMapping(path = "/consumer/view/{id}/offsets", method = RequestMethod.POST, produces = "application/json")
     public ConsumerState setConsumerOffsets(@PathVariable final Long id,  @RequestBody final Map<Integer, Long> partitionOffsetMap) {
-        // Retrieve the view definition
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
-            throw new NotFoundApiException("Offsets", "Unable to find view");
-        }
+        // Retrieve View
+        final View view = retrieveViewById(id);
 
         // Create consumer
         try (final WebKafkaConsumer webKafkaConsumer = setup(view, new HashSet<>())) {
@@ -169,11 +153,8 @@ public class ApiController extends BaseController {
     @ResponseBody
     @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
     public ConsumerState setConsumerOffsetsByTimestamp(@PathVariable final Long id, @PathVariable final Long timestamp) {
-        // Retrieve the view definition
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
-            throw new NotFoundApiException("OffsetsByTimestamp", "Unable to find view");
-        }
+        // Retrieve View
+        final View view = retrieveViewById(id);
 
         // Create consumer
         try (final WebKafkaConsumer webKafkaConsumer = setup(view, new HashSet<>())) {
@@ -190,10 +171,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/view/{id}/partitions", method = RequestMethod.GET, produces = "application/json")
     public Collection<Integer> getPartitionsForView(@PathVariable final Long id) {
         // Retrieve View
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
-            throw new NotFoundApiException("Partitions", "Unable to find view");
-        }
+        final View view = retrieveViewById(id);
 
         // If the view has defined partitions, we'll return them
         if (!view.getPartitionsAsSet().isEmpty()) {
@@ -221,10 +199,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
     public List<TopicListing> getTopics(@PathVariable final Long id) {
         // Retrieve cluster
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
-            throw new NotFoundApiException("Topics", "Unable to find cluster");
-        }
+        final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
@@ -242,10 +217,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
     public TopicDetails getTopicDetails(@PathVariable final Long id, @PathVariable final String topic) {
         // Retrieve cluster
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
-            throw new NotFoundApiException("TopicDetails", "Unable to find cluster");
-        }
+        final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
@@ -262,10 +234,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/config", method = RequestMethod.GET, produces = "application/json")
     public List<ConfigItem> getTopicConfig(@PathVariable final Long id, @PathVariable final String topic) {
         // Retrieve cluster
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
-            throw new NotFoundApiException("TopicConfig", "Unable to find cluster");
-        }
+        final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
@@ -282,10 +251,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/cluster/{id}/broker/{brokerId}/config", method = RequestMethod.GET, produces = "application/json")
     public List<ConfigItem> getBrokerConfig(@PathVariable final Long id, @PathVariable final String brokerId) {
         // Retrieve cluster
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
-            throw new NotFoundApiException("TopicConfig", "Unable to find cluster");
-        }
+        final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
@@ -302,10 +268,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/cluster/{id}/topics/details", method = RequestMethod.GET, produces = "application/json")
     public Collection<TopicDetails> getAllTopicsDetails(@PathVariable final Long id) {
         // Retrieve cluster
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
-            throw new NotFoundApiException("TopicDetails", "Unable to find cluster");
-        }
+        final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
@@ -329,10 +292,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/cluster/{id}/nodes", method = RequestMethod.GET, produces = "application/json")
     public List<NodeDetails> getClusterNodes(@PathVariable final Long id) {
         // Retrieve cluster
-        final Cluster cluster = clusterRepository.findOne(id);
-        if (cluster == null) {
-            throw new NotFoundApiException("ClusterNodes", "Unable to find cluster");
-        }
+        final Cluster cluster = retrieveClusterById(id);
 
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             final NodeList nodes = operations.getClusterNodes();
@@ -349,10 +309,7 @@ public class ApiController extends BaseController {
     @RequestMapping(path = "/filter/{id}/options", method = RequestMethod.GET, produces = "application/json")
     public String[] getFilterOptions(@PathVariable final Long id) {
         // Retrieve Filter
-        final Filter filter = filterRepository.findOne(id);
-        if (filter == null) {
-            throw new NotFoundApiException("FilterOptions", "Unable to find filter");
-        }
+        final Filter filter = retrieveFilterById(id);
         final String[] options = filter.getOptions().split(",");
 
         return options;
@@ -390,5 +347,55 @@ public class ApiController extends BaseController {
     @ModelAttribute
     public void addAttributes(final Model model) {
         // Do nothing.
+    }
+
+    /**
+     * Helper method to retrieve a cluster by its Id.  If its not found it will throw the appropriate
+     * NotFoundApiException exception.
+     *
+     * @param id id of cluster to retrieve
+     * @return the cluster entity.
+     * @throws NotFoundApiException if not found.
+     */
+    private Cluster retrieveClusterById(final Long id) throws NotFoundApiException {
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if (!clusterOptional.isPresent()) {
+            throw new NotFoundApiException("TopicConfig", "Unable to find cluster");
+        }
+        return clusterOptional.get();
+    }
+
+    /**
+     * Helper method to retrieve a view by its Id.  If its not found it will throw the appropriate
+     * NotFoundApiException exception.
+     *
+     * @param id id of view to retrieve
+     * @return the view entity.
+     * @throws NotFoundApiException if not found.
+     */
+    private View retrieveViewById(final Long id) throws NotFoundApiException {
+        // Retrieve View
+        final Optional<View> viewOptional = viewRepository.findById(id);
+        if (!viewOptional.isPresent()) {
+            throw new NotFoundApiException("Partitions", "Unable to find view");
+        }
+        return viewOptional.get();
+    }
+
+    /**
+     * Helper method to retrieve a filter by its Id.  If its not found it will throw the appropriate
+     * NotFoundApiException exception.
+     *
+     * @param id id of filter to retrieve
+     * @return the filter entity.
+     * @throws NotFoundApiException if not found.
+     */
+    private Filter retrieveFilterById(final Long id) throws NotFoundApiException {
+        // Retrieve Filter
+        final Optional<Filter> filterOptional = filterRepository.findById(id);
+        if (!filterOptional.isPresent()) {
+            throw new NotFoundApiException("FilterOptions", "Unable to find filter");
+        }
+        return filterOptional.get();
     }
 }

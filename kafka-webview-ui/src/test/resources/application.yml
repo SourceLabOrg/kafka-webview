@@ -6,11 +6,6 @@ server:
     remote_ip_header: x-forwarded-for
     protocol_header: x-forwarded-proto
 
-security:
-  basic:
-    enabled: true
-  require-ssl: false
-
 spring:
   application:
     name: Kafka Webview
@@ -21,7 +16,7 @@ spring:
     password:
     driver-class-name: org.h2.Driver
 
-  http:
+  servlet:
     multipart:
       max-file-size: 15MB
       max-request-size: 15MB
@@ -47,3 +42,4 @@ app:
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"
+  require-ssl: false

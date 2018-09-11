@@ -50,6 +50,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Web socket controller end points.
@@ -84,14 +85,15 @@ public class StreamController extends BaseController {
         final Model model,
         final RedirectAttributes redirectAttributes) {
         // Retrieve view
-        final View view = viewRepository.findOne(id);
-        if (view == null) {
+        final Optional<View> viewOptional = viewRepository.findById(id);
+        if (!viewOptional.isPresent()) {
             // Set flash message
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
 
             // redirect to home
             return "redirect:/";
         }
+        final View view = viewOptional.get();
 
         // Setup breadcrumbs
         new BreadCrumbManager(model)
@@ -118,10 +120,11 @@ public class StreamController extends BaseController {
         final SimpMessageHeaderAccessor headerAccessor) {
 
         // Retrieve view
-        final View view = viewRepository.findOne(viewId);
-        if (view == null) {
+        final Optional<View> viewOptional = viewRepository.findById(viewId);
+        if (!viewOptional.isPresent()) {
             return "{success: false}";
         }
+        final View view = viewOptional.get();
 
         // Build a session identifier
         final long userId = getLoggedInUserId(headerAccessor);

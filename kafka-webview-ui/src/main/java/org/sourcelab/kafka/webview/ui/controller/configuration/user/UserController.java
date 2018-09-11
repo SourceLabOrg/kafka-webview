@@ -45,6 +45,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controller for User entity CRUD.
@@ -118,10 +119,10 @@ public class UserController extends BaseController {
         model.addAttribute("isAdmin", isAdmin);
 
         // Retrieve by id
-        final User user = userRepository.findOne(id);
+        final Optional<User> userOptional = userRepository.findById(id);
 
         // If we couldn't find the user, or the user is archived.
-        if (user == null || !user.getActive()) {
+        if (!userOptional.isPresent() || !userOptional.get().getActive()) {
             // redirect
             // Set flash message
             final FlashMessage flashMessage = FlashMessage.newWarning("Unable to find user!");
@@ -130,6 +131,7 @@ public class UserController extends BaseController {
             // redirect to cluster index
             return "redirect:/configuration/user";
         }
+        final User user = userOptional.get();
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit: " + user.getDisplayName(), null);
@@ -249,13 +251,15 @@ public class UserController extends BaseController {
             }
         } else {
             // Update existing user
-            final User user = userRepository.findOne(userForm.getId());
+            final Optional<User> userOptional = userRepository.findById(userForm.getId());
 
             // If the user is archived
-            if (!user.getActive()) {
+            if (!userOptional.isPresent() || !userOptional.get().getActive()) {
                 // Add error flash msg
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error creating new user!"));
             } else {
+                final User user = userOptional.get();
+
                 // Update user
                 user.setEmail(userForm.getEmail());
                 user.setDisplayName(userForm.getDisplayName());
@@ -294,14 +298,16 @@ public class UserController extends BaseController {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
-        final User user = userRepository.findOne(id);
-        if (user == null) {
+        final Optional<User> userOptional = userRepository.findById(id);
+        if (!userOptional.isPresent()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find user!"));
-        } else if (user.getId() == getLoggedInUserId()) {
+        } else if (userOptional.get().getId() == getLoggedInUserId()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to delete your own user!"));
         } else {
+            final User user = userOptional.get();
+
             // Rename user
             user.setEmail("DELETED: " + user.getEmail());
             user.setActive(false);

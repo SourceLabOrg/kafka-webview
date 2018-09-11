@@ -27,10 +27,9 @@ package org.sourcelab.kafka.webview.ui.configuration;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -45,14 +44,17 @@ import org.springframework.web.context.request.RequestContextListener;
  */
 @Configuration
 @EnableWebSecurity
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private SecurityProperties securityProperties;
+    /**
+     * Allows for requiring all requests over SSL.
+     * If not defined in the config under the key security.require_ssl, we default to false.
+     */
+    @Value("${app.require_ssl:false}")
+    private boolean isRequireSsl;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -99,7 +101,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll();
         
         // If require SSL is enabled
-        if (securityProperties.isRequireSsl()) {
+        if (isRequireSsl) {
             // Ensure its enabled.
             http
                 .requiresChannel()

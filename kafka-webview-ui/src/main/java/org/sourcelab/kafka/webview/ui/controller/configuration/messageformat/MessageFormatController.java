@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller for MessageFormat CRUD operations.
@@ -121,12 +122,13 @@ public class MessageFormatController extends BaseController {
         final Model model,
         final RedirectAttributes redirectAttributes) {
         // Retrieve it
-        final MessageFormat messageFormat = messageFormatRepository.findOne(id);
-        if (messageFormat == null) {
+        final Optional<MessageFormat> messageFormatOptional = messageFormatRepository.findById(id);
+        if (!messageFormatOptional.isPresent()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find message format!"));
             return "redirect:/configuration/messageFormat";
         }
+        final MessageFormat messageFormat = messageFormatOptional.get();
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit " + messageFormat.getName(), null);
@@ -195,14 +197,15 @@ public class MessageFormatController extends BaseController {
         final MessageFormat messageFormat;
         if (messageFormatForm.exists()) {
             // Retrieve message format
-            messageFormat = messageFormatRepository.findOne(messageFormatForm.getId());
+            final Optional<MessageFormat> messageFormatOptional = messageFormatRepository.findById(messageFormatForm.getId());
 
             // If we can't find the format
-            if (messageFormat == null) {
+            if (!messageFormatOptional.isPresent()) {
                 // Set flash message & redirect
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find message format!"));
                 return "redirect:/configuration/messageFormat";
             }
+            messageFormat = messageFormatOptional.get();
         } else {
             // Creating new message format
             messageFormat = new MessageFormat();
@@ -302,14 +305,16 @@ public class MessageFormatController extends BaseController {
         final String redirectUrl = "redirect:/configuration/messageFormat";
 
         // Retrieve it
-        final MessageFormat messageFormat = messageFormatRepository.findOne(id);
-        if (messageFormat == null || messageFormat.isDefaultFormat()) {
+        final Optional<MessageFormat> messageFormatOptional = messageFormatRepository.findById(id);
+        if (!messageFormatOptional.isPresent() || messageFormatOptional.get().isDefaultFormat()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute(
                 "FlashMessage",
                 FlashMessage.newWarning("Unable to remove message format!"));
             return redirectUrl;
         }
+        final MessageFormat messageFormat = messageFormatOptional.get();
+
         // See if its in use by any views
         final Iterable<View> views = viewRepository
             .findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(messageFormat.getId(), messageFormat.getId());
@@ -327,7 +332,7 @@ public class MessageFormatController extends BaseController {
 
         try {
             // Delete entity
-            messageFormatRepository.delete(id);
+            messageFormatRepository.deleteById(id);
 
             // Delete jar from disk
             try {

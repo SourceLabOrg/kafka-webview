@@ -38,7 +38,7 @@ import javax.persistence.ManyToOne;
 @Entity
 public class ViewToFilterOptional {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

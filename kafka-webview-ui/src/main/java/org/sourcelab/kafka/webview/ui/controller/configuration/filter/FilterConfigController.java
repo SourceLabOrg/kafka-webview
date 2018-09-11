@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -116,12 +117,13 @@ public class FilterConfigController extends BaseController {
         final Model model,
         final RedirectAttributes redirectAttributes) {
         // Retrieve it
-        final Filter filter = filterRepository.findOne(id);
-        if (filter == null) {
+        final Optional<Filter> filterOptional = filterRepository.findById(id);
+        if (!filterOptional.isPresent()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find filter!"));
             return "redirect:/configuration/filter";
         }
+        final Filter filter = filterOptional.get();
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit " + filter.getName(), null);
@@ -164,14 +166,15 @@ public class FilterConfigController extends BaseController {
         final Filter filter;
         if (filterForm.exists()) {
             // Retrieve Filter
-            filter = filterRepository.findOne(filterForm.getId());
+            final Optional<Filter> filterOptional = filterRepository.findById(filterForm.getId());
 
             // If we can't find the filter
-            if (filter == null) {
+            if (!filterOptional.isPresent()) {
                 // Set flash message & redirect
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find filter!"));
                 return "redirect:/configuration/filter";
             }
+            filter = filterOptional.get();
         } else {
             // Creating new filter
             filter = new Filter();
@@ -268,21 +271,22 @@ public class FilterConfigController extends BaseController {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
-        final Filter filter = filterRepository.findOne(id);
-        if (filter == null) {
+        final Optional<Filter> filterOptional = filterRepository.findById(id);
+        if (!filterOptional.isPresent()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to remove filter!"));
         } else {
+            final Filter filter = filterOptional.get();
             try {
                 // Delete any children
                 final List<ViewToFilterEnforced> enforcedList = viewToFilterEnforcedRepository.findByFilterId(id);
                 final List<ViewToFilterOptional> optionalList = viewToFilterOptionalRepository.findByFilterId(id);
 
-                viewToFilterEnforcedRepository.delete(enforcedList);
-                viewToFilterOptionalRepository.delete(optionalList);
+                viewToFilterEnforcedRepository.deleteAll(enforcedList);
+                viewToFilterOptionalRepository.deleteAll(optionalList);
 
                 // Delete entity
-                filterRepository.delete(id);
+                filterRepository.deleteById(id);
 
                 // Delete jar from disk
                 Files.delete(recordFilterPluginFactory.getPathForJar(filter.getJar()));
