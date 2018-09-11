@@ -22,46 +22,40 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.tools;
+package org.sourcelab.kafka.webview.ui.manager.encryption;
 
-import org.sourcelab.kafka.webview.ui.model.Cluster;
-import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
 
 /**
- * Helpful tools for Clusters in tests.
+ * Collection of utility methods around calculating SHA1 hashes.
  */
-@Component
-public class ClusterTestTools {
-    private final ClusterRepository clusterRepository;
-
-    @Autowired
-    public ClusterTestTools(final ClusterRepository clusterRepository) {
-        this.clusterRepository = clusterRepository;
+public class Sha1Tools {
+    /**
+     * Given an input, calculate the SHA1 hash of it and return the hash encoded in hex.
+     * @param input input string to hash.
+     * @return HEX'd result of SHA1 calculation.
+     */
+    public static String sha1(final String input) {
+        try {
+            final MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+            crypt.reset();
+            crypt.update(input.getBytes("UTF-8"));
+            return byteToHex(crypt.digest());
+        }
+        catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
     }
 
-    /**
-     * Creates a cluster model entity and persists it.
-     * @param name Name of the cluster.
-     * @return A persisted cluster.
-     */
-    public Cluster createCluster(final String name) {
-        final Cluster cluster = new Cluster();
-        cluster.setBrokerHosts("localhost:9092");
-        cluster.setSslEnabled(false);
-        cluster.setName(name);
-        cluster.setValid(true);
-        save(cluster);
-
-        return cluster;
-    }
-
-    /**
-     * Easy access to clusterRepository.
-     * @param cluster Cluster to persist.
-     */
-    public void save(final Cluster cluster) {
-        clusterRepository.save(cluster);
+    private static String byteToHex(final byte[] hash) {
+        try (final Formatter formatter = new Formatter();) {
+            for (final byte bit : hash) {
+                formatter.format("%02x", bit);
+            }
+            return formatter.toString();
+        }
     }
 }

@@ -89,4 +89,12 @@ public class ViewTestTools {
         return view;
     }
 
+    /**
+     * Easy access to viewRepository.
+     * @param view View to persist.
+     */
+    public void save(final View view) {
+        viewRepository.save(view);
+    }
+
 }

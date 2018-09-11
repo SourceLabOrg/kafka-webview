@@ -4,8 +4,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.0.0 (UNRELEASED)
 
-### Breaking Changes
+- Added new Stream consumer management page at /configuration/stream
 - Updated SpringBoot framework from 1.5.x to 2.0.4
+
+### Breaking Changes
+
 TODO Write migration guide
 
 ## 1.0.5 (06/22/2018)

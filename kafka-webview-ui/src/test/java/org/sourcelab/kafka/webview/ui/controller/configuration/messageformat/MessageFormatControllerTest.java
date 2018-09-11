@@ -28,7 +28,7 @@ import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.sourcelab.kafka.webview.ui.controller.configuration.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
