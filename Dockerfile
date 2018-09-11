@@ -20,7 +20,9 @@ WORKDIR ${WEBVIEW_HOME}
 
 # Download KafkaWebview Release from Github project
 RUN curl -fSL -o /tmp/kafka-webview-ui-bin.zip https://github.com/SourceLabOrg/kafka-webview/releases/download/v${WEBVIEW_VER}/kafka-webview-ui-${WEBVIEW_VER}-bin.zip
-RUN echo "${WEBVIEW_SHA1} /tmp/kafka-webview-ui-bin.zip" | sha1 -c && \
+
+# Verify SHA1 hash and extract.
+RUN echo "${WEBVIEW_SHA1}  /tmp/kafka-webview-ui-bin.zip" | sha1sum -c - && \
     unzip -d ${WEBVIEW_HOME} /tmp/kafka-webview-ui-bin.zip && \
     mv ${WEBVIEW_HOME}/kafka-webview-ui-${WEBVIEW_VER}/* ${WEBVIEW_HOME} && \
     rm -rf ${WEBVIEW_HOME}/kafka-webview-ui-${WEBVIEW_VER}/ && \
