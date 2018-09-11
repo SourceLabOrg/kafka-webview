@@ -245,16 +245,17 @@ public class WebSocketConsumersManager implements Runnable {
      * @return Returns all of the currently active consumers.
      */
     public Collection<StreamConsumerDetails> getConsumers() {
-        final Collection<StreamConsumerDetails> details = consumers.entrySet().stream()
+        final Collection<StreamConsumerDetails> details = consumers
+            .entrySet()
+            .stream()
             .map((entry) -> new StreamConsumerDetails(
-                    entry.getKey().getUserId(),
-                    entry.getKey().getViewId(),
-                    entry.getKey().getSessionHash(),
-                    entry.getValue().getStartTimestamp(),
-                    entry.getValue().getRecordCount(),
-                    entry.getValue().isPaused()
-                )
-            ).collect(Collectors.toList());
+            entry.getKey().getUserId(),
+            entry.getKey().getViewId(),
+            entry.getKey().getSessionHash(),
+            entry.getValue().getStartTimestamp(),
+            entry.getValue().getRecordCount(),
+            entry.getValue().isPaused()))
+            .collect(Collectors.toList());
 
         // Return immutable
         return Collections.unmodifiableCollection(details);
