@@ -19,7 +19,6 @@ TODO Write migration guide
 - [Issue#83](https://github.com/SourceLabOrg/kafka-webview/issues/83) Improvement Wrap key and message values in <pre></pre> tags. 
 
 ## 1.0.4 (06/11/2018)
->>>>>>> bc93f95a4ed081ef2f3242d2de8d4e03eff6aa72
 - Update NPM dependencies for [CVE-2017-18214](https://nvd.nist.gov/vuln/detail/CVE-2017-18214).
 - Update [Kafka-JUnit](https://github.com/salesforce/kafka-junit) dependency to [Kafka-JUnit4](https://github.com/salesforce/kafka-junit/tree/master/kafka-junit4).
 - Update SpringBoot dependency from 1.5.10 to 1.5.13.
