@@ -59,6 +59,14 @@ public class UserTestTools {
         return createNewUser(UserRole.ROLE_USER);
     }
 
+    /**
+     * Easy access to userRepository.
+     * @param user User to persist.
+     */
+    public void save(final User user) {
+        userRepository.save(user);
+    }
+
     private User createNewUser(final UserRole userRole) {
         final User user = new UserBuilder()
             .withDisplayName("Test User")
@@ -68,7 +76,7 @@ public class UserTestTools {
             .withRole(userRole)
             .build();
 
-        userRepository.save(user);
+        save(user);
         return user;
     }
 }

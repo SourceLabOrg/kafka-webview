@@ -28,7 +28,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
 
-public class ConsumerKeytest {
+public class ConsumerKeyTest {
     @Test
     public void testEquals_differentInstances() {
         final long viewId = 123L;

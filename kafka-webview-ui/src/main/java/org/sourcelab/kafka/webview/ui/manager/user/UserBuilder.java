@@ -30,11 +30,6 @@ import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Formatter;
-
 /**
  * Utility class for building new User entity instances.
  */

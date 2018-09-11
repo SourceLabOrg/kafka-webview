@@ -28,8 +28,6 @@ import org.sourcelab.kafka.webview.ui.model.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-
 /**
  * For interacting w/ the User database table.
  */

@@ -46,7 +46,10 @@
                                         ).getName()}">
                                     </a>
                                 </td>
-                                <td th:text="${consumer.getStartedAtTimestamp()}">
+                                <td
+                                    th:class="relativeUnixTimestamp"
+                                    th:text="${consumer.getStartedAtTimestamp()}"
+                                    >
                                 </td>
                                 <td th:text="${consumer.getRecordCount()}">
                                 </td>
@@ -74,6 +77,25 @@
             <!--/.col-->
         </div>
     </div>
+
+    <!-- Javascript -->
+    <script type="application/javascript">
+        jQuery(document).ready(function() {
+            // Convert timestamps to relative times on load.
+            jQuery('.relativeUnixTimestamp').each(
+                function( index, tdEl ) {
+                    var unixTimestamp = jQuery(tdEl).text();
+                    var momentInstance = moment(unixTimestamp, "x");
+
+                    jQuery(tdEl)
+                        .text(momentInstance.fromNow());
+
+                    jQuery(tdEl)
+                        .attr("title", momentInstance.utc().format())
+                }
+            );
+        });
+    </script>
 </section>
 
 </body>

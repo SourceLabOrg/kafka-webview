@@ -24,6 +24,9 @@
 
 package org.sourcelab.kafka.webview.ui.manager.socket;
 
+import java.time.Instant;
+import java.util.Date;
+
 /**
  * StreamConsumerDetails.
  * Immutable value class holding information about a consumer.
@@ -74,6 +77,10 @@ public final class StreamConsumerDetails {
 
     public long getStartedAtTimestamp() {
         return startedAtTimestamp;
+    }
+
+    public Date getStartedAtDate() {
+        return Date.from( Instant.ofEpochSecond( getStartedAtTimestamp() ) );
     }
 
     public long getRecordCount() {

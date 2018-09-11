@@ -52,8 +52,16 @@ public class ClusterTestTools {
         cluster.setSslEnabled(false);
         cluster.setName(name);
         cluster.setValid(true);
-        clusterRepository.save(cluster);
+        save(cluster);
 
         return cluster;
+    }
+
+    /**
+     * Easy access to clusterRepository.
+     * @param cluster Cluster to persist.
+     */
+    public void save(final Cluster cluster) {
+        clusterRepository.save(cluster);
     }
 }
