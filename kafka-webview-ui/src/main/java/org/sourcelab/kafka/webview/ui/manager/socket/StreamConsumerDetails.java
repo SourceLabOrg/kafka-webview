@@ -25,7 +25,8 @@
 package org.sourcelab.kafka.webview.ui.manager.socket;
 
 /**
- * StreamConsumerDetails.  Holds
+ * StreamConsumerDetails.
+ * Immutable value class holding information about a consumer.
  */
 public final class StreamConsumerDetails {
     private final long viewId;
