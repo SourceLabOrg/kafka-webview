@@ -36,7 +36,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 public class AnonymousUserDetailsService implements UserDetailsService {
     private static CustomUserDetails defaultUserDetails;
 
-    {{
+    {
         // Setup a mock user.
         final User anonymousUser = new User();
         anonymousUser.setId(0);
@@ -46,7 +46,7 @@ public class AnonymousUserDetailsService implements UserDetailsService {
         anonymousUser.setActive(true);
 
         defaultUserDetails = new CustomUserDetails(anonymousUser);
-    }}
+    }
 
     @Override
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {

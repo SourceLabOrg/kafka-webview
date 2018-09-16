@@ -87,6 +87,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         }
     }
 
+    @Override
+    public void configure(final AuthenticationManagerBuilder auth) throws Exception {
+        if (appProperties.isUserAuthEnabled()) {
+            auth
+                // Define our custom user details service.
+                .userDetailsService(new CustomUserDetailsService(userRepository))
+                .passwordEncoder(getPasswordEncoder());
+        } else {
+            auth
+                // Define our custom user details service.
+                .userDetailsService(new AnonymousUserDetailsService());
+        }
+    }
+
     /**
      * Sets up HttpSecurity for standard local user authentication.
      */
@@ -141,23 +155,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // with admin credentials.
             .anonymous()
             .principal(customUserDetails)
-            .authorities(
-                new ArrayList<>(customUserDetails.getAuthorities())
-            );
-    }
-
-    @Override
-    public void configure(final AuthenticationManagerBuilder auth) throws Exception {
-        if (appProperties.isUserAuthEnabled()) {
-            auth
-                // Define our custom user details service.
-                .userDetailsService(new CustomUserDetailsService(userRepository))
-                .passwordEncoder(getPasswordEncoder());
-        } else {
-            auth
-                // Define our custom user details service.
-                .userDetailsService(new AnonymousUserDetailsService());
-        }
+            .authorities(new ArrayList<>(customUserDetails.getAuthorities()));
     }
 
     @Bean
