@@ -43,4 +43,6 @@ app:
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"
-  require-ssl: true
+  requireSsl: true
+  user:
+    enabled: true

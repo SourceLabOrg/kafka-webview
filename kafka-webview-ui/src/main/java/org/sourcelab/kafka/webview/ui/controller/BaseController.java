@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.controller;
 
+import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
@@ -51,14 +52,21 @@ public abstract class BaseController {
     @Autowired
     private ViewRepository viewRepository;
 
+    @Autowired
+    private AppProperties appProperties;
+
     /**
      * Determine if the current user is logged in or not.
      * @return True if so, false if not.
      */
     protected boolean isLoggedIn() {
         // For now bypass auth
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth instanceof AnonymousAuthenticationToken) {
+        final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return false;
+        }
+
+        if (auth instanceof AnonymousAuthenticationToken && appProperties.isUserAuthEnabled()) {
             return false;
         }
         return true;

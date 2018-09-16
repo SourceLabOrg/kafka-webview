@@ -25,29 +25,38 @@
 package org.sourcelab.kafka.webview.ui.manager.user;
 
 import org.sourcelab.kafka.webview.ui.model.User;
-import org.sourcelab.kafka.webview.ui.repository.UserRepository;
+import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
 
 /**
- * Custom User Details Service.  Create Custom User Details implementation.
+ * Simple implementation that should only be used when real user authentication has been disabled.
  */
-@Service
-public class CustomUserDetailsService implements UserDetailsService {
-    private final UserRepository userRepository;
+public class AnonymousUserDetailsService implements UserDetailsService {
+    private static CustomUserDetails defaultUserDetails;
 
-    public CustomUserDetailsService(final UserRepository userRepository) {
-        this.userRepository = userRepository;
+    {
+        // Setup a mock user.
+        final User anonymousUser = new User();
+        anonymousUser.setId(0);
+        anonymousUser.setDisplayName("Anonymous User");
+        anonymousUser.setEmail("Anonymous User");
+        anonymousUser.setRole(UserRole.ROLE_ADMIN);
+        anonymousUser.setActive(true);
+
+        defaultUserDetails = new CustomUserDetails(anonymousUser);
     }
 
     @Override
-    public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
-        final User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found.");
-        }
-        return new CustomUserDetails(user);
+    public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
+        return getDefaultAnonymousUser();
+    }
+
+    /**
+     * @return Default user when not using real user authentication.
+     */
+    public static CustomUserDetails getDefaultAnonymousUser() {
+        return defaultUserDetails;
     }
 }

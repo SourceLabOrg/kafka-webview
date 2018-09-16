@@ -11,4 +11,10 @@ app:
   consumerIdPrefix: "KafkaWebViewConsumer"
 
   ## Require SSL
-  require-ssl: false
+  requireSsl: false
+
+  ## User authentication options
+  user:
+    ## Require user authentication
+    ## Setting to false will disable login requirement.
+    enabled: true
