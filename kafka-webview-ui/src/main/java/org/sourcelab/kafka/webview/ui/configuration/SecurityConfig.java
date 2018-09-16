@@ -27,25 +27,20 @@ package org.sourcelab.kafka.webview.ui.configuration;
 import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
-import org.sourcelab.kafka.webview.ui.model.User;
-import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.context.request.RequestContextListener;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Manages Security Configuration.
@@ -134,13 +129,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      */
     private void disableUserAuth(final HttpSecurity http) throws Exception {
         // Define the "User" that anonymous web clients will assume.
-        final User anonymousUser = new User();
-        anonymousUser.setId(0);
-        anonymousUser.setDisplayName("Anonymous User");
-        anonymousUser.setEmail("no-one");
-        anonymousUser.setRole(UserRole.ROLE_ADMIN);
-        anonymousUser.setActive(true);
-        final CustomUserDetails customUserDetails = new CustomUserDetails(anonymousUser);
+        final CustomUserDetails customUserDetails = AnonymousUserDetailsService.getDefaultAnonymousUser();
 
         http
             // All requests should require authorization as anonymous

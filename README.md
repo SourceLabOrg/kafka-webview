@@ -51,8 +51,21 @@ server:
 
 ## Various App Configs
 app:
+  ## Should be unique to your installation.
+  ## This key will be used for symmetric encryption of JKS/TrustStore secrets if you configure any SSL enabled Kafka clusters.
   key: "SuperSecretKey"
-  requireSsl: true
+
+  ## Defines a prefix prepended to the Id of all consumers.
+  consumerIdPrefix: "KafkaWebViewConsumer"
+
+  ## Require SSL
+  requireSsl: false
+
+  ## User authentication options
+  user:
+    ## Require user authentication
+    ## Setting to false will disable login requirement.
+    enabled: true
 ```
 
 ### Starting the service
@@ -75,6 +88,8 @@ To build and run from the latest source code requires JDK 1.8 and Maven 3.3.9+. 
 Point your browser at `http://localhost:8080` follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
 
 ## Logging in for the first time
+
+**NOTE** If you've disabled user authentication in your configuration, no login will be required.
 
 On first start up a default Administrator user will be created for you.  Login using `admin@example.com` with password `admin`
 
