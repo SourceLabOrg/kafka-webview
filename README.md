@@ -49,12 +49,10 @@ By default config.yml will look similar to:
 server:
   port: 8080
 
-security:
-  require-ssl: false
-
 ## Various App Configs
 app:
   key: "SuperSecretKey"
+  requireSsl: true
 ```
 
 ### Starting the service

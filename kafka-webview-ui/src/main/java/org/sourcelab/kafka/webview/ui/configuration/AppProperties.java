@@ -48,8 +48,15 @@ public class AppProperties {
     @Value("${app.consumerIdPrefix}")
     private String consumerIdPrefix;
 
-    @Value("${app.require_ssl:false}")
+    @Value("${app.requireSsl:false}")
     private boolean requireSsl = false;
+
+    /**
+     * Flag read from configuratio file to determine if the app should
+     * enforce User authentication.
+     */
+    @Value("${app.user.enabled:true}")
+    private boolean userAuthEnabled = true;
 
     public String getName() {
         return name;
@@ -75,6 +82,10 @@ public class AppProperties {
         return requireSsl;
     }
 
+    public boolean isUserAuthEnabled() {
+        return userAuthEnabled;
+    }
+
     @Override
     public String toString() {
         return "AppProperties{"
@@ -84,6 +95,7 @@ public class AppProperties {
             + ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers
             + ", consumerIdPrefix='" + consumerIdPrefix + '\''
             + ", requireSsl='" + requireSsl + '\''
+            + ", userAuthEnabled='" + userAuthEnabled + '\''
             + '}';
     }
 }

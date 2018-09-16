@@ -15,4 +15,6 @@ spring:
     show-sql: true
 
 app:
-  require-ssl: false
+  requireSsl: false
+  user:
+    enabled: true

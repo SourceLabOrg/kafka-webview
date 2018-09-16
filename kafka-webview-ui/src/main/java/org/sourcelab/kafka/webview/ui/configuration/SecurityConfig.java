@@ -24,7 +24,11 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
+import org.sourcelab.kafka.webview.ui.model.User;
+import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,10 +38,14 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.context.request.RequestContextListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages Security Configuration.
@@ -49,12 +57,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserRepository userRepository;
 
-    /**
-     * Allows for requiring all requests over SSL.
-     * If not defined in the config under the key security.require_ssl, we default to false.
-     */
-    @Value("${app.require_ssl:false}")
-    private boolean isRequireSsl;
+    @Autowired
+    private AppProperties appProperties;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -65,43 +69,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
+
+        // CSRF Enabled
         http
-            // CSRF Enabled
-            .csrf().and()
+            .csrf();
 
-            .authorizeRequests()
-                // Paths to static resources are available to anyone
-                .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
-                    .permitAll()
-                // Users can edit their own profile
-                .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
-                    .fullyAuthenticated()
-                // But other Configuration paths require ADMIN role.
-                .antMatchers("/configuration/**")
-                    .hasRole("ADMIN")
-                // All other requests must be authenticated
-                .anyRequest()
-                    .fullyAuthenticated()
-                .and()
-
-            // Define how you login
-            .formLogin()
-                .loginPage("/login")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .failureUrl("/login?error=true")
-                .defaultSuccessUrl("/")
-                .permitAll()
-                .and()
-
-            // And how you logout
-            .logout()
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login")
-                .permitAll();
+        // If user auth is enabled
+        if (appProperties.isUserAuthEnabled()) {
+            // Set it up.
+            enableUserAuth(http);
+        } else {
+            disableUserAuth(http);
+        }
         
         // If require SSL is enabled
-        if (isRequireSsl) {
+        if (appProperties.isRequireSsl()) {
             // Ensure its enabled.
             http
                 .requiresChannel()
@@ -110,12 +92,83 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         }
     }
 
+    /**
+     * Sets up HttpSecurity for standard local user authentication.
+     */
+    private void enableUserAuth(final HttpSecurity http) throws Exception {
+        http
+            .authorizeRequests()
+            // Paths to static resources are available to anyone
+            .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
+            .permitAll()
+            // Users can edit their own profile
+            .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
+            .fullyAuthenticated()
+            // But other Configuration paths require ADMIN role.
+            .antMatchers("/configuration/**")
+            .hasRole("ADMIN")
+            // All other requests must be authenticated
+            .anyRequest()
+            .fullyAuthenticated()
+            .and()
+
+            // Define how you login
+            .formLogin()
+            .loginPage("/login")
+            .usernameParameter("email")
+            .passwordParameter("password")
+            .failureUrl("/login?error=true")
+            .defaultSuccessUrl("/")
+            .permitAll()
+            .and()
+
+            // And how you logout
+            .logout()
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+            .logoutSuccessUrl("/login")
+            .permitAll();
+    }
+
+    /**
+     * Sets up HttpSecurity for standard local user authentication.
+     */
+    private void disableUserAuth(final HttpSecurity http) throws Exception {
+        // Define the "User" that anonymous web clients will assume.
+        final User anonymousUser = new User();
+        anonymousUser.setId(0);
+        anonymousUser.setDisplayName("Anonymous User");
+        anonymousUser.setEmail("no-one");
+        anonymousUser.setRole(UserRole.ROLE_ADMIN);
+        anonymousUser.setActive(true);
+        final CustomUserDetails customUserDetails = new CustomUserDetails(anonymousUser);
+
+        http
+            // All requests should require authorization as anonymous
+            .authorizeRequests()
+            .anyRequest()
+            .anonymous()
+            .and()
+            // And the user provider should always return our anonymous user instance
+            // with admin credentials.
+            .anonymous()
+            .principal(customUserDetails)
+            .authorities(
+                new ArrayList<>(customUserDetails.getAuthorities())
+            );
+    }
+
     @Override
     public void configure(final AuthenticationManagerBuilder auth) throws Exception {
-        auth
-            // Define our custom user details service.
-            .userDetailsService(new CustomUserDetailsService(userRepository))
-            .passwordEncoder(getPasswordEncoder());
+        if (appProperties.isUserAuthEnabled()) {
+            auth
+                // Define our custom user details service.
+                .userDetailsService(new CustomUserDetailsService(userRepository))
+                .passwordEncoder(getPasswordEncoder());
+        } else {
+            auth
+                // Define our custom user details service.
+                .userDetailsService(new AnonymousUserDetailsService());
+        }
     }
 
     @Bean
