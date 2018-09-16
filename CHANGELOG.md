@@ -5,8 +5,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.0 (UNRELEASED)
 
 - Added new Stream consumer management page at /configuration/stream
-- Added ability to configure webserver to not require user logins.
-- Updated SpringBoot framework from 1.5.x to 2.0.5
+- Added ability to disable user authentication, allowing for anonymous users to access the web service.
+- Updated SpringBoot framework from 1.5.x to 2.0.5.
 
 ### Breaking Changes
 
