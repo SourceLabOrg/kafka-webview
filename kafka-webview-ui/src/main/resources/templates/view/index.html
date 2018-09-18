@@ -12,7 +12,7 @@
 <section layout:fragment="content">
     <div class="container">
 
-        <div class="row" th:if="${clusters.isEmpty()}">
+        <div class="row" th:if="${clustersById.isEmpty()}">
             <!-- No Clusters Found -->
             <div class="col-lg-12">
                 <div class="card">
@@ -34,12 +34,40 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-6" th:each="cluster: ${clusters}">
+
+        <div class="row" th:if="${!clustersById.isEmpty()} and ${viewList.isEmpty()}">
+            <!-- No Views Found -->
+            <div class="col-lg-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="alert alert-warning" role="alert">
+                        <h4 class="alert-heading"><strong>No Views Found</strong></h4>
+                        <p>
+                            It looks like you have no Views configured yet!<br/>
+                        </p>
+                        <p class="mb-0">
+                            <span sec:authorize="hasRole('ROLE_ADMIN')">
+                                Let's head over and set one up now!
+                                <a href="/configuration/view/create">Setup new View</a>
+                            </span>
+                            <span sec:authorize="!hasRole('ROLE_ADMIN')">
+                                Ask an Administrator to configure a view.
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" th:if="${not clustersById.isEmpty()} and ${not viewList.isEmpty()}">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header" th:if="${clusterName != null}">
                         <i class="fa fa-align-justify"></i>
-                        Cluster <strong th:text="${cluster.name}"></strong>
+                        Views for <b>[[${clusterName}]]</b> Cluster
+                    </div>
+                    <div class="card-header" th:if="${clusterName == null}">
+                        <i class="fa fa-align-justify"></i>
+                        All Views
                     </div>
                     <div class="card-body">
                         <table class="table table-bordered table-striped table-sm">
@@ -47,27 +75,22 @@
                             <tr>
                                 <th>View</th>
                                 <th>Topic</th>
-                                <th>Partitions</th>
+                                <th>Cluster</th>
                                 <th colspan="2"></th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:unless="${viewsByClusterId.get(cluster.getId()).isEmpty()}" th:each="view : ${viewsByClusterId.get(cluster.getId())}">
-                                <td th:text="${view.name}">
-                                </td>
+                            <tr th:each="view : ${viewList}">
+                                <td th:text="${view.name}"></td>
                                 <td th:text="${view.topic}"></td>
-                                <td th:text="${view.displayPartitions()}"></td>
+                                <td>
+                                    <a th:href="'/cluster/' + ${view.cluster.id}" th:text="${clustersById.get(view.cluster.id).name}"></a>
+                                </td>
                                 <td>
                                     <a th:href="'/view/' + ${view.id}">Browse</a>
                                 </td>
                                 <td>
                                     <a th:href="'/stream/' + ${view.id}">Stream</a>
-                                </td>
-                            </tr>
-                            <!-- Empty List -->
-                            <tr th:if="${viewsByClusterId.get(cluster.getId()).isEmpty()}" >
-                                <td colspan="3" class="text-center">
-                                    No Views Found!
                                 </td>
                             </tr>
                             </tbody>

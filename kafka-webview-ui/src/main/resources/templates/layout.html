@@ -30,6 +30,7 @@
 
     <!-- Main styles for this application -->
     <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/app.css" rel="stylesheet">
     <link href="/vendors/css/jquery-ui.min.css" rel="stylesheet">
     <link href="/vendors/css/jquery-ui-timepicker-addon.min.css" rel="stylesheet">
 
@@ -109,7 +110,7 @@
                         <i class="icon-layers"></i> Clusters
                     </a>
                     <ul class="nav-dropdown-items">
-                        <li class="nav-item" th:each="cluster : ${MenuClusters}">
+                        <li class="nav-item" th:title="${cluster.name}" th:each="cluster : ${MenuClusters}">
                             <a class="nav-link" th:href="'/cluster/' + ${cluster.id}">
                                 <i class="icon-layers"></i>
                                 [[${cluster.name}]]
@@ -124,7 +125,7 @@
                         <i class="icon-eye"></i> Views
                     </a>
                     <ul class="nav-dropdown-items">
-                        <li class="nav-item" th:each="view : ${MenuViews}">
+                        <li class="nav-item" th:title="${view.name}" th:each="view : ${MenuViews}">
                             <a class="nav-link" th:href="@{/view/{id}(id=${view.id})}">
                                 <i class="icon-eye"></i>
                                 [[${view.name}]]
@@ -237,7 +238,7 @@
 
 <!-- Start footer -->
 <footer class="app-footer">
-    <a href="https://www.github.com/crim/kafka-webview">Kafka WebView</a>
+    <a href="https://www.github.com/sourcelaborg/kafka-webview">Kafka WebView</a>
     <span class="float-right">
         UI by <a href="http://coreui.io">CoreUI</a>
     </span>

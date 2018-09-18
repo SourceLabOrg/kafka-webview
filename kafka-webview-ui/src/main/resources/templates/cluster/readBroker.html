@@ -263,7 +263,11 @@
             <tr>
                 <td>{{name}}</td>
                 <td>
-                    {{value}}
+                    <input
+                        class="overflow"
+                        type="text"
+                        value="{{value}}"
+                        readonly/>
                 </td>
                 <td>
                     {{#if isDefault}}
