@@ -37,6 +37,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
@@ -59,25 +60,49 @@ public class ViewController extends BaseController {
      * GET views index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index(final Model model) {
-
+    public String index(
+        final Model model,
+        @RequestParam(name = "clusterId", required = false) final Long clusterId
+    ) {
         // Setup breadcrumbs
-        new BreadCrumbManager(model)
-            .addCrumb("View", null);
+        final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
 
-        // Retrieve all clusters
-        final Iterable<Cluster> clusters = clusterRepository.findAllByOrderByNameAsc();
-        final Map<Long, Iterable<View>> viewsByClusterId = new HashMap<>();
+        // Retrieve all clusters and index by id
+        final Map<Long, Cluster> clustersById = new HashMap<>();
+        clusterRepository
+            .findAllByOrderByNameAsc()
+            .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
 
-        for (final Cluster cluster: clusters) {
-            // Retrieve all views for cluster
-            final Iterable<View> views = viewRepository.findAllByClusterIdOrderByNameAsc(cluster.getId());
-            viewsByClusterId.put(cluster.getId(), views);
+        final Iterable<View> views;
+        if (clusterId == null) {
+            // Retrieve all views order by name asc.
+            views = viewRepository.findAllByOrderByNameAsc();
+        } else {
+            // Retrieve only views for the cluster
+            views = viewRepository.findAllByClusterIdOrderByNameAsc(clusterId);
         }
 
         // Set model Attributes
-        model.addAttribute("viewsByClusterId", viewsByClusterId);
-        model.addAttribute("clusters", clusters);
+        model.addAttribute("viewList", views);
+        model.addAttribute("clustersById", clustersById);
+
+        final String clusterName;
+        if (clusterId != null && clustersById.containsKey(clusterId)) {
+            // If filtered by a cluster
+            clusterName = clustersById.get(clusterId).getName();
+
+            // Add top level breadcrumb
+            breadCrumbManager
+                .addCrumb("View", "/view")
+                .addCrumb("Cluster: " + clusterName);
+        } else {
+            // If showing all views
+            clusterName = null;
+
+            // Add top level breadcrumb
+            breadCrumbManager.addCrumb("View", null);
+        }
+        model.addAttribute("clusterName", clusterName);
 
         return "view/index";
     }

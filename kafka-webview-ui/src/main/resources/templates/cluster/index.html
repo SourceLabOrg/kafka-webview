@@ -32,7 +32,7 @@
                                     <a th:href="'/cluster/' + ${cluster.id}" th:text="${cluster.name}"></a>
                                 </td>
                                 <td>
-                                    <a th:href="'/view#cluster' + ${cluster.id}" th:text="${viewsByClusterId.get(cluster.getId())} + ' Views'"></a>
+                                    <a th:href="'/view?clusterId=' + ${cluster.id}" th:text="${viewsByClusterId.get(cluster.getId())} + ' Views'"></a>
                                 </td>
                                 <td>
                                     <span

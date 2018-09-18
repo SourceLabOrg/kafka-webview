@@ -7,3 +7,8 @@ input.overflow {
     border: none;
     width: 100%;
 }
+
+.overflow-wrap {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
