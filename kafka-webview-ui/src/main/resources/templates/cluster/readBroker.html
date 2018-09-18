@@ -263,7 +263,11 @@
             <tr>
                 <td>{{name}}</td>
                 <td>
-                    {{value}}
+                    <input
+                        type="text"
+                        value="{{value}}"
+                        style="background: transparent; border: none; width: 100%;"
+                        readonly/>
                 </td>
                 <td>
                     {{#if isDefault}}
