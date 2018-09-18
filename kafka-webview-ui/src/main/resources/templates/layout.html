@@ -110,7 +110,7 @@
                         <i class="icon-layers"></i> Clusters
                     </a>
                     <ul class="nav-dropdown-items">
-                        <li class="nav-item" th:each="cluster : ${MenuClusters}">
+                        <li class="nav-item" th:title="${cluster.name}" th:each="cluster : ${MenuClusters}">
                             <a class="nav-link" th:href="'/cluster/' + ${cluster.id}">
                                 <i class="icon-layers"></i>
                                 [[${cluster.name}]]
@@ -125,7 +125,7 @@
                         <i class="icon-eye"></i> Views
                     </a>
                     <ul class="nav-dropdown-items">
-                        <li class="nav-item" th:each="view : ${MenuViews}">
+                        <li class="nav-item" th:title="${view.name}" th:each="view : ${MenuViews}">
                             <a class="nav-link" th:href="@{/view/{id}(id=${view.id})}">
                                 <i class="icon-eye"></i>
                                 [[${view.name}]]
