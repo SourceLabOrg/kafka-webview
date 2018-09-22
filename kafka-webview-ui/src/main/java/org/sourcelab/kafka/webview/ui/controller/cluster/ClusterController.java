@@ -24,8 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.controller.cluster;
 
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
@@ -43,7 +41,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Controller for viewing Cluster details.
@@ -166,38 +163,6 @@ public class ClusterController extends BaseController {
 
         // Display template
         return "cluster/readTopic";
-    }
-
-    /**
-     * GET Displays info about a specific broker in a cluster.
-     */
-    @RequestMapping(path = "/{clusterId}/manage/create/topic", method = RequestMethod.POST)
-    public String createTopic(
-        @PathVariable final Long clusterId,
-        @PathVariable final Integer brokerId,
-        final Model model,
-        final RedirectAttributes redirectAttributes) {
-
-        // Retrieve by id
-        final Cluster cluster = retrieveCluster(clusterId, redirectAttributes);
-        if (cluster == null) {
-            // redirect
-            return "redirect:/";
-        }
-
-        final AdminClient adminClient = AdminClient.create(new Properties());
-
-        final String topicName = "name";
-        final int numPartitions = 4;
-        final short replicaFactor = 2;
-        final NewTopic newTopic = new NewTopic(topicName, numPartitions, replicaFactor);
-
-
-        //adminClient.createTopics()
-
-
-        // Display template
-        return "cluster/readBroker";
     }
 
     private Cluster retrieveCluster(final Long id, final RedirectAttributes redirectAttributes) {
