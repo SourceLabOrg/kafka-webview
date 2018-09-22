@@ -284,7 +284,9 @@ public class ApiController extends BaseController {
 
             // Sort the results by name
             final List<TopicDetails> sortedResults = new ArrayList<>(results.values());
-            Collections.sort(sortedResults, Comparator.comparing(TopicDetails::getName));
+            sortedResults.sort(Comparator.comparing(TopicDetails::getName));
+
+            // Return values.
             return sortedResults;
         } catch (final Exception e) {
             throw new ApiException("TopicDetails", e);
@@ -315,11 +317,7 @@ public class ApiController extends BaseController {
             throw new ApiException("CreateTopic", "Invalid replicas value");
         }
 
-        final CreateTopic createTopic = new CreateTopic(
-          name,
-          partitions,
-          replicas
-        );
+        final CreateTopic createTopic = new CreateTopic(name, partitions, replicas);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {

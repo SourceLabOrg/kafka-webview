@@ -35,13 +35,13 @@ import org.slf4j.LoggerFactory;
  * Not intended for external consumption.
  */
 public class DevCluster {
-    private final static Logger logger = LoggerFactory.getLogger(DevCluster.class);
+    private static final Logger logger = LoggerFactory.getLogger(DevCluster.class);
 
     /**
      * Main entry point
      * @param args command line args.
      */
-    public static void main(final String args[]) throws Exception {
+    public static void main(final String[] args) throws Exception {
         // Right now we accept one parameter, the number of nodes in the cluster.
         final int clusterSize;
         if (args.length > 0) {

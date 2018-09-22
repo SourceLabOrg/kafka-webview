@@ -32,6 +32,12 @@ public class CreateTopic {
     private final int numberOfPartitions;
     private final short replicaFactor;
 
+    /**
+     * Constructor.
+     * @param name Name of the topic.
+     * @param numberOfPartitions number of partitions.
+     * @param replicaFactor replication factory.
+     */
     public CreateTopic(final String name, final int numberOfPartitions, final short replicaFactor) {
         this.name = name;
         this.numberOfPartitions = numberOfPartitions;
