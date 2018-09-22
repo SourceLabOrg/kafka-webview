@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>kafka-webview</artifactId>
+        <groupId>org.sourcelab</groupId>
+        <version>2.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>dev-cluster</artifactId>
+    <version>2.0.0</version>
+
+    <!-- Require Maven 3.3.9 -->
+    <prerequisites>
+        <maven>3.3.9</maven>
+    </prerequisites>
+
+    <!-- Module Description and Ownership -->
+    <name>Kafka Dev Cluster</name>
+    <description>A simple embedded kafka cluster for developing against.</description>
+    <url>https://github.com/Crim/kafka-webview</url>
+    <developers>
+        <developer>
+            <name>Stephen Powis</name>
+            <email>stephen.powis@gmail.com</email>
+            <organization>SourceLab.org</organization>
+            <organizationUrl>https://www.sourcelab.org/</organizationUrl>
+        </developer>
+    </developers>
+
+    <!-- MIT License -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <!-- Module Properties -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Log4J Version -->
+        <log4j2.version>2.8.2</log4j2.version>
+    </properties>
+
+
+    <dependencies>
+        <!-- Include Kafka-JUnit-Core -->
+        <dependency>
+            <groupId>com.salesforce.kafka.test</groupId>
+            <artifactId>kafka-junit-core</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <!-- Include Kafka 1.1.x -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.11</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- This is just an internal module to ease development -->
+            <!-- Module not for external consumption -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>

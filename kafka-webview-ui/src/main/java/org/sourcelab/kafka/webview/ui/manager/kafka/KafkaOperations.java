@@ -27,7 +27,9 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.Node;
@@ -35,6 +37,7 @@ import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
@@ -194,6 +197,33 @@ public class KafkaOperations implements AutoCloseable {
     public BrokerConfig getBrokerConfig(final String brokerId) {
         final ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, brokerId);
         return new BrokerConfig(describeResource(configResource));
+    }
+
+    /**
+     * Create a new topic on the cluster.
+     * @param createTopic defines the new topic
+     * @return boolean, true if success.
+     */
+    public boolean createTopic(final CreateTopic createTopic) {
+        final NewTopic newTopic = new NewTopic(
+            createTopic.getName(),
+            createTopic.getNumberOfPartitions(),
+            createTopic.getReplicaFactor()
+        );
+
+        try {
+            // Create the topic
+            final CreateTopicsResult result = adminClient.createTopics(Collections.singleton(newTopic));
+
+            // Wait for the async request to process.
+            result.all().get();
+
+            // return true?
+            return true;
+        } catch (final InterruptedException | ExecutionException exception) {
+            // TODO Handle this
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
     }
 
     private List<ConfigItem> describeResource(final ConfigResource configResource) {
