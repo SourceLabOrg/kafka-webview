@@ -13,6 +13,7 @@
     <modules>
         <module>kafka-webview-plugin</module>
         <module>kafka-webview-ui</module>
+        <module>dev-cluster</module>
     </modules>
 
     <!-- Require Maven 3.3.9 -->

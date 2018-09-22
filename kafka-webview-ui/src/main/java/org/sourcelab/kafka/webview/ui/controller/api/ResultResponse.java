@@ -22,39 +22,46 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.model;
+package org.sourcelab.kafka.webview.ui.controller.api;
 
-import org.junit.Test;
-
-import java.lang.reflect.Field;
-
-import static org.junit.Assert.assertFalse;
-
-
-public class ClusterTest {
+/**
+ * Generic response object.
+ */
+public class ResultResponse {
+    private final String operation;
+    private final boolean result;
+    private final String message;
 
     /**
-     * Validate toString never spits out sensitive fields
+     * Constructor.
+     * @param operation Name of the operation.
+     * @param result was it a success?
+     * @param message Any other message.
      */
-    @Test
-    public void testToString() throws IllegalAccessException, NoSuchFieldException {
-        final String expectedSecret1 = "MySuperSecretKey";
-        final String expectedSecret2 = "AnotherSecret";
+    public ResultResponse(final String operation, final boolean result, final String message) {
+        this.operation = operation;
+        this.result = result;
+        this.message = message;
+    }
 
-        // Create app Properties instance
-        final Cluster cluster = new Cluster();
+    public String getOperation() {
+        return operation;
+    }
 
-        // Jump through hoops to set properties
-        final Field field1 = cluster.getClass().getDeclaredField("trustStorePassword");
-        field1.setAccessible(true);
-        field1.set(cluster, expectedSecret1);
+    public boolean isResult() {
+        return result;
+    }
 
-        final Field field2 = cluster.getClass().getDeclaredField("keyStorePassword");
-        field2.setAccessible(true);
-        field2.set(cluster, expectedSecret1);
+    public String getMessage() {
+        return message;
+    }
 
-        final String result = cluster.toString();
-        assertFalse("Should not contain our sensitive field", result.contains(expectedSecret1));
-        assertFalse("Should not contain our sensitive field", result.contains(expectedSecret2));
+    @Override
+    public String toString() {
+        return "ResultResponse{"
+            + "operation='" + operation + '\''
+            + ", result=" + result
+            + ", message='" + message + '\''
+            + '}';
     }
 }

@@ -47,10 +47,20 @@ public class ClusterTestTools {
      * @return A persisted cluster.
      */
     public Cluster createCluster(final String name) {
+        return createCluster(name, "localhost:9092");
+    }
+
+    /**
+     * Creates a cluster model entity and persists it.
+     * @param name Name of the cluster.
+     * @param brokerHosts hosts for the cluster.
+     * @return A persisted cluster.
+     */
+    public Cluster createCluster(final String name, final String brokerHosts) {
         final Cluster cluster = new Cluster();
-        cluster.setBrokerHosts("localhost:9092");
-        cluster.setSslEnabled(false);
         cluster.setName(name);
+        cluster.setBrokerHosts(brokerHosts);
+        cluster.setSslEnabled(false);
         cluster.setValid(true);
         save(cluster);
 

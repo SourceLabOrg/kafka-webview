@@ -22,39 +22,46 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.model;
+package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
-import org.junit.Test;
-
-import java.lang.reflect.Field;
-
-import static org.junit.Assert.assertFalse;
-
-
-public class ClusterTest {
+/**
+ * DTO class for defining a new Kafka topic.
+ */
+public class CreateTopic {
+    private final String name;
+    private final int numberOfPartitions;
+    private final short replicaFactor;
 
     /**
-     * Validate toString never spits out sensitive fields
+     * Constructor.
+     * @param name Name of the topic.
+     * @param numberOfPartitions number of partitions.
+     * @param replicaFactor replication factory.
      */
-    @Test
-    public void testToString() throws IllegalAccessException, NoSuchFieldException {
-        final String expectedSecret1 = "MySuperSecretKey";
-        final String expectedSecret2 = "AnotherSecret";
+    public CreateTopic(final String name, final int numberOfPartitions, final short replicaFactor) {
+        this.name = name;
+        this.numberOfPartitions = numberOfPartitions;
+        this.replicaFactor = replicaFactor;
+    }
 
-        // Create app Properties instance
-        final Cluster cluster = new Cluster();
+    public String getName() {
+        return name;
+    }
 
-        // Jump through hoops to set properties
-        final Field field1 = cluster.getClass().getDeclaredField("trustStorePassword");
-        field1.setAccessible(true);
-        field1.set(cluster, expectedSecret1);
+    public int getNumberOfPartitions() {
+        return numberOfPartitions;
+    }
 
-        final Field field2 = cluster.getClass().getDeclaredField("keyStorePassword");
-        field2.setAccessible(true);
-        field2.set(cluster, expectedSecret1);
+    public short getReplicaFactor() {
+        return replicaFactor;
+    }
 
-        final String result = cluster.toString();
-        assertFalse("Should not contain our sensitive field", result.contains(expectedSecret1));
-        assertFalse("Should not contain our sensitive field", result.contains(expectedSecret2));
+    @Override
+    public String toString() {
+        return "CreateTopic{"
+            + "name='" + name + '\''
+            + ", numberOfPartitions=" + numberOfPartitions
+            + ", replicaFactor=" + replicaFactor
+            + '}';
     }
 }

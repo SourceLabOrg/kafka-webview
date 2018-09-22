@@ -96,6 +96,8 @@ public class ClusterController extends BaseController {
             // redirect
             return "redirect:/";
         }
+
+        // Set view attribute
         model.addAttribute("cluster", cluster);
 
         // Setup breadcrumbs

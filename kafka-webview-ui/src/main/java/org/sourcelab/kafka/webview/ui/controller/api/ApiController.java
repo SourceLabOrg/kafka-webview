@@ -35,6 +35,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerState;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
@@ -61,7 +62,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -278,10 +281,52 @@ public class ApiController extends BaseController {
             // Now get details about all the topics
             final Map<String, TopicDetails> results = operations.getTopicDetails(topicList.getTopicNames());
 
-            // Return just the TopicDetails
-            return results.values();
+            // Sort the results by name
+            final List<TopicDetails> sortedResults = new ArrayList<>(results.values());
+            sortedResults.sort(Comparator.comparing(TopicDetails::getName));
+
+            // Return values.
+            return sortedResults;
         } catch (final Exception e) {
             throw new ApiException("TopicDetails", e);
+        }
+    }
+
+    /**
+     * POST Create new topic on cluster.
+     * This should require ADMIN role.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/create/topic", method = RequestMethod.POST, produces = "application/json")
+    public ResultResponse createTopic(@PathVariable final Long id, @RequestBody final CreateTopicRequest createTopicRequest) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        final String name = createTopicRequest.getName();
+        if (name == null || name.trim().isEmpty()) {
+            throw new ApiException("CreateTopic", "Invalid topic name");
+        }
+
+        final Integer partitions = createTopicRequest.getPartitions();
+        if (partitions == null || partitions < 1) {
+            throw new ApiException("CreateTopic", "Invalid partitions value");
+        }
+
+        final Short replicas = createTopicRequest.getReplicas();
+        if (replicas == null || replicas < 1) {
+            throw new ApiException("CreateTopic", "Invalid replicas value");
+        }
+
+        final CreateTopic createTopic = new CreateTopic(name, partitions, replicas);
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            final boolean result = operations.createTopic(createTopic);
+
+            // Quick n dirty json response
+            return new ResultResponse("CreateTopic", result, "");
+        } catch (final Exception e) {
+            throw new ApiException("CreateTopic", e);
         }
     }
 

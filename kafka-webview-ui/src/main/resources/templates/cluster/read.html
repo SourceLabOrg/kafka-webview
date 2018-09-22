@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
     xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
@@ -87,6 +88,39 @@
                         jQuery('#topics-no-results').toggle(false);
                         jQuery('#topics-table').toggle(true);
                     }
+                },
+                loadTopics: function() {
+                    // Fire off request to get topic details
+                    ApiClient.getAllTopicsDetails(ClusterInfo.clusterId, function(results) {
+                        // Handle results
+                        ClusterInfo.handleAllTopicsDetails(results);
+                    });
+                },
+                // Handle submitting new topic form.
+                createNewTopic: function() {
+                    ApiClient.createTopic(
+                        ClusterInfo.clusterId,
+                        jQuery('#topicName').val(),
+                        jQuery('#topicPartitions').val(),
+                        jQuery('#topicReplicas').val(),
+
+                        // Handle results
+                        function(results) {
+                            // Hide modal
+                            jQuery('#createTopicModal').modal('hide');
+
+                            // Reset form
+                            jQuery('#topicName').val("");
+                            jQuery('#topicPartitions').val(1);
+                            jQuery('#topicReplicas').val(1);
+
+                            // Reload topic listing
+                            UITools.showSuccess("Created topic successfully.");
+
+                            // show notification
+                            ClusterInfo.loadTopics();
+                        }
+                    )
                 }
             };
 
@@ -99,10 +133,7 @@
                     ClusterInfo.handleClusterNodeResults(results);
 
                     // Fire off request to get topic details
-                    ApiClient.getAllTopicsDetails(ClusterInfo.clusterId, function(results) {
-                       // Handle results
-                       ClusterInfo.handleAllTopicsDetails(results);
-                    });
+                    ClusterInfo.loadTopics();
                 });
             });
         </script>
@@ -157,6 +188,13 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Topics
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group" sec:authorize="hasRole('ROLE_ADMIN')">
+                            <button class="btn" type="button" data-toggle="modal" data-target="#createTopicModal" style="padding-bottom: 0;">
+                                <i class="icon-settings"></i>
+                                &nbsp;Create new
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -228,6 +266,71 @@
                 </td>
             </tr>
         </script>
+
+        <!-- Create topic modal -->
+        <div class="modal fade show" id="createTopicModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Create new topic on [[${cluster.name}]]</h4>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" class="form-horizontal"
+                            th:action="@{/cluster/manage/create/topic}">
+
+                            <!-- Name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="topicName">
+                                    Topic Name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="topicName" name="name" class="form-control" type="text"
+                                        placeholder="A unique name to identify this topic">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <!-- Partition Count -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="topicPartitions">
+                                    Partitions
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="topicPartitions" name="partitions" class="form-control" type="text"
+                                        placeholder="How many partitions on this topic"
+                                        value="1">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <!-- Partition Count -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="topicReplicas">
+                                    Replication factor
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="topicReplicas" name="resultsPerPartition" class="form-control" type="text"
+                                        placeholder="Number of replicas"
+                                        th:value="1">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
+                        <button class="btn btn-primary" type="button" onclick="ClusterInfo.createNewTopic();">Create topic</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </section>
 

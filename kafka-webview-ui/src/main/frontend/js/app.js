@@ -254,6 +254,25 @@ var ApiClient = {
             .getJSON('/api/cluster/' + clusterId + '/broker/' + brokerId + '/config', '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
+    createTopic: function(clusterId, name, partitions, replicas, callback) {
+        var payload = JSON.stringify({
+            name: name,
+            partitions: partitions,
+            replicas: replicas
+        });
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/cluster/' + clusterId + '/create/topic',
+            data: payload,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
     defaultErrorHandler: function(jqXHR, textStatus, errorThrown) {
         // convert response to json
         var response = jQuery.parseJSON(jqXHR.responseText);
@@ -270,6 +289,19 @@ var UITools = {
         var alertContainer = jQuery(UITools.alertContainerId);
 
         var alertElement = jQuery.parseHTML('<div class="alert alert-dismissable alert-danger"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> <i class="icon-fire"></i> <span><strong>Error </strong>' + message + '</span></div>');
+        jQuery(alertContainer)
+            .append(alertElement);
+
+        if (timeoutInSecs) {
+            setTimeout(function() {
+                jQuery(alertElement).alert('close');
+            }, timeoutInSecs * 1000);
+        }
+    },
+    showSuccess: function(message, timeoutInSecs) {
+        var alertContainer = jQuery(UITools.alertContainerId);
+
+        var alertElement = jQuery.parseHTML('<div class="alert alert-dismissable alert-success"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button> <i class="icon-check"></i> <span><strong>Success </strong>' + message + '</span></div>');
         jQuery(alertContainer)
             .append(alertElement);
 

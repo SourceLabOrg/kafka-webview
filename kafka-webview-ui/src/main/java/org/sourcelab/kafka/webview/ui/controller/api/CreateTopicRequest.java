@@ -22,39 +22,46 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.model;
+package org.sourcelab.kafka.webview.ui.controller.api;
 
-import org.junit.Test;
+/**
+ * Represents a request to create a new topic.
+ */
+public class CreateTopicRequest {
+    private String name;
+    private Integer partitions;
+    private Short replicas;
 
-import java.lang.reflect.Field;
+    public void setName(final String name) {
+        this.name = name;
+    }
 
-import static org.junit.Assert.assertFalse;
+    public String getName() {
+        return name;
+    }
 
+    public Integer getPartitions() {
+        return partitions;
+    }
 
-public class ClusterTest {
+    public void setPartitions(final Integer partitions) {
+        this.partitions = partitions;
+    }
 
-    /**
-     * Validate toString never spits out sensitive fields
-     */
-    @Test
-    public void testToString() throws IllegalAccessException, NoSuchFieldException {
-        final String expectedSecret1 = "MySuperSecretKey";
-        final String expectedSecret2 = "AnotherSecret";
+    public Short getReplicas() {
+        return replicas;
+    }
 
-        // Create app Properties instance
-        final Cluster cluster = new Cluster();
+    public void setReplicas(final Short replicas) {
+        this.replicas = replicas;
+    }
 
-        // Jump through hoops to set properties
-        final Field field1 = cluster.getClass().getDeclaredField("trustStorePassword");
-        field1.setAccessible(true);
-        field1.set(cluster, expectedSecret1);
-
-        final Field field2 = cluster.getClass().getDeclaredField("keyStorePassword");
-        field2.setAccessible(true);
-        field2.set(cluster, expectedSecret1);
-
-        final String result = cluster.toString();
-        assertFalse("Should not contain our sensitive field", result.contains(expectedSecret1));
-        assertFalse("Should not contain our sensitive field", result.contains(expectedSecret2));
+    @Override
+    public String toString() {
+        return "CreateTopicRequest{"
+            + "name='" + name + '\''
+            + ", partitions=" + partitions
+            + ", replicas=" + replicas
+            + '}';
     }
 }
