@@ -109,16 +109,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             // Paths to static resources are available to anyone
             .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
-            .permitAll()
+                .permitAll()
             // Users can edit their own profile
             .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
-            .fullyAuthenticated()
-            // But other Configuration paths require ADMIN role.
-            .antMatchers("/configuration/**")
-            .hasRole("ADMIN")
+                .fullyAuthenticated()
+            // Define admin only paths
+            .antMatchers(
+                // Configuration
+                "/configuration/**",
+
+                // Create topic
+                "/api/cluster/*/create/**"
+            ).hasRole("ADMIN")
+
             // All other requests must be authenticated
             .anyRequest()
-            .fullyAuthenticated()
+                .fullyAuthenticated()
             .and()
 
             // Define how you login

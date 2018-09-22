@@ -25,9 +25,10 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.user.forms;
 
 import org.junit.Test;
+
 import java.lang.reflect.Field;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 public class UserFormTest {
 

@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.configuration;
 
 import org.junit.Test;
+
 import java.lang.reflect.Field;
 
 import static org.junit.Assert.assertFalse;

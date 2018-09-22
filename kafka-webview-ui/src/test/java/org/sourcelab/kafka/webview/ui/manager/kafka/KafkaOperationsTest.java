@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
@@ -243,6 +244,34 @@ public class KafkaOperationsTest {
             for (final ConfigItem configItem: brokerConfig.getConfigEntries()) {
                 assertNotNull(configItem.getName());
             }
+        }
+    }
+
+    /**
+     * Test creating a new topic.
+     */
+    @Test
+    public void testCreateTopic() {
+        final String newTopic = "TestTopic-" + System.currentTimeMillis();
+
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+        final String clientId = "BobsYerAunty";
+
+        // Create operations client.
+        try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
+            // Sanity test to validate our topic doesn't exist
+            TopicList topicsList = operations.getAvailableTopics();
+            assertFalse("Should not contain our topic yet", topicsList.getTopicNames().contains(newTopic));
+
+            // Create our topic
+            final boolean result = operations.createTopic(new CreateTopic(newTopic, 1, (short) 1));
+            assertTrue("Should have true return result", result);
+
+            // Validate topic exists now.
+            topicsList = operations.getAvailableTopics();
+            assertTrue("Should contain our topic now", topicsList.getTopicNames().contains(newTopic));
         }
     }
 

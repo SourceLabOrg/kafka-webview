@@ -64,7 +64,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -295,10 +294,11 @@ public class ApiController extends BaseController {
 
     /**
      * POST Create new topic on cluster.
+     * This should require ADMIN role.
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/create/topic", method = RequestMethod.POST, produces = "application/json")
-    public boolean createTopic(@PathVariable final Long id, @RequestBody final CreateTopicRequest createTopicRequest) {
+    public ResultResponse createTopic(@PathVariable final Long id, @RequestBody final CreateTopicRequest createTopicRequest) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
@@ -321,7 +321,10 @@ public class ApiController extends BaseController {
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
-            return operations.createTopic(createTopic);
+            final boolean result = operations.createTopic(createTopic);
+
+            // Quick n dirty json response
+            return new ResultResponse("CreateTopic", result, "");
         } catch (final Exception e) {
             throw new ApiException("CreateTopic", e);
         }
