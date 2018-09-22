@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
     xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
@@ -188,7 +189,7 @@
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Topics
 
-                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                        <div class="btn-group float-right" role="group" aria-label="Button group" sec:authorize="hasRole('ROLE_ADMIN')">
                             <button class="btn" type="button" data-toggle="modal" data-target="#createTopicModal" style="padding-bottom: 0;">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
