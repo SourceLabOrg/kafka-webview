@@ -24,7 +24,9 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -34,7 +36,14 @@ public class BrokerConfig {
     private final List<ConfigItem> configEntries;
 
     public BrokerConfig(final List<ConfigItem> configEntries) {
-        this.configEntries = Collections.unmodifiableList(configEntries);
+        // Create new list from source.
+        final List<ConfigItem> sorted = new ArrayList<>(configEntries);
+
+        // Sort the list by name
+        sorted.sort(Comparator.comparing(ConfigItem::getName));
+
+        // Make immutable.
+        this.configEntries = Collections.unmodifiableList(sorted);
     }
 
     public List<ConfigItem> getConfigEntries() {
