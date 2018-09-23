@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added new Stream consumer management page at /configuration/stream
 - Added ability to disable user authentication, allowing for anonymous users to access the web service.
 - Added ability to create topics via the UI.
+- Added ability to modify topic configuration via the UI.
 - Updated SpringBoot framework from 1.5.x to 2.0.5.
 
 ### Breaking Changes
