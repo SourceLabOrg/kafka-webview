@@ -65,7 +65,7 @@ public class ClusterController extends BaseController {
         manager.addCrumb("Cluster Explorer", null);
 
         // Retrieve all clusters
-        final Iterable<Cluster> clusterList = clusterRepository.findAll();
+        final Iterable<Cluster> clusterList = clusterRepository.findAllByOrderByNameAsc();
         model.addAttribute("clusterList", clusterList);
 
         // Retrieve how many views for each cluster
