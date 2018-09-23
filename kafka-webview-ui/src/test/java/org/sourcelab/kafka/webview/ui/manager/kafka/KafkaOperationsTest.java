@@ -41,6 +41,10 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -272,6 +276,64 @@ public class KafkaOperationsTest {
             // Validate topic exists now.
             topicsList = operations.getAvailableTopics();
             assertTrue("Should contain our topic now", topicsList.getTopicNames().contains(newTopic));
+        }
+    }
+
+    /**
+     * Test altering the configuration of a topic.
+     */
+    @Test
+    public void testModifyingATopic() {
+        final String topicName = "TestTopic-" + System.currentTimeMillis();
+
+        // Define the values we want to modify
+        final String configName1 = "flush.messages";
+        final String newConfigValue1 = "0";
+
+        final String configName2 = "max.message.bytes";
+        final String newConfigValue2 = "1024";
+
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+        final String clientId = "BobsYerAunty";
+
+        // Create operations client.
+        try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
+            // Create our topic
+            final boolean result = operations.createTopic(new CreateTopic(topicName, 1, (short) 1));
+            assertTrue("Should have true return result", result);
+
+            // Validate topic exists now.
+            final TopicList topicsList = operations.getAvailableTopics();
+            assertTrue("Should contain our topic now", topicsList.getTopicNames().contains(topicName));
+
+            // Get configuration for topic
+            TopicConfig topicConfig = operations.getTopicConfig(topicName);
+
+            // Sanity test, these keys should exist and be set to default values.
+            assertTrue("Should be set to default", topicConfig.getConfigItemByName(configName1).get().isDefault());
+            assertTrue("Should be set to default", topicConfig.getConfigItemByName(configName2).get().isDefault());
+
+            // Now lets modify them
+            final Map<String, String> alteredConfigs = new HashMap<>();
+            alteredConfigs.put(configName1, newConfigValue1);
+            alteredConfigs.put(configName2, newConfigValue2);
+
+            // Alter them and get back modified topicConfig
+            topicConfig = operations.alterTopicConfig(topicName, alteredConfigs);
+
+            // Validate our entries were modified
+            assertNotNull(topicConfig);
+
+            // Validation, these keys should exist and be set to new values.
+            ConfigItem configItem = topicConfig.getConfigItemByName(configName1).get();
+            assertFalse("Should no longer be default", configItem.isDefault());
+            assertEquals("Should have our value", newConfigValue1, configItem.getValue());
+
+            configItem = topicConfig.getConfigItemByName(configName2).get();
+            assertFalse("Should no longer be default", configItem.isDefault());
+            assertEquals("Should have our value", newConfigValue2, configItem.getValue());
         }
     }
 

@@ -22,17 +22,46 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.api;
+package org.sourcelab.kafka.webview.ui.controller.api.requests;
 
 /**
- * Error when requesting an object over the API that doesn't not exist.
+ * Represents a request to create a new topic.
  */
-public class NotFoundApiException extends ApiException {
+public class CreateTopicRequest {
+    private String name;
+    private Integer partitions;
+    private Short replicas;
 
-    /**
-     * Constructor.
-     */
-    public NotFoundApiException(final String type, final String message) {
-        super(type, message);
+    public void setName(final String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Integer getPartitions() {
+        return partitions;
+    }
+
+    public void setPartitions(final Integer partitions) {
+        this.partitions = partitions;
+    }
+
+    public Short getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(final Short replicas) {
+        this.replicas = replicas;
+    }
+
+    @Override
+    public String toString() {
+        return "CreateTopicRequest{"
+            + "name='" + name + '\''
+            + ", partitions=" + partitions
+            + ", replicas=" + replicas
+            + '}';
     }
 }

@@ -22,46 +22,30 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.api;
+package org.sourcelab.kafka.webview.ui.controller.api.requests;
+
+import java.util.Map;
 
 /**
- * Represents a request to create a new topic.
+ * Represents a request to modify a topic configuration.
  */
-public class CreateTopicRequest {
-    private String name;
-    private Integer partitions;
-    private Short replicas;
+public class ModifyTopicConfigRequest {
+    private String topic;
+    private Map<String, String> config;
 
-    public void setName(final String name) {
-        this.name = name;
+    public String getTopic() {
+        return topic;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Integer getPartitions() {
-        return partitions;
-    }
-
-    public void setPartitions(final Integer partitions) {
-        this.partitions = partitions;
-    }
-
-    public Short getReplicas() {
-        return replicas;
-    }
-
-    public void setReplicas(final Short replicas) {
-        this.replicas = replicas;
+    public Map<String, String> getConfig() {
+        return config;
     }
 
     @Override
     public String toString() {
-        return "CreateTopicRequest{"
-            + "name='" + name + '\''
-            + ", partitions=" + partitions
-            + ", replicas=" + replicas
+        return "ModifyTopicConfigRequest{"
+            + "topic='" + topic + '\''
+            + ", config=" + config
             + '}';
     }
 }

@@ -28,11 +28,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Represents a collection of metadata about how a topic is configured.
  */
 public class TopicConfig {
+    /**
+     * It may make more sense to make this into a map for faster direct access by name in the future.
+     */
     private final List<ConfigItem> configEntries;
 
     /**
@@ -51,6 +55,18 @@ public class TopicConfig {
 
     public List<ConfigItem> getConfigEntries() {
         return configEntries;
+    }
+
+    /**
+     * Given a configuration name, return its entry.
+     * @param name name of config value to find.
+     * @return Optionally, the matching ConfigItem.
+     */
+    public Optional<ConfigItem> getConfigItemByName(final String name) {
+        return getConfigEntries()
+            .stream()
+            .filter((entry) -> name.equals(entry.getName()))
+            .findFirst();
     }
 
     @Override

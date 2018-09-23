@@ -36,6 +36,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
@@ -118,5 +119,62 @@ public class ApiControllerTest extends AbstractMvcTest {
 
         // sanity test.
         assertTrue("Topic should exist now", topicNames.contains(newTopic));
+    }
+
+    /**
+     * Test the modify topic configuration end point.
+     */
+    @Test
+    @Transactional
+    public void test_modifyTopic() throws Exception {
+        // Define our new topic name
+        final String topicName = "TestTopic-" + System.currentTimeMillis();
+
+        // Define the values we want to modify
+        final String configName1 = "flush.messages";
+        final String newConfigValue1 = "0";
+
+        final String configName2 = "max.message.bytes";
+        final String newConfigValue2 = "1024";
+
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a new topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 1, (short) 1);
+
+        // Construct payload
+        final String payload = "{ \"topic\": \"" + topicName + "\", \"config\": {" +
+            "\"" + configName1 + "\": \"" + newConfigValue1 + "\", " +
+            "\"" + configName2 + "\": \"" + newConfigValue2 + "\"" +
+            "}}";
+
+        // Hit end point as admin user
+        final MvcResult result = mockMvc
+            .perform(post("/api/cluster/" + cluster.getId() + "/modify/topic")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andReturn();
+
+        // Grab out the response
+        final String resultJsonStr = result.getResponse().getContentAsString();
+
+        // Half assed validation
+        final String targetItem1 = "{\"name\":\"" + configName1 + "\",\"value\":\"" + newConfigValue1 + "\",\"default\":false}";
+        final String targetItem2 = "{\"name\":\"" + configName2 + "\",\"value\":\"" + newConfigValue2 + "\",\"default\":false}";
+
+        assertTrue(resultJsonStr.contains(targetItem1));
+        assertTrue(resultJsonStr.contains(targetItem2));
     }
 }

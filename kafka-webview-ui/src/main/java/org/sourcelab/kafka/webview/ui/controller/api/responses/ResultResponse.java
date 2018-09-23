@@ -22,42 +22,46 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+package org.sourcelab.kafka.webview.ui.controller.api.responses;
 
 /**
- * Represents configuration values as defined on a broker.
+ * Generic response object.
  */
-public class BrokerConfig {
-    private final List<ConfigItem> configEntries;
+public class ResultResponse {
+    private final String operation;
+    private final boolean result;
+    private final String message;
 
     /**
      * Constructor.
-     * @param configEntries entries in the config.
+     * @param operation Name of the operation.
+     * @param result was it a success?
+     * @param message Any other message.
      */
-    public BrokerConfig(final List<ConfigItem> configEntries) {
-        // Create new list from source.
-        final List<ConfigItem> sorted = new ArrayList<>(configEntries);
-
-        // Sort the list by name
-        sorted.sort(Comparator.comparing(ConfigItem::getName));
-
-        // Make immutable.
-        this.configEntries = Collections.unmodifiableList(sorted);
+    public ResultResponse(final String operation, final boolean result, final String message) {
+        this.operation = operation;
+        this.result = result;
+        this.message = message;
     }
 
-    public List<ConfigItem> getConfigEntries() {
-        return configEntries;
+    public String getOperation() {
+        return operation;
+    }
+
+    public boolean isResult() {
+        return result;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     @Override
     public String toString() {
-        return "BrokerConfig{"
-            + "configEntries=" + configEntries
+        return "ResultResponse{"
+            + "operation='" + operation + '\''
+            + ", result=" + result
+            + ", message='" + message + '\''
             + '}';
     }
 }

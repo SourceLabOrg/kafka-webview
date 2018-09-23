@@ -36,6 +36,7 @@ public class PartitionDetails {
     private final NodeDetails leader;
     private final List<NodeDetails> replicas;
     private final List<NodeDetails> isr;
+    private final boolean isUnderReplicated;
 
     /**
      * Constructor.
@@ -52,6 +53,10 @@ public class PartitionDetails {
         this.leader = leader;
         this.replicas = Collections.unmodifiableList(replicas);
         this.isr = Collections.unmodifiableList(isr);
+
+        // Lazy many way to determine this is to count the number of replicas
+        // and compare it to the count of ISR, if not equal, then under replicated.
+        this.isUnderReplicated = getReplicas().size() != getIsr().size();
     }
 
     public String getTopic() {
@@ -74,6 +79,10 @@ public class PartitionDetails {
         return isr;
     }
 
+    public boolean isUnderReplicated() {
+        return isUnderReplicated;
+    }
+
     @Override
     public String toString() {
         return "PartitionDetails{"
@@ -82,6 +91,7 @@ public class PartitionDetails {
             + ", leader=" + leader
             + ", replicas=" + replicas
             + ", isr=" + isr
+            + ", isUnderReplicated=" + isUnderReplicated
             + '}';
     }
 }

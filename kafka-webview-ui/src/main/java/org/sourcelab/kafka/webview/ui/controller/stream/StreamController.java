@@ -25,7 +25,7 @@
 package org.sourcelab.kafka.webview.ui.controller.stream;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
-import org.sourcelab.kafka.webview.ui.controller.api.ConsumeRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.ViewCustomizer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;

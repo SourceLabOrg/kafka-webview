@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AlterConfigsResult;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
@@ -32,6 +33,7 @@ import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
@@ -220,6 +222,41 @@ public class KafkaOperations implements AutoCloseable {
 
             // return true?
             return true;
+        } catch (final InterruptedException | ExecutionException exception) {
+            // TODO Handle this
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
+    }
+
+    /**
+     * Modify configuration values for a specific topic.
+     * @param topic The topic to modify.
+     * @param configItems Map of Key => Value to modify.
+     * @return boolean
+     */
+    public TopicConfig alterTopicConfig(final String topic, final Map<String, String> configItems) {
+        try {
+            // Define the resource we want to modify, the topic.
+            final ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic);
+
+            final List<ConfigEntry> configEntries = new ArrayList<>();
+            for (final Map.Entry<String, String> entry : configItems.entrySet()) {
+                configEntries.add(
+                    new ConfigEntry(entry.getKey(), entry.getValue())
+                );
+            }
+
+            // Define the configuration set
+            final Config config = new Config(configEntries);
+
+            // Create the topic
+            final AlterConfigsResult result = adminClient.alterConfigs(Collections.singletonMap(configResource, config));
+
+            // Wait for the async request to process.
+            result.all().get();
+
+            // Lets return updated topic details
+            return getTopicConfig(topic);
         } catch (final InterruptedException | ExecutionException exception) {
             // TODO Handle this
             throw new RuntimeException(exception.getMessage(), exception);

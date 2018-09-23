@@ -34,6 +34,7 @@ public class TopicDetails {
     private final String name;
     private final boolean isInternal;
     private final List<PartitionDetails> partitions;
+    private final boolean isUnderReplicated;
 
     /**
      * Constructor.
@@ -42,6 +43,16 @@ public class TopicDetails {
         this.name = name;
         this.isInternal = isInternal;
         this.partitions = Collections.unmodifiableList(partitions);
+
+        // Determine if any partition is under replicated.
+        boolean underReplicated = false;
+        for (final PartitionDetails partitionDetails : partitions) {
+            if (partitionDetails.isUnderReplicated()) {
+                underReplicated = true;
+                break;
+            }
+        }
+        this.isUnderReplicated = underReplicated;
     }
 
     public String getName() {
@@ -56,12 +67,20 @@ public class TopicDetails {
         return isInternal;
     }
 
+    /**
+     * @return true if any partition on the topic is under replicated.
+     */
+    public boolean isUnderReplicated() {
+        return isUnderReplicated;
+    }
+
     @Override
     public String toString() {
         return "TopicDetails{"
-            + "+ name='" + name + '\''
-            + ", + isInternal=" + isInternal
-            + ", + partitions=" + partitions
+            + "name='" + name + '\''
+            + ", isInternal=" + isInternal
+            + ", partitions=" + partitions
+            + ", isUnderReplicated=" + isUnderReplicated
             + '}';
     }
 }

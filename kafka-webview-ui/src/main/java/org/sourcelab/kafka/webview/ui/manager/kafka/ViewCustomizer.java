@@ -24,7 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.sourcelab.kafka.webview.ui.controller.api.ConsumeRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.model.Filter;
