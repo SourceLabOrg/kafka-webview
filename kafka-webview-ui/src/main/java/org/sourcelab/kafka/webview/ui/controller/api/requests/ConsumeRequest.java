@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.api;
+package org.sourcelab.kafka.webview.ui.controller.api.requests;
 
 import java.util.List;
 import java.util.Map;

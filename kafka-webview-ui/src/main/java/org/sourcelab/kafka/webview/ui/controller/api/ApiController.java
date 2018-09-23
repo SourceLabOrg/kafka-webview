@@ -25,6 +25,12 @@
 package org.sourcelab.kafka.webview.ui.controller.api;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
+import org.sourcelab.kafka.webview.ui.controller.api.exceptions.ApiException;
+import org.sourcelab.kafka.webview.ui.controller.api.exceptions.NotFoundApiException;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
@@ -327,6 +333,37 @@ public class ApiController extends BaseController {
             return new ResultResponse("CreateTopic", result, "");
         } catch (final Exception e) {
             throw new ApiException("CreateTopic", e);
+        }
+    }
+
+    /**
+     * POST Modify a topic's configuration on cluster.
+     * This should require ADMIN role.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/modify/topic", method = RequestMethod.POST, produces = "application/json")
+    public List<ConfigItem> modifyTopicConfig(
+        @PathVariable final Long id,
+        @RequestBody final ModifyTopicConfigRequest modifyTopicConfigRequest
+    ) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        final String name = modifyTopicConfigRequest.getTopic();
+        if (name == null || name.trim().isEmpty()) {
+            throw new ApiException("ModifyTopic", "Invalid topic name");
+        }
+
+        final Map<String, String> configEntries = modifyTopicConfigRequest.getConfig();
+        if (configEntries == null || configEntries.isEmpty()) {
+            throw new ApiException("ModifyTopic", "Invalid configuration defined");
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.alterTopicConfig(name, configEntries).getConfigEntries();
+        } catch (final Exception e) {
+            throw new ApiException("ModifyTopic", e);
         }
     }
 

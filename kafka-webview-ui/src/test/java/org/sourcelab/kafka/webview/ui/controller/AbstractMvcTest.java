@@ -34,6 +34,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -93,7 +94,8 @@ public abstract class AbstractMvcTest {
     protected void testUrlWithOutAdminRole(final String url, final boolean isPost) throws Exception {
         final MockHttpServletRequestBuilder action;
         if (isPost) {
-            action = post(url);
+            action = post(url)
+                .with(csrf());
         } else {
             action = get(url);
         }

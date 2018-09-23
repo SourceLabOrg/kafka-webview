@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.api;
+package org.sourcelab.kafka.webview.ui.controller.api.exceptions;
 
 /**
  * Represents an error that occurred within an API request.
@@ -41,7 +41,7 @@ public class ApiException extends RuntimeException {
     /**
      * Constructor.
      */
-    ApiException(final String type, final String message) {
+    public ApiException(final String type, final String message) {
         super(message);
         this.type = type;
     }

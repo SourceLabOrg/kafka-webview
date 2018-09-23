@@ -71,7 +71,8 @@
                             encodedTopic: encodeURIComponent(result.name),
                             clusterId: ClusterInfo.clusterId,
                             internal: result.internal,
-                            partitions_count: result.partitions.length
+                            partitions_count: result.partitions.length,
+                            isUnderReplicated: result.underReplicated
                         };
                         var resultHtml = template(properties);
 
@@ -220,7 +221,7 @@
                             <tr>
                                 <th>Topic</th>
                                 <th>Partitions</th>
-                                <th>Internal</th>
+                                <th>Status</th>
                             </tr>
                             </thead>
                             <tbody id="topics-tbody">
@@ -258,17 +259,20 @@
                 </td>
                 <td>{{partitions_count}}</td>
                 <td>
+                    {{#if isUnderReplicated}}
+                        <span class="badge badge-warning">Under Replicated</span>
+                    {{else}}
+                        <span class="badge badge-success">Fully Replicated</span>
+                    {{/if}}
                     {{#if internal}}
-                        <span class="badge badge-info">
-                            internal
-                        </span>
+                        <span class="badge badge-info">Internal topic</span>
                     {{/if}}
                 </td>
             </tr>
         </script>
 
         <!-- Create topic modal -->
-        <div class="modal fade show" id="createTopicModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;">
+        <div class="modal fade show" id="createTopicModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" sec:authorize="hasRole('ROLE_ADMIN')">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -278,8 +282,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form method="post" class="form-horizontal"
-                            th:action="@{/cluster/manage/create/topic}">
+                        <form method="post" class="form-horizontal">
 
                             <!-- Name -->
                             <div class="form-group row">

@@ -119,7 +119,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/configuration/**",
 
                 // Create topic
-                "/api/cluster/*/create/**"
+                "/api/cluster/*/create/**",
+
+                // Modify topic
+                "/api/cluster/*/modify/**"
             ).hasRole("ADMIN")
 
             // All other requests must be authenticated

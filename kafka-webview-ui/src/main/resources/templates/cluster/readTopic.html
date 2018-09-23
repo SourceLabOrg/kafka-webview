@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
     xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
@@ -103,6 +104,33 @@
                         jQuery('#config-no-results').toggle(false);
                         jQuery('#config-table').toggle(true);
                     }
+                },
+                showModifyConfigModal: function(configName, configValue) {
+                    // Set values
+                    jQuery('input#configName').val(configName);
+                    jQuery('input#configValue').val(configValue);
+
+                    // Show modal
+                    jQuery('#modifyTopicModal').modal('show');
+
+                    // Prevent link default action.
+                    return false;
+                },
+                modifyTopicConfig: function() {
+                    // Hide modal
+                    jQuery('#modifyTopicModal').modal('hide');
+
+                    // Get values
+                    var configName = jQuery('input#configName').val();
+                    var configValue = jQuery('input#configValue').val();
+
+                    ApiClient.modifyTopicConfig(TopicInfo.clusterId, TopicInfo.topic, configName, configValue, function(results) {
+                        // Reload topic listing
+                        UITools.showSuccess("Modifying topic successfully.", 10);
+
+                        // Handle results
+                        TopicInfo.handleConfigResults(results);
+                    })
                 }
             };
 
@@ -198,7 +226,8 @@
                             <tr>
                                 <th>Config</th>
                                 <th>Value</th>
-                                <th>Default Value</th>
+                                <th>Status</th>
+                                <th class="text-right" sec:authorize="hasRole('ROLE_ADMIN')">Action</th>
                             </tr>
                             </thead>
                             <tbody id="config-tbody">
@@ -245,8 +274,71 @@
                     <span class="badge badge-warning">modified</span>
                     {{/if}}
                 </td>
+                <td class="text-right" sec:authorize="hasRole('ROLE_ADMIN')">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-gear"></i>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" onclick="return TopicInfo.showModifyConfigModal('{{name}}', '{{value}}');">
+                                <i class="fa fa-edit"></i>
+                                Edit
+                            </a>
+                        </div>
+                    </div>
+                </td>
             </tr>
         </script>
+
+
+        <!-- Modify topic config modal -->
+        <div class="modal fade show" id="modifyTopicModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" sec:authorize="hasRole('ROLE_ADMIN')">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Modify topic [[${topic}]]</h4>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" class="form-horizontal">
+
+                            <!-- Config name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="configName">
+                                    Config
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="configName" name="configName" class="form-control" type="text" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <!-- Config value -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="configValue">
+                                    Value
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="configValue" name="configValue" class="form-control" type="text"
+                                        placeholder="Value to set"
+                                        value="">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
+                        <button class="btn btn-primary" type="button" onclick="if (confirm('Are you sure?')) { TopicInfo.modifyTopicConfig();}">Modify value</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 

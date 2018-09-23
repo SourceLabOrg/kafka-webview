@@ -22,46 +22,17 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.api;
+package org.sourcelab.kafka.webview.ui.controller.api.exceptions;
 
 /**
- * Generic response object.
+ * Error when requesting an object over the API that doesn't not exist.
  */
-public class ResultResponse {
-    private final String operation;
-    private final boolean result;
-    private final String message;
+public class NotFoundApiException extends ApiException {
 
     /**
      * Constructor.
-     * @param operation Name of the operation.
-     * @param result was it a success?
-     * @param message Any other message.
      */
-    public ResultResponse(final String operation, final boolean result, final String message) {
-        this.operation = operation;
-        this.result = result;
-        this.message = message;
-    }
-
-    public String getOperation() {
-        return operation;
-    }
-
-    public boolean isResult() {
-        return result;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    @Override
-    public String toString() {
-        return "ResultResponse{"
-            + "operation='" + operation + '\''
-            + ", result=" + result
-            + ", message='" + message + '\''
-            + '}';
+    public NotFoundApiException(final String type, final String message) {
+        super(type, message);
     }
 }
