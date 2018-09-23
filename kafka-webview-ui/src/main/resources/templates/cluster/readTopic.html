@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
     xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
@@ -226,7 +227,7 @@
                                 <th>Config</th>
                                 <th>Value</th>
                                 <th>Status</th>
-                                <th class="text-right">Action</th>
+                                <th class="text-right" sec:authorize="hasRole('ROLE_ADMIN')">Action</th>
                             </tr>
                             </thead>
                             <tbody id="config-tbody">
@@ -273,7 +274,7 @@
                     <span class="badge badge-warning">modified</span>
                     {{/if}}
                 </td>
-                <td class="text-right">
+                <td class="text-right" sec:authorize="hasRole('ROLE_ADMIN')">
                     <div class="dropdown">
                         <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-gear"></i>
@@ -291,7 +292,7 @@
 
 
         <!-- Modify topic config modal -->
-        <div class="modal fade show" id="modifyTopicModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;">
+        <div class="modal fade show" id="modifyTopicModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: none;" sec:authorize="hasRole('ROLE_ADMIN')">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
