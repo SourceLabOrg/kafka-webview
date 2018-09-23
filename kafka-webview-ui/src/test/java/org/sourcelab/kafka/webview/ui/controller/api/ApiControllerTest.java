@@ -69,6 +69,7 @@ public class ApiControllerTest extends AbstractMvcTest {
     @Transactional
     public void test_withoutAdminRole() throws Exception {
         testUrlWithOutAdminRole("/api/cluster/1/create/topic", true);
+        testUrlWithOutAdminRole("/api/cluster/1/modify/topic", true);
     }
 
     /**

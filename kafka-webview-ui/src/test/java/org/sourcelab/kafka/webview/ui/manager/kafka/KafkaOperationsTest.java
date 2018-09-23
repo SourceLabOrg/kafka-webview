@@ -42,7 +42,6 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;

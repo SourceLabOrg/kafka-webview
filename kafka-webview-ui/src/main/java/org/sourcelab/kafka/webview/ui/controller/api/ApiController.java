@@ -46,7 +46,6 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
-import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
