@@ -273,6 +273,27 @@ var ApiClient = {
             }
         });
     },
+    modifyTopicConfig: function(clusterId, topic, configName, configValue, callback) {
+        var payloadJson = {
+            topic: topic,
+            config: {}
+        };
+        payloadJson['config'][configName] = configValue;
+
+        var payload = JSON.stringify(payloadJson);
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/cluster/' + clusterId + '/modify/topic',
+            data: payload,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
     defaultErrorHandler: function(jqXHR, textStatus, errorThrown) {
         // convert response to json
         var response = jQuery.parseJSON(jqXHR.responseText);
