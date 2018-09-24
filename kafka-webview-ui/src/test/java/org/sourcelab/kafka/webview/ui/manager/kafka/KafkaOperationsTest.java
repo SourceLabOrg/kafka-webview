@@ -286,8 +286,8 @@ public class KafkaOperationsTest {
         final String topicName = "TestTopic-" + System.currentTimeMillis();
 
         // Define the values we want to modify
-        final String configName1 = "flush.messages";
-        final String newConfigValue1 = "0";
+        final String configName1 = "cleanup.policy";
+        final String newConfigValue1 = "compact";
 
         final String configName2 = "max.message.bytes";
         final String newConfigValue2 = "1024";
