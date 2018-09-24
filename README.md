@@ -47,6 +47,7 @@ By default config.yml will look similar to:
 
 ```yml
 server:
+  ## What port to run the service on.
   port: 8080
 
 ## Various App Configs
@@ -57,6 +58,9 @@ app:
 
   ## Defines a prefix prepended to the Id of all consumers.
   consumerIdPrefix: "KafkaWebViewConsumer"
+
+  ## Sets upper limit on the number of concurrent web socket consumers supported.
+  maxConcurrentWebSocketConsumers: 64
 
   ## Require SSL
   requireSsl: false

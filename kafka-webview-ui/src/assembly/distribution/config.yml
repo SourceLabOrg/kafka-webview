@@ -1,4 +1,5 @@
 server:
+  ## What port to run the service on.
   port: 8080
 
 ## Various App Configs
