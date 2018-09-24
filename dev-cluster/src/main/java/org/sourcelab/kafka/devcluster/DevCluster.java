@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.devcluster;
 
 import com.salesforce.kafka.test.KafkaTestCluster;
+import com.salesforce.kafka.test.KafkaTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,16 @@ public class DevCluster {
 
         // Start the cluster.
         kafkaTestCluster.start();
+
+        // Create a topic
+        final String topicName = "TestTopicA";
+        final KafkaTestUtils utils = new KafkaTestUtils(kafkaTestCluster);
+        utils.createTopic(topicName, clusterSize, (short) clusterSize);
+
+        // Publish some data into that topic
+        for (int partition = 0; partition < clusterSize; partition++) {
+            utils.produceRecords(1000, topicName, partition);
+        }
 
         kafkaTestCluster
             .getKafkaBrokers()
