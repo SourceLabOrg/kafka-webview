@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added ability to modify topic configuration via the UI.
 - Various UI usability improvements.
 - Updated SpringBoot framework from 1.5.x to 2.0.5.
+- Updates Kafka Client from 0.11.0.2 to 1.1.1.
 
 ### Breaking Changes
 
