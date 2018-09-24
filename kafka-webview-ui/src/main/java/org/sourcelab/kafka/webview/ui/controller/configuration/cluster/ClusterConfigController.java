@@ -80,7 +80,7 @@ public class ClusterConfigController extends BaseController {
         setupBreadCrumbs(model, null, null);
 
         // Retrieve all clusters
-        final Iterable<Cluster> clusterList = clusterRepository.findAll();
+        final Iterable<Cluster> clusterList = clusterRepository.findAllByOrderByNameAsc();
         model.addAttribute("clusterList", clusterList);
 
         return "configuration/cluster/index";

@@ -10,6 +10,9 @@ app:
   ## Defines a prefix prepended to the Id of all consumers.
   consumerIdPrefix: "KafkaWebViewConsumer"
 
+  ## Sets upper limit on the number of concurrent web socket consumers supported.
+  maxConcurrentWebSocketConsumers: 64
+
   ## Require SSL
   requireSsl: false
 

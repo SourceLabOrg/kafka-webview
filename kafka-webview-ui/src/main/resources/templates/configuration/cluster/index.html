@@ -35,6 +35,11 @@
                             </tr>
                             </thead>
                             <tbody>
+                                <tr th:if="${clusterList.isEmpty()}" align="center">
+                                    <td colspan="5">
+                                        No clusters found!
+                                    </td>
+                                </tr>
                                 <tr th:each="cluster : ${clusterList}">
                                     <td th:text="${cluster.name}"></td>
                                     <td th:text="${cluster.brokerHosts}"></td>

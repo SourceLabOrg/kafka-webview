@@ -191,10 +191,10 @@
                         Cluster <strong th:text="${cluster.name}"></strong> Topics
 
                         <div class="btn-group float-right" role="group" aria-label="Button group" sec:authorize="hasRole('ROLE_ADMIN')">
-                            <button class="btn" type="button" data-toggle="modal" data-target="#createTopicModal" style="padding-bottom: 0;">
+                            <a class="btn" href="#" style="padding-bottom: 0;" data-toggle="modal" data-target="#createTopicModal">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
-                            </button>
+                            </a>
                         </div>
                     </div>
                     <div class="card-body">
