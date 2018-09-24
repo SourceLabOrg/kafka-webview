@@ -30,6 +30,11 @@
                             </tr>
                             </thead>
                             <tbody>
+                            <tr th:if="${consumers.isEmpty()}" align="center">
+                                <td colspan="6">
+                                    No active consumers found!
+                                </td>
+                            </tr>
                             <tr th:each="consumer : ${consumers}">
                                 <td th:text="${userMap.get(consumer.getUserId()).getDisplayName()}"></td>
                                 <td>

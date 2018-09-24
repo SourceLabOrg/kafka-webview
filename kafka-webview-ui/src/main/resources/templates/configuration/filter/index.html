@@ -40,6 +40,11 @@
                             </tr>
                             </thead>
                             <tbody>
+                            <tr th:if="${filters.isEmpty()}" align="center">
+                                <td colspan="5">
+                                    No filters found!
+                                </td>
+                            </tr>
                             <tr th:each="filter : ${filters}">
                                 <td th:text="${filter.name}"></td>
                                 <td th:text="${filter.classpath}"></td>

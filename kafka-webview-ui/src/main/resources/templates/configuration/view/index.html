@@ -37,6 +37,11 @@
                             </tr>
                             </thead>
                             <tbody>
+                            <tr th:if="${views.isEmpty()}" align="center">
+                                <td colspan="7">
+                                    No views found!
+                                </td>
+                            </tr>
                             <tr th:each="view : ${views}">
                                 <td>
                                     <a th:href="@{/view/{id}(id=${view.id})}" th:text="${view.name}"/>

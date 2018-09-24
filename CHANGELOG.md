@@ -5,14 +5,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.0.0 (UNRELEASED)
 
 - Added new Stream consumer management page at /configuration/stream
-- Added ability to disable user authentication, allowing for anonymous users to access the web service.
+- Added ability to disable user authentication.  This allows for anonymous user access.
 - Added ability to create topics via the UI.
 - Added ability to modify topic configuration via the UI.
+- Various UI usability improvements.
 - Updated SpringBoot framework from 1.5.x to 2.0.5.
 
 ### Breaking Changes
 
-TODO Write migration guide
+Kafka-WebView's configuration file has changed slightly.  Most notably the `require-ssl` property has moved and been renamed requiredSsl.
+Please review the default [config.yml](kafka-webview-ui/src/assembly/distribution/config.yml) for references to the new configuration options. 
 
 ## 1.0.5 (06/22/2018)
 - [Issue#75](https://github.com/SourceLabOrg/kafka-webview/issues/75) Bugfix Add Jackson serializer that falls back to using toString() when consuming entries from Kafka.

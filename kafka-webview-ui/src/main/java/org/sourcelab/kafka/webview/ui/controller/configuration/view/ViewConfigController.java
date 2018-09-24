@@ -101,7 +101,7 @@ public class ViewConfigController extends BaseController {
         setupBreadCrumbs(model, null, null);
 
         // Retrieve all message formats
-        final Iterable<View> viewList = viewRepository.findAll();
+        final Iterable<View> viewList = viewRepository.findAllByOrderByNameAsc();
         model.addAttribute("views", viewList);
 
         return "configuration/view/index";
