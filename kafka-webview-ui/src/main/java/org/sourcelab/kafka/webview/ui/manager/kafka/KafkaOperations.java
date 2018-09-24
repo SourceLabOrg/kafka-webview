@@ -230,7 +230,7 @@ public class KafkaOperations implements AutoCloseable {
     /**
      * Modify configuration values for a specific topic.
      * @param topic The topic to modify.
-     * @param configItems Map of Key => Value to modify.
+     * @param configItems Map of Key to Value to modify.
      * @return boolean
      */
     public TopicConfig alterTopicConfig(final String topic, final Map<String, String> configItems) {

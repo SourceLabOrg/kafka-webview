@@ -37,11 +37,13 @@ import java.util.List;
 public interface ViewToFilterOptionalRepository extends CrudRepository<ViewToFilterOptional, Long> {
     /**
      * Retrieve all by FilterId.
+     * @param filterId to restrict results by.
      */
     List<ViewToFilterOptional> findByFilterId(final Long filterId);
 
     /**
      * Retrieve all by ViewId.
+     * @param viewId to restrict results by.
      */
     List<ViewToFilterOptional> findByViewId(final Long viewId);
 }

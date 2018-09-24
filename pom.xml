@@ -199,6 +199,9 @@
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
+                                <configuration>
+                                    <failOnWarnings>false</failOnWarnings>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

@@ -48,6 +48,7 @@ public interface MessageFormatRepository extends CrudRepository<MessageFormat, L
 
     /**
      * Find all message formats by type, ordered by name.
+     * @param isDefaultFormat Only return items that match the default_format field being true or false.
      * @return all message formats ordered by name.
      */
     Iterable<MessageFormat> findByIsDefaultFormatOrderByNameAsc(final boolean isDefaultFormat);
