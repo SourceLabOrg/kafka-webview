@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.0.1 (UNRELEASED)
+## 2.0.1 (10/02/2018)
 - [Issue#100](https://github.com/SourceLabOrg/kafka-webview/issues/100) Fix start.sh script
 
 ## 2.0.0 (09/24/2018)
