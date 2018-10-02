@@ -16,18 +16,30 @@
     <fileSets>
         <!-- Include startup scripts -->
         <fileSet>
-            <directory>${basedir}/src/assembly/distribution/</directory>
+            <directory>${project.basedir}/src/assembly/distribution/</directory>
             <outputDirectory></outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
         </fileSet>
+
+        <!-- Include Changelog, Readme, and License from top level project directory -->
+        <fileSet>
+            <directory>${project.basedir}/../</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>CHANGELOG.md</include>
+                <include>README.md</include>
+                <include>LICENSE.txt</include>
+            </includes>
+        </fileSet>
+
         <!-- Put the main JAR at the top level -->
         <fileSet>
             <directory>${project.build.directory}</directory>
             <outputDirectory></outputDirectory>
             <includes>
-                <include>*.jar</include>
+                <include>kafka-webview-ui-${project.version}.jar</include>
             </includes>
             <excludes>
                 <exclude>kafka-webview-ui-*-sources.jar</exclude>
@@ -40,8 +52,8 @@
             <directory>${project.build.directory}</directory>
             <outputDirectory>src/</outputDirectory>
             <includes>
-                <include>kafka-webview-ui-*-sources.jar</include>
-                <include>kafka-webview-ui-*-javadoc.jar</include>
+                <include>kafka-webview-ui-${project.version}-sources.jar</include>
+                <include>kafka-webview-ui-${project.version}-javadoc.jar</include>
             </includes>
         </fileSet>
     </fileSets>
