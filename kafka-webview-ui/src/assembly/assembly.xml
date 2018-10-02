@@ -3,16 +3,7 @@
     <formats>
         <format>zip</format>
     </formats>
-
-    <!-- Adds the dependencies of our application to the lib directory -->
-    <dependencySets>
-        <dependencySet>
-            <useProjectArtifact>false</useProjectArtifact>
-            <outputDirectory>lib</outputDirectory>
-            <unpack>false</unpack>
-        </dependencySet>
-    </dependencySets>
-
+    
     <fileSets>
         <!-- Include startup scripts -->
         <fileSet>
