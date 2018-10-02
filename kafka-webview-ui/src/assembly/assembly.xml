@@ -3,7 +3,7 @@
     <formats>
         <format>zip</format>
     </formats>
-    
+
     <fileSets>
         <!-- Include startup scripts -->
         <fileSet>
