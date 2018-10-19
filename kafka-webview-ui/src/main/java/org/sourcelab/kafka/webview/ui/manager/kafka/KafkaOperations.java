@@ -30,6 +30,7 @@ import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
@@ -70,13 +71,20 @@ public class KafkaOperations implements AutoCloseable {
     }
 
     /**
-     * Retrieve all available topics within cluster.
+     * Retrieve all available topics within cluster.  Includes internal topics.
      */
     public TopicList getAvailableTopics() {
         final List<org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing> topicListings = new ArrayList<>();
 
         try {
-            final Collection<TopicListing> results = adminClient.listTopics().listings().get();
+            // We want to show all topics, including internal topics.
+            final ListTopicsOptions listTopicsOptions = new ListTopicsOptions().listInternal(true);
+
+            final Collection<TopicListing> results = adminClient
+                .listTopics(listTopicsOptions)
+                .listings()
+                .get();
+
             for (final TopicListing entry: results) {
                 topicListings.add(
                     new org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing(entry.name(), entry.isInternal())
