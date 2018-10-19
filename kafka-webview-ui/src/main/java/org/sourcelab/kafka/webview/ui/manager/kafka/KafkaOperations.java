@@ -28,8 +28,10 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AlterConfigsResult;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
+import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
@@ -39,6 +41,7 @@ import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
@@ -50,6 +53,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -267,6 +271,37 @@ public class KafkaOperations implements AutoCloseable {
         } catch (final InterruptedException | ExecutionException exception) {
             // TODO Handle this
             throw new RuntimeException(exception.getMessage(), exception);
+        }
+    }
+
+    /**
+     * List all consumer groups on server.
+     * @return Immutable sorted list of Consumer Group Identifiers.
+     */
+    public List<ConsumerGroupIdentifier> listConsumers() {
+        // Make request
+        final ListConsumerGroupsResult results = adminClient.listConsumerGroups();
+
+        // Generate return list.
+        final List<ConsumerGroupIdentifier> consumerIds = new ArrayList<>();
+
+        try {
+            // Iterate over results
+            results
+                .all()
+                .get()
+                .forEach((result) ->  consumerIds.add(new ConsumerGroupIdentifier(
+                    result.groupId(), result.isSimpleConsumerGroup())
+                ));
+
+            // Sort them by consumer Id.
+            consumerIds.sort(Comparator.comparing(ConsumerGroupIdentifier::getId));
+
+            // return immutable list.
+            return Collections.unmodifiableList(consumerIds);
+
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 

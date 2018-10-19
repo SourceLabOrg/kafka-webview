@@ -25,13 +25,20 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
+import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
@@ -40,9 +47,13 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
+import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 
+import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -337,11 +348,110 @@ public class KafkaOperationsTest {
     }
 
     /**
+     * Test listing consumer group ids.
+     */
+    @Test
+    public void testListConsumers() {
+        // First need to create a topic.
+        final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 1, (short) 1);
+
+        // Publish data into the topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 0);
+
+        // Create cluster config.
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+        final String clientId = "BobsYerAunty";
+
+        final String consumerId1 = "ConsumerA";
+        final String consumerId2 = "ConsumerB";
+        final String consumerPrefix = "TestConsumer";
+
+        consumeFromTopic(topicName, consumerId1, consumerPrefix);
+        consumeFromTopic(topicName, consumerId2, consumerPrefix);
+
+        // Create operations client.
+        try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
+            // Ask for list of consumers.
+            final List<ConsumerGroupIdentifier> consumerIds = operations.listConsumers();
+
+            // We should have two
+            assertEquals("Should have 2 consumers listed", consumerIds.size(), 2);
+
+            // Results should be sorted.
+            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
+            assertEquals(consumerIds.get(1).getId(), consumerPrefix + "-" + consumerId2);
+        }
+    }
+
+    /**
      * Utility method for validating NodeDetails record.
      */
     private void validateNode(final NodeDetails node, final int expectedId, final String expectedHost, final int expectedPort) {
         assertEquals("Incorrect id", expectedId, node.getId());
         assertEquals("Should have hostname", expectedHost, node.getHost());
         assertEquals("Should have port", expectedPort, node.getPort());
+    }
+
+    /**
+     * Helper method to consumer records from a topic.
+     *
+     * @param topic topic to consume from.
+     * @param consumerId Consumer's consumerId
+     * @param consumerPrefix Any consumer Id prefix.
+     */
+    private void consumeFromTopic(final String topic, final String consumerId, final String consumerPrefix) {
+        // Create cluster config.
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+
+        // Create Deserializer Config
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(KafkaConsumerFactoryTest.TestDeserializer.class)
+            .withKeyDeserializerOption("key.option", "key.value")
+            .withKeyDeserializerOption("key.option2", "key.value2")
+
+            // Attempt to override a real setting, it should get filtered
+            .withKeyDeserializerOption(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "MadeUpValue")
+
+            .withValueDeserializerClass(KafkaConsumerFactoryTest.TestDeserializer.class)
+            .withValueDeserializerOption("value.option", "value.value")
+            .withValueDeserializerOption("value.option2", "value.value2")
+
+            // Attempt to override a real setting, it should get filtered
+            .withValueDeserializerOption(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "MadeUpValue")
+            .build();
+
+        // Create Topic Config
+        final org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig topicConfig = new org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig(clusterConfig, deserializerConfig, topic);
+
+        // Create FilterConfig
+        final FilterConfig filterConfig = FilterConfig.withNoFilters();
+
+        // Create ClientConfig, instructing to start from tail.
+        final ClientConfig clientConfig = ClientConfig.newBuilder()
+            .withConsumerId(consumerId)
+            .withFilterConfig(filterConfig)
+            .withAllPartitions()
+            .withStartingPosition(StartingPosition.newHeadPosition())
+            .withMaxResultsPerPartition(100)
+            .withTopicConfig(topicConfig)
+            .build();
+
+        // Create consumer and consume the entries, storing state in Kafka.
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", consumerPrefix);
+        try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
+            // consume & close.
+            consumer.poll(Duration.ofMillis(1000L));
+        }
     }
 }
