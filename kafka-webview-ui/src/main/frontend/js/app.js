@@ -254,6 +254,11 @@ var ApiClient = {
             .getJSON('/api/cluster/' + clusterId + '/broker/' + brokerId + '/config', '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
+    getAllConsumers: function(clusterId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/consumers', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
     createTopic: function(clusterId, name, partitions, replicas, callback) {
         var payload = JSON.stringify({
             name: name,

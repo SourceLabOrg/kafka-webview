@@ -40,6 +40,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
@@ -395,6 +396,23 @@ public class ApiController extends BaseController {
         final String[] options = filter.getOptions().split(",");
 
         return options;
+    }
+
+    /**
+     * GET Options for a specific filter.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumers", method = RequestMethod.GET, produces = "application/json")
+    public List<ConsumerGroupIdentifier> listConsumers(@PathVariable final Long id) {
+
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.listConsumers();
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
     }
 
     /**

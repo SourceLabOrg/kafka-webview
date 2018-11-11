@@ -90,11 +90,53 @@
                         jQuery('#topics-table').toggle(true);
                     }
                 },
+
+                // Handle all consumers results ajax result
+                handleConsumers: function(results) {
+                    // Clear topics table
+                    var table = jQuery('#consumers-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#consumers-template').html();
+                    var template = Handlebars.compile(source);
+
+                    jQuery.each(results, function(index, result) {
+                        // Generate html from template
+                        var properties = {
+                            id: result.id,
+                            encodedId: encodeURIComponent(result.id),
+                            clusterId: ClusterInfo.clusterId
+                        };
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#consumers-loader').toggle(false);
+
+                    if (results.length == 0) {
+                        jQuery('#consumers-no-results').toggle(true);
+                    } else {
+                        jQuery('#consumers-no-results').toggle(false);
+                        jQuery('#consumers-table').toggle(true);
+                    }
+                },
+
                 loadTopics: function() {
                     // Fire off request to get topic details
                     ApiClient.getAllTopicsDetails(ClusterInfo.clusterId, function(results) {
                         // Handle results
                         ClusterInfo.handleAllTopicsDetails(results);
+                    });
+                },
+                loadConsumers: function() {
+                    // Fire off request to get consumer details
+                    ApiClient.getAllConsumers(ClusterInfo.clusterId, function(results) {
+                        // Handle results
+                        ClusterInfo.handleConsumers(results);
                     });
                 },
                 // Handle submitting new topic form.
@@ -135,6 +177,9 @@
 
                     // Fire off request to get topic details
                     ClusterInfo.loadTopics();
+
+                    // Fire off request to get consumers
+                    ClusterInfo.loadConsumers();
                 });
             });
         </script>
@@ -232,6 +277,48 @@
             </div>
         </div>
 
+        <!-- Consumers -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong> Consumers
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumers-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="consumers-no-results" style="display: none;">
+                            <h4 class="alert-heading">No Consumers Found</h4>
+                            <p>Looks like we couldn't find any consumers!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumers-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Consumer Id</th>
+                                <th sec:authorize="hasRole('ROLE_ADMIN')">Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumers-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Nodes Template -->
         <script id="nodes-template" type="text/x-handlebars-template">
             <tr>
@@ -267,6 +354,20 @@
                     {{#if internal}}
                         <span class="badge badge-info">Internal topic</span>
                     {{/if}}
+                </td>
+            </tr>
+        </script>
+
+        <!-- Topics Details Template -->
+        <script id="consumers-template" type="text/x-handlebars-template">
+            <tr>
+                <td>
+                    <a href="/cluster/{{clusterId}}/consumer/{{encodedId}}">
+                        {{id}}
+                    </a>
+                </td>
+                <td sec:authorize="hasRole('ROLE_ADMIN')">
+                    [TODO]
                 </td>
             </tr>
         </script>
