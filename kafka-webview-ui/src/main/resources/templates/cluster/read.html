@@ -48,6 +48,7 @@
 
                     if (results.length == 0) {
                         jQuery('#nodes-no-results').toggle(true);
+                        jQuery('#nodes-table').toggle(false);
                     } else {
                         jQuery('#nodes-no-results').toggle(false);
                         jQuery('#nodes-table').toggle(true);
@@ -85,6 +86,7 @@
 
                     if (results.length == 0) {
                         jQuery('#topics-no-results').toggle(true);
+                        jQuery('#topics-table').toggle(false);
                     } else {
                         jQuery('#topics-no-results').toggle(false);
                         jQuery('#topics-table').toggle(true);
@@ -119,6 +121,7 @@
 
                     if (results.length == 0) {
                         jQuery('#consumers-no-results').toggle(true);
+                        jQuery('#consumers-table').toggle(false);
                     } else {
                         jQuery('#consumers-no-results').toggle(false);
                         jQuery('#consumers-table').toggle(true);
@@ -138,6 +141,19 @@
                         // Handle results
                         ClusterInfo.handleConsumers(results);
                     });
+                },
+                removeConsumer: function(consumerId) {
+                    if (!confirm('Are you sure you want to remove this consumer group?')) {
+                        return;
+                    }
+                    ApiClient.removeConsumer(ClusterInfo.clusterId, consumerId, function(result) {
+                        UITools.showSuccess('Successfully remove consumer group.');
+
+                        // Display success
+                        // On success reload consumers
+                        ClusterInfo.loadConsumers();
+                    });
+
                 },
                 // Handle submitting new topic form.
                 createNewTopic: function() {
@@ -277,13 +293,13 @@
             </div>
         </div>
 
-        <!-- Consumers -->
+        <!-- Consumer Groups -->
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Cluster <strong th:text="${cluster.name}"></strong> Consumers
+                        Cluster <strong th:text="${cluster.name}"></strong> Consumer Groups
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -307,7 +323,7 @@
                         <table class="table table-bordered table-striped table-sm" id="consumers-table" style="display: none;">
                             <thead>
                             <tr>
-                                <th>Consumer Id</th>
+                                <th>Consumer Group</th>
                                 <th sec:authorize="hasRole('ROLE_ADMIN')">Delete</th>
                             </tr>
                             </thead>
@@ -367,7 +383,7 @@
                     </a>
                 </td>
                 <td sec:authorize="hasRole('ROLE_ADMIN')">
-                    [TODO]
+                    <a href="#" onclick="ClusterInfo.removeConsumer('{{id}}'); return false;">Remove?</a>
                 </td>
             </tr>
         </script>

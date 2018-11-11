@@ -259,6 +259,24 @@ var ApiClient = {
             .getJSON('/api/cluster/' + clusterId + '/consumers', '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
+    removeConsumer: function(clusterId, consumerId, callback) {
+        var payload = JSON.stringify({
+            clusterId: clusterId,
+            consumerId: consumerId
+        });
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/cluster/' + clusterId + '/consumer/remove',
+            data: payload,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
     createTopic: function(clusterId, name, partitions, replicas, callback) {
         var payload = JSON.stringify({
             name: name,

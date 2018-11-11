@@ -28,6 +28,7 @@ import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.api.exceptions.ApiException;
 import org.sourcelab.kafka.webview.ui.controller.api.exceptions.NotFoundApiException;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
@@ -399,7 +400,7 @@ public class ApiController extends BaseController {
     }
 
     /**
-     * GET Options for a specific filter.
+     * GET list all consumer groups for a specific cluster.
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/consumers", method = RequestMethod.GET, produces = "application/json")
@@ -410,6 +411,26 @@ public class ApiController extends BaseController {
 
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             return operations.listConsumers();
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * POST list all consumer groups for a specific cluster.
+     * This should require ADMIN role.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumer/remove", method = RequestMethod.POST, produces = "application/json")
+    public boolean removeConsumer(
+        @PathVariable final Long id,
+        @RequestBody final ConsumerRemoveRequest consumerRemoveRequest) {
+
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(consumerRemoveRequest.getClusterId());
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.removeConsumerGroup(consumerRemoveRequest.getConsumerId());
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
         }
