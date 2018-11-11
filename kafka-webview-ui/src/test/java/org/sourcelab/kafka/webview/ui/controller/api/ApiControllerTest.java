@@ -269,6 +269,41 @@ public class ApiControllerTest extends AbstractMvcTest {
     }
 
     /**
+     * Test the remove Consumer end point with non admin role.
+     */
+    @Test
+    @Transactional
+    public void test_getConsumerDetails() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState(cluster);
+
+        // Construct payload
+        final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
+
+        // Hit end point
+        mockMvc
+            .perform(post("/api/cluster/" + cluster.getId() + "/consumer/details")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("true")));
+
+        // TODO finish test.
+    }
+
+    /**
      * Helper method to create a consumer with state on the given cluster.
      * @param cluster cluster to create state on.
      * @return Consumer group id created.
