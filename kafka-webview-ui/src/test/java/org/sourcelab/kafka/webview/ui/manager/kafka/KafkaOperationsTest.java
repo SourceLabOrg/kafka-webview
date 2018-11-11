@@ -393,6 +393,64 @@ public class KafkaOperationsTest {
     }
 
     /**
+     * Test remove a consumer group id.
+     */
+    @Test
+    public void testRemoveConsumer() {
+        // First need to create a topic.
+        final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 1, (short) 1);
+
+        // Publish data into the topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 0);
+
+        // Create cluster config.
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+        final String clientId = "BobsYerAunty";
+
+        final String consumerId1 = "ConsumerA";
+        final String consumerId2 = "ConsumerB";
+        final String consumerPrefix = "TestConsumer";
+
+        consumeFromTopic(topicName, consumerId1, consumerPrefix);
+        consumeFromTopic(topicName, consumerId2, consumerPrefix);
+
+        // Create operations client.
+        try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
+            // Ask for list of consumers.
+            List<ConsumerGroupIdentifier> consumerIds = operations.listConsumers();
+
+            // We should have two
+            assertEquals("Should have 2 consumers listed", consumerIds.size(), 2);
+
+            // Results should be sorted.
+            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
+            assertEquals(consumerIds.get(1).getId(), consumerPrefix + "-" + consumerId2);
+
+            // Now attempt to remove consumer2
+            final boolean result = operations.removeConsumerGroup(consumerPrefix + "-" + consumerId2);
+            assertTrue("Should have returned true.", result);
+
+            // Verify only one consumer group remains
+            consumerIds = operations.listConsumers();
+
+            // We should have two
+            assertEquals("Should have 1 consumers listed", consumerIds.size(), 1);
+
+            // Results should be sorted.
+            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
+        }
+    }
+
+    /**
      * Utility method for validating NodeDetails record.
      */
     private void validateNode(final NodeDetails node, final int expectedId, final String expectedHost, final int expectedPort) {
