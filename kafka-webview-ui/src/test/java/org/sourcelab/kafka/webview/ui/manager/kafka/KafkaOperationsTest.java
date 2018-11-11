@@ -38,6 +38,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
@@ -447,6 +448,63 @@ public class KafkaOperationsTest {
 
             // Results should be sorted.
             assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
+        }
+    }
+
+    /**
+     * Test getting details about a consumer.
+     */
+    @Test
+    public void testGetConsumerDetails() {
+        // First need to create a topic.
+        final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 1, (short) 1);
+
+        // Publish data into the topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 0);
+
+        // Create cluster config.
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+        final String clientId = "BobsYerAunty";
+
+        final String consumerId1 = "ConsumerA";
+        final String consumerPrefix = "TestConsumer";
+        final String finalConsumerId = consumerPrefix + "-" + consumerId1;
+
+        consumeFromTopic(topicName, consumerId1, consumerPrefix);
+
+        // Create operations client.
+        try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
+            // Ask for list of consumers.
+            List<ConsumerGroupDetails> consumerIds = operations.getConsumerDetails(finalConsumerId);
+
+//            // We should have two
+//            assertEquals("Should have 2 consumers listed", consumerIds.size(), 2);
+//
+//            // Results should be sorted.
+//            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
+//            assertEquals(consumerIds.get(1).getId(), consumerPrefix + "-" + consumerId2);
+//
+//            // Now attempt to remove consumer2
+//            final boolean result = operations.removeConsumerGroup(consumerPrefix + "-" + consumerId2);
+//            assertTrue("Should have returned true.", result);
+//
+//            // Verify only one consumer group remains
+//            consumerIds = operations.listConsumers();
+//
+//            // We should have two
+//            assertEquals("Should have 1 consumers listed", consumerIds.size(), 1);
+//
+//            // Results should be sorted.
+//            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
         }
     }
 

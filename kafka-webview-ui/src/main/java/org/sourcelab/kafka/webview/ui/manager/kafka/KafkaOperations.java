@@ -32,6 +32,7 @@ import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DeleteConsumerGroupsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
+import org.apache.kafka.clients.admin.DescribeConsumerGroupsResult;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -42,6 +43,7 @@ import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
@@ -309,7 +311,8 @@ public class KafkaOperations implements AutoCloseable {
     /**
      * Removes a consumer's state.
      * @param id id of consumer group to remove.
-     * @return
+     * @return boolean true if success.
+     * @throws RuntimeException on underlying errors.
      */
     public boolean removeConsumerGroup(final String id) {
         final DeleteConsumerGroupsResult request = adminClient.deleteConsumerGroups(Collections.singleton(id));
@@ -319,6 +322,41 @@ public class KafkaOperations implements AutoCloseable {
             return true;
         } catch (InterruptedException | ExecutionException e) {
             // TODO Handle this
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public List<ConsumerGroupDetails> getConsumerDetails(final String consumerId) {
+        // Make request
+        final DescribeConsumerGroupsResult results = adminClient.describeConsumerGroups(Collections.singletonList(consumerId));
+
+        // Generate return list.
+        final List<ConsumerGroupDetails> consumerGroupDetails = new ArrayList<>();
+
+        try {
+            // Iterate over results
+            results
+                .all()
+                .get()
+                .forEach((key, value) ->  {
+                    final ConsumerGroupDetails.State state = new ConsumerGroupDetails.State();
+                    final ConsumerGroupDetails.Member member = new ConsumerGroupDetails.Member();
+                    consumerGroupDetails.add(
+                        new ConsumerGroupDetails(
+                            value.groupId(),
+                            value.isSimpleConsumerGroup(),
+                            value.partitionAssignor(),
+                            Collections.singletonList(state),
+                            Collections.singletonList(member)
+                        )
+                    );
+                });
+
+
+            // return immutable list.
+            return Collections.unmodifiableList(consumerGroupDetails);
+
+        } catch (final InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
