@@ -25,6 +25,9 @@
 package org.sourcelab.kafka.webview.ui.controller.api;
 
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -42,7 +45,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -192,13 +197,84 @@ public class ApiControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void test_listConsumers() throws Exception {
-        final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
-
         // Create a cluster.
         final Cluster cluster = clusterTestTools.createCluster(
             "Test Cluster",
             sharedKafkaTestResource.getKafkaConnectString()
         );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState(cluster);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumers")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("{\"id\":\"" + consumerId + "\",\"simple\":false}")));
+    }
+
+    /**
+     * Test the remove Consumer end point with admin role.
+     */
+    @Test
+    @Transactional
+    public void test_removeConsumer() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState(cluster);
+
+        // Construct payload
+        final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
+
+        // Hit end point
+        mockMvc
+            .perform(post("/api/cluster/" + cluster.getId() + "/consumer/remove")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("true")));
+
+        // Verify consumer no longer exists
+        try (final AdminClient adminClient = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getAdminClient()) {
+
+            final ListConsumerGroupsResult request = adminClient.listConsumerGroups();
+            final Collection<ConsumerGroupListing> results = request.all().get();
+
+            final Optional<ConsumerGroupListing> match = results.stream()
+                .filter((entry) -> (entry.groupId().equals(consumerId)))
+                .findFirst();
+
+            assertFalse("Should not have found entry", match.isPresent());
+        }
+    }
+
+    /**
+     * Helper method to create a consumer with state on the given cluster.
+     * @param cluster cluster to create state on.
+     * @return Consumer group id created.
+     */
+    private String createConsumerWithState(final Cluster cluster) {
+        final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
 
         // Define our new topic name
         final String newTopic = "TestTopic-" + System.currentTimeMillis();
@@ -227,18 +303,7 @@ public class ApiControllerTest extends AbstractMvcTest {
             // Save state.
             consumer.commitSync();
         }
-        
-        // Hit end point
-        mockMvc
-            .perform(get("/api/cluster/" + cluster.getId() + "/consumers")
-                .with(user(nonAdminUserDetails))
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-            )
-            .andDo(print())
-            .andExpect(status().isOk())
 
-            // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("{\"id\":\"" + consumerId + "\",\"simple\":false}")));
+        return consumerId;
     }
 }
