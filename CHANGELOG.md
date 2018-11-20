@@ -2,6 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0.2 (UNRELEASED)
+- More explicitly expose user login session timeout configuration value.
+
 ## 2.0.1 (10/02/2018)
 - [Issue#100](https://github.com/SourceLabOrg/kafka-webview/issues/100) Fix start.sh script
 - Dependency JARs were accidentally being included twice in release packages.
