@@ -5,7 +5,10 @@ server:
     protocol_header: x-forwarded-proto
   servlet:
     session:
+      ## User sessions should not be persistent across service restarts by default.
       persistent: false
+      ## User login session timeout after 1 hour (3600 seconds)
+      timeout: 3600
 
 spring:
   application:
