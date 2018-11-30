@@ -299,9 +299,11 @@ public class KafkaOperations implements AutoCloseable {
             results
                 .all()
                 .get()
-                .forEach((result) ->  consumerIds.add(new ConsumerGroupIdentifier(
-                    result.groupId(), result.isSimpleConsumerGroup())
-                ));
+                .forEach((result) ->  {
+                    consumerIds.add(
+                        new ConsumerGroupIdentifier(result.groupId(), result.isSimpleConsumerGroup())
+                    );
+                });
 
             // Sort them by consumer Id.
             consumerIds.sort(Comparator.comparing(ConsumerGroupIdentifier::getId));
@@ -382,14 +384,12 @@ public class KafkaOperations implements AutoCloseable {
                         }));
 
                         // Create new ConsumerGroupDetails for this member
-                        members.add(
-                            new ConsumerGroupDetails.Member(
-                                member.consumerId(),
-                                member.clientId(),
-                                member.host(),
-                                assignedPartitions
-                            )
-                        );
+                        members.add(new ConsumerGroupDetails.Member(
+                            member.consumerId(),
+                            member.clientId(),
+                            member.host(),
+                            assignedPartitions
+                        ));
                     });
 
                     final NodeDetails coordinator = new NodeDetails(
@@ -399,16 +399,14 @@ public class KafkaOperations implements AutoCloseable {
                         value.coordinator().rack()
                     );
 
-                    consumerGroupDetails.add(
-                        new ConsumerGroupDetails(
-                            value.groupId(),
-                            value.isSimpleConsumerGroup(),
-                            value.partitionAssignor(),
-                            value.state().toString(),
-                            members,
-                            coordinator
-                        )
-                    );
+                    consumerGroupDetails.add(new ConsumerGroupDetails(
+                        value.groupId(),
+                        value.isSimpleConsumerGroup(),
+                        value.partitionAssignor(),
+                        value.state().toString(),
+                        members,
+                        coordinator
+                    ));
                 });
 
             return Collections.unmodifiableList(consumerGroupDetails);
@@ -436,11 +434,9 @@ public class KafkaOperations implements AutoCloseable {
                 .get();
 
             for (final Map.Entry<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> entry : partitionsToOffsets.entrySet()) {
-                offsetList.add(
-                    new PartitionOffset(
-                        entry.getKey().partition(), entry.getValue().offset()
-                    )
-                );
+                offsetList.add(new PartitionOffset(
+                    entry.getKey().partition(), entry.getValue().offset()
+                ));
                 if (topic == null) {
                     topic = entry.getKey().topic();
                 }
