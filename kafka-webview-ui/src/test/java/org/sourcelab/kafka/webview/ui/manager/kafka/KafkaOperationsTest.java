@@ -28,6 +28,7 @@ import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,10 +41,12 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionOffset;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
@@ -51,10 +54,11 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
 import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -376,8 +380,8 @@ public class KafkaOperationsTest {
         final String consumerId2 = "ConsumerB";
         final String consumerPrefix = "TestConsumer";
 
-        consumeFromTopic(topicName, consumerId1, consumerPrefix);
-        consumeFromTopic(topicName, consumerId2, consumerPrefix);
+        consumeFromTopicAndClose(topicName, consumerId1, consumerPrefix);
+        consumeFromTopicAndClose(topicName, consumerId2, consumerPrefix);
 
         // Create operations client.
         try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
@@ -385,11 +389,20 @@ public class KafkaOperationsTest {
             final List<ConsumerGroupIdentifier> consumerIds = operations.listConsumers();
 
             // We should have two
-            assertEquals("Should have 2 consumers listed", consumerIds.size(), 2);
+            assertTrue("Should have at least 2 consumers listed", consumerIds.size() >= 2);
 
-            // Results should be sorted.
-            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
-            assertEquals(consumerIds.get(1).getId(), consumerPrefix + "-" + consumerId2);
+            // Results may contain other consumer groups, look for ours.
+            boolean foundGroup1 = false;
+            boolean foundGroup2 = false;
+            for (final ConsumerGroupIdentifier foundConsumerGroupIds : consumerIds) {
+                if (foundConsumerGroupIds.getId().equals(consumerPrefix + "-" + consumerId1)) {
+                    foundGroup1 = true;
+                } else if (foundConsumerGroupIds.getId().equals(consumerPrefix + "-" + consumerId2)) {
+                    foundGroup2 = true;
+                }
+            }
+            assertTrue("Found consumer group 1", foundGroup1);
+            assertTrue("Found consumer group 2", foundGroup2);
         }
     }
 
@@ -421,8 +434,8 @@ public class KafkaOperationsTest {
         final String consumerId2 = "ConsumerB";
         final String consumerPrefix = "TestConsumer";
 
-        consumeFromTopic(topicName, consumerId1, consumerPrefix);
-        consumeFromTopic(topicName, consumerId2, consumerPrefix);
+        consumeFromTopicAndClose(topicName, consumerId1, consumerPrefix);
+        consumeFromTopicAndClose(topicName, consumerId2, consumerPrefix);
 
         // Create operations client.
         try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
@@ -430,11 +443,20 @@ public class KafkaOperationsTest {
             List<ConsumerGroupIdentifier> consumerIds = operations.listConsumers();
 
             // We should have two
-            assertEquals("Should have 2 consumers listed", consumerIds.size(), 2);
+            assertTrue("Should have at least 2 consumers listed", consumerIds.size() >= 2);
 
-            // Results should be sorted.
-            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
-            assertEquals(consumerIds.get(1).getId(), consumerPrefix + "-" + consumerId2);
+            // Results may contain other consumer groups, look for ours.
+            boolean foundGroup1 = false;
+            boolean foundGroup2 = false;
+            for (final ConsumerGroupIdentifier foundConsumerGroupIds : consumerIds) {
+                if (foundConsumerGroupIds.getId().equals(consumerPrefix + "-" + consumerId1)) {
+                    foundGroup1 = true;
+                } else if (foundConsumerGroupIds.getId().equals(consumerPrefix + "-" + consumerId2)) {
+                    foundGroup2 = true;
+                }
+            }
+            assertTrue("Found consumer group 1", foundGroup1);
+            assertTrue("Found consumer group 2", foundGroup2);
 
             // Now attempt to remove consumer2
             final boolean result = operations.removeConsumerGroup(consumerPrefix + "-" + consumerId2);
@@ -443,11 +465,21 @@ public class KafkaOperationsTest {
             // Verify only one consumer group remains
             consumerIds = operations.listConsumers();
 
-            // We should have two
-            assertEquals("Should have 1 consumers listed", consumerIds.size(), 1);
+            // We should have consumer id 1, but not consumer id 2
+            assertTrue("Should have atleast 1 consumers listed", consumerIds.size() >= 1);
 
-            // Results should be sorted.
-            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
+            // Results may contain other consumer groups, look for ours.
+            foundGroup1 = false;
+            foundGroup2 = false;
+            for (final ConsumerGroupIdentifier foundConsumerGroupIds : consumerIds) {
+                if (foundConsumerGroupIds.getId().equals(consumerPrefix + "-" + consumerId1)) {
+                    foundGroup1 = true;
+                } else if (foundConsumerGroupIds.getId().equals(consumerPrefix + "-" + consumerId2)) {
+                    foundGroup2 = true;
+                }
+            }
+            assertTrue("Found consumer group 1", foundGroup1);
+            assertFalse("Should not have found consumer group 2", foundGroup2);
         }
     }
 
@@ -455,7 +487,7 @@ public class KafkaOperationsTest {
      * Test getting details about a consumer.
      */
     @Test
-    public void testGetConsumerDetails() {
+    public void testGetConsumerGroupDetails() {
         // First need to create a topic.
         final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
 
@@ -475,36 +507,96 @@ public class KafkaOperationsTest {
             .build();
         final String clientId = "BobsYerAunty";
 
-        final String consumerId1 = "ConsumerA";
+        final String consumerId1 = "ConsumerA-" + System.currentTimeMillis();
         final String consumerPrefix = "TestConsumer";
         final String finalConsumerId = consumerPrefix + "-" + consumerId1;
 
-        consumeFromTopic(topicName, consumerId1, consumerPrefix);
+        // Create consumer, consume from topic, keep alive.
+        try (final KafkaConsumer consumer = consumeFromTopic(topicName, consumerId1, consumerPrefix)) {
 
-        // Create operations client.
-        try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
-            // Ask for list of consumers.
-            List<ConsumerGroupDetails> consumerIds = operations.getConsumerDetails(finalConsumerId);
+            // Create operations client.
+            try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
+                // Ask for list of consumers.
+                final ConsumerGroupDetails consumerGroupDetails = operations.getConsumerGroupDetails(finalConsumerId);
 
-//            // We should have two
-//            assertEquals("Should have 2 consumers listed", consumerIds.size(), 2);
-//
-//            // Results should be sorted.
-//            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
-//            assertEquals(consumerIds.get(1).getId(), consumerPrefix + "-" + consumerId2);
-//
-//            // Now attempt to remove consumer2
-//            final boolean result = operations.removeConsumerGroup(consumerPrefix + "-" + consumerId2);
-//            assertTrue("Should have returned true.", result);
-//
-//            // Verify only one consumer group remains
-//            consumerIds = operations.listConsumers();
-//
-//            // We should have two
-//            assertEquals("Should have 1 consumers listed", consumerIds.size(), 1);
-//
-//            // Results should be sorted.
-//            assertEquals(consumerIds.get(0).getId(), consumerPrefix + "-" + consumerId1);
+                // We should have one
+                assertNotNull(consumerGroupDetails);
+
+                // Validate bits
+                assertEquals(finalConsumerId, consumerGroupDetails.getConsumerId());
+                assertFalse(consumerGroupDetails.isSimple());
+                assertEquals("range", consumerGroupDetails.getPartitionAssignor());
+                assertEquals("Stable", consumerGroupDetails.getState());
+                assertEquals(1, consumerGroupDetails.getMembers().size());
+
+                final ConsumerGroupDetails.Member memberDetails = consumerGroupDetails.getMembers().get(0);
+                assertNotNull(memberDetails);
+                assertEquals("/127.0.0.1", memberDetails.getHost());
+                assertEquals(finalConsumerId, memberDetails.getClientId());
+                assertTrue(memberDetails.getMemberId().startsWith(finalConsumerId));
+            }
+        }
+    }
+
+    /**
+     * Test getting details about a consumer.
+     */
+    @Test
+    public void testGetConsumerGroupOffsets() {
+        // First need to create a topic.
+        final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
+
+        // Publish data into the topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 0);
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 1);
+
+        // Create cluster config.
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+        final String clientId = "BobsYerAunty";
+
+        final String consumerId1 = "ConsumerA-" + System.currentTimeMillis();
+        final String consumerPrefix = "TestConsumer";
+        final String finalConsumerId = consumerPrefix + "-" + consumerId1;
+
+        // Create consumer, consume from topic, keep alive.
+        try (final KafkaConsumer consumer = consumeFromTopic(topicName, consumerId1, consumerPrefix)) {
+
+            // Create operations client.
+            try (final KafkaOperations operations = new KafkaOperations(kafkaAdminFactory.create(clusterConfig, clientId))) {
+                // Ask for list of offsets.
+                final ConsumerGroupOffsets consumerGroupOffsets = operations.getConsumerGroupOffsets(finalConsumerId);
+
+                // We should have one
+                assertNotNull(consumerGroupOffsets);
+
+                // Validate bits
+                assertEquals(topicName, consumerGroupOffsets.getTopic());
+                assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerGroupId());
+                assertEquals(2, consumerGroupOffsets.getOffsets().size());
+                assertEquals(10, consumerGroupOffsets.getOffsetForPartition(0));
+                assertEquals(10, consumerGroupOffsets.getOffsetForPartition(1));
+
+                final PartitionOffset offsetsPartition0 = consumerGroupOffsets.getOffsets().get(0);
+                assertNotNull(offsetsPartition0);
+                assertEquals(0, offsetsPartition0.getPartition());
+                assertEquals(10, offsetsPartition0.getOffset());
+
+                final PartitionOffset offsetsPartition1 = consumerGroupOffsets.getOffsets().get(1);
+                assertNotNull(offsetsPartition1);
+                assertEquals(1, offsetsPartition1.getPartition());
+                assertEquals(10, offsetsPartition1.getOffset());
+            }
         }
     }
 
@@ -519,12 +611,11 @@ public class KafkaOperationsTest {
 
     /**
      * Helper method to consumer records from a topic.
-     *
-     * @param topic topic to consume from.
+     *  @param topic topic to consume from.
      * @param consumerId Consumer's consumerId
      * @param consumerPrefix Any consumer Id prefix.
      */
-    private void consumeFromTopic(final String topic, final String consumerId, final String consumerPrefix) {
+    private KafkaConsumer<String, String> consumeFromTopic(final String topic, final String consumerId, final String consumerPrefix) {
         // Create cluster config.
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
@@ -565,9 +656,38 @@ public class KafkaOperationsTest {
 
         // Create consumer and consume the entries, storing state in Kafka.
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", consumerPrefix);
-        try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
-            // consume & close.
+        final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
+
+        // "Subscribe" to topic.
+        consumer.unsubscribe();
+        consumer.subscribe(Collections.singletonList(topicConfig.getTopicName()));
+
+
+        // consume and commit offsets.
+        // Wait for assignment to complete.
+        for (int attempts = 0; attempts < 10; attempts++) {
             consumer.poll(Duration.ofMillis(1000L));
+            final Set<TopicPartition> assignmentSet = consumer.assignment();
+            if (!assignmentSet.isEmpty()) {
+                break;
+            }
         }
+
+        // Commit offsets.
+        consumer.commitSync();
+
+        return consumer;
+    }
+
+    /**
+     * Helper method to consumer records from a topic.
+     *
+     * @param topic topic to consume from.
+     * @param consumerId Consumer's consumerId
+     * @param consumerPrefix Any consumer Id prefix.
+     */
+    private void consumeFromTopicAndClose(final String topic, final String consumerId, final String consumerPrefix) {
+        final KafkaConsumer consumer = consumeFromTopic(topic, consumerId, consumerPrefix);
+        consumer.close();
     }
 }

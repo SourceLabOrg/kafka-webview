@@ -28,16 +28,17 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AlterConfigsResult;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
-import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DeleteConsumerGroupsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeConsumerGroupsResult;
+import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
@@ -45,21 +46,26 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.BrokerConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionOffset;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicPartition;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -326,9 +332,32 @@ public class KafkaOperations implements AutoCloseable {
         }
     }
 
-    public List<ConsumerGroupDetails> getConsumerDetails(final String consumerId) {
+    /**
+     * Returns details about every consumer within the consumer group id.
+     * @param consumerGroupId id to retrieve details for.
+     * @return ConsumerGroupDetails
+     */
+    public ConsumerGroupDetails getConsumerGroupDetails(final String consumerGroupId) {
+        final List<ConsumerGroupDetails> consumerGroupDetails = getConsumerGroupDetails(
+            Collections.singletonList(consumerGroupId)
+        );
+
+        // There should only be a single entry
+        if (consumerGroupDetails.size() == 1) {
+            return consumerGroupDetails.get(0);
+        }
+        // If we had zero or more than one.... not sure... toss exception
+        throw new RuntimeException("Unable to locate consumer group id " + consumerGroupId);
+    }
+
+    /**
+     * Returns details about every consumer within the consumer group id.
+     * @param consumerGroupIds ids to retrieve details for.
+     * @return immutable list of ConsumerGroupDetails
+     */
+    public List<ConsumerGroupDetails> getConsumerGroupDetails(final List<String> consumerGroupIds) {
         // Make request
-        final DescribeConsumerGroupsResult results = adminClient.describeConsumerGroups(Collections.singletonList(consumerId));
+        final DescribeConsumerGroupsResult results = adminClient.describeConsumerGroups(consumerGroupIds);
 
         // Generate return list.
         final List<ConsumerGroupDetails> consumerGroupDetails = new ArrayList<>();
@@ -339,23 +368,85 @@ public class KafkaOperations implements AutoCloseable {
                 .all()
                 .get()
                 .forEach((key, value) ->  {
-                    final ConsumerGroupDetails.State state = new ConsumerGroupDetails.State();
-                    final ConsumerGroupDetails.Member member = new ConsumerGroupDetails.Member();
+                    final List<ConsumerGroupDetails.Member> members = new ArrayList<>();
+
+                    // Loop over each member
+                    value.members().forEach((member) -> {
+                        // Collect the members assigned partitions
+                        final Set<TopicPartition> assignedPartitions = new HashSet<>();
+                        member.assignment().topicPartitions().forEach((topicPartition -> {
+                            assignedPartitions.add(new TopicPartition(
+                                topicPartition.topic(),
+                                topicPartition.partition()
+                            ));
+                        }));
+
+                        // Create new ConsumerGroupDetails for this member
+                        members.add(
+                            new ConsumerGroupDetails.Member(
+                                member.consumerId(),
+                                member.clientId(),
+                                member.host(),
+                                assignedPartitions
+                            )
+                        );
+                    });
+
+                    final NodeDetails coordinator = new NodeDetails(
+                        value.coordinator().id(),
+                        value.coordinator().host(),
+                        value.coordinator().port(),
+                        value.coordinator().rack()
+                    );
+
                     consumerGroupDetails.add(
                         new ConsumerGroupDetails(
                             value.groupId(),
                             value.isSimpleConsumerGroup(),
                             value.partitionAssignor(),
-                            Collections.singletonList(state),
-                            Collections.singletonList(member)
+                            value.state().toString(),
+                            members,
+                            coordinator
                         )
                     );
                 });
 
-
-            // return immutable list.
             return Collections.unmodifiableList(consumerGroupDetails);
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
 
+    /**
+     * Returns consumer offsets for requested consumer group id.
+     * @param consumerGroupId id to retrieve offsets for.
+     * @return ConsumerGroupOffsets
+     */
+    public ConsumerGroupOffsets getConsumerGroupOffsets(final String consumerGroupId) {
+        // Make request
+        final ListConsumerGroupOffsetsResult results = adminClient.listConsumerGroupOffsets(consumerGroupId);
+
+        try {
+            final List<PartitionOffset> offsetList = new ArrayList<>();
+            String topic = null;
+
+            // Iterate over results
+            final Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> partitionsToOffsets = results
+                .partitionsToOffsetAndMetadata()
+                .get();
+
+            for (final Map.Entry<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> entry : partitionsToOffsets.entrySet()) {
+                offsetList.add(
+                    new PartitionOffset(
+                        entry.getKey().partition(), entry.getValue().offset()
+                    )
+                );
+                if (topic == null) {
+                    topic = entry.getKey().topic();
+                }
+            }
+
+            return new ConsumerGroupOffsets(consumerGroupId, topic, offsetList);
         } catch (final InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
