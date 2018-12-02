@@ -19,7 +19,7 @@
     "stompjs": "^2.3.3"
   },
   "devDependencies": {
-    "browser-sync": "^2.16.0",
+    "browser-sync": "^2.26.3",
     "del": "^3.0.0",
     "gulp": "^3.9.1",
     "gulp-bower-src": "^0.1.0",
@@ -29,7 +29,7 @@
     "gulp-filter": "^5.0.1",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.6.1",
-    "gulp-sass": "^3.1.0",
+    "gulp-sass": "^3.2.1",
     "gulp-search": "^1.0.0",
     "gulp-uglify": "^3.0.0",
     "gulp-web-dependencies": "^1.1.2",
