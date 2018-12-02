@@ -81,6 +81,8 @@ public class ApiControllerTest extends AbstractMvcTest {
     public void test_withoutAdminRole() throws Exception {
         testUrlWithOutAdminRole("/api/cluster/1/create/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/modify/topic", true);
+
+        // TODO I think this needs a post body to pass.
         testUrlWithOutAdminRole("/api/cluster/1/consumer/remove", true);
     }
 
