@@ -15,7 +15,7 @@
     "pace-progress": "^1.0.2",
     "popper.js": "^1.12.5",
     "simple-line-icons": "^2.4.1",
-    "sockjs-client": "^1.1.4",
+    "sockjs-client": "^1.3.0",
     "stompjs": "^2.3.3"
   },
   "devDependencies": {
