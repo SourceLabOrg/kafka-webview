@@ -49,6 +49,11 @@ By default config.yml will look similar to:
 server:
   ## What port to run the service on.
   port: 8080
+  servlet:
+    session:
+      ## User login session timeout after 1 hour (3600 seconds)
+      timeout: 3600
+
 
 ## Various App Configs
 app:
