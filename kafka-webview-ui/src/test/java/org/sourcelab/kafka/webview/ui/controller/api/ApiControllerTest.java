@@ -227,7 +227,7 @@ public class ApiControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void test_removeConsumer() throws Exception {
+    public void test_removeConsumer_withAdminRole() throws Exception {
         // Create a cluster.
         final Cluster cluster = clusterTestTools.createCluster(
             "Test Cluster",
@@ -275,7 +275,7 @@ public class ApiControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void test_getConsumerDetails() throws Exception {
+    public void test_removeConsumer_withNonAdminRole() throws Exception {
         // Create a cluster.
         final Cluster cluster = clusterTestTools.createCluster(
             "Test Cluster",
@@ -290,19 +290,69 @@ public class ApiControllerTest extends AbstractMvcTest {
 
         // Hit end point
         mockMvc
-            .perform(post("/api/cluster/" + cluster.getId() + "/consumer/details")
+            .perform(post("/api/cluster/" + cluster.getId() + "/consumer/remove")
                 .with(user(nonAdminUserDetails))
                 .with(csrf())
                 .content(payload)
                 .contentType(MediaType.APPLICATION_JSON)
             )
             .andDo(print())
-            .andExpect(status().isOk())
+            .andExpect(status().is4xxClientError())
 
             // Validate submit button seems to show up.
             .andExpect(content().string(containsString("true")));
 
-        // TODO finish test.
+        // Verify consumer still exists
+        try (final AdminClient adminClient = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getAdminClient()) {
+
+            final ListConsumerGroupsResult request = adminClient.listConsumerGroups();
+            final Collection<ConsumerGroupListing> results = request.all().get();
+
+            final Optional<ConsumerGroupListing> match = results.stream()
+                .filter((entry) -> (entry.groupId().equals(consumerId)))
+                .findFirst();
+
+            assertTrue("Should have found entry", match.isPresent());
+        }
+    }
+
+    /**
+     * Test the list Consumers end point.
+     */
+    @Test
+    @Transactional
+    public void test_listConsumersAndDetails() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState(cluster);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumersAndDetails")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // [{"consumerId":"test-consumer-id-1543825835154","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":52168,"rack":null},"simple":false}]
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("[{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("partitionAssignor")))
+            .andExpect(content().string(containsString("state")))
+            .andExpect(content().string(containsString("members")))
+            .andExpect(content().string(containsString("coordinator")))
+            .andExpect(content().string(containsString("\"simple\":false")));
     }
 
     /**

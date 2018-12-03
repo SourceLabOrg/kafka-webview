@@ -259,6 +259,11 @@ var ApiClient = {
             .getJSON('/api/cluster/' + clusterId + '/consumers', '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
+    getAllConsumersWithDetails: function(clusterId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/consumersAndDetails', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
     removeConsumer: function(clusterId, consumerId, callback) {
         var payload = JSON.stringify({
             clusterId: clusterId,

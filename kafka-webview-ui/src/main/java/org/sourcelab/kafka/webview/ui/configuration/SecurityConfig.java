@@ -125,7 +125,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/api/cluster/*/modify/**",
 
                 // Remove consumer group
-                "/api/cluster/*/remove/**"
+                "/cluster/*/consumer/remove"
 
             ).hasRole("ADMIN")
 

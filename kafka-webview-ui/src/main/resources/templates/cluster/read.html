@@ -104,10 +104,26 @@
                     var template = Handlebars.compile(source);
 
                     jQuery.each(results, function(index, result) {
+                        // Collect unique topics
+                        var topics = [];
+                        jQuery.each(result.members, function(index, member) {
+                            // Loop thru each assignment
+                            jQuery.each(member.assignment, function(index, assigned) {
+                                topics.push(assigned.topic);
+                            });
+                        });
+
+                        var uniqueTopics = topics.filter(function (value, index, self) {
+                            return self.indexOf(value) === index;
+                        });
+
                         // Generate html from template
                         var properties = {
-                            id: result.id,
-                            encodedId: encodeURIComponent(result.id),
+                            id: result.consumerId,
+                            encodedId: encodeURIComponent(result.consumerId),
+                            topic: uniqueTopics,
+                            state: result.state,
+                            numberOfMembers: result.members.length,
                             clusterId: ClusterInfo.clusterId
                         };
                         var resultHtml = template(properties);
@@ -137,7 +153,7 @@
                 },
                 loadConsumers: function() {
                     // Fire off request to get consumer details
-                    ApiClient.getAllConsumers(ClusterInfo.clusterId, function(results) {
+                    ApiClient.getAllConsumersWithDetails(ClusterInfo.clusterId, function(results) {
                         // Handle results
                         ClusterInfo.handleConsumers(results);
                     });
@@ -324,7 +340,10 @@
                             <thead>
                             <tr>
                                 <th>Consumer Group</th>
-                                <th sec:authorize="hasRole('ROLE_ADMIN')">Delete</th>
+                                <th>Topic</th>
+                                <th>State</th>
+                                <th>Members</th>
+                                <th sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">Action</th>
                             </tr>
                             </thead>
                             <tbody id="consumers-tbody">
@@ -382,8 +401,28 @@
                         {{id}}
                     </a>
                 </td>
-                <td sec:authorize="hasRole('ROLE_ADMIN')">
-                    <a href="#" onclick="ClusterInfo.removeConsumer('{{id}}'); return false;">Remove?</a>
+                <td>
+                    {{topic}}
+                </td>
+                <td>
+                    {{state}}
+                </td>
+                <td>
+                    {{numberOfMembers}}
+                </td>
+                <td sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" x-placement="bottom-start" style="position: absolute; transform: translate3d(29px, 31px, 0px); top: 0px; left: 0px; will-change: transform;">
+
+                            <button class="dropdown-item" onclick="ClusterInfo.removeConsumer('{{id}}'); return false;">
+                                <i class="fa fa-remove"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 </td>
             </tr>
         </script>

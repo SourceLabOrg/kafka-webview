@@ -41,6 +41,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
@@ -411,6 +412,35 @@ public class ApiController extends BaseController {
 
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             return operations.listConsumers();
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET list all consumer groups for a specific cluster with details about each one.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumersAndDetails", method = RequestMethod.GET, produces = "application/json")
+    public List<ConsumerGroupDetails> listConsumersAndDetails(@PathVariable final Long id) {
+
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            // First get list of all consumerGroups.
+            final List<ConsumerGroupIdentifier> consumerGroupIdentifiers = operations.listConsumers();
+            if (consumerGroupIdentifiers.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            final List<String> stringIds = new ArrayList<>();
+            consumerGroupIdentifiers.forEach(groupId -> {
+                stringIds.add(groupId.getId());
+            });
+
+            // Now get details about all of em.
+            return operations.getConsumerGroupDetails(stringIds);
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
         }
