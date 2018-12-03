@@ -28,7 +28,6 @@ import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.ClassRule;
@@ -81,8 +80,6 @@ public class ApiControllerTest extends AbstractMvcTest {
     public void test_withoutAdminRole() throws Exception {
         testUrlWithOutAdminRole("/api/cluster/1/create/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/modify/topic", true);
-
-        // TODO I think this needs a post body to pass.
         testUrlWithOutAdminRole("/api/cluster/1/consumer/remove", true);
     }
 
@@ -297,10 +294,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .contentType(MediaType.APPLICATION_JSON)
             )
             .andDo(print())
-            .andExpect(status().is4xxClientError())
-
-            // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("true")));
+            .andExpect(status().is4xxClientError());
 
         // Verify consumer still exists
         try (final AdminClient adminClient = sharedKafkaTestResource
