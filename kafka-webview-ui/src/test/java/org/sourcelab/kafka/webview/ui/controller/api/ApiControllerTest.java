@@ -350,6 +350,78 @@ public class ApiControllerTest extends AbstractMvcTest {
     }
 
     /**
+     * Test the get specific consumer end point.
+     */
+    @Test
+    @Transactional
+    public void test_specificConsumerDetails() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState(cluster);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumer/" + consumerId + "/details")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // {"consumerId":"test-consumer-id-1543909384618","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":51229,"rack":null},"simple":false}
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("partitionAssignor")))
+            .andExpect(content().string(containsString("state")))
+            .andExpect(content().string(containsString("members")))
+            .andExpect(content().string(containsString("coordinator")))
+            .andExpect(content().string(containsString("\"simple\":false")));
+    }
+
+    /**
+     * Test the get specific consumer offsets.
+     */
+    @Test
+    @Transactional
+    public void test_specificConsumerOffsets() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState(cluster);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumer/" + consumerId + "/offsets")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // {"consumerId":"test-consumer-id-1543909610144","topic":"TestTopic-1543909610145","offsets":[{"partition":0,"offset":10}],"partitions":[0]}
+
+            // Validate results seem right.
+            .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
+            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10}]")))
+            .andExpect(content().string(containsString("\"partitions\":[0]")));
+    }
+
+    /**
      * Helper method to create a consumer with state on the given cluster.
      * @param cluster cluster to create state on.
      * @return Consumer group id created.

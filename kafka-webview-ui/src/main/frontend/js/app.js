@@ -264,6 +264,16 @@ var ApiClient = {
             .getJSON('/api/cluster/' + clusterId + '/consumersAndDetails', '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
+    getConsumerDetails: function(clusterId, consumerGroupId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/details', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
+    getConsumerOffsets: function(clusterId, consumerGroupId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/offsets', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
     removeConsumer: function(clusterId, consumerId, callback) {
         var payload = JSON.stringify({
             clusterId: clusterId,

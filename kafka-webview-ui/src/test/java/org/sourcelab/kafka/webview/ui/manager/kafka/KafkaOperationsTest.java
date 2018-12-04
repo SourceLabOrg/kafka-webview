@@ -582,7 +582,7 @@ public class KafkaOperationsTest {
 
                 // Validate bits
                 assertEquals(topicName, consumerGroupOffsets.getTopic());
-                assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerGroupId());
+                assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
                 assertEquals(2, consumerGroupOffsets.getOffsets().size());
                 assertEquals(10, consumerGroupOffsets.getOffsetForPartition(0));
                 assertEquals(10, consumerGroupOffsets.getOffsetForPartition(1));

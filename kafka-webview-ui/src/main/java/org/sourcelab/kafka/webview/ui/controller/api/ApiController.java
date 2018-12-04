@@ -43,6 +43,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
@@ -441,6 +442,47 @@ public class ApiController extends BaseController {
 
             // Now get details about all of em.
             return operations.getConsumerGroupDetails(stringIds);
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET Retrieve details about a single specific consumer.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/details", method = RequestMethod.GET, produces = "application/json")
+    public ConsumerGroupDetails getConsumerDetails(@PathVariable final Long id, @PathVariable final String consumerGroupId) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            final List<String> stringIds = new ArrayList<>();
+            stringIds.add(consumerGroupId);
+
+            // Now get details about all of em.
+            final List<ConsumerGroupDetails> detailsList = operations.getConsumerGroupDetails(stringIds);
+            if (detailsList.isEmpty()) {
+                throw new RuntimeException("Unable to find consumer group id " + consumerGroupId);
+            }
+
+            return detailsList.get(0);
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET Retrieve offsets for a specific consumer group id.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/offsets", method = RequestMethod.GET, produces = "application/json")
+    public ConsumerGroupOffsets getConsumerOffsets(@PathVariable final Long id, @PathVariable final String consumerGroupId) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.getConsumerGroupOffsets(consumerGroupId);
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
         }

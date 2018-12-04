@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+        xmlns:th="http://www.thymeleaf.org"
+        layout:decorate="~{layout}">
+
+<head>
+    <title>Cluster Explorer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // Maintains state of our consumer
+            var ConsumerInfo = {
+                clusterId: '[[${cluster.id}]]',
+                consumerId: '[[${consumerId}]]',
+
+                handleConsumerDetails: function(results) {
+                    console.log(results);
+
+                    // Hide loader
+                    jQuery('#topic-loader').toggle(false);
+                }
+            };
+
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                // Chain initial ajax requests.
+                // Request Cluster Information
+                ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
+                    // handle results
+                    ConsumerInfo.handleConsumerDetails(results);
+                });
+                ApiClient.getConsumerOffsets(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
+                   console.log(results);
+                });
+            });
+        </script>
+
+    </div>
+</section>
+
+</body>
+</html>

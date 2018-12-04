@@ -38,18 +38,18 @@ import java.util.TreeSet;
  * Represents details about a consumer group offset positions.
  */
 public class ConsumerGroupOffsets {
-    private final String consumerGroupId;
+    private final String consumerId;
     private final String topic;
     private final Map<Integer, PartitionOffset> offsetMap;
 
     /**
      * Constructor.
-     * @param consumerGroupId id of consumer group.
+     * @param consumerId id of consumer group.
      * @param topic name of the topic.
      * @param offsets details about each partition and offset.
      */
-    public ConsumerGroupOffsets(final String consumerGroupId, final String topic, final Collection<PartitionOffset> offsets) {
-        this.consumerGroupId = consumerGroupId;
+    public ConsumerGroupOffsets(final String consumerId, final String topic, final Collection<PartitionOffset> offsets) {
+        this.consumerId = consumerId;
         this.topic = topic;
 
         final Map<Integer, PartitionOffset> offsetMap = new HashMap<>();
@@ -62,15 +62,15 @@ public class ConsumerGroupOffsets {
         this.offsetMap = Collections.unmodifiableMap(offsetMap);
     }
 
-    public String getConsumerGroupId() {
-        return consumerGroupId;
+    public String getConsumerId() {
+        return consumerId;
     }
 
     public String getTopic() {
         return topic;
     }
 
-    public Map<Integer, PartitionOffset> getOffsetMap() {
+    private Map<Integer, PartitionOffset> getOffsetMap() {
         return offsetMap;
     }
 
@@ -115,7 +115,7 @@ public class ConsumerGroupOffsets {
     @Override
     public String toString() {
         return "ConsumerGroupOffsets{"
-            + "consumerGroupId='" + consumerGroupId + '\''
+            + "consumerId='" + consumerId + '\''
             + ", topic='" + topic + '\''
             + ", offsetMap=" + offsetMap
             + '}';
