@@ -168,10 +168,10 @@ public class ClusterController extends BaseController {
     /**
      * GET Displays info about a specific consumers group in a cluster.
      */
-    @RequestMapping(path = "/{clusterId}/consumer/{consumerGroupId:.+}", method = RequestMethod.GET)
+    @RequestMapping(path = "/{clusterId}/consumer/{consumerId:.+}", method = RequestMethod.GET)
     public String readConsumer(
         @PathVariable final Long clusterId,
-        @PathVariable final String consumerGroupId,
+        @PathVariable final String consumerId,
         final Model model,
         final RedirectAttributes redirectAttributes) {
 
@@ -182,12 +182,12 @@ public class ClusterController extends BaseController {
             return "redirect:/";
         }
         model.addAttribute("cluster", cluster);
-        model.addAttribute("consumerGroupId", consumerGroupId);
+        model.addAttribute("consumerId", consumerId);
 
         // Setup breadcrumbs
         setupBreadCrumbs(model)
             .addCrumb(cluster.getName(), "/cluster/" + clusterId)
-            .addCrumb("Consumer " + consumerGroupId, null);
+            .addCrumb("Consumer " + consumerId, null);
 
 
         // Display template

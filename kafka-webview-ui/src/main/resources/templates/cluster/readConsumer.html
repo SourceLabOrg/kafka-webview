@@ -17,28 +17,282 @@
             // Maintains state of our consumer
             var ConsumerInfo = {
                 clusterId: '[[${cluster.id}]]',
+                clusterName: '[[${cluster.name}]]',
                 consumerId: '[[${consumerId}]]',
 
-                handleConsumerDetails: function(results) {
-                    console.log(results);
+                // Refresh ConsumerDetails
+                refreshConsumerDetails: function() {
+                    // Request Cluster Information
+                    ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerDetails);
+                },
 
-                    // Hide loader
-                    jQuery('#topic-loader').toggle(false);
+                // Handle results from ConsumerDetails request
+                handleConsumerDetails: function(results) {
+                    // Clear consumer details table
+                    var table = jQuery('#consumer-details-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#consumer-details-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Collect unique topics
+                    var topics = [];
+                    jQuery.each(results.members, function(index, member) {
+                        // Loop thru each assignment
+                        jQuery.each(member.assignment, function(index, assigned) {
+                            topics.push(assigned.topic);
+                        });
+                    });
+
+                    var uniqueTopics = topics.filter(function (value, index, self) {
+                        return self.indexOf(value) === index;
+                    });
+
+                    // Generate html from template
+                    var properties = {
+                        clusterName: ConsumerInfo.clusterName,
+                        consumerId: ConsumerInfo.consumerId,
+                        topic: uniqueTopics,
+                        state: results.state,
+                        numberOfMembers: results.members.length,
+                        partitionAssignor: results.partitionAssignor,
+                        isSimple: results.simple,
+                        coordinatorId: results.coordinator.id,
+                        coordinatorHost: results.coordinator.host,
+                        coordinatorPort: results.coordinator.port,
+                        coordinatorRack: results.coordinator.rack
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
+
+                    // Build Membership details
+                    ConsumerInfo.handleMembershipDetails(results.members);
+
+                    // Hide loaders
+                    jQuery('#consumer-details-loader').toggle(false);
+                    jQuery('#consumer-details-table').toggle(true);
+
+                    // Setup timer to refresh ConsumerDetails every 15 seconds
+                    setTimeout(ConsumerInfo.refreshConsumerDetails, 15 * 1000);
+                },
+                handleMembershipDetails: function(members) {
+                    // Clear consumer details table
+                    var table = jQuery('#consumer-membership-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#consumer-membership-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Process each member
+                    jQuery.each(members, function(index, member) {
+                        var partitions = [];
+
+                        // Loop thru each assignment
+                        jQuery.each(member.assignment, function(index, assigned) {
+                            partitions.push(assigned.partition);
+                        });
+
+                        // Sort partitions?
+                        partitions.sort(function(a, b)
+                        {
+                            return a - b;
+                        });
+
+                        // Generate html from template
+                        var properties = {
+                            memberId: member.memberId,
+                            partitionCount: member.assignment.length,
+                            hostname: member.host,
+                            partitions: partitions
+                        };
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    jQuery('#consumer-membership-loader').toggle(false);
+                    jQuery('#consumer-membership-table').toggle(true);
+                },
+
+                // Refresh ConsumerOffsets
+                refreshConsumerOffsets: function() {
+                    ApiClient.getConsumerOffsets(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
+                        console.log(results);
+                    });
+                },
+
+                toggleMembershipDetails: function(el) {
+                    jQuery(el).next("tr.membership-summary").toggle();
                 }
             };
 
             // On load, fire off ajax request to load results.
             jQuery(document).ready(function() {
-                // Chain initial ajax requests.
-                // Request Cluster Information
-                ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
-                    // handle results
-                    ConsumerInfo.handleConsumerDetails(results);
-                });
-                ApiClient.getConsumerOffsets(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
-                   console.log(results);
-                });
+                ConsumerInfo.refreshConsumerDetails();
+                ConsumerInfo.refreshConsumerOffsets();
             });
+        </script>
+
+        <!-- Consumer Details -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong> Consumer <strong th:text="${consumerId}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumer-details-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumer-details-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumer-details-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Membership Details -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Consumer <strong th:text="${consumerId}"></strong> Membership
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumer-membership-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumer-membership-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Member Id</th>
+                                <th>Partitions</th>
+                                <th>Hostname</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumer-membership-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumer Details Template -->
+        <script id="consumer-details-template" type="text/x-handlebars-template">
+            <tr>
+                <td><strong>Cluster</strong></td>
+                <td>{{clusterName}}</td>
+            </tr>
+            <tr>
+                <td><strong>Consumer Id</strong></td>
+                <td>{{consumerId}}</td>
+            </tr>
+            <tr>
+                <td><strong>Topic</strong></td>
+                <td>{{topic}}</td>
+            </tr>
+            <tr>
+                <td><strong>State</strong></td>
+                <td>{{state}}</td>
+            </tr>
+            <tr>
+                <td><strong>Members</strong></td>
+                <td>{{numberOfMembers}}</td>
+            </tr>
+            <tr>
+                <td><strong>Coordinator</strong></td>
+                <td>
+                    <ul>
+                        <li>
+                            BrokerId: {{coordinatorId}}
+                        </li>
+                        <li>
+                            Host: {{coordinatorHost}}:{{coordinatorPort}}
+                        </li>
+                        <li>
+                            Rack: {{coordinatorRack}}
+                        </li>
+                    </ul>
+
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Partition Assignor</strong></td>
+                <td>{{partitionAssignor}}</td>
+            </tr>
+            <tr>
+                <td><strong>Simple Consumer</strong></td>
+                <td>
+                    {{#if isSimple}}
+                    <span class="badge badge-success">Yes</span>
+                    {{else}}
+                    <span class="badge badge-warning">No</span>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+
+        <!-- Consumer Membership Template -->
+        <script id="consumer-membership-template" type="text/x-handlebars-template">
+            <tr onclick="ConsumerInfo.toggleMembershipDetails(this); return false;">
+                <td>
+                    <a href="#" onclick="return false;">{{memberId}}</a>
+                </td>
+                <td>{{partitionCount}}</td>
+                <td>{{hostname}}</td>
+            </tr>
+            <tr class="membership-summary" style="display: none;">
+                <td colspan="3">
+                    <table class="table table-bordered table-striped table-sm">
+                        <tr>
+                            <td>Assignments</td>
+                            <td>
+                                <ul>
+                                    {{#each partitions}}
+                                    <li>
+                                        Partition {{this}}
+                                    </li>
+                                    {{/each}}
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
         </script>
 
     </div>
