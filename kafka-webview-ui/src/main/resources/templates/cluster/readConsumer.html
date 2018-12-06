@@ -20,8 +20,20 @@
                 clusterName: '[[${cluster.name}]]',
                 consumerId: '[[${consumerId}]]',
 
+                // Holds reference to last consumer membership data.
+                lastMembershipDetails: [],
+
+                // Holds reference to last refreshed offset data
+                lastOffsetData: [],
+
                 // Refresh ConsumerDetails
                 refreshConsumerDetails: function() {
+                    // Show loaders
+                    jQuery('#consumer-details-loader').toggle(true);
+                    jQuery('#consumer-details-table').toggle(false);
+                    jQuery('#consumer-membership-loader').toggle(true);
+                    jQuery('#consumer-membership-table').toggle(false);
+
                     // Request Cluster Information
                     ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerDetails);
                 },
@@ -74,11 +86,11 @@
                     // Hide loaders
                     jQuery('#consumer-details-loader').toggle(false);
                     jQuery('#consumer-details-table').toggle(true);
-
-                    // Setup timer to refresh ConsumerDetails every 15 seconds
-                    setTimeout(ConsumerInfo.refreshConsumerDetails, 15 * 1000);
                 },
                 handleMembershipDetails: function(members) {
+                    // Save reference.
+                    ConsumerInfo.lastMembershipDetails = members;
+
                     // Clear consumer details table
                     var table = jQuery('#consumer-membership-tbody');
                     jQuery(table).empty();
@@ -115,6 +127,7 @@
                         jQuery(table).append(resultHtml);
                     });
 
+                    // Hide loaders
                     jQuery('#consumer-membership-loader').toggle(false);
                     jQuery('#consumer-membership-table').toggle(true);
                 },
@@ -122,8 +135,68 @@
                 // Refresh ConsumerOffsets
                 refreshConsumerOffsets: function() {
                     ApiClient.getConsumerOffsets(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
-                        console.log(results);
+                        ConsumerInfo.handleConsumerOffsets(results);
                     });
+                },
+
+                // Handle ConsumerOffsets Results
+                handleConsumerOffsets: function(results) {
+                    console.log(results);
+
+                    // Get consumer offsets table
+                    var table = jQuery('#consumer-offsets-tbody');
+
+                    // Get and compile template
+                    var source   = jQuery('#consumer-offsets-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Process each partition
+                    jQuery.each(results.offsets, function(index, offsetData) {
+                        // Generate html from template
+                        var properties = {
+                            partition: offsetData.partition,
+                            memberId: ConsumerInfo.findAssignedMemberForPartition(offsetData.partition),
+                            tail: "TODO",
+                            position: offsetData.offset
+                        };
+                        var resultHtml = template(properties);
+
+                        // Look for existing row
+                        var row = jQuery("#partition-" + offsetData.partition);
+                        if (row.length > 0) {
+                            row.replaceWith(resultHtml);
+                        } else {
+                            // Append it to our table
+                            jQuery(table).append(resultHtml);
+                        }
+                    });
+
+                    // Hide loaders
+                    jQuery('#consumer-offsets-loader').toggle(false);
+                    jQuery('#consumer-offsets-table').toggle(true);
+                },
+
+                // Attempts to map partition to its assigned consumer id.
+                findAssignedMemberForPartition: function(partitionId) {
+                    var returnString = null;
+
+                    jQuery.each(ConsumerInfo.lastMembershipDetails, function(index, member) {
+                        console.log("Looking at member")
+                        jQuery.each(member.assignment, function(index, assigned) {
+                            if (assigned.partition == partitionId) {
+                                returnString = member.memberId;
+                                return false;
+                            }
+                        });
+                        // Break out of loop if we found what we were looking for.
+                        if (returnString != null) {
+                            return false;
+                        }
+                    });
+                    if (returnString == null) {
+                        return "Querying...";
+                    }
+                    return returnString;
                 },
 
                 toggleMembershipDetails: function(el) {
@@ -145,6 +218,13 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Consumer <strong th:text="${consumerId}"></strong>
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.refreshConsumerDetails(); return false;">
+                                <i class="icon-refresh"></i>
+                                &nbsp;Refresh
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -181,6 +261,13 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Consumer <strong th:text="${consumerId}"></strong> Membership
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.refreshConsumerDetails(); return false;">
+                                <i class="icon-refresh"></i>
+                                &nbsp;Refresh
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -204,6 +291,51 @@
                             </tr>
                             </thead>
                             <tbody id="consumer-membership-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumer Offsets -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Consumer <strong th:text="${consumerId}"></strong> Positions
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.refreshConsumerOffsets(); return false;">
+                                <i class="icon-refresh"></i>
+                                &nbsp;Refresh
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumer-offsets-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                        class="progress-bar progress-bar-striped progress-bar-animated"
+                                        role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                        style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumer-offsets-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Partition</th>
+                                <th>Member Id</th>
+                                <th>Tail Offset</th>
+                                <th>Consumer Offset</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumer-offsets-tbody">
                             </tbody>
                         </table>
                     </div>
@@ -279,7 +411,7 @@
                 <td colspan="3">
                     <table class="table table-bordered table-striped table-sm">
                         <tr>
-                            <td>Assignments</td>
+                            <td>Assigned Partitions</td>
                             <td>
                                 <ul>
                                     {{#each partitions}}
@@ -292,6 +424,16 @@
                         </tr>
                     </table>
                 </td>
+            </tr>
+        </script>
+
+        <!-- Consumer Offsets Template -->
+        <script id="consumer-offsets-template" type="text/x-handlebars-template">
+            <tr id="partition-{{partition}}">
+                <td>{{partition}}</td>
+                <td>{{memberId}}</td>
+                <td>{{tail}}</td>
+                <td>{{position}}</td>
             </tr>
         </script>
 
