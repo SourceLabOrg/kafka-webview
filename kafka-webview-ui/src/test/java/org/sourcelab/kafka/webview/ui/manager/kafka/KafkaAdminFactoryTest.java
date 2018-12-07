@@ -40,17 +40,40 @@ import static org.junit.Assert.assertNotNull;
 
 public class KafkaAdminFactoryTest {
 
-    @ClassRule
-    public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
+    //@ClassRule
+    //public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 
     /**
      * Test that KafkaAdminFactory can create a working AdminClient when connecting to a non-ssl cluster.
      */
+//    @Test
+//    public void testCreateNonSslAdminClient() throws ExecutionException, InterruptedException {
+//        // Create Cluster config
+//        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+//            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+//            .build();
+//
+//        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("NotUsed");
+//
+//        // Create instance
+//        try (final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, "MyClientId")) {
+//
+//            // Call method to validate things work as expected
+//            final DescribeClusterResult results = adminClient.describeCluster();
+//            assertNotNull("Should have a non-null result", results);
+//
+//            // Request future result
+//            final Collection<Node> nodes = results.nodes().get();
+//            assertNotNull("Should have non-null node result", nodes);
+//            assertFalse("Should have non-empty node", nodes.isEmpty());
+//        }
+//    }
+
     @Test
-    public void testCreateNonSslAdminClient() throws ExecutionException, InterruptedException {
+    public void testCreateSaslAdminClient() throws ExecutionException, InterruptedException {
         // Create Cluster config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
-            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .withBrokerHosts("localhost:9092")
             .build();
 
         final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("NotUsed");

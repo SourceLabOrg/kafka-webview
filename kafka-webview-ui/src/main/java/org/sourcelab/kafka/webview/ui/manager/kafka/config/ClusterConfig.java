@@ -37,11 +37,20 @@ import java.util.stream.Collectors;
  */
 public class ClusterConfig {
     private final Set<String> brokerHosts;
+
+    /**
+     * SSL Configuration Options.
+     */
     private final boolean useSsl;
     private final String keyStoreFile;
     private final String keyStorePassword;
     private final String trustStoreFile;
     private final String trustStorePassword;
+
+    /**
+     * SASL Configuration Options.
+     */
+    private final boolean useSasl = true;
 
     /**
      * Private Constructor for connecting to NON-SSL brokers.
@@ -98,6 +107,10 @@ public class ClusterConfig {
         return trustStorePassword;
     }
 
+    public boolean isUseSasl() {
+        return useSasl;
+    }
+
     @Override
     public String toString() {
         return "ClusterConfig{"
@@ -105,6 +118,7 @@ public class ClusterConfig {
             + ", useSsl=" + useSsl
             + ", keyStoreFile='" + keyStoreFile + '\''
             + ", trustStoreFile='" + trustStoreFile + '\''
+            + ", useSasl=" + useSasl
             + '}';
     }
 

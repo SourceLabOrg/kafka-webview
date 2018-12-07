@@ -29,6 +29,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.HashMap;
@@ -60,13 +61,35 @@ public class KafkaAdminFactory {
         config.put(AdminClientConfig.CLIENT_ID_CONFIG, clientId);
         config.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeout);
 
+        // Optionally configure SSL
         if (clusterConfig.isUseSsl()) {
-            config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+            if (clusterConfig.isUseSasl()) {
+                config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name);
+            } else {
+                config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name);
+            }
             config.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
             config.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());
             config.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getTrustStoreFile());
             config.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clusterConfig.getTrustStorePassword());
         }
+
+        // Optionally configure SASL
+        // If we're using SSL, we've already configured everything for SASL too...
+        if (clusterConfig.isUseSasl()) {
+            if (!clusterConfig.isUseSsl()) {
+                config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_PLAINTEXT.name);
+            }
+            final String jaasConfig = "org.apache.kafka.common.security.plain.PlainLoginModule required\n" +
+                "username=\"kafkaclient\"\n" +
+                "password=\"client-secret\";";
+
+            config.put("sasl.mechanism", "PLAIN");
+            config.put("sasl.jaas.config", jaasConfig);
+
+        }
+
+        // TODO Handle SSL + SASL
 
         return KafkaAdminClient.create(config);
     }
