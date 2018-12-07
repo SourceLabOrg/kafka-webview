@@ -55,7 +55,12 @@ public class KafkaOperationsTest {
     @ClassRule
     public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 
-    private final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("./uploads");
+    private final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(
+        new KafkaClientConfigUtil(
+            "./uploads",
+            "TestPrefix"
+        )
+    );
 
     /**
      * Test getting topic listing.

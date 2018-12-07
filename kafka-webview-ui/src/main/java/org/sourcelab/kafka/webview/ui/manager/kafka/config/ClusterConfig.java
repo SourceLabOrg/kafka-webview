@@ -50,15 +50,9 @@ public class ClusterConfig {
     /**
      * SASL Configuration Options.
      */
-    private final boolean useSasl = true;
-
-    /**
-     * Private Constructor for connecting to NON-SSL brokers.
-     * @param brokerHosts List of one or more broker hosts.
-     */
-    private ClusterConfig(final Set<String> brokerHosts) {
-        this(brokerHosts, false, null, null, null, null);
-    }
+    private final boolean useSasl;
+    private final String saslPlaintextUsername;
+    private final String saslPlaintextPassword;
 
     /**
      * Private constructor for connecting to SSL brokers.
@@ -69,14 +63,24 @@ public class ClusterConfig {
         final String keyStoreFile,
         final String keyStorePassword,
         final String trustStoreFile,
-        final String trustStorePassword) {
+        final String trustStorePassword,
+        final boolean useSasl,
+        final String saslPlaintextUsername,
+        final String saslPlaintextPassword) {
 
         this.brokerHosts = brokerHosts;
+
+        // SSL Options
         this.useSsl = useSsl;
         this.keyStoreFile = keyStoreFile;
         this.keyStorePassword = keyStorePassword;
         this.trustStoreFile = trustStoreFile;
         this.trustStorePassword = trustStorePassword;
+
+        // SASL Options
+        this.useSasl = useSasl;
+        this.saslPlaintextUsername = saslPlaintextUsername;
+        this.saslPlaintextPassword = saslPlaintextPassword;
     }
 
     public Set<String> getBrokerHosts() {
@@ -109,6 +113,14 @@ public class ClusterConfig {
 
     public boolean isUseSasl() {
         return useSasl;
+    }
+
+    public String getSaslPlaintextUsername() {
+        return saslPlaintextUsername;
+    }
+
+    public String getSaslPlaintextPassword() {
+        return saslPlaintextPassword;
     }
 
     @Override
@@ -160,11 +172,22 @@ public class ClusterConfig {
      */
     public static final class Builder {
         private Set<String> brokerHosts;
+
+        /**
+         * SSL Configuration Options.
+         */
         private boolean useSsl = false;
         private String keyStoreFile;
         private String keyStorePassword;
         private String trustStoreFile;
         private String trustStorePassword;
+
+        /**
+         * SASL Configuration Options.
+         */
+        private boolean useSasl = false;
+        private String saslPlaintextUsername;
+        private String saslPlaintextPassword;
 
         private Builder() {
         }
@@ -227,13 +250,46 @@ public class ClusterConfig {
         }
 
         /**
+         * Declare if the brokers use SASL.
+         */
+        public Builder withUseSasl(final boolean useSasl) {
+            this.useSasl = useSasl;
+            return this;
+        }
+
+        /**
+         * Declare SASL plaintext username.
+         */
+        public Builder withSaslPlaintextUsername(final String saslPlaintextUsername) {
+            this.saslPlaintextUsername = saslPlaintextUsername;
+            return this;
+        }
+
+        /**
+         * Declare SASL plaintext password.
+         */
+        public Builder withSaslPlaintextPassword(final String saslPlaintextPassword) {
+            this.saslPlaintextPassword = saslPlaintextPassword;
+            return this;
+        }
+
+        /**
          * Create ClusterConfig instance from builder values.
          */
         public ClusterConfig build() {
-            if (!useSsl) {
-                return new ClusterConfig(brokerHosts);
-            }
-            return new ClusterConfig(brokerHosts, true, keyStoreFile, keyStorePassword, trustStoreFile, trustStorePassword);
+            return new ClusterConfig(
+                brokerHosts,
+                // SSL Options.
+                useSsl,
+                keyStoreFile,
+                keyStorePassword,
+                trustStoreFile,
+                trustStorePassword,
+                // SASL Options
+                useSasl,
+                saslPlaintextUsername,
+                saslPlaintextPassword
+            );
         }
     }
 }

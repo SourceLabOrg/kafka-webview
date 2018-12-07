@@ -34,6 +34,8 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.DeserializerConfig;
@@ -51,9 +53,18 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class KafkaConsumerFactoryTest {
-
     @ClassRule
     public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
+
+    /**
+     * Factory instance used by tests tests.
+     */
+    private final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
+        new KafkaClientConfigUtil(
+            "not/used",
+            "TestPrefix"
+        )
+    );
 
     /**
      * Simple Smoke Test.
@@ -77,9 +88,6 @@ public class KafkaConsumerFactoryTest {
         sharedKafkaTestResource
             .getKafkaTestUtils()
             .produceRecords(maxRecordsPerPoll, topicName, 1);
-
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
@@ -117,6 +125,49 @@ public class KafkaConsumerFactoryTest {
     }
 
     /**
+     * Simple Smoke Test using SASL
+     */
+    @Test
+    public void testBasicConsumeWithSaslAuthentication() {
+        final int maxRecordsPerPoll = 10;
+
+        final String topicName = "test_topic";
+
+        // Create cluster Config
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts("localhost:9092")
+            .withUseSasl(true)
+            .withSaslPlaintextUsername("kafkaclient")
+            .withSaslPlaintextPassword("client-secret")
+            .build();
+
+        // Create Deserializer Config
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(StringDeserializer.class)
+            .withValueDeserializerClass(StringDeserializer.class)
+            .build();
+
+        // Create Topic Config
+        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
+
+        // Create ClientConfig
+        final ClientConfig clientConfig = ClientConfig.newBuilder()
+            .withConsumerId("MyConsumerId")
+            .withNoFilters()
+            .withAllPartitions()
+            .withMaxResultsPerPartition(maxRecordsPerPoll)
+            .withTopicConfig(topicConfig)
+            .build();
+
+        // Create consumer
+        try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
+            // Attempt to consume, should pull first 10
+            ConsumerRecords<String, String> records = consumer.poll(2000L);
+            assertTrue("Finish writing this test!" , false);
+        }
+    }
+
+    /**
      * Simple Smoke Test, exclude a partition.
      */
     @Test
@@ -138,9 +189,6 @@ public class KafkaConsumerFactoryTest {
         sharedKafkaTestResource
             .getKafkaTestUtils()
             .produceRecords(maxRecordsPerPoll, topicName, 1);
-
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
@@ -204,9 +252,6 @@ public class KafkaConsumerFactoryTest {
             .getKafkaTestUtils()
             .produceRecords(maxRecordsPerPoll, topicName, 1);
 
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
-
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
@@ -265,9 +310,6 @@ public class KafkaConsumerFactoryTest {
         sharedKafkaTestResource
             .getKafkaTestUtils()
             .createTopic(topicName, 1, (short) 1);
-
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()

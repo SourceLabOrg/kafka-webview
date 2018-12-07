@@ -47,7 +47,9 @@ public class WebKafkaConsumerTest {
 
     private final static Logger logger = LoggerFactory.getLogger(WebKafkaConsumerTest.class);
 
-    private final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("./uploads", "TestPrefix");
+    private final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
+        new KafkaClientConfigUtil("./uploads", "TestPrefix")
+    );
 
     //@Test
     public void doTest() {

@@ -24,20 +24,16 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.config.SslConfigs;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,29 +41,20 @@ import java.util.Map;
  * Factory class for creating new KafkaConsumers.
  */
 public class KafkaConsumerFactory {
-
     /**
-     * Path on filesystem where keystores are persisted.
+     * Utility class for setting up common kafka client properties.
      */
-    private final String keyStoreRootPath;
-
-    /**
-     * Static prefix to pre-pend to all consumerIds.
-     */
-    private final String consumerIdPrefix;
+    private final KafkaClientConfigUtil configUtil;
 
     /**
      * Constructor.
-     * @param keyStoreRootPath Parent path to where JKS key/trust stores are saved on disk.
-     * @param consumerIdPrefix Static prefix to pre-pend to all consumerIds.
+     * @param configUtil
      */
-    public KafkaConsumerFactory(final String keyStoreRootPath, final String consumerIdPrefix) {
-        if (consumerIdPrefix == null) {
-            throw new IllegalArgumentException("ConsumerIdPrefix must be configured!");
+    public KafkaConsumerFactory(final KafkaClientConfigUtil configUtil) {
+        if (configUtil == null) {
+            throw new RuntimeException("Missing dependency KafkaClientConfigUtil!");
         }
-
-        this.keyStoreRootPath = keyStoreRootPath;
-        this.consumerIdPrefix = consumerIdPrefix;
+        this.configUtil = configUtil;
     }
 
     /**
@@ -108,17 +95,11 @@ public class KafkaConsumerFactory {
      * Build an appropriate configuration based on the passed in ClientConfig.
      */
     private Map<String, Object> buildConsumerConfig(final ClientConfig clientConfig) {
-        // Generate consumerId with our configured static prefix.
-        final String prefixedConsumerId = consumerIdPrefix.concat("-").concat(clientConfig.getConsumerId());
-
         // Build config
-        final Map<String, Object> configMap = new HashMap<>();
-        configMap.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, clientConfig.getTopicConfig().getClusterConfig().getConnectString());
-
-        // ClientId and ConsumerGroupId are intended to be unique for each user session.
-        // See Issue-57 https://github.com/SourceLabOrg/kafka-webview/issues/57#issuecomment-363508531
-        configMap.put(ConsumerConfig.CLIENT_ID_CONFIG, prefixedConsumerId);
-        configMap.put(ConsumerConfig.GROUP_ID_CONFIG, prefixedConsumerId);
+        final Map<String, Object> configMap = configUtil.applyCommonSettings(
+            clientConfig.getTopicConfig().getClusterConfig(),
+            clientConfig.getConsumerId()
+        );
 
         // Set deserializer classes.
         configMap.put(
@@ -143,17 +124,6 @@ public class KafkaConsumerFactory {
             // Create interceptor
             configMap.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, RecordFilterInterceptor.class.getName());
             configMap.put(RecordFilterInterceptor.CONFIG_KEY, recordFilterDefinitions);
-        }
-
-        // Use SSL?
-        final ClusterConfig clusterConfig = clientConfig.getTopicConfig().getClusterConfig();
-        if (clusterConfig.isUseSsl()) {
-            configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-            configMap.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-            configMap.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
-            configMap.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());
-            configMap.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getTrustStoreFile());
-            configMap.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clusterConfig.getTrustStorePassword());
         }
 
         // Get the Deserializer options
