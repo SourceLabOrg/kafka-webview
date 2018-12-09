@@ -48,7 +48,7 @@ public class KafkaConsumerFactory {
 
     /**
      * Constructor.
-     * @param configUtil
+     * @param configUtil Utility class to DRY out common kafka client settings.
      */
     public KafkaConsumerFactory(final KafkaClientConfigUtil configUtil) {
         if (configUtil == null) {

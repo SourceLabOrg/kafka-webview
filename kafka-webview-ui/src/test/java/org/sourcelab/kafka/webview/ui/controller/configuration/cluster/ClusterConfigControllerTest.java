@@ -746,8 +746,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      * @param cluster cluster to validate.
      */
     private void validateNonSaslCluster(final Cluster cluster) {
-        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
-        assertEquals("Should be set back to NOT valid", false, cluster.isValid());
         assertEquals("Should not be sasl enabled", false, cluster.isSaslEnabled());
+        assertEquals("Should have empty sasl mechanism", "", cluster.getSaslMechanism());
+        assertEquals("Should have empty sasl config", "", cluster.getSaslConfig());
     }
 }
