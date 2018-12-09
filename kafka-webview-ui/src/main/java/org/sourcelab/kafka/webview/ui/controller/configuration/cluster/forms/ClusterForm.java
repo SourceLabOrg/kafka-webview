@@ -85,12 +85,6 @@ public class ClusterForm {
     private String saslPassword;
 
     /**
-     * This option allows the user to define their own JAAS configuration.
-     * Selecting this will ignore the values for saslUsername and saslPassword.
-     */
-    private Boolean useCustomJass= false;
-
-    /**
      * If user selects to use a custom JAAS configuration,
      * this is the value of that.
      */
@@ -234,14 +228,6 @@ public class ClusterForm {
         this.saslPassword = saslPassword;
     }
 
-    public Boolean getUseCustomJass() {
-        return useCustomJass;
-    }
-
-    public void setUseCustomJass(final Boolean useCustomJass) {
-        this.useCustomJass = useCustomJass;
-    }
-
     public String getSaslCustomJaas() {
         return saslCustomJaas;
     }
@@ -270,7 +256,6 @@ public class ClusterForm {
             + ", sasl=" + sasl
             + ", saslMechanism='" + saslMechanism + '\''
             + ", saslCustomMechanism='" + saslCustomMechanism + '\''
-            + ", saslCustomJaas='" + saslCustomJaas + '\''
             + '}';
     }
 }
