@@ -33,7 +33,10 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class KafkaClientConfigUtilTest {
     private final KafkaClientConfigUtil util = new KafkaClientConfigUtil("/tmp", "TestPrefix");

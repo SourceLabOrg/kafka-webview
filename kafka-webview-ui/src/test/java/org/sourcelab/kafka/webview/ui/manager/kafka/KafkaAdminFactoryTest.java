@@ -38,12 +38,15 @@ import java.util.concurrent.ExecutionException;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+/**
+ * Tests KafkaAdminFactory against a cluster configured WITHOUT SSL and WITHOUT SASL.
+ */
 public class KafkaAdminFactoryTest {
 
     /**
-     * TODO Setup brokers to use both plain + sasl auth.
+     * Setup broker without SSL or SASL support.
      */
-    //@ClassRule
+    @ClassRule
     public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 
     /**
@@ -72,38 +75,5 @@ public class KafkaAdminFactoryTest {
             assertNotNull("Should have non-null node result", nodes);
             assertFalse("Should have non-empty node", nodes.isEmpty());
         }
-    }
-
-    /**
-     * Test that KafkaAdminFactory can create a working AdminClient when connecting to a non-ssl SASL cluster.
-     */
-    @Test
-    public void testCreateSaslAdminClient() throws ExecutionException, InterruptedException {
-        // Create Cluster config
-        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
-            .withBrokerHosts("localhost:9092")
-            .withUseSasl(true)
-            .withSaslPlaintextUsername("kafkaclient")
-            .withSaslPlaintextPassword("client-secret")
-            .build();
-
-        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(
-            new KafkaClientConfigUtil("not/used", "MyPrefix")
-        );
-
-        // Create instance
-        try (final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, "MyClientId")) {
-
-            // Call method to validate things work as expected
-            final DescribeClusterResult results = adminClient.describeCluster();
-            assertNotNull("Should have a non-null result", results);
-
-            // Request future result
-            final Collection<Node> nodes = results.nodes().get();
-            assertNotNull("Should have non-null node result", nodes);
-            assertFalse("Should have non-empty node", nodes.isEmpty());
-        }
-
-        //assertFalse("Finish writing this test", true);
     }
 }

@@ -589,7 +589,13 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertEquals("Should have expected mechanism", expectedSaslMechanism, saslProperties.getMechanism());
         assertEquals("Should have expected username", expectedSaslUsername, saslProperties.getPlainUsername());
         assertEquals("Should have expected password", expectedSaslPassword, saslProperties.getPlainPassword());
-        assertEquals("Should have empty custom jaas", "", saslProperties.getJaas());
+        assertEquals(
+            "Should have default jaas for plain",
+            "org.apache.kafka.common.security.plain.PlainLoginModule required\n"
+            + "username=\"USERname\"\n"
+            + "password=\"PASSword\";",
+            saslProperties.getJaas()
+        );
     }
 
     /**

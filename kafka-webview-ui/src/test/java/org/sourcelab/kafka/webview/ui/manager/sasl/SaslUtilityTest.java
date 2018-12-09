@@ -28,7 +28,8 @@ import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class SaslUtilityTest {
 

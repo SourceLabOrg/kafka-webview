@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
@@ -146,7 +147,7 @@ public class KafkaClientConfigUtil {
             // Just SASL PLAINTEXT
             config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_PLAINTEXT.name);
         }
-        config.put("sasl.mechanism", clusterConfig.getSaslMechanism());
-        config.put("sasl.jaas.config", clusterConfig.getSaslJaas());
+        config.put(SaslConfigs.SASL_MECHANISM, clusterConfig.getSaslMechanism());
+        config.put(SaslConfigs.SASL_JAAS_CONFIG, clusterConfig.getSaslJaas());
     }
 }
