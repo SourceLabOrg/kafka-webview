@@ -59,6 +59,7 @@
                                             th:if="${cluster.isSaslEnabled()}"
                                             class="badge badge-success">Yes
                                         </span>
+                                            (<span th:text="${cluster.getSaslMechanism()}"></span>)
                                         <span
                                             th:if="!${cluster.isSaslEnabled()}"
                                             class="badge badge-danger">No

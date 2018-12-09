@@ -146,11 +146,6 @@ public class KafkaClientConfigUtil {
             // Just SASL PLAINTEXT
             config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_PLAINTEXT.name);
         }
-
-        final String jaasConfig = "org.apache.kafka.common.security.plain.PlainLoginModule required\n"
-            + "username=\"" + clusterConfig.getSaslPlaintextUsername() + "\"\n"
-            + "password=\"" + clusterConfig.getSaslPlaintextPassword() + "\";";
-
         config.put("sasl.mechanism", clusterConfig.getSaslMechanism());
         config.put("sasl.jaas.config", clusterConfig.getSaslJaas());
     }
