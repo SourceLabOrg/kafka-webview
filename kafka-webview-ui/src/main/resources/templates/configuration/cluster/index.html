@@ -30,6 +30,7 @@
                                 <th>Cluster Name</th>
                                 <th>Brokers</th>
                                 <th>SSL Enabled</th>
+                                <th>SASL Enabled</th>
                                 <th>Status</th>
                                 <th class="text-right">Action</th>
                             </tr>
@@ -50,6 +51,16 @@
                                         </span>
                                         <span
                                             th:if="!${cluster.isSslEnabled()}"
+                                            class="badge badge-danger">No
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            th:if="${cluster.isSaslEnabled()}"
+                                            class="badge badge-success">Yes
+                                        </span>
+                                        <span
+                                            th:if="!${cluster.isSaslEnabled()}"
                                             class="badge badge-danger">No
                                         </span>
                                     </td>

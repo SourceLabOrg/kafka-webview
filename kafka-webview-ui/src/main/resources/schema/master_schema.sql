@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `cluster` (
   key_store_password TEXT DEFAULT NULL,
   is_sasl_enabled BOOLEAN DEFAULT FALSE NOT NULL,
   sasl_mechanism TEXT DEFAULT NULL,
-  sasl_config TEXT DEFAULT '{}',
+  sasl_config TEXT DEFAULT DEFAULT NULL,
   is_valid BOOLEAN DEFAULT FALSE NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_by INT(11) UNSIGNED DEFAULT NULL,

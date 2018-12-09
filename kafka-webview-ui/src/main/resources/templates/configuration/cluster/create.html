@@ -260,7 +260,7 @@
                                                 id="saslCustomJaas" name="saslCustomJaas" class="form-control" type="text" th:rows="7"
                                                 placeholder=""
                                                 th:errorclass="is-invalid"
-                                                th:value="*{saslCustomJaas}"></textarea>
+                                                th:field="*{saslCustomJaas}"></textarea>
                                             <div class="invalid-feedback" th:if="${#fields.hasErrors('saslCustomJaas')}" th:errors="*{saslCustomJaas}"/>
                                         </div>
                                     </div>

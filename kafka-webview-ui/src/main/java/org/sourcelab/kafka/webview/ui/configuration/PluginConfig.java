@@ -33,6 +33,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -143,5 +144,15 @@ public class PluginConfig {
             appProperties.getUploadPath() + "/keyStores",
             appProperties.getConsumerIdPrefix()
         );
+    }
+
+    /**
+     * Utility for managing Sasl properties persisted on cluster table.
+     * @param secretManager For handling encryption/decryption of secrets.
+     * @return SaslUtility instance.
+     */
+    @Bean
+    public SaslUtility getSaslUtility(final SecretManager secretManager) {
+        return new SaslUtility(secretManager);
     }
 }
