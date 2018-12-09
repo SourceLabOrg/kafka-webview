@@ -96,9 +96,20 @@ public class SaslUtility {
             builder.withPlainPassword(
                 options.getOrDefault("password", "")
             );
-            builder.withJaas(
-                options.getOrDefault("jaas", "")
-            );
+
+            // Determine if we have a custom defined JAAS
+            final String customJaas = options.getOrDefault("jaas", "").trim();
+            if (!customJaas.isEmpty()) {
+                // Use it as is.
+                builder.withJaas(customJaas);
+            } else if ("PLAIN".equals(cluster.getSaslMechanism())) {
+                // Build a standard plain JAAS?
+                final String jaasConfig = "org.apache.kafka.common.security.plain.PlainLoginModule required\n"
+                    + "username=\"" + options.getOrDefault("username", "") + "\"\n"
+                    + "password=\"" + options.getOrDefault("password", "") + "\";";
+
+                builder.withJaas(jaasConfig);
+            }
         } catch (final IOException exception) {
             throw new RuntimeException(exception.getMessage(), exception);
         }

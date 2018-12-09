@@ -321,7 +321,8 @@ public class ClusterConfigController extends BaseController {
                 // Grab username and password
                 saslBuilder
                     .withPlainUsername(clusterForm.getSaslUsername())
-                    .withPlainPassword(clusterForm.getSaslPassword());
+                    .withPlainPassword(clusterForm.getSaslPassword())
+                    .withJaas("");
             } else {
                 saslBuilder
                     .withJaas(clusterForm.getSaslCustomJaas());
@@ -400,10 +401,6 @@ public class ClusterConfigController extends BaseController {
         }
         final Cluster cluster = clusterOptional.get();
 
-        // Build a client
-        // TODO use a clientId unique to the client + cluster + topic
-        final String clientId = "TestingClient-" + cluster.getId();
-
         // Create new Operational Client
         try {
             try (final KafkaOperations kafkaOperations = kafkaOperationsFactory.create(cluster, getLoggedInUserId())) {
@@ -416,7 +413,7 @@ public class ClusterConfigController extends BaseController {
                 // Set success msg
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Cluster configuration is valid!"));
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             String reason = e.getMessage();
             if (e instanceof KafkaException && e.getCause() != null) {
                 reason = e.getCause().getMessage();

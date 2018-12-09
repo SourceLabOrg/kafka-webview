@@ -151,7 +151,7 @@ public class KafkaClientConfigUtil {
             + "username=\"" + clusterConfig.getSaslPlaintextUsername() + "\"\n"
             + "password=\"" + clusterConfig.getSaslPlaintextPassword() + "\";";
 
-        config.put("sasl.mechanism", "PLAIN");
-        config.put("sasl.jaas.config", jaasConfig);
+        config.put("sasl.mechanism", clusterConfig.getSaslMechanism());
+        config.put("sasl.jaas.config", clusterConfig.getSaslJaas());
     }
 }
