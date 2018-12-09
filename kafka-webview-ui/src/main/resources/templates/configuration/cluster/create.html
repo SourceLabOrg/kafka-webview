@@ -17,6 +17,28 @@
                 var isChecked = jQuery('#ssl').is(':checked');
                 jQuery('#ssl-options').toggle(isChecked);
             });
+            jQuery('#sasl').click(function() {
+                var isChecked = jQuery('#sasl').is(':checked');
+                jQuery('#sasl-options').toggle(isChecked);
+            });
+            jQuery('#saslMechanism').change(function() {
+                var selected = jQuery(this).val();
+                if (selected == "custom") {
+                    // Show custom mechanism input
+                    jQuery('#saslCustomMechanism').toggle(true);
+                } else {
+                    // Hide custom mechanism input
+                    jQuery('#saslCustomMechanism').toggle(false);
+                }
+
+                if (selected == "PLAIN") {
+                    jQuery('#sasl-plain-jaas').toggle(true);
+                    jQuery('#sasl-custom-jaas').toggle(false);
+                } else {
+                    jQuery('#sasl-plain-jaas').toggle(false);
+                    jQuery('#sasl-custom-jaas').toggle(true);
+                }
+            });
         });
     </script>
 
@@ -62,6 +84,9 @@
                                 </div>
                             </div>
 
+                            <h6>SSL Settings</h6>
+                            <hr>
+
                             <!-- Use SSL -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="ssl">
@@ -78,9 +103,6 @@
 
                             <!-- SSL Options -->
                             <div id="ssl-options" th:styleappend="${clusterForm.getSsl()} ? 'display: block;' : 'display: none;'">
-                                <h6>SSL Settings</h6>
-                                <hr>
-
                                 <!-- Trust Store file -->
                                 <div class="form-group row">
                                     <label class="col-md-3 form-control-label" for="trustStoreFile">
@@ -146,6 +168,101 @@
                                             th:errorclass="is-invalid"
                                             th:value="*{keyStorePassword}">
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStorePassword')}" th:errors="*{keyStorePassword}"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6>SASL Settings</h6>
+                            <hr>
+
+                            <!-- Use SASL -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="sasl">
+                                    Use SASL authentication?
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="sasl" name="sasl" class="" type="checkbox"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{sasl}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('sasl')}" th:errors="*{sasl}"/>
+                                </div>
+                            </div>
+
+                            <!-- SASL Options -->
+                            <div id="sasl-options" th:styleappend="${clusterForm.getSasl()} ? 'display: block;' : 'display: none;'">
+                                <!-- Mechanism -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="saslMechanism">
+                                        SASL Mechanism
+                                    </label>
+                                    <div class="col-md-9">
+                                        <select
+                                            id="saslMechanism" name="saslMechanism" class="form-control"
+                                            th:errorclass="is-invalid"
+                                            th:field="*{saslMechanism}">
+                                            <option value="PLAIN">PLAIN</option>
+                                            <option value="GSSAPI">GSSAPI (Kerberos)</option>
+                                            <option value="custom">Other...</option>
+                                        </select>
+                                        <input
+                                            id="saslCustomMechanism" name="saslCustomMechanism" class="form-control"
+                                            placeholder="Enter custom SASL mechanism name"
+                                            th:errorclass="is-invalid"
+                                            th:field="*{saslCustomMechanism}"
+                                            th:styleappend="${clusterForm.isCustomSaslMechanism()} ? 'display: block;' : 'display: none;'">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('saslMechanism')}" th:errors="*{saslMechanism}"/>
+                                    </div>
+                                </div>
+
+                                <!-- SASL Plain Values -->
+                                <div id="sasl-plain-jaas" th:styleappend="${clusterForm.isPlainSaslMechanism()} ? 'display: block;' : 'display: none;'">
+                                    <!-- SASL Plain Username -->
+                                    <div class="form-group row">
+                                        <label class="col-md-3 form-control-label" for="saslUsername">
+                                            SASL Username
+                                        </label>
+                                        <div class="col-md-9">
+                                            <input
+                                                id="saslUsername" name="saslUsername" class="form-control" type="text"
+                                                placeholder="SASL Username"
+                                                th:errorclass="is-invalid"
+                                                th:value="*{saslUsername}">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('saslUsername')}" th:errors="*{saslUsername}"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- SASL Plain Password -->
+                                    <div class="form-group row">
+                                        <label class="col-md-3 form-control-label" for="saslPassword">
+                                            SASL Password
+                                        </label>
+                                        <div class="col-md-9">
+                                            <input
+                                                id="saslPassword" name="saslPassword" class="form-control" type="password"
+                                                placeholder=""
+                                                th:errorclass="is-invalid"
+                                                th:value="*{saslPassword}">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('saslPassword')}" th:errors="*{saslPassword}"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SASL Custom Values -->
+                                <div id="sasl-custom-jaas" th:styleappend="${!clusterForm.isPlainSaslMechanism()} ? 'display: block;' : 'display: none;'">
+                                    <!-- Enter custom JAAS Config -->
+                                    <div class="form-group row">
+                                        <label class="col-md-3 form-control-label" for="saslPassword">
+                                            SASL JAAS Configuration
+                                        </label>
+                                        <div class="col-md-9">
+                                            <textarea
+                                                id="saslCustomJaas" name="saslCustomJaas" class="form-control" type="text" th:rows="7"
+                                                placeholder=""
+                                                th:errorclass="is-invalid"
+                                                th:value="*{saslCustomJaas}"></textarea>
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('saslCustomJaas')}" th:errors="*{saslCustomJaas}"/>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
