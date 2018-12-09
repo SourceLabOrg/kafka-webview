@@ -127,9 +127,14 @@ public class ClusterConfigController extends BaseController {
         clusterForm.setId(cluster.getId());
         clusterForm.setName(cluster.getName());
         clusterForm.setBrokerHosts(cluster.getBrokerHosts());
+
+        // Set SSL options
         clusterForm.setSsl(cluster.isSslEnabled());
         clusterForm.setKeyStoreFilename(cluster.getKeyStoreFile());
         clusterForm.setTrustStoreFilename(cluster.getTrustStoreFile());
+
+        // Set SASL options
+        clusterForm.setSasl(false);
 
         // Display template
         return "configuration/cluster/create";

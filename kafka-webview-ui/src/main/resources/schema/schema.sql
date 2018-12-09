@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS `cluster` (
   trust_store_password TEXT DEFAULT NULL,
   key_store_file TEXT DEFAULT NULL,
   key_store_password TEXT DEFAULT NULL,
+  is_sasl_enabled BOOLEAN DEFAULT FALSE NOT NULL,
+  sasl_mechanism TEXT DEFAULT NULL,
+  sasl_config TEXT DEFAULT '{}',
   is_valid BOOLEAN DEFAULT FALSE NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_by INT(11) UNSIGNED DEFAULT NULL,
@@ -107,3 +110,4 @@ CREATE TABLE IF NOT EXISTS `view_to_filter_optional` (
   FOREIGN KEY (filter_id) REFERENCES filter(id),
   FOREIGN KEY (view_id) REFERENCES view(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+

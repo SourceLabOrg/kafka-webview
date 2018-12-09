@@ -88,6 +88,12 @@
             <artifactId>h2</artifactId>
         </dependency>
 
+        <!-- Flyway for database migrations -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
         <!-- Security Module -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
