@@ -26,8 +26,18 @@ package org.sourcelab.kafka.devcluster;
 
 import com.salesforce.kafka.test.KafkaTestCluster;
 import com.salesforce.kafka.test.KafkaTestUtils;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URL;
+import java.util.Properties;
 
 /**
  * Simple applicatin for firing up a Kafka cluster of 1 or more nodes.  This exists solely
@@ -43,40 +53,126 @@ public class DevCluster {
      * @param args command line args.
      */
     public static void main(final String[] args) throws Exception {
-        // Right now we accept one parameter, the number of nodes in the cluster.
-        final int clusterSize;
-        if (args.length > 0) {
-            clusterSize = Integer.parseInt(args[0]);
-        } else {
-            clusterSize = 1;
-        }
+        // Parse command line arguments
+        final CommandLine cmd = parseArguments(args);
 
+        // Right now we accept one parameter, the number of nodes in the cluster.
+        final int clusterSize = Integer.parseInt(cmd.getOptionValue("size"));
         logger.info("Starting up kafka cluster with {} brokers", clusterSize);
 
+        final Properties properties = new Properties();
+        if (cmd.hasOption("ssl")) {
+            final URL trustStore = DevCluster.class.getClassLoader().getResource("kafka.truststore.jks");
+            final URL keyStore = DevCluster.class.getClassLoader().getResource("kafka.keystore.jks");
+            properties.put("ssl.truststore.location", trustStore.getFile());
+            properties.put("ssl.truststore.password", "password");
+            properties.put("ssl.keystore.location", keyStore.getFile());
+            properties.put("ssl.keystore.password", "password");
+            properties.put("ssl.key.password", "password");
+
+            // Set brokers to communicate via SSL as well.
+            properties.put("security.inter.broker.protocol", "SSL");
+
+            // Define port
+            properties.put("listeners", "SSL://localhost:9093");
+            properties.put("advertised.listeners", "SSL://localhost:9093");
+
+            properties.put("ssl.client.auth", "required");
+        }
+
         // Create a test cluster
-        final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(clusterSize);
+        final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(clusterSize, properties);
 
         // Start the cluster.
         kafkaTestCluster.start();
 
-        // Create a topic
-        final String topicName = "TestTopicA";
-        final KafkaTestUtils utils = new KafkaTestUtils(kafkaTestCluster);
-        utils.createTopic(topicName, clusterSize, (short) clusterSize);
+        // Create topics
+        String[] topicNames = null;
+        if (cmd.hasOption("topic")) {
+            topicNames = cmd.getOptionValues("topic");
 
-        // Publish some data into that topic
-        for (int partition = 0; partition < clusterSize; partition++) {
-            utils.produceRecords(1000, topicName, partition);
+            for (final String topicName : topicNames) {
+                final KafkaTestUtils utils = new KafkaTestUtils(kafkaTestCluster);
+                utils.createTopic(topicName, clusterSize, (short) clusterSize);
+
+                // Publish some data into that topic
+                for (int partition = 0; partition < clusterSize; partition++) {
+                    utils.produceRecords(1000, topicName, partition);
+                }
+            }
         }
 
+        // Log how to connect to cluster brokers.
         kafkaTestCluster
             .getKafkaBrokers()
             .stream()
             .forEach((broker) -> logger.info("Started broker with Id {} at {}", broker.getBrokerId(), broker.getConnectString()));
 
+        // Log topic names created.
+        if (topicNames != null) {
+            logger.info("Created topics: {}", String.join(", ", topicNames));
+        }
+
+        // Log cluster connect string.
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
 
         // Wait forever.
         Thread.currentThread().join();
+    }
+
+    private static CommandLine parseArguments(final String[] args) throws ParseException {
+        // create Options object
+        final Options options = new Options();
+
+        // add number of brokers
+        options.addOption(
+            Option.builder("size")
+                .desc("Number of brokers to start")
+                .required()
+                .hasArg()
+                .type(Integer.class)
+                .build()
+        );
+
+        options.addOption(
+            Option.builder("topic")
+                .desc("Create test topic")
+                .required(false)
+                .hasArgs()
+                .build()
+        );
+
+        // Optionally enable SASL
+        options.addOption(
+            Option.builder("sasl")
+                .desc("Enable SASL authentication")
+                .required(false)
+                .hasArg(false)
+                .type(Boolean.class)
+                .build()
+        );
+
+        // Optionally enable SSL
+        options.addOption(
+            Option.builder("ssl")
+                .desc("Enable SSL")
+                .required(false)
+                .hasArg(false)
+                .type(Boolean.class)
+                .build()
+        );
+
+        try {
+            final CommandLineParser parser = new DefaultParser();
+            return parser.parse(options, args);
+        } catch (final Exception exception) {
+            System.out.println("ERROR: " + exception.getMessage() + "\n");
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp( "DevCluster", options);
+            System.out.println("");
+            System.out.flush();
+
+            throw exception;
+        }
     }
 }
