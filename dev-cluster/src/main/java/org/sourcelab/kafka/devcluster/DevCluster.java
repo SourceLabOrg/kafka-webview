@@ -26,6 +26,11 @@ package org.sourcelab.kafka.devcluster;
 
 import com.salesforce.kafka.test.KafkaTestCluster;
 import com.salesforce.kafka.test.KafkaTestUtils;
+import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
+import com.salesforce.kafka.test.listeners.SaslPlainListener;
+import com.salesforce.kafka.test.listeners.SaslSslListener;
+import com.salesforce.kafka.test.listeners.SslListener;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -37,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.Properties;
 
 /**
@@ -60,28 +66,45 @@ public class DevCluster {
         final int clusterSize = Integer.parseInt(cmd.getOptionValue("size"));
         logger.info("Starting up kafka cluster with {} brokers", clusterSize);
 
+        // Default to plaintext listener.
+        BrokerListener listener = new PlainListener();
+
+        final URL trustStore = DevCluster.class.getClassLoader().getResource("kafka.truststore.jks");
+        final URL keyStore = DevCluster.class.getClassLoader().getResource("kafka.keystore.jks");
+
         final Properties properties = new Properties();
-        if (cmd.hasOption("ssl")) {
-            final URL trustStore = DevCluster.class.getClassLoader().getResource("kafka.truststore.jks");
-            final URL keyStore = DevCluster.class.getClassLoader().getResource("kafka.keystore.jks");
-            properties.put("ssl.truststore.location", trustStore.getFile());
-            properties.put("ssl.truststore.password", "password");
-            properties.put("ssl.keystore.location", keyStore.getFile());
-            properties.put("ssl.keystore.password", "password");
-            properties.put("ssl.key.password", "password");
-
-            // Set brokers to communicate via SSL as well.
-            properties.put("security.inter.broker.protocol", "SSL");
-
-            // Define port
-            properties.put("listeners", "SSL://localhost:9093");
-            properties.put("advertised.listeners", "SSL://localhost:9093");
-
-            properties.put("ssl.client.auth", "required");
+        if (cmd.hasOption("sasl") && cmd.hasOption("ssl")) {
+            listener = new SaslSslListener()
+                // SSL Options
+                .withClientAuthRequired()
+                .withTrustStoreLocation(trustStore.getFile())
+                .withTrustStorePassword("password")
+                .withKeyStoreLocation(keyStore.getFile())
+                .withKeyStorePassword("password")
+                .withKeyPassword("password")
+                // SASL Options.
+                .withUsername("kafkaclient")
+                .withPassword("client-secret");
+        } else if (cmd.hasOption("sasl")) {
+            listener = new SaslPlainListener()
+                .withUsername("kafkaclient")
+                .withPassword("client-secret");
+        } else if (cmd.hasOption("ssl")) {
+            listener = new SslListener()
+                .withClientAuthRequired()
+                .withTrustStoreLocation(trustStore.getFile())
+                .withTrustStorePassword("password")
+                .withKeyStoreLocation(keyStore.getFile())
+                .withKeyStorePassword("password")
+                .withKeyPassword("password");
         }
 
         // Create a test cluster
-        final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(clusterSize, properties);
+        final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(
+            clusterSize,
+            properties,
+            Collections.singletonList(listener)
+        );
 
         // Start the cluster.
         kafkaTestCluster.start();
