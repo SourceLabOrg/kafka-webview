@@ -9,6 +9,12 @@ cache:
   directories:
   - $HOME/.m2
   - kafka-webview-ui/src/main/frontend/node_modules/
-before_script:
+script:
+  ## Ensure data directory exists
   - mkdir -p ./data/uploads
+  ## Generate dummy SSL certificates
   - ./generateDummySslCertificates.sh
+  ## Run CheckStyle and License Header checks, compile, and install locally
+  - mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V
+  ## Run Test Suite
+  - mvn test -B -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-webview-ui/src/test/resources/jaas.conf
