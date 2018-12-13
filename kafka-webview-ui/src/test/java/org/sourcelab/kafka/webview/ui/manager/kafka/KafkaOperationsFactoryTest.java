@@ -66,30 +66,4 @@ public class KafkaOperationsFactoryTest {
             assertFalse("Should have non-empty node", nodeList.getNodes().isEmpty());
         }
     }
-
-    /**
-     * Test that KafkaAdminFactory can create a working AdminClient when connecting to a non-ssl SASL plaintext cluster.
-     */
-    @Test
-    public void smokeTestNonSslSaslOperationsClient() throws ExecutionException, InterruptedException {
-        // Create dependencies.
-        final SecretManager secretManager = new SecretManager("notused");
-        final KafkaClientConfigUtil configUtil = new KafkaClientConfigUtil("Not-Used", "Test-Prefix");
-        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(configUtil);
-        final KafkaOperationsFactory operationsFactory = new KafkaOperationsFactory(secretManager, kafkaAdminFactory);
-
-        // Create cluster model.
-        final Cluster cluster = new Cluster();
-        cluster.setBrokerHosts(sharedKafkaTestResource.getKafkaConnectString());
-        cluster.setSslEnabled(false);
-
-        // Create instance
-        try (final KafkaOperations kafkaOperations = operationsFactory.create(cluster, 1L)) {
-
-            // Call method to validate things work as expected
-            final NodeList nodeList = kafkaOperations.getClusterNodes();
-            assertNotNull("Should have a non-null result", nodeList);
-            assertFalse("Should have non-empty node", nodeList.getNodes().isEmpty());
-        }
-    }
 }

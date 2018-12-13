@@ -6,3 +6,5 @@ kafka-webview-ui/src/main/frontend/dist/
 kafka-webview-ui/src/main/resources/static/
 data/
 TODO
+kafka-webview-ui/src/test/resources/kafka.keystore.jks
+kafka-webview-ui/src/test/resources/kafka.truststore.jks

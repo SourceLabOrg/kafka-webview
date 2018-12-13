@@ -148,41 +148,37 @@ public class DevCluster {
         final Options options = new Options();
 
         // add number of brokers
-        options.addOption(
-            Option.builder("size")
-                .desc("Number of brokers to start")
-                .required()
-                .hasArg()
-                .type(Integer.class)
-                .build()
+        options.addOption(Option.builder("size")
+            .desc("Number of brokers to start")
+            .required()
+            .hasArg()
+            .type(Integer.class)
+            .build()
         );
 
-        options.addOption(
-            Option.builder("topic")
-                .desc("Create test topic")
-                .required(false)
-                .hasArgs()
-                .build()
+        options.addOption(Option.builder("topic")
+            .desc("Create test topic")
+            .required(false)
+            .hasArgs()
+            .build()
         );
 
         // Optionally enable SASL
-        options.addOption(
-            Option.builder("sasl")
-                .desc("Enable SASL authentication")
-                .required(false)
-                .hasArg(false)
-                .type(Boolean.class)
-                .build()
+        options.addOption(Option.builder("sasl")
+            .desc("Enable SASL authentication")
+            .required(false)
+            .hasArg(false)
+            .type(Boolean.class)
+            .build()
         );
 
         // Optionally enable SSL
-        options.addOption(
-            Option.builder("ssl")
-                .desc("Enable SSL")
-                .required(false)
-                .hasArg(false)
-                .type(Boolean.class)
-                .build()
+        options.addOption(Option.builder("ssl")
+            .desc("Enable SSL")
+            .required(false)
+            .hasArg(false)
+            .type(Boolean.class)
+            .build()
         );
 
         try {
