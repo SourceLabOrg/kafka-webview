@@ -115,7 +115,10 @@ public class KafkaOperationsTest {
      */
     @Test
     public void testGetClusterNodes() {
-        final String[] brokerHostBits = sharedKafkaTestResource.getKafkaConnectString().split(":");
+        final String[] brokerHostBits = sharedKafkaTestResource
+            .getKafkaConnectString()
+            .replaceAll("PLAINTEXT://", "")
+            .split(":");
         final String brokerHost = brokerHostBits[0];
         final int brokerPort = Integer.valueOf(brokerHostBits[1]);
 
@@ -140,7 +143,10 @@ public class KafkaOperationsTest {
      */
     @Test
     public void testGetTopicDetails() {
-        final String[] brokerHostBits = sharedKafkaTestResource.getKafkaConnectString().split(":");
+        final String[] brokerHostBits = sharedKafkaTestResource
+            .getKafkaConnectString()
+            .replaceAll("PLAINTEXT://", "")
+            .split(":");
         final String brokerHost = brokerHostBits[0];
         final int brokerPort = Integer.valueOf(brokerHostBits[1]);
 
