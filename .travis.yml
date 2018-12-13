@@ -11,4 +11,4 @@ cache:
   - kafka-webview-ui/src/main/frontend/node_modules/
 before_script:
   - mkdir -p ./data/uploads
-  - generateCertificatesForTests.sh
+  - generateDummySslCertificates.sh
