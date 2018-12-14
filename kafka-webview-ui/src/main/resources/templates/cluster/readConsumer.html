@@ -233,7 +233,7 @@
                     var results = {
                         consumerDifference: 0,
                         tailDifference: 0,
-                        lagDifference: 0,
+                        lagDifference: 0
                     };
                     if (ConsumerInfo.lastOffsetData == null) {
                         return results;
@@ -247,6 +247,11 @@
                             results.consumerDifference = (newConsumerOffset - offsetData.offset);
                             results.tailDifference = (newTailOffset - offsetData.tail);
                             results.lagDifference = (newLag - oldLag);
+
+                            // If > 0, prefix with a + to indicate its increasing.
+                            if (results.lagDifference > 0) {
+                                results.lagDifference = '+' + results.lagDifference;
+                            }
 
                             return false;
                         }

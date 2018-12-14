@@ -274,6 +274,11 @@ var ApiClient = {
             .getJSON('/api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/offsets', '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
+    getConsumerOffsetsWithTailPositions: function(clusterId, consumerGroupId, callback) {
+        jQuery
+            .getJSON('/api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/offsetsAndTailPositions', '', callback)
+            .fail(ApiClient.defaultErrorHandler);
+    },
     removeConsumer: function(clusterId, consumerId, callback) {
         var payload = JSON.stringify({
             clusterId: clusterId,
