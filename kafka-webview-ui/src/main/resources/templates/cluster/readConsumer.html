@@ -26,6 +26,10 @@
                 // Holds reference to last refreshed offset data
                 lastOffsetData: [],
 
+                // Toggles for auto-refresh
+                autoRefreshOffsets: true,
+                autoRefreshConsumerDetails: true,
+
                 // Refresh ConsumerDetails
                 refreshConsumerDetails: function() {
                     // Show loaders
@@ -86,6 +90,10 @@
                     // Hide loaders
                     jQuery('#consumer-details-loader').toggle(false);
                     jQuery('#consumer-details-table').toggle(true);
+
+                    if (ConsumerInfo.autoRefreshConsumerDetails) {
+                        setTimeout(ConsumerInfo.refreshConsumerDetails, 30000);
+                    }
                 },
                 handleMembershipDetails: function(members) {
                     // Save reference.
@@ -109,8 +117,7 @@
                         });
 
                         // Sort partitions?
-                        partitions.sort(function(a, b)
-                        {
+                        partitions.sort(function(a, b) {
                             return a - b;
                         });
 
@@ -134,15 +141,13 @@
 
                 // Refresh ConsumerOffsets
                 refreshConsumerOffsets: function() {
-                    ApiClient.getConsumerOffsets(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
+                    ApiClient.getConsumerOffsetsWithTailPositions(ConsumerInfo.clusterId, ConsumerInfo.consumerId, function(results) {
                         ConsumerInfo.handleConsumerOffsets(results);
                     });
                 },
 
                 // Handle ConsumerOffsets Results
                 handleConsumerOffsets: function(results) {
-                    console.log(results);
-
                     // Get consumer offsets table
                     var table = jQuery('#consumer-offsets-tbody');
 
@@ -152,12 +157,23 @@
 
                     // Process each partition
                     jQuery.each(results.offsets, function(index, offsetData) {
+                        // Calculate differences
+                        var differences = ConsumerInfo.findOffsetDifference(
+                            offsetData.partition,
+                            offsetData.offset,
+                            offsetData.tailOffset
+                        );
+
                         // Generate html from template
                         var properties = {
                             partition: offsetData.partition,
                             memberId: ConsumerInfo.findAssignedMemberForPartition(offsetData.partition),
-                            tail: "TODO",
-                            position: offsetData.offset
+                            position: offsetData.offset,
+                            positionDiff: differences.consumerDifference,
+                            tail: offsetData.tailOffset,
+                            tailDiff: differences.tailDifference,
+                            lag: (offsetData.tailOffset - offsetData.offset),
+                            lagDiff: differences.lagDifference
                         };
                         var resultHtml = template(properties);
 
@@ -171,9 +187,17 @@
                         }
                     });
 
+                    // Retain previous
+                    ConsumerInfo.lastOffsetData = results.offsets;
+
                     // Hide loaders
                     jQuery('#consumer-offsets-loader').toggle(false);
                     jQuery('#consumer-offsets-table').toggle(true);
+
+                    if (ConsumerInfo.autoRefreshOffsets) {
+                        // Refresh every 10 seconds
+                        setTimeout(ConsumerInfo.refreshConsumerOffsets, 10000);
+                    }
                 },
 
                 // Attempts to map partition to its assigned consumer id.
@@ -181,7 +205,6 @@
                     var returnString = null;
 
                     jQuery.each(ConsumerInfo.lastMembershipDetails, function(index, member) {
-                        console.log("Looking at member")
                         jQuery.each(member.assignment, function(index, assigned) {
                             if (assigned.partition == partitionId) {
                                 returnString = member.memberId;
@@ -201,6 +224,30 @@
 
                 toggleMembershipDetails: function(el) {
                     jQuery(el).next("tr.membership-summary").toggle();
+                },
+                findOffsetDifference : function(partition, newConsumerOffset, newTailOffset) {
+                    var results = {
+                        consumerDifference: 0,
+                        tailDifference: 0,
+                        lagDifference: 0,
+                    };
+                    if (ConsumerInfo.lastOffsetData == null) {
+                        return results;
+                    }
+
+                    jQuery.each(ConsumerInfo.lastOffsetData, function(index, offsetData) {
+                        if (offsetData.partition == partition) {
+                            var newLag = newTailOffset - newConsumerOffset;
+                            var oldLag = offsetData.tailOffset - offsetData.offset;
+
+                            results.consumerDifference = (newConsumerOffset - offsetData.offset);
+                            results.tailDifference = (newTailOffset - offsetData.tailOffset);
+                            results.lagDifference = (newLag - oldLag);
+
+                            return false;
+                        }
+                    });
+                    return results;
                 }
             };
 
@@ -333,6 +380,7 @@
                                 <th>Member Id</th>
                                 <th>Tail Offset</th>
                                 <th>Consumer Offset</th>
+                                <th>Lag</th>
                             </tr>
                             </thead>
                             <tbody id="consumer-offsets-tbody">
@@ -432,8 +480,9 @@
             <tr id="partition-{{partition}}">
                 <td>{{partition}}</td>
                 <td>{{memberId}}</td>
-                <td>{{tail}}</td>
-                <td>{{position}}</td>
+                <td>{{tail}} {{#if tailDiff }} (+{{tailDiff}}) {{/if}}</td>
+                <td>{{position}} {{#if positionDiff }} (+{{positionDiff}}) {{/if}}</td>
+                <td>{{lag}} {{#if lagDiff }} ({{lagDiff}}) {{/if}}</td>
             </tr>
         </script>
 

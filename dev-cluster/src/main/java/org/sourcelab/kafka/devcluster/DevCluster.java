@@ -26,8 +26,17 @@ package org.sourcelab.kafka.devcluster;
 
 import com.salesforce.kafka.test.KafkaTestCluster;
 import com.salesforce.kafka.test.KafkaTestUtils;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.Properties;
 
 /**
  * Simple applicatin for firing up a Kafka cluster of 1 or more nodes.  This exists solely
@@ -61,12 +70,13 @@ public class DevCluster {
 
         // Create a topic
         final String topicName = "TestTopicA";
+        final int partitionsCount = 5 * clusterSize;
         final KafkaTestUtils utils = new KafkaTestUtils(kafkaTestCluster);
-        utils.createTopic(topicName, clusterSize, (short) clusterSize);
+        utils.createTopic(topicName, partitionsCount, (short) clusterSize);
 
         // Publish some data into that topic
-        for (int partition = 0; partition < clusterSize; partition++) {
-            utils.produceRecords(1000, topicName, partition);
+        for (int partition = 0; partition < partitionsCount; partition++) {
+            utils.produceRecords(10000, topicName, partition);
         }
 
         kafkaTestCluster
@@ -76,7 +86,46 @@ public class DevCluster {
 
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
 
+        runEndlessConsumer(topicName, utils);
+
         // Wait forever.
-        Thread.currentThread().join();
+        //Thread.currentThread().join();
+    }
+
+    private static void runEndlessProducer(final String topicName, final int partitionCount, final KafkaTestUtils utils) throws InterruptedException {
+        do {
+            try (final KafkaProducer<String, String> producer = utils.getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
+                // Publish some data into that topic
+                for (int partition = 0; partition < partitionCount; partition++) {
+                    utils.produceRecords(1000, topicName, partition);
+                    Thread.sleep(1000L);
+                }
+                Thread.sleep(5000L);
+            }
+        } while(true);
+    }
+
+    private static void runEndlessConsumer(final String topicName, final KafkaTestUtils utils) throws InterruptedException {
+        // Start a consumer
+        final Properties properties = new Properties();
+        properties.put("max.poll.records", 10);
+        properties.put("group.id", "MyConsumerId");
+
+        try (final KafkaConsumer<String, String> consumer = utils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, properties)) {
+            consumer.subscribe(Collections.singleton(topicName));
+            do {
+                final ConsumerRecords<String, String> records = consumer.poll(1000);
+                consumer.commitSync();
+
+                logger.info("Consumed {} records", records.count());
+
+                if (records.isEmpty()) {
+                    consumer.seekToBeginning(consumer.assignment());
+                    consumer.commitSync();
+                }
+                Thread.sleep(1000);
+            } while (true);
+
+        }
     }
 }

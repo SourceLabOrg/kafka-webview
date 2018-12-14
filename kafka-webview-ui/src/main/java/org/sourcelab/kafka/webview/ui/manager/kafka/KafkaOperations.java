@@ -38,6 +38,7 @@ import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
@@ -47,11 +48,14 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsetsWithTailPositions;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionOffset;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionOffsetWithTailPosition;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TailOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
@@ -67,6 +71,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /**
  * Wrapper for AdminClient.  For doing various 'operational' type commands
@@ -74,13 +79,15 @@ import java.util.concurrent.ExecutionException;
  */
 public class KafkaOperations implements AutoCloseable {
     private final AdminClient adminClient;
+    private final KafkaConsumer<String, String> consumerClient;
 
     /**
      * Constructor.
      * @param adminClient The AdminClient to wrap.
      */
-    public KafkaOperations(final AdminClient adminClient) {
+    public KafkaOperations(final AdminClient adminClient, final KafkaConsumer<String, String> consumerClient) {
         this.adminClient = adminClient;
+        this.consumerClient = consumerClient;
     }
 
     /**
@@ -425,10 +432,10 @@ public class KafkaOperations implements AutoCloseable {
      * @return ConsumerGroupOffsets
      */
     public ConsumerGroupOffsets getConsumerGroupOffsets(final String consumerGroupId) {
-        // Make request
-        final ListConsumerGroupOffsetsResult results = adminClient.listConsumerGroupOffsets(consumerGroupId);
-
         try {
+            // Make request
+            final ListConsumerGroupOffsetsResult results = adminClient.listConsumerGroupOffsets(consumerGroupId);
+
             final List<PartitionOffset> offsetList = new ArrayList<>();
             String topic = null;
 
@@ -450,6 +457,60 @@ public class KafkaOperations implements AutoCloseable {
         } catch (final InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    public ConsumerGroupOffsetsWithTailPositions getConsumerGroupOffsetsWithTailOffsets(final String consumerGroupId) {
+        final ConsumerGroupOffsets consumerGroupOffsets = getConsumerGroupOffsets(consumerGroupId);
+        final TailOffsets tailOffsets = getTailOffsets(consumerGroupOffsets.getTopic(), consumerGroupOffsets.getPartitions());
+
+        final List<PartitionOffsetWithTailPosition> offsetsWithPartitions = new ArrayList<>();
+
+        for (final Map.Entry<Integer, Long> entry : tailOffsets.getPartitionsToOffsets().entrySet()) {
+            offsetsWithPartitions.add(new PartitionOffsetWithTailPosition(
+                entry.getKey(),
+                consumerGroupOffsets.getOffsetForPartition(entry.getKey()),
+                entry.getValue()
+            ));
+        }
+
+        return new ConsumerGroupOffsetsWithTailPositions(
+            consumerGroupId,
+            consumerGroupOffsets.getTopic(),
+            offsetsWithPartitions
+        );
+    }
+
+    /**
+     * Given a topic name, return the tail offsets for all partitions on that topic.
+     * @param topic Name of topic to get tail offsets for.
+     * @return TailOffsets map.
+     */
+    public TailOffsets getTailOffsets(final String topic) {
+        // Determine which partitions exist on the topic
+        final TopicDetails topicDetails = getTopicDetails(topic);
+        final List<Integer> partitions = topicDetails.getPartitions().stream().map(PartitionDetails::getPartition).collect(Collectors.toList());
+        return getTailOffsets(topic, partitions);
+    }
+
+    /**
+     * Given a topic name, return the tail offsets for the requested partitions.
+     * @param topic Name of topic to get tail offsets for.
+     * @param partitions Partitions to get tail offsets for.
+     * @return TailOffsets map.
+     */
+    public TailOffsets getTailOffsets(final String topic, final Collection<Integer> partitions) {
+        final Collection<org.apache.kafka.common.TopicPartition> topicPartitions = new ArrayList<>();
+        partitions.forEach((partitionId) -> {
+            topicPartitions.add(new org.apache.kafka.common.TopicPartition(topic, partitionId));
+        });
+
+        final Map<org.apache.kafka.common.TopicPartition, Long> offsets = consumerClient.endOffsets(topicPartitions);
+        final Map<Integer, Long> offsetMap = new HashMap<>();
+        offsets.forEach((key, value) -> {
+            offsetMap.put(key.partition(), value);
+        });
+
+        return new TailOffsets(topic, offsetMap);
     }
 
     private List<ConfigItem> describeResource(final ConfigResource configResource) {
@@ -482,5 +543,6 @@ public class KafkaOperations implements AutoCloseable {
      */
     public void close() {
         adminClient.close();
+        consumerClient.close();
     }
 }

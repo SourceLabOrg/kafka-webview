@@ -32,6 +32,7 @@ import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequ
 import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
+import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
@@ -44,6 +45,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsetsWithTailPositions;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
@@ -483,6 +485,22 @@ public class ApiController extends BaseController {
 
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
             return operations.getConsumerGroupOffsets(consumerGroupId);
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET Retrieve offsets for a specific consumer group id with tail positions.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/offsetsAndTailPositions", method = RequestMethod.GET, produces = "application/json")
+    public ConsumerGroupOffsetsWithTailPositions getConsumerOffsetsWithTailPositions(@PathVariable final Long id, @PathVariable final String consumerGroupId) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.getConsumerGroupOffsetsWithTailOffsets(consumerGroupId);
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
         }
