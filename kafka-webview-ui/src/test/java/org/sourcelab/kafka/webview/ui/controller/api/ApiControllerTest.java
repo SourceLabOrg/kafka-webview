@@ -203,7 +203,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState(cluster);
+        final String consumerId = createConsumerWithState();
 
         // Hit end point
         mockMvc
@@ -232,7 +232,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState(cluster);
+        final String consumerId = createConsumerWithState();
 
         // Construct payload
         final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
@@ -280,7 +280,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState(cluster);
+        final String consumerId = createConsumerWithState();
 
         // Construct payload
         final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
@@ -325,7 +325,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState(cluster);
+        final String consumerId = createConsumerWithState();
 
         // Hit end point
         mockMvc
@@ -338,10 +338,10 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
 
             // Should have content similar to:
-            // [{"consumerId":"test-consumer-id-1543825835154","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":52168,"rack":null},"simple":false}]
+            // {"consumerId":"test-consumer-id-1543825835154","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":52168,"rack":null},"simple":false}]
 
             // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("[{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
             .andExpect(content().string(containsString("partitionAssignor")))
             .andExpect(content().string(containsString("state")))
             .andExpect(content().string(containsString("members")))
@@ -362,7 +362,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState(cluster);
+        final String consumerId = createConsumerWithState();
 
         // Hit end point
         mockMvc
@@ -399,7 +399,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState(cluster);
+        final String consumerId = createConsumerWithState();
 
         // Hit end point
         mockMvc
@@ -434,7 +434,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState(cluster);
+        final String consumerId = createConsumerWithState();
 
         // Hit end point
         mockMvc
@@ -458,10 +458,9 @@ public class ApiControllerTest extends AbstractMvcTest {
 
     /**
      * Helper method to create a consumer with state on the given cluster.
-     * @param cluster cluster to create state on.
      * @return Consumer group id created.
      */
-    private String createConsumerWithState(final Cluster cluster) {
+    private String createConsumerWithState() {
         final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
 
         // Define our new topic name

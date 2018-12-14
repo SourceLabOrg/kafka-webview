@@ -31,8 +31,6 @@ import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 
-import java.util.concurrent.ExecutionException;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 

@@ -24,7 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
