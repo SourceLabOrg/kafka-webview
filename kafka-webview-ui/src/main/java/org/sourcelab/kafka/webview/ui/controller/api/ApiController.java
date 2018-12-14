@@ -149,8 +149,15 @@ public class ApiController extends BaseController {
      * POST manually set a consumer's offsets.
      */
     @ResponseBody
-    @RequestMapping(path = "/consumer/view/{id}/offsets", method = RequestMethod.POST, produces = "application/json")
-    public ConsumerState setConsumerOffsets(@PathVariable final Long id,  @RequestBody final Map<Integer, Long> partitionOffsetMap) {
+    @RequestMapping(
+        path = "/consumer/view/{id}/offsets",
+        method = RequestMethod.POST,
+        produces = "application/json"
+    )
+    public ConsumerState setConsumerOffsets(
+        @PathVariable final Long id,
+        @RequestBody final Map<Integer, Long> partitionOffsetMap
+    ) {
         // Retrieve View
         final View view = retrieveViewById(id);
 
@@ -166,8 +173,15 @@ public class ApiController extends BaseController {
      * POST manually set a consumer's offsets using a timestamp.
      */
     @ResponseBody
-    @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
-    public ConsumerState setConsumerOffsetsByTimestamp(@PathVariable final Long id, @PathVariable final Long timestamp) {
+    @RequestMapping(
+        path = "/consumer/view/{id}/timestamp/{timestamp}",
+        method = RequestMethod.POST,
+        produces = "application/json"
+    )
+    public ConsumerState setConsumerOffsetsByTimestamp(
+        @PathVariable final Long id,
+        @PathVariable final Long timestamp
+    ) {
         // Retrieve View
         final View view = retrieveViewById(id);
 
@@ -424,7 +438,11 @@ public class ApiController extends BaseController {
      * GET list all consumer groups for a specific cluster with details about each one.
      */
     @ResponseBody
-    @RequestMapping(path = "/cluster/{id}/consumersAndDetails", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(
+        path = "/cluster/{id}/consumersAndDetails",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
     public List<ConsumerGroupDetails> listConsumersAndDetails(@PathVariable final Long id) {
 
         // Retrieve cluster
@@ -453,8 +471,15 @@ public class ApiController extends BaseController {
      * GET Retrieve details about a single specific consumer.
      */
     @ResponseBody
-    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/details", method = RequestMethod.GET, produces = "application/json")
-    public ConsumerGroupDetails getConsumerDetails(@PathVariable final Long id, @PathVariable final String consumerGroupId) {
+    @RequestMapping(
+        path = "/cluster/{id}/consumer/{consumerGroupId}/details",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
+    public ConsumerGroupDetails getConsumerDetails(
+        @PathVariable final Long id,
+        @PathVariable final String consumerGroupId
+    ) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
@@ -478,8 +503,15 @@ public class ApiController extends BaseController {
      * GET Retrieve offsets for a specific consumer group id.
      */
     @ResponseBody
-    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/offsets", method = RequestMethod.GET, produces = "application/json")
-    public ConsumerGroupOffsets getConsumerOffsets(@PathVariable final Long id, @PathVariable final String consumerGroupId) {
+    @RequestMapping(
+        path = "/cluster/{id}/consumer/{consumerGroupId}/offsets",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
+    public ConsumerGroupOffsets getConsumerOffsets(
+        @PathVariable final Long id,
+        @PathVariable final String consumerGroupId
+    ) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
@@ -494,8 +526,14 @@ public class ApiController extends BaseController {
      * GET Retrieve offsets for a specific consumer group id with tail positions.
      */
     @ResponseBody
-    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/offsetsAndTailPositions", method = RequestMethod.GET, produces = "application/json")
-    public ConsumerGroupOffsetsWithTailPositions getConsumerOffsetsWithTailPositions(@PathVariable final Long id, @PathVariable final String consumerGroupId) {
+    @RequestMapping(
+        path = "/cluster/{id}/consumer/{consumerGroupId}/offsetsAndTailPositions",
+        method = RequestMethod.GET, produces = "application/json"
+    )
+    public ConsumerGroupOffsetsWithTailPositions getConsumerOffsetsWithTailPositions(
+        @PathVariable final Long id,
+        @PathVariable final String consumerGroupId
+    ) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
@@ -547,7 +585,10 @@ public class ApiController extends BaseController {
      * Creates a WebKafkaConsumer instance.
      */
     private WebKafkaConsumer setup(final View view, final Collection<FilterDefinition> filterDefinitions) {
-        final SessionIdentifier sessionIdentifier = new SessionIdentifier(getLoggedInUserId(), getLoggedInUserSessionId());
+        final SessionIdentifier sessionIdentifier = new SessionIdentifier(
+            getLoggedInUserId(),
+            getLoggedInUserSessionId()
+        );
         return webKafkaConsumerFactory.createWebClient(view, filterDefinitions, sessionIdentifier);
     }
 

@@ -55,6 +55,7 @@ public class KafkaAdminFactory {
      * Create a new AdminClient instance.
      * @param clusterConfig What cluster to connect to.
      * @param clientId What clientId to associate the connection with.
+     * @return AdminClient instance.
      */
     public AdminClient create(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
@@ -64,6 +65,12 @@ public class KafkaAdminFactory {
         return KafkaAdminClient.create(config);
     }
 
+    /**
+     * Create a new KafkaConsumer instance.
+     * @param clusterConfig What cluster to connect to.
+     * @param clientId What clientId to associate the connection with.
+     * @return KafkaConsumer instance.
+     */
     public KafkaConsumer<String, String> createConsumer(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
         final Map<String, Object> config = buildClientProperties(clusterConfig, clientId);
@@ -76,6 +83,12 @@ public class KafkaAdminFactory {
         return new KafkaConsumer<>(config);
     }
 
+    /**
+     * Utility method to generate the appropriate Kafka client configuration from the ClusterConfig definition.
+     * @param clusterConfig Details about the cluster to connect to.
+     * @param clientId What clientId to associate with connection with.
+     * @return Map of Kafka client properties.
+     */
     private Map<String, Object> buildClientProperties(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
         final Map<String, Object> config = new HashMap<>();

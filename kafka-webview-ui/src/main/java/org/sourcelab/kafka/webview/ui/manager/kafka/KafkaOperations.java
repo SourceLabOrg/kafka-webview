@@ -459,6 +459,13 @@ public class KafkaOperations implements AutoCloseable {
         }
     }
 
+    /**
+     * Returns consumer offsets for requested consumer group id along with the associated tail offset positions for
+     * each of those partitions.
+     *
+     * @param consumerGroupId id to retrieve offsets for.
+     * @return ConsumerGroupOffsets
+     */
     public ConsumerGroupOffsetsWithTailPositions getConsumerGroupOffsetsWithTailOffsets(final String consumerGroupId) {
         final ConsumerGroupOffsets consumerGroupOffsets = getConsumerGroupOffsets(consumerGroupId);
         final TailOffsets tailOffsets = getTailOffsets(consumerGroupOffsets.getTopic(), consumerGroupOffsets.getPartitions());
@@ -488,7 +495,12 @@ public class KafkaOperations implements AutoCloseable {
     public TailOffsets getTailOffsets(final String topic) {
         // Determine which partitions exist on the topic
         final TopicDetails topicDetails = getTopicDetails(topic);
-        final List<Integer> partitions = topicDetails.getPartitions().stream().map(PartitionDetails::getPartition).collect(Collectors.toList());
+        final List<Integer> partitions = topicDetails.getPartitions()
+            .stream()
+            .map(PartitionDetails::getPartition)
+            .collect(Collectors.toList());
+
+        // Call method for specific partitions.
         return getTailOffsets(topic, partitions);
     }
 

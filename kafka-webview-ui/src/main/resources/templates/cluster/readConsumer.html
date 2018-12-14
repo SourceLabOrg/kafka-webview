@@ -257,7 +257,7 @@
                 toggleAutoRefreshForConsumerDetails: function(enable) {
                     ConsumerInfo.autoRefreshConsumerDetails = enable;
                     clearTimeout(ConsumerInfo.refreshDetailsTimer);
-                    
+
                     if (enable) {
                         ConsumerInfo.refreshConsumerDetails();
                         jQuery('#disable-refresh-details-toggle').toggle(false);

@@ -76,56 +76,92 @@ public class DevCluster {
 
         // Publish some data into that topic
         for (int partition = 0; partition < partitionsCount; partition++) {
-            utils.produceRecords(10000, topicName, partition);
+            utils.produceRecords(1000, topicName, partition);
         }
 
         kafkaTestCluster
             .getKafkaBrokers()
             .stream()
-            .forEach((broker) -> logger.info("Started broker with Id {} at {}", broker.getBrokerId(), broker.getConnectString()));
+            .forEach((broker) -> {
+                logger.info("Started broker with Id {} at {}", broker.getBrokerId(), broker.getConnectString());
+            });
 
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
 
         runEndlessConsumer(topicName, utils);
+        runEndlessProducer(topicName, partitionsCount, utils);
 
         // Wait forever.
-        //Thread.currentThread().join();
+        Thread.currentThread().join();
     }
 
-    private static void runEndlessProducer(final String topicName, final int partitionCount, final KafkaTestUtils utils) throws InterruptedException {
-        do {
-            try (final KafkaProducer<String, String> producer = utils.getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
+    /**
+     * Fire up a new thread running an endless producer script into the given topic and partitions.
+     * @param topicName Name of the topic to produce records into.
+     * @param partitionCount number of partitions that exist on that topic.
+     * @param utils KafkaUtils instance.
+     */
+    private static void runEndlessProducer(
+        final String topicName,
+        final int partitionCount,
+        final KafkaTestUtils utils
+    ) {
+        final Thread producerThread = new Thread(() -> {
+            do {
+
                 // Publish some data into that topic
                 for (int partition = 0; partition < partitionCount; partition++) {
                     utils.produceRecords(1000, topicName, partition);
-                    Thread.sleep(1000L);
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
                 }
-                Thread.sleep(5000L);
-            }
-        } while(true);
+                try {
+                    Thread.sleep(5000L);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            } while (true);
+        });
+        producerThread.start();
+
     }
 
-    private static void runEndlessConsumer(final String topicName, final KafkaTestUtils utils) throws InterruptedException {
-        // Start a consumer
-        final Properties properties = new Properties();
-        properties.put("max.poll.records", 10);
-        properties.put("group.id", "MyConsumerId");
+    /**
+     * Fire up a new thread running an enless consumer script that reads from the given topic.
+     * @param topicName Topic to consume from.
+     * @param utils KafkaUtils instance.
+     */
+    private static void runEndlessConsumer(final String topicName, final KafkaTestUtils utils) {
+        final Thread consumerThread = new Thread(() -> {
+            // Start a consumer
+            final Properties properties = new Properties();
+            properties.put("max.poll.records", 37);
+            properties.put("group.id", "MyConsumerId");
 
-        try (final KafkaConsumer<String, String> consumer = utils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, properties)) {
-            consumer.subscribe(Collections.singleton(topicName));
-            do {
-                final ConsumerRecords<String, String> records = consumer.poll(1000);
-                consumer.commitSync();
+            try (final KafkaConsumer<String, String> consumer
+                     = utils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, properties)) {
 
-                logger.info("Consumed {} records", records.count());
-
-                if (records.isEmpty()) {
-                    consumer.seekToBeginning(consumer.assignment());
+                consumer.subscribe(Collections.singleton(topicName));
+                do {
+                    final ConsumerRecords<String, String> records = consumer.poll(1000);
                     consumer.commitSync();
-                }
-                Thread.sleep(1000);
-            } while (true);
 
-        }
+                    logger.info("Consumed {} records", records.count());
+
+                    if (records.isEmpty()) {
+                        consumer.seekToBeginning(consumer.assignment());
+                        consumer.commitSync();
+                    }
+                    Thread.sleep(1000);
+                } while (true);
+
+            } catch (final InterruptedException e) {
+                return;
+            }
+        });
+        consumerThread.start();
     }
 }

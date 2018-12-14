@@ -25,7 +25,7 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 /**
- * Represents metadata about an offset stored on a particular partition.
+ * Represents metadata about a consumer offset stored on a particular partition.
  */
 public class PartitionOffset {
     private final int partition;
