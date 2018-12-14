@@ -55,8 +55,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -418,6 +418,41 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
             .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
             .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10}]")))
+            .andExpect(content().string(containsString("\"partitions\":[0]")));
+    }
+
+    /**
+     * Test the get specific consumer offsets with tail offsets.
+     */
+    @Test
+    @Transactional
+    public void test_specificConsumerOffsetsWithTailOffsets() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState(cluster);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumer/" + consumerId + "/offsetsAndTailPositions")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // {"consumerId":"test-consumer-id-1544775318028","topic":"TestTopic-1544775318028","offsets":[{"partition":0,"offset":10,"tail":10}],"partitions":[0]}
+
+            // Validate results seem right.
+            .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
+            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}]")))
             .andExpect(content().string(containsString("\"partitions\":[0]")));
     }
 

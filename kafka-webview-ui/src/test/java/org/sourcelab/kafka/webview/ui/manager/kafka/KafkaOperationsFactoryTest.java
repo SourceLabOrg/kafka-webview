@@ -45,7 +45,7 @@ public class KafkaOperationsFactoryTest {
      * Test that KafkaAdminFactory can create a working AdminClient when connecting to a non-ssl cluster.
      */
     @Test
-    public void smokeTestNonSslOperationsClient() throws ExecutionException, InterruptedException {
+    public void smokeTestNonSslOperationsClient() {
         // Create dependencies.
         final SecretManager secretManager = new SecretManager("notused");
         final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("NotUsed");

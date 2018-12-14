@@ -166,7 +166,7 @@
                         var differences = ConsumerInfo.findOffsetDifference(
                             offsetData.partition,
                             offsetData.offset,
-                            offsetData.tailOffset
+                            offsetData.tail
                         );
 
                         // Generate html from template
@@ -175,9 +175,9 @@
                             memberId: ConsumerInfo.findAssignedMemberForPartition(offsetData.partition),
                             position: offsetData.offset,
                             positionDiff: differences.consumerDifference,
-                            tail: offsetData.tailOffset,
+                            tail: offsetData.tail,
                             tailDiff: differences.tailDifference,
-                            lag: (offsetData.tailOffset - offsetData.offset),
+                            lag: (offsetData.tail - offsetData.offset),
                             lagDiff: differences.lagDifference
                         };
                         var resultHtml = template(properties);
@@ -242,10 +242,10 @@
                     jQuery.each(ConsumerInfo.lastOffsetData, function(index, offsetData) {
                         if (offsetData.partition == partition) {
                             var newLag = newTailOffset - newConsumerOffset;
-                            var oldLag = offsetData.tailOffset - offsetData.offset;
+                            var oldLag = offsetData.tail - offsetData.offset;
 
                             results.consumerDifference = (newConsumerOffset - offsetData.offset);
-                            results.tailDifference = (newTailOffset - offsetData.tailOffset);
+                            results.tailDifference = (newTailOffset - offsetData.tail);
                             results.lagDifference = (newLag - oldLag);
 
                             return false;

@@ -24,10 +24,14 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Mapping of partitions on a topic to their tail positions.
@@ -51,8 +55,25 @@ public class TailOffsets {
         return topic;
     }
 
-    public Map<Integer, Long> getPartitionsToOffsets() {
+    /**
+     * Marked private to avoid being serialized in responses.
+     */
+    private Map<Integer, Long> getPartitionsToOffsets() {
         return partitionsToOffsets;
+    }
+
+    /**
+     * Sorted list of offsets.
+     * @return Immutable list of offsets.
+     */
+    public List<PartitionOffset> getOffsets() {
+        final List<PartitionOffset> offsets = partitionsToOffsets.entrySet()
+            .stream()
+            .map((entry) -> new PartitionOffset(entry.getKey(), entry.getValue()))
+            .sorted(Comparator.comparingInt(PartitionOffset::getPartition))
+            .collect(Collectors.toList());
+
+        return Collections.unmodifiableList(offsets);
     }
 
     /**
@@ -62,7 +83,7 @@ public class TailOffsets {
      *
      * @throws IllegalArgumentException if passed an invalid partitionId.
      */
-    public long getTailOffsetForPartition(final int partitionId) {
+    public long getOffsetForPartition(final int partitionId) {
         if (!partitionsToOffsets.containsKey(partitionId)) {
             throw new IllegalArgumentException("Invalid partitionId " + partitionId);
         }

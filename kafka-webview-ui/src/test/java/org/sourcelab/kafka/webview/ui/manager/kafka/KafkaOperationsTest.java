@@ -31,7 +31,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -45,11 +44,14 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsetsWithTailPositions;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionOffset;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionOffsetWithTailPosition;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TailOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
@@ -542,6 +544,123 @@ public class KafkaOperationsTest {
             assertEquals(1, offsetsPartition1.getPartition());
             assertEquals(10, offsetsPartition1.getOffset());
         }
+    }
+
+    /**
+     * Test getting details about a consumer with tail offset positions incuded.
+     */
+    @Test
+    public void testGetConsumerGroupOffsetsWithTailPositions() {
+        // First need to create a topic.
+        final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
+
+        // Publish data into the topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 0);
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 1);
+
+        final String consumerId1 = "ConsumerA-" + System.currentTimeMillis();
+        final String consumerPrefix = "TestConsumer";
+        final String finalConsumerId = consumerPrefix + "-" + consumerId1;
+
+        // Create consumer, consume from topic, keep alive.
+        try (final KafkaConsumer consumer = consumeFromTopic(topicName, consumerId1, consumerPrefix)) {
+
+            // Ask for list of offsets.
+            final ConsumerGroupOffsetsWithTailPositions consumerGroupOffsets
+                = kafkaOperations.getConsumerGroupOffsetsWithTailOffsets(finalConsumerId);
+
+            // We should have one
+            assertNotNull(consumerGroupOffsets);
+
+            // Validate bits
+            assertEquals(topicName, consumerGroupOffsets.getTopic());
+            assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
+            assertEquals(2, consumerGroupOffsets.getOffsets().size());
+            assertEquals(10, consumerGroupOffsets.getOffsetForPartition(0));
+            assertEquals(10, consumerGroupOffsets.getOffsetForPartition(1));
+
+            final PartitionOffsetWithTailPosition offsetsPartition0 = consumerGroupOffsets.getOffsets().get(0);
+            assertNotNull(offsetsPartition0);
+            assertEquals(0, offsetsPartition0.getPartition());
+            assertEquals(10, offsetsPartition0.getOffset());
+            assertEquals(10, offsetsPartition0.getTail());
+
+            final PartitionOffsetWithTailPosition offsetsPartition1 = consumerGroupOffsets.getOffsets().get(1);
+            assertNotNull(offsetsPartition1);
+            assertEquals(1, offsetsPartition1.getPartition());
+            assertEquals(10, offsetsPartition1.getOffset());
+            assertEquals(10, offsetsPartition1.getTail());
+        }
+    }
+
+    /**
+     * Test getting tail offsets for a topic.
+     */
+    @Test
+    public void testGetTailOffsets() {
+        // First need to create a topic.
+        final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
+
+        // Publish data into the topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName, 0);
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(12, topicName, 1);
+
+
+        // Ask for list of offsets for all partitions
+        final TailOffsets allTailOffsets = kafkaOperations.getTailOffsets(topicName);
+
+        // We should have one
+        assertNotNull(allTailOffsets);
+
+        // Validate bits
+        assertEquals(topicName, allTailOffsets.getTopic());
+        assertEquals(2, allTailOffsets.getPartitions().size());
+        assertEquals(2, allTailOffsets.getOffsets().size());
+        assertEquals(10, allTailOffsets.getOffsetForPartition(0));
+        assertEquals(12, allTailOffsets.getOffsetForPartition(1));
+
+        final PartitionOffset offsetsPartition0 = allTailOffsets.getOffsets().get(0);
+        assertNotNull(offsetsPartition0);
+        assertEquals(0, offsetsPartition0.getPartition());
+        assertEquals(10, offsetsPartition0.getOffset());
+
+        final PartitionOffset offsetsPartition1 = allTailOffsets.getOffsets().get(1);
+        assertNotNull(offsetsPartition1);
+        assertEquals(1, offsetsPartition1.getPartition());
+        assertEquals(12, offsetsPartition1.getOffset());
+
+        // Now ask for tail offsets for just one partition
+        final TailOffsets partialTailOffsets = kafkaOperations.getTailOffsets(topicName, Collections.singletonList(1));
+        assertNotNull(partialTailOffsets);
+
+        // Validate bits
+        assertEquals(topicName, partialTailOffsets.getTopic());
+        assertEquals(1, partialTailOffsets.getPartitions().size());
+        assertEquals(1, partialTailOffsets.getOffsets().size());
+        assertEquals(12, partialTailOffsets.getOffsetForPartition(1));
+
+        final PartitionOffset partialOffsetsPartition1 = partialTailOffsets.getOffsets().get(0);
+        assertNotNull(partialOffsetsPartition1);
+        assertEquals(1, partialOffsetsPartition1.getPartition());
+        assertEquals(12, partialOffsetsPartition1.getOffset());
     }
 
     /**

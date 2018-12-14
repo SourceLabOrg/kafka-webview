@@ -31,15 +31,15 @@ package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 public class PartitionOffsetWithTailPosition {
     private final int partition;
     private final long offset;
-    private final long tailOffset;
+    private final long tail;
 
     /**
      * Constructor.
      */
-    public PartitionOffsetWithTailPosition(final int partition, final long offset, final long tailOffset) {
+    public PartitionOffsetWithTailPosition(final int partition, final long offset, final long tail) {
         this.partition = partition;
         this.offset = offset;
-        this.tailOffset = tailOffset;
+        this.tail = tail;
     }
 
     public int getPartition() {
@@ -50,8 +50,8 @@ public class PartitionOffsetWithTailPosition {
         return offset;
     }
 
-    public long getTailOffset() {
-        return tailOffset;
+    public long getTail() {
+        return tail;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class PartitionOffsetWithTailPosition {
         return "PartitionOffsetWithTailPosition{"
             + "partition=" + partition
             + ", offset=" + offset
-            + ", tailOffset=" + tailOffset
+            + ", tail=" + tail
             + '}';
     }
 }

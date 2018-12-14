@@ -70,6 +70,9 @@ public class ConsumerGroupOffsets {
         return topic;
     }
 
+    /**
+     * Marked private to keep from being serialized in responses.
+     */
     private Map<Integer, PartitionOffset> getOffsetMap() {
         return offsetMap;
     }

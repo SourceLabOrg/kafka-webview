@@ -25,7 +25,6 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -75,7 +74,10 @@ public class ConsumerGroupOffsetsWithTailPositions {
         return topic;
     }
 
-    public Map<Integer, PartitionOffsetWithTailPosition> getOffsetMap() {
+    /**
+     * Marked private to keep from being serialized in responses.
+     */
+    private Map<Integer, PartitionOffsetWithTailPosition> getOffsetMap() {
         return offsetMap;
     }
 
@@ -123,7 +125,7 @@ public class ConsumerGroupOffsetsWithTailPositions {
             .findFirst();
 
         if (offsetOptional.isPresent()) {
-            return offsetOptional.get().getTailOffset();
+            return offsetOptional.get().getTail();
         }
         throw new RuntimeException("Unable to find partition " + partition);
     }

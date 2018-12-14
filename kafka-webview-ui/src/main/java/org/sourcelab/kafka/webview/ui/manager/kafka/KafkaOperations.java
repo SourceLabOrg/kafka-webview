@@ -84,6 +84,7 @@ public class KafkaOperations implements AutoCloseable {
     /**
      * Constructor.
      * @param adminClient The AdminClient to wrap.
+     * @param consumerClient The KafkaConsumer instance to wrap.
      */
     public KafkaOperations(final AdminClient adminClient, final KafkaConsumer<String, String> consumerClient) {
         this.adminClient = adminClient;
@@ -472,11 +473,11 @@ public class KafkaOperations implements AutoCloseable {
 
         final List<PartitionOffsetWithTailPosition> offsetsWithPartitions = new ArrayList<>();
 
-        for (final Map.Entry<Integer, Long> entry : tailOffsets.getPartitionsToOffsets().entrySet()) {
+        for (final PartitionOffset entry : tailOffsets.getOffsets()) {
             offsetsWithPartitions.add(new PartitionOffsetWithTailPosition(
-                entry.getKey(),
-                consumerGroupOffsets.getOffsetForPartition(entry.getKey()),
-                entry.getValue()
+                entry.getPartition(),
+                consumerGroupOffsets.getOffsetForPartition(entry.getPartition()),
+                entry.getOffset()
             ));
         }
 
