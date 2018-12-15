@@ -312,8 +312,8 @@
                         var ctx = document.getElementById("ConsumerPositionsChart").getContext('2d');
                         ConsumerPositionsGraph.chart = new Chart(ctx, {
                             type: 'horizontalBar',
-                            data: ConsumerInfo.graphData,
-                            options: ConsumerInfo.graphOptions
+                            data: ConsumerPositionsGraph.graphData,
+                            options: ConsumerPositionsGraph.graphOptions
                         });
                     } else {
                         // Update the scales
@@ -362,59 +362,6 @@
                             barPercentage: 1
                         }],
                             xAxes: [{
-                            stacked: false,
-                            ticks: {
-                                beginAtZero: false
-                            }
-                        }, {
-                            display: false,
-                            stacked: false,
-                            ticks: {
-                                beginAtZero: false
-                            }
-                        }]
-                    }
-                },
-                graph: null
-            };
-
-            // Consumer Progress Graph
-            var ConsumerProgressGraph = {
-                graphData: {
-                    labels: [],
-                    datasets: [{
-                        stack: 0,
-                        label: "Tail Position",
-                        data: [],
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderColor: 'rgba(255,99,132,1)',
-                        borderWidth: 1
-                    }, {
-                        stack: 0,
-                        label: "Consumer Position",
-                        data: [],
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                graphOptions: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    title: {
-                        display: true,
-                        text: "Consumer Positions"
-                    },
-                    animation: {
-                        duration: 0
-                    },
-                    scales: {
-                        yAxes: [{
-                            stacked: false,
-                            categoryPercentage: 1,
-                            barPercentage: 1
-                        }],
-                        xAxes: [{
                             stacked: false,
                             ticks: {
                                 beginAtZero: false
