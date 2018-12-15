@@ -316,9 +316,6 @@
                             options: ConsumerPositionsGraph.graphOptions
                         });
                     } else {
-                        // Update the scales
-                        //ConsumerInfo.graphOptions.scales
-
                         // Redraw
                         ConsumerPositionsGraph.chart.update({duration: 0});
                     }
@@ -361,7 +358,7 @@
                             categoryPercentage: 1,
                             barPercentage: 1
                         }],
-                            xAxes: [{
+                        xAxes: [{
                             stacked: false,
                             ticks: {
                                 beginAtZero: false
