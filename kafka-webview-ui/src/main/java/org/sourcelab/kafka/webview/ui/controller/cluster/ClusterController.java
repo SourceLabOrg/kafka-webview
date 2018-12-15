@@ -165,6 +165,35 @@ public class ClusterController extends BaseController {
         return "cluster/readTopic";
     }
 
+    /**
+     * GET Displays info about a specific consumers group in a cluster.
+     */
+    @RequestMapping(path = "/{clusterId}/consumer/{consumerId:.+}", method = RequestMethod.GET)
+    public String readConsumer(
+        @PathVariable final Long clusterId,
+        @PathVariable final String consumerId,
+        final Model model,
+        final RedirectAttributes redirectAttributes) {
+
+        // Retrieve by id
+        final Cluster cluster = retrieveCluster(clusterId, redirectAttributes);
+        if (cluster == null) {
+            // redirect
+            return "redirect:/";
+        }
+        model.addAttribute("cluster", cluster);
+        model.addAttribute("consumerId", consumerId);
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model)
+            .addCrumb(cluster.getName(), "/cluster/" + clusterId)
+            .addCrumb("Consumer " + consumerId, null);
+
+
+        // Display template
+        return "cluster/readConsumer";
+    }
+
     private Cluster retrieveCluster(final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve by id
         final Optional<Cluster> clusterOptional = clusterRepository.findById(id);

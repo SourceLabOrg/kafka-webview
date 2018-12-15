@@ -26,6 +26,9 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.Map;
@@ -53,6 +56,7 @@ public class KafkaAdminFactory {
      * Create a new AdminClient instance.
      * @param clusterConfig What cluster to connect to.
      * @param clientId What clientId to associate the connection with.
+     * @return AdminClient instance.
      */
     public AdminClient create(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
@@ -60,5 +64,23 @@ public class KafkaAdminFactory {
 
         // Build admin client.
         return KafkaAdminClient.create(config);
+    }
+
+    /**
+     * Create a new KafkaConsumer instance.
+     * @param clusterConfig What cluster to connect to.
+     * @param clientId What clientId to associate the connection with.
+     * @return KafkaConsumer instance.
+     */
+    public KafkaConsumer<String, String> createConsumer(final ClusterConfig clusterConfig, final String clientId) {
+        // Create a map
+        final Map<String, Object> config = configUtil.applyCommonSettings(clusterConfig, clientId);
+
+        // Set required deserializer classes.
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+
+        // Create consumer
+        return new KafkaConsumer<>(config);
     }
 }

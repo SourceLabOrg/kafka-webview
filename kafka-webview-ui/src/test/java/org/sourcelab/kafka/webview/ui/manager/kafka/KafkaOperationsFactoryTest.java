@@ -31,8 +31,6 @@ import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 
-import java.util.concurrent.ExecutionException;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -45,7 +43,7 @@ public class KafkaOperationsFactoryTest {
      * Test that KafkaAdminFactory can create a working AdminClient when connecting to a non-ssl cluster.
      */
     @Test
-    public void smokeTestNonSslOperationsClient() throws ExecutionException, InterruptedException {
+    public void smokeTestNonSslOperationsClient() {
         // Create dependencies.
         final SecretManager secretManager = new SecretManager("notused");
         final KafkaClientConfigUtil configUtil = new KafkaClientConfigUtil("Not-Used", "Test-Prefix");

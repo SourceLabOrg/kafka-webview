@@ -63,7 +63,7 @@ public class WebKafkaConsumerFactory {
     /**
      * Defines the consumerId prefix pre-pended to all consumers.
      */
-    private static final String consumerIdPrefix = "KafkaWebView-Consumer-UserId";
+    private static final String consumerIdPrefix = "UserId";
 
     private final PluginFactory<Deserializer> deserializerPluginFactory;
     private final PluginFactory<RecordFilter> recordFilterPluginFactory;
@@ -141,6 +141,7 @@ public class WebKafkaConsumerFactory {
         final View view,
         final Collection<FilterDefinition> filterDefinitions,
         final SessionIdentifier sessionIdentifier) {
+
         // Construct a consumerId based on user
         final String consumerId = consumerIdPrefix + sessionIdentifier.toString();
 

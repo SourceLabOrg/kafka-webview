@@ -27,14 +27,19 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeClusterResult;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.PartitionInfo;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import static org.hibernate.validator.internal.util.Contracts.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -74,6 +79,32 @@ public class KafkaAdminFactoryTest {
             final Collection<Node> nodes = results.nodes().get();
             assertNotNull("Should have non-null node result", nodes);
             assertFalse("Should have non-empty node", nodes.isEmpty());
+        }
+    }
+
+    /**
+     * Test that KafkaAdminFactory can create a working KafkaConsumer when connecting to a non-ssl cluster.
+     */
+    @Test
+    public void testCreateNonSslConsumer() {
+        // Create Cluster config
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+
+        // Create a topic
+        final String topicName = "MyRandomTopic";
+        sharedKafkaTestResource.getKafkaTestUtils().createTopic(topicName, 1, (short) 1);
+
+        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(new KafkaClientConfigUtil("NotUsed", "Prefix"));
+
+        // Create instance
+        try (final KafkaConsumer<String, String> consumerClient = kafkaAdminFactory.createConsumer(clusterConfig, "MyClientId")) {
+
+            // Call method to validate things work as expected
+            final Map<String, List<PartitionInfo>> results = consumerClient.listTopics();
+            assertNotNull(results);
+            assertTrue(results.containsKey(topicName), "Should have our topic.");
         }
     }
 }
