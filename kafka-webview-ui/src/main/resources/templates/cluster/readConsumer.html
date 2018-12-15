@@ -201,6 +201,9 @@
 
                     // Refresh every 10 seconds
                     ConsumerInfo.refreshOffsetsTimer = setTimeout(ConsumerInfo.refreshConsumerOffsets, 10000);
+
+                    // Push update to graph
+                    ConsumerInfo.updateConsumerPositionsGraph(results.offsets);
                 },
 
                 // Attempts to map partition to its assigned consumer id.
@@ -285,7 +288,147 @@
                         jQuery('#disable-refresh-offsets-toggle').toggle(true);
                         jQuery('#enable-refresh-offsets-toggle').toggle(false);
                     }
+                },
+
+                updateConsumerPositionsGraph: function(offsets) {
+                    var labels = [];
+                    var tailPositions = [];
+                    var consumerPositions = [];
+
+                    // Process each partition
+                    jQuery.each(offsets, function(index, offsetData) {
+                        labels.push("Partition " + offsetData.partition);
+                        tailPositions.push(offsetData.tail);
+                        consumerPositions.push(offsetData.offset);
+                    });
+
+                    // Push data into graph sources
+                    ConsumerPositionsGraph.graphData.labels = labels;
+                    ConsumerPositionsGraph.graphData.datasets[0].data = tailPositions;
+                    ConsumerPositionsGraph.graphData.datasets[1].data = consumerPositions;
+
+                    // Update graph
+                    if (ConsumerPositionsGraph.graph == null) {
+                        var ctx = document.getElementById("ConsumerPositionsChart").getContext('2d');
+                        ConsumerPositionsGraph.chart = new Chart(ctx, {
+                            type: 'horizontalBar',
+                            data: ConsumerInfo.graphData,
+                            options: ConsumerInfo.graphOptions
+                        });
+                    } else {
+                        // Update the scales
+                        //ConsumerInfo.graphOptions.scales
+
+                        // Redraw
+                        ConsumerPositionsGraph.chart.update({duration: 0});
+                    }
                 }
+            };
+
+            // ConsumerPositions Graph
+            var ConsumerPositionsGraph = {
+                graphData: {
+                    labels: [],
+                        datasets: [{
+                        stack: 0,
+                        label: "Tail Position",
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255,99,132,1)',
+                        borderWidth: 1
+                    }, {
+                        stack: 0,
+                        label: "Consumer Position",
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                graphOptions: {
+                    responsive: true,
+                        maintainAspectRatio: false,
+                        title: {
+                        display: true,
+                            text: "Consumer Positions"
+                    },
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        yAxes: [{
+                            stacked: false,
+                            categoryPercentage: 1,
+                            barPercentage: 1
+                        }],
+                            xAxes: [{
+                            stacked: false,
+                            ticks: {
+                                beginAtZero: false
+                            }
+                        }, {
+                            display: false,
+                            stacked: false,
+                            ticks: {
+                                beginAtZero: false
+                            }
+                        }]
+                    }
+                },
+                graph: null
+            };
+
+            // Consumer Progress Graph
+            var ConsumerProgressGraph = {
+                graphData: {
+                    labels: [],
+                    datasets: [{
+                        stack: 0,
+                        label: "Tail Position",
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255,99,132,1)',
+                        borderWidth: 1
+                    }, {
+                        stack: 0,
+                        label: "Consumer Position",
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: "Consumer Positions"
+                    },
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        yAxes: [{
+                            stacked: false,
+                            categoryPercentage: 1,
+                            barPercentage: 1
+                        }],
+                        xAxes: [{
+                            stacked: false,
+                            ticks: {
+                                beginAtZero: false
+                            }
+                        }, {
+                            display: false,
+                            stacked: false,
+                            ticks: {
+                                beginAtZero: false
+                            }
+                        }]
+                    }
+                },
+                graph: null
             };
 
             // On load, fire off ajax request to load results.
@@ -427,6 +570,11 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Consumer Positions Chart -->
+        <div style="height: 500px">
+            <canvas id="ConsumerPositionsChart"></canvas>
         </div>
 
         <!-- Consumer Details Template -->
