@@ -2,10 +2,14 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.0.2 (UNRELEAED)
+## 2.1.0 (UNRELEASED)
 #### New Features
-- More explicitly expose user login session timeout configuration value.
+- Consumer details can now be viewed on Clusters.
+- Explicitly expose user login session timeout configuration value in documentation.
+
+#### Bug fixes
 - Topics shown on brokers now include "internal" topics.
+- Generated consumer client.id shortened.
 
 #### Internal Dependency Updates
 - Upgrade from Spring Boot 2.0.5 to 2.0.7
@@ -14,7 +18,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - sockjs-client from 1.1.4 to 1.3.0
   - browser-sync from 2.16.0 to 2.26.3
   - gulp-sass from 3.1.0 to 3.2.1
->>>>>>> d58ad8cdea2d36b208ade69dd6cc52af312e17cb
 
 ## 2.0.1 (10/02/2018)
 - [Issue#100](https://github.com/SourceLabOrg/kafka-webview/issues/100) Fix start.sh script
