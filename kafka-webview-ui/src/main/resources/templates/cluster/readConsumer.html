@@ -298,8 +298,15 @@
                     // Process each partition
                     jQuery.each(offsets, function(index, offsetData) {
                         labels.push("Partition " + offsetData.partition);
-                        tailPositions.push(offsetData.tail);
-                        consumerPositions.push(offsetData.offset);
+                        tailPositions.push(100);
+                        if (offsetData.tail != null && offsetData.tail > 0) {
+                            var dataPoint = (offsetData.offset / offsetData.tail) * 100;
+                            consumerPositions.push(dataPoint.toPrecision(2));
+                        } else {
+                            consumerPositions.push(0);
+                        }
+                        //tailPositions.push(offsetData.tail);
+                        //consumerPositions.push(offsetData.offset);
                     });
 
                     // Push data into graph sources
@@ -344,10 +351,10 @@
                 },
                 graphOptions: {
                     responsive: true,
-                        maintainAspectRatio: false,
-                        title: {
-                        display: true,
-                            text: "Consumer Positions"
+                    maintainAspectRatio: false,
+                    title: {
+                    display: true,
+                        text: "Consumer Lag (Percent Consumed)"
                     },
                     animation: {
                         duration: 0
@@ -370,6 +377,34 @@
                                 beginAtZero: false
                             }
                         }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(toolTipItem, data) {
+                                var isTail = false;
+                                if (toolTipItem.datasetIndex == 0) {
+                                    isTail = true;
+                                }
+                                var partitionId = toolTipItem.index;
+                                var tailPosition = 0;
+                                var consumerPosition = 0;
+
+                                jQuery.each(ConsumerInfo.lastOffsetData, function(index, offsetData) {
+                                    if (offsetData.partition == partitionId) {
+                                        tailPosition = offsetData.tail;
+                                        consumerPosition = offsetData.offset;
+                                        return true;
+                                    }
+                                });
+
+                                var percentageValue = data.datasets[toolTipItem.datasetIndex].data[partitionId];
+                                if (isTail) {
+                                    return "Tail Position: " + tailPosition;
+                                } else {
+                                    return "Consumer Position: " + consumerPosition + " (" + percentageValue + "%)";
+                                }
+                            }
+                        }
                     }
                 },
                 graph: null
