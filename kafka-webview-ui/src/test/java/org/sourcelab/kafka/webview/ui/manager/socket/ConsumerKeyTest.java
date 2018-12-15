@@ -64,15 +64,4 @@ public class ConsumerKeyTest {
 
         Assert.assertFalse(consumerKey1.equals(consumerKey2));
     }
-
-    @Test
-    public void testEquals_differentContexts() {
-        final long viewId = 123L;
-        final long userId = 444L;
-        final String sessionId = "BlahBlah";
-
-        final WebSocketConsumersManager.ConsumerKey consumerKey1 = new WebSocketConsumersManager.ConsumerKey(viewId, SessionIdentifier.newWebIdentifier(userId, sessionId));
-
-        Assert.assertFalse(consumerKey1.equals(consumerKey1));
-    }
 }
