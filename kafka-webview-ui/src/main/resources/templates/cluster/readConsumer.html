@@ -32,6 +32,10 @@
                 refreshOffsetsTimer: null,
                 refreshDetailsTimer: null,
 
+                // Configuration for refresh rates
+                refreshRateConsumerDetails: 30000,
+                refreshRateConsumerOffsets: 10000,
+
                 // Refresh ConsumerDetails
                 refreshConsumerDetails: function() {
                     if (!ConsumerInfo.autoRefreshConsumerDetails) {
@@ -97,7 +101,7 @@
                     jQuery('#consumer-details-loader').toggle(false);
                     jQuery('#consumer-details-table').toggle(true);
 
-                    ConsumerInfo.refreshDetailsTimer = setTimeout(ConsumerInfo.refreshConsumerDetails, 30000);
+                    ConsumerInfo.refreshDetailsTimer = setTimeout(ConsumerInfo.refreshConsumerDetails, ConsumerInfo.refreshRateConsumerDetails);
                 },
                 handleMembershipDetails: function(members) {
                     // Save reference.
@@ -200,7 +204,7 @@
                     jQuery('#consumer-offsets-table').toggle(true);
 
                     // Refresh every 10 seconds
-                    ConsumerInfo.refreshOffsetsTimer = setTimeout(ConsumerInfo.refreshConsumerOffsets, 10000);
+                    ConsumerInfo.refreshOffsetsTimer = setTimeout(ConsumerInfo.refreshConsumerOffsets, ConsumerInfo.refreshRateConsumerOffsets);
 
                     // Push update to graph
                     ConsumerInfo.updateConsumerPositionsGraph(results.offsets);

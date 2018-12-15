@@ -32,6 +32,7 @@ import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequ
 import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
+import org.sourcelab.kafka.webview.ui.manager.encryption.Sha1Tools;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
@@ -584,7 +585,7 @@ public class ApiController extends BaseController {
      * Creates a WebKafkaConsumer instance.
      */
     private WebKafkaConsumer setup(final View view, final Collection<FilterDefinition> filterDefinitions) {
-        final SessionIdentifier sessionIdentifier = new SessionIdentifier(
+        final SessionIdentifier sessionIdentifier = SessionIdentifier.newWebIdentifier(
             getLoggedInUserId(),
             getLoggedInUserSessionId()
         );

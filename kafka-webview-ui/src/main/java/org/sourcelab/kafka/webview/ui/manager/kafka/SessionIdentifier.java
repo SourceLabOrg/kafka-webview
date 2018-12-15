@@ -24,7 +24,10 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
+import org.sourcelab.kafka.webview.ui.manager.encryption.Sha1Tools;
+
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 /**
  * Unique key to represent a session.
@@ -33,16 +36,24 @@ import javax.validation.constraints.NotNull;
 public class SessionIdentifier {
     private final long userId;
     private final String sessionId;
+    private final Context context;
 
     /**
      * Constructor.
      */
-    public SessionIdentifier(final long userId, @NotNull final String sessionId) {
+    public SessionIdentifier(
+        final long userId,
+        @NotNull final String sessionId,
+        @NotNull final Context context
+    ) {
         if (sessionId == null) {
             throw new NullPointerException("sessionId cannot be null!");
         }
         this.userId = userId;
+
+        // Use hash of sessionId to avoid exposure
         this.sessionId = sessionId;
+        this.context = context;
     }
 
     public long getUserId() {
@@ -51,6 +62,10 @@ public class SessionIdentifier {
 
     public String getSessionId() {
         return sessionId;
+    }
+
+    public Context getContext() {
+        return context;
     }
 
     @Override
@@ -67,18 +82,48 @@ public class SessionIdentifier {
         if (userId != that.userId) {
             return false;
         }
+
+        if (context != that.context) {
+            return false;
+        }
         return sessionId.equals(that.sessionId);
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (userId ^ (userId >>> 32));
-        result = 31 * result + sessionId.hashCode();
-        return result;
+        return Objects.hash(userId, sessionId, context);
     }
 
     @Override
     public String toString() {
-        return userId + "-" + sessionId;
+        return userId + "-" + context.name + "-" + Sha1Tools.sha1(sessionId);
+    }
+
+    /**
+     * Factory method.
+     */
+    public static SessionIdentifier newWebIdentifier(final long userId, final String sessionId) {
+        return new SessionIdentifier(userId, sessionId, Context.WEB);
+    }
+
+    /**
+     * Factory method.
+     */
+    public static SessionIdentifier newStreamIdentifier(final long userId, final String sessionId) {
+        return new SessionIdentifier(userId, sessionId, Context.STREAM);
+    }
+
+    /**
+     * Enumerate Context types.
+     */
+    public static enum Context {
+        WEB("web"),
+        STREAM("stream");
+
+        String name;
+
+        Context(final String name) {
+            this.name = name;
+        }
     }
 }
