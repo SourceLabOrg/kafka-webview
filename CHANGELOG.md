@@ -4,8 +4,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.1.0 (UNRELEASED)
 #### New Features
+- Add support for SASL authentication to Kafka clusters.
 - Consumer details can now be viewed on Clusters.
 - Explicitly expose user login session timeout configuration value in documentation.
+
 
 #### Bug fixes
 - Topics shown on brokers now include "internal" topics.
