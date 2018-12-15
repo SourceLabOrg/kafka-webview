@@ -22,36 +22,39 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
+package org.sourcelab.kafka.webview.ui.controller.api.requests;
 
 /**
- * Represents metadata about a consumer offset stored on a particular partition.
+ * Defines a request to remove a consumer.
  */
-public class PartitionOffset {
-    private final int partition;
-    private final long offset;
+public class ConsumerRemoveRequest {
+    private Long clusterId;
+    private String consumerId;
 
-    /**
-     * Constructor.
-     */
-    public PartitionOffset(final int partition, final long offset) {
-        this.partition = partition;
-        this.offset = offset;
+    public ConsumerRemoveRequest() {
     }
 
-    public int getPartition() {
-        return partition;
+    public Long getClusterId() {
+        return clusterId;
     }
 
-    public long getOffset() {
-        return offset;
+    public void setClusterId(final Long clusterId) {
+        this.clusterId = clusterId;
+    }
+
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(final String consumerId) {
+        this.consumerId = consumerId;
     }
 
     @Override
     public String toString() {
-        return "PartitionOffset{"
-            + "partition=" + partition
-            + ", offset=" + offset
+        return "ConsumerRemoveRequest{"
+            + "clusterId='" + clusterId + '\''
+            + ", consumerId='" + consumerId + '\''
             + '}';
     }
 }

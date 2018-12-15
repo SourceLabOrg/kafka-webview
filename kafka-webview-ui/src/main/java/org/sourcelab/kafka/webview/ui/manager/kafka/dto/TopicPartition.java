@@ -24,34 +24,55 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
+import java.util.Objects;
+
 /**
- * Represents metadata about a consumer offset stored on a particular partition.
+ * Represents a partition on a specific topic.
  */
-public class PartitionOffset {
+public class TopicPartition {
+    private final String topic;
     private final int partition;
-    private final long offset;
 
     /**
      * Constructor.
+     * @param topic Name of the topic.
+     * @param partition partition id.
      */
-    public PartitionOffset(final int partition, final long offset) {
+    public TopicPartition(final String topic, final int partition) {
+        this.topic = topic;
         this.partition = partition;
-        this.offset = offset;
+    }
+
+    public String getTopic() {
+        return topic;
     }
 
     public int getPartition() {
         return partition;
     }
 
-    public long getOffset() {
-        return offset;
+    @Override
+    public String toString() {
+        return "TopicPartition{"
+            + "topic='" + topic + '\''
+            + ", partition=" + partition
+            + '}';
     }
 
     @Override
-    public String toString() {
-        return "PartitionOffset{"
-            + "partition=" + partition
-            + ", offset=" + offset
-            + '}';
+    public boolean equals(final Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+        final TopicPartition that = (TopicPartition) other;
+        return partition == that.partition && Objects.equals(topic, that.topic);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(topic, partition);
     }
 }

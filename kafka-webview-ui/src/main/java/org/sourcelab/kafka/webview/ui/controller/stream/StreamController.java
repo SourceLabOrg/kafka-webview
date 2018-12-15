@@ -129,7 +129,7 @@ public class StreamController extends BaseController {
         // Build a session identifier
         final long userId = getLoggedInUserId(headerAccessor);
         final String sessionId = headerAccessor.getSessionId();
-        final SessionIdentifier sessionIdentifier = new SessionIdentifier(userId, sessionId);
+        final SessionIdentifier sessionIdentifier = SessionIdentifier.newStreamIdentifier(userId, sessionId);
 
         // Override settings
         final ViewCustomizer viewCustomizer = new ViewCustomizer(view, consumeRequest);
@@ -155,7 +155,7 @@ public class StreamController extends BaseController {
         // Request a pause
         final long userId = getLoggedInUserId(headerAccessor);
         final String sessionId = headerAccessor.getSessionId();
-        webSocketConsumersManager.pauseConsumer(viewId, new SessionIdentifier(userId, sessionId));
+        webSocketConsumersManager.pauseConsumer(viewId, SessionIdentifier.newStreamIdentifier(userId, sessionId));
         return "{success: true}";
     }
 
@@ -171,7 +171,7 @@ public class StreamController extends BaseController {
         // Request Resume
         final long userId = getLoggedInUserId(headerAccessor);
         final String sessionId = headerAccessor.getSessionId();
-        webSocketConsumersManager.resumeConsumer(viewId, new SessionIdentifier(userId, sessionId));
+        webSocketConsumersManager.resumeConsumer(viewId, SessionIdentifier.newStreamIdentifier(userId, sessionId));
         return "{success: true}";
     }
 

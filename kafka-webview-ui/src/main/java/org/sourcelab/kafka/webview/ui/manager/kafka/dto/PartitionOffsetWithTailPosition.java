@@ -25,18 +25,21 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 /**
- * Represents metadata about a consumer offset stored on a particular partition.
+ * Represents metadata about a consumer offset stored on a particular partition along with the current
+ * tail offset position for the same partition.
  */
-public class PartitionOffset {
+public class PartitionOffsetWithTailPosition {
     private final int partition;
     private final long offset;
+    private final long tail;
 
     /**
      * Constructor.
      */
-    public PartitionOffset(final int partition, final long offset) {
+    public PartitionOffsetWithTailPosition(final int partition, final long offset, final long tail) {
         this.partition = partition;
         this.offset = offset;
+        this.tail = tail;
     }
 
     public int getPartition() {
@@ -47,11 +50,16 @@ public class PartitionOffset {
         return offset;
     }
 
+    public long getTail() {
+        return tail;
+    }
+
     @Override
     public String toString() {
-        return "PartitionOffset{"
+        return "PartitionOffsetWithTailPosition{"
             + "partition=" + partition
             + ", offset=" + offset
+            + ", tail=" + tail
             + '}';
     }
 }

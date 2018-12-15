@@ -99,7 +99,7 @@ public class WebSocketConsumersManagerTest {
 
         final Collection<FilterDefinition> filters = new ArrayList<>();
         final StartingPosition startingPosition = StartingPosition.newHeadPosition();
-        final SessionIdentifier sessionIdentifier = new SessionIdentifier(userId, sessionId);
+        final SessionIdentifier sessionIdentifier = SessionIdentifier.newStreamIdentifier(userId, sessionId);
 
         // Configure mocks
         when(mockConsumerFactory.createWebSocketClient(view, filters, startingPosition, sessionIdentifier))
@@ -150,7 +150,7 @@ public class WebSocketConsumersManagerTest {
 
         final Collection<FilterDefinition> filters = new ArrayList<>();
         final StartingPosition startingPosition = StartingPosition.newHeadPosition();
-        final SessionIdentifier sessionIdentifier = new SessionIdentifier(userId, sessionId);
+        final SessionIdentifier sessionIdentifier = SessionIdentifier.newStreamIdentifier(userId, sessionId);
 
         // Configure mocks
         when(mockConsumerFactory.createWebSocketClient(view, filters, StartingPosition.newHeadPosition(), sessionIdentifier))
@@ -189,7 +189,7 @@ public class WebSocketConsumersManagerTest {
 
         final Collection<FilterDefinition> filters = new ArrayList<>();
         final StartingPosition startingPosition = StartingPosition.newHeadPosition();
-        final SessionIdentifier sessionIdentifier = new SessionIdentifier(userId, sessionId);
+        final SessionIdentifier sessionIdentifier = SessionIdentifier.newStreamIdentifier(userId, sessionId);
 
         final SocketKafkaConsumer mockSocketKafkaConsumer1 = mock(SocketKafkaConsumer.class);
         final SocketKafkaConsumer mockSocketKafkaConsumer2 = mock(SocketKafkaConsumer.class);
@@ -265,8 +265,8 @@ public class WebSocketConsumersManagerTest {
 
         final Collection<FilterDefinition> filters = new ArrayList<>();
         final StartingPosition startingPosition = StartingPosition.newHeadPosition();
-        final SessionIdentifier sessionIdentifier1 = new SessionIdentifier(userId, sessionId1);
-        final SessionIdentifier sessionIdentifier2 = new SessionIdentifier(userId, sessionId2);
+        final SessionIdentifier sessionIdentifier1 = SessionIdentifier.newStreamIdentifier(userId, sessionId1);
+        final SessionIdentifier sessionIdentifier2 = SessionIdentifier.newStreamIdentifier(userId, sessionId2);
 
         final SocketKafkaConsumer mockSocketKafkaConsumer1 = mock(SocketKafkaConsumer.class);
         final SocketKafkaConsumer mockSocketKafkaConsumer2 = mock(SocketKafkaConsumer.class);
@@ -341,8 +341,8 @@ public class WebSocketConsumersManagerTest {
 
         final Collection<FilterDefinition> filters = new ArrayList<>();
         final StartingPosition startingPosition = StartingPosition.newHeadPosition();
-        final SessionIdentifier sessionIdentifier1 = new SessionIdentifier(userId, sessionId1);
-        final SessionIdentifier sessionIdentifier2 = new SessionIdentifier(userId, sessionId2);
+        final SessionIdentifier sessionIdentifier1 = SessionIdentifier.newStreamIdentifier(userId, sessionId1);
+        final SessionIdentifier sessionIdentifier2 = SessionIdentifier.newStreamIdentifier(userId, sessionId2);
 
         final SocketKafkaConsumer mockSocketKafkaConsumer1 = mock(SocketKafkaConsumer.class);
         final SocketKafkaConsumer mockSocketKafkaConsumer2 = mock(SocketKafkaConsumer.class);
@@ -392,8 +392,8 @@ public class WebSocketConsumersManagerTest {
 
         final Collection<FilterDefinition> filters = new ArrayList<>();
         final StartingPosition startingPosition = StartingPosition.newHeadPosition();
-        final SessionIdentifier sessionIdentifier1 = new SessionIdentifier(userId, sessionId1);
-        final SessionIdentifier sessionIdentifier2 = new SessionIdentifier(userId, sessionId2);
+        final SessionIdentifier sessionIdentifier1 = SessionIdentifier.newStreamIdentifier(userId, sessionId1);
+        final SessionIdentifier sessionIdentifier2 = SessionIdentifier.newStreamIdentifier(userId, sessionId2);
 
         final SocketKafkaConsumer mockSocketKafkaConsumer1 = mock(SocketKafkaConsumer.class);
         final SocketKafkaConsumer mockSocketKafkaConsumer2 = mock(SocketKafkaConsumer.class);
@@ -448,8 +448,8 @@ public class WebSocketConsumersManagerTest {
 
         final Collection<FilterDefinition> filters = new ArrayList<>();
         final StartingPosition startingPosition = StartingPosition.newHeadPosition();
-        final SessionIdentifier sessionIdentifier1 = new SessionIdentifier(userId, sessionId1);
-        final SessionIdentifier sessionIdentifier2 = new SessionIdentifier(userId, sessionId2);
+        final SessionIdentifier sessionIdentifier1 = SessionIdentifier.newStreamIdentifier(userId, sessionId1);
+        final SessionIdentifier sessionIdentifier2 = SessionIdentifier.newStreamIdentifier(userId, sessionId2);
 
         final SocketKafkaConsumer mockSocketKafkaConsumer1 = mock(SocketKafkaConsumer.class);
         final SocketKafkaConsumer mockSocketKafkaConsumer2 = mock(SocketKafkaConsumer.class);

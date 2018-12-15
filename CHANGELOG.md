@@ -2,12 +2,18 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.0.2 (UNRELEASED)
+## 2.1.0 (UNRELEASED)
 #### New Features
-- More explicitly expose user login session timeout configuration value.
+- Consumer details can now be viewed on Clusters.
+- Explicitly expose user login session timeout configuration value in documentation.
+
+#### Bug fixes
+- Topics shown on brokers now include "internal" topics.
+- Generated consumer client.id shortened.
 
 #### Internal Dependency Updates
 - Upgrade from Spring Boot 2.0.5 to 2.0.7
+- Updated Kafka Client library version to 2.0.0
 - Updated NPM dependencies:
   - sockjs-client from 1.1.4 to 1.3.0
   - browser-sync from 2.16.0 to 2.26.3

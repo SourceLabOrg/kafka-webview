@@ -25,33 +25,35 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 /**
- * Represents metadata about a consumer offset stored on a particular partition.
+ * Represents information about a consumer group identifier.
  */
-public class PartitionOffset {
-    private final int partition;
-    private final long offset;
+public class ConsumerGroupIdentifier {
+    private final String id;
+    private final boolean isSimple;
 
     /**
      * Constructor.
+     * @param id consumer group id/name.
+     * @param isSimple If its a simple consumer or not.
      */
-    public PartitionOffset(final int partition, final long offset) {
-        this.partition = partition;
-        this.offset = offset;
+    public ConsumerGroupIdentifier(final String id, final boolean isSimple) {
+        this.id = id;
+        this.isSimple = isSimple;
     }
 
-    public int getPartition() {
-        return partition;
+    public String getId() {
+        return id;
     }
 
-    public long getOffset() {
-        return offset;
+    public boolean isSimple() {
+        return isSimple;
     }
 
     @Override
     public String toString() {
-        return "PartitionOffset{"
-            + "partition=" + partition
-            + ", offset=" + offset
+        return "ConsumerGroupIdentifier{"
+            + "id='" + id + '\''
+            + ", isSimple=" + isSimple
             + '}';
     }
 }

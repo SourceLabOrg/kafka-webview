@@ -35,8 +35,8 @@ public class ConsumerKeyTest {
         final long userId = 444L;
         final String sessionId = "BlahBlah";
 
-        final WebSocketConsumersManager.ConsumerKey consumerKey1 = new WebSocketConsumersManager.ConsumerKey(viewId, new SessionIdentifier(userId, sessionId));
-        final WebSocketConsumersManager.ConsumerKey consumerKey2 = new WebSocketConsumersManager.ConsumerKey(viewId, new SessionIdentifier(userId, sessionId));
+        final WebSocketConsumersManager.ConsumerKey consumerKey1 = new WebSocketConsumersManager.ConsumerKey(viewId, SessionIdentifier.newStreamIdentifier(userId, sessionId));
+        final WebSocketConsumersManager.ConsumerKey consumerKey2 = new WebSocketConsumersManager.ConsumerKey(viewId, SessionIdentifier.newStreamIdentifier(userId, sessionId));
 
         Assert.assertTrue(consumerKey1.equals(consumerKey2));
     }
@@ -47,7 +47,7 @@ public class ConsumerKeyTest {
         final long userId = 444L;
         final String sessionId = "BlahBlah";
 
-        final WebSocketConsumersManager.ConsumerKey consumerKey1 = new WebSocketConsumersManager.ConsumerKey(viewId, new SessionIdentifier(userId, sessionId));
+        final WebSocketConsumersManager.ConsumerKey consumerKey1 = new WebSocketConsumersManager.ConsumerKey(viewId, SessionIdentifier.newStreamIdentifier(userId, sessionId));
 
         Assert.assertTrue(consumerKey1.equals(consumerKey1));
     }
@@ -59,8 +59,8 @@ public class ConsumerKeyTest {
         final long userId = 444L;
         final String sessionId = "BlahBlah";
 
-        final WebSocketConsumersManager.ConsumerKey consumerKey1 = new WebSocketConsumersManager.ConsumerKey(viewId1, new SessionIdentifier(userId, sessionId));
-        final WebSocketConsumersManager.ConsumerKey consumerKey2 = new WebSocketConsumersManager.ConsumerKey(viewId2, new SessionIdentifier(userId, sessionId));
+        final WebSocketConsumersManager.ConsumerKey consumerKey1 = new WebSocketConsumersManager.ConsumerKey(viewId1, SessionIdentifier.newStreamIdentifier(userId, sessionId));
+        final WebSocketConsumersManager.ConsumerKey consumerKey2 = new WebSocketConsumersManager.ConsumerKey(viewId2, SessionIdentifier.newStreamIdentifier(userId, sessionId));
 
         Assert.assertFalse(consumerKey1.equals(consumerKey2));
     }

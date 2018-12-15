@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+        xmlns:th="http://www.thymeleaf.org"
+        layout:decorate="~{layout}">
+
+<head>
+    <title>Cluster Explorer</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // Maintains state of our consumer
+            var ConsumerInfo = {
+                clusterId: '[[${cluster.id}]]',
+                clusterName: '[[${cluster.name}]]',
+                consumerId: '[[${consumerId}]]',
+
+                // Holds reference to last consumer membership data.
+                lastMembershipDetails: [],
+
+                // Holds reference to last refreshed offset data
+                lastOffsetData: [],
+
+                // Toggles for auto-refresh
+                autoRefreshOffsets: true,
+                autoRefreshConsumerDetails: true,
+                refreshOffsetsTimer: null,
+                refreshDetailsTimer: null,
+
+                // Configuration for refresh rates
+                refreshRateConsumerDetails: 30000,
+                refreshRateConsumerOffsets: 10000,
+
+                // Refresh ConsumerDetails
+                refreshConsumerDetails: function() {
+                    if (!ConsumerInfo.autoRefreshConsumerDetails) {
+                        return;
+                    }
+
+                    // Show loaders
+                    jQuery('#consumer-details-loader').toggle(true);
+                    jQuery('#consumer-details-table').toggle(false);
+                    jQuery('#consumer-membership-loader').toggle(true);
+                    jQuery('#consumer-membership-table').toggle(false);
+
+                    // Request Cluster Information
+                    ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerDetails);
+                },
+
+                // Handle results from ConsumerDetails request
+                handleConsumerDetails: function(results) {
+                    // Clear consumer details table
+                    var table = jQuery('#consumer-details-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#consumer-details-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Collect unique topics
+                    var topics = [];
+                    jQuery.each(results.members, function(index, member) {
+                        // Loop thru each assignment
+                        jQuery.each(member.assignment, function(index, assigned) {
+                            topics.push(assigned.topic);
+                        });
+                    });
+
+                    var uniqueTopics = topics.filter(function (value, index, self) {
+                        return self.indexOf(value) === index;
+                    });
+
+                    // Generate html from template
+                    var properties = {
+                        clusterName: ConsumerInfo.clusterName,
+                        consumerId: ConsumerInfo.consumerId,
+                        topic: uniqueTopics,
+                        state: results.state,
+                        numberOfMembers: results.members.length,
+                        partitionAssignor: results.partitionAssignor,
+                        isSimple: results.simple,
+                        coordinatorId: results.coordinator.id,
+                        coordinatorHost: results.coordinator.host,
+                        coordinatorPort: results.coordinator.port,
+                        coordinatorRack: results.coordinator.rack
+                    };
+                    var resultHtml = template(properties);
+
+                    // Append it to our table
+                    jQuery(table).append(resultHtml);
+
+                    // Build Membership details
+                    ConsumerInfo.handleMembershipDetails(results.members);
+
+                    // Hide loaders
+                    jQuery('#consumer-details-loader').toggle(false);
+                    jQuery('#consumer-details-table').toggle(true);
+
+                    ConsumerInfo.refreshDetailsTimer = setTimeout(ConsumerInfo.refreshConsumerDetails, ConsumerInfo.refreshRateConsumerDetails);
+                },
+                handleMembershipDetails: function(members) {
+                    // Save reference.
+                    ConsumerInfo.lastMembershipDetails = members;
+
+                    // Clear consumer details table
+                    var table = jQuery('#consumer-membership-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#consumer-membership-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Process each member
+                    jQuery.each(members, function(index, member) {
+                        var partitions = [];
+
+                        // Loop thru each assignment
+                        jQuery.each(member.assignment, function(index, assigned) {
+                            partitions.push(assigned.partition);
+                        });
+
+                        // Sort partitions?
+                        partitions.sort(function(a, b) {
+                            return a - b;
+                        });
+
+                        // Generate html from template
+                        var properties = {
+                            memberId: member.memberId,
+                            partitionCount: member.assignment.length,
+                            hostname: member.host,
+                            partitions: partitions
+                        };
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loaders
+                    jQuery('#consumer-membership-loader').toggle(false);
+                    jQuery('#consumer-membership-table').toggle(true);
+                },
+
+                // Refresh ConsumerOffsets
+                refreshConsumerOffsets: function() {
+                    if (!ConsumerInfo.autoRefreshOffsets) {
+                        return;
+                    }
+                    ApiClient.getConsumerOffsetsWithTailPositions(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerOffsets);
+                },
+
+                // Handle ConsumerOffsets Results
+                handleConsumerOffsets: function(results) {
+                    // Get consumer offsets table
+                    var table = jQuery('#consumer-offsets-tbody');
+
+                    // Get and compile template
+                    var source   = jQuery('#consumer-offsets-template').html();
+                    var template = Handlebars.compile(source);
+
+                    // Process each partition
+                    jQuery.each(results.offsets, function(index, offsetData) {
+                        // Calculate differences
+                        var differences = ConsumerInfo.findOffsetDifference(
+                            offsetData.partition,
+                            offsetData.offset,
+                            offsetData.tail
+                        );
+
+                        // Generate html from template
+                        var properties = {
+                            partition: offsetData.partition,
+                            memberId: ConsumerInfo.findAssignedMemberForPartition(offsetData.partition),
+                            position: offsetData.offset,
+                            positionDiff: differences.consumerDifference,
+                            tail: offsetData.tail,
+                            tailDiff: differences.tailDifference,
+                            lag: (offsetData.tail - offsetData.offset),
+                            lagDiff: differences.lagDifference
+                        };
+                        var resultHtml = template(properties);
+
+                        // Look for existing row
+                        var row = jQuery("#partition-" + offsetData.partition);
+                        if (row.length > 0) {
+                            row.replaceWith(resultHtml);
+                        } else {
+                            // Append it to our table
+                            jQuery(table).append(resultHtml);
+                        }
+                    });
+
+                    // Retain previous
+                    ConsumerInfo.lastOffsetData = results.offsets;
+
+                    // Hide loaders
+                    jQuery('#consumer-offsets-loader').toggle(false);
+                    jQuery('#consumer-offsets-table').toggle(true);
+
+                    // Refresh every 10 seconds
+                    ConsumerInfo.refreshOffsetsTimer = setTimeout(ConsumerInfo.refreshConsumerOffsets, ConsumerInfo.refreshRateConsumerOffsets);
+
+                    // Push update to graph
+                    ConsumerInfo.updateConsumerPositionsGraph(results.offsets);
+                },
+
+                // Attempts to map partition to its assigned consumer id.
+                findAssignedMemberForPartition: function(partitionId) {
+                    var returnString = null;
+
+                    jQuery.each(ConsumerInfo.lastMembershipDetails, function(index, member) {
+                        jQuery.each(member.assignment, function(index, assigned) {
+                            if (assigned.partition == partitionId) {
+                                returnString = member.memberId;
+                                return false;
+                            }
+                        });
+                        // Break out of loop if we found what we were looking for.
+                        if (returnString != null) {
+                            return false;
+                        }
+                    });
+                    if (returnString == null) {
+                        return "-unknown-";
+                    }
+                    return returnString;
+                },
+
+                toggleMembershipDetails: function(el) {
+                    jQuery(el).next("tr.membership-summary").toggle();
+                },
+
+                findOffsetDifference: function(partition, newConsumerOffset, newTailOffset) {
+                    var results = {
+                        consumerDifference: 0,
+                        tailDifference: 0,
+                        lagDifference: 0
+                    };
+                    if (ConsumerInfo.lastOffsetData == null) {
+                        return results;
+                    }
+
+                    jQuery.each(ConsumerInfo.lastOffsetData, function(index, offsetData) {
+                        if (offsetData.partition == partition) {
+                            var newLag = newTailOffset - newConsumerOffset;
+                            var oldLag = offsetData.tail - offsetData.offset;
+
+                            results.consumerDifference = (newConsumerOffset - offsetData.offset);
+                            results.tailDifference = (newTailOffset - offsetData.tail);
+                            results.lagDifference = (newLag - oldLag);
+
+                            // If > 0, prefix with a + to indicate its increasing.
+                            if (results.lagDifference > 0) {
+                                results.lagDifference = '+' + results.lagDifference;
+                            }
+
+                            return false;
+                        }
+                    });
+                    return results;
+                },
+
+                toggleAutoRefreshForConsumerDetails: function(enable) {
+                    ConsumerInfo.autoRefreshConsumerDetails = enable;
+                    clearTimeout(ConsumerInfo.refreshDetailsTimer);
+
+                    if (enable) {
+                        ConsumerInfo.refreshConsumerDetails();
+                        jQuery('#disable-refresh-details-toggle').toggle(false);
+                        jQuery('#enable-refresh-details-toggle').toggle(true);
+                    } else {
+                        jQuery('#disable-refresh-details-toggle').toggle(true);
+                        jQuery('#enable-refresh-details-toggle').toggle(false);
+                    }
+                },
+
+                toggleAutoRefreshForConsumerOffsets: function(enable) {
+                    ConsumerInfo.autoRefreshOffsets = enable;
+                    clearTimeout(ConsumerInfo.refreshOffsetsTimer);
+
+                    if (enable) {
+                        ConsumerInfo.refreshConsumerOffsets();
+                        jQuery('#disable-refresh-offsets-toggle').toggle(false);
+                        jQuery('#enable-refresh-offsets-toggle').toggle(true);
+                    } else {
+                        jQuery('#disable-refresh-offsets-toggle').toggle(true);
+                        jQuery('#enable-refresh-offsets-toggle').toggle(false);
+                    }
+                },
+
+                updateConsumerPositionsGraph: function(offsets) {
+                    var labels = [];
+                    var tailPositions = [];
+                    var consumerPositions = [];
+
+                    // Process each partition
+                    jQuery.each(offsets, function(index, offsetData) {
+                        labels.push("Partition " + offsetData.partition);
+                        tailPositions.push(100);
+                        if (offsetData.tail != null && offsetData.tail > 0) {
+                            var dataPoint = (offsetData.offset / offsetData.tail) * 100;
+                            consumerPositions.push(dataPoint.toPrecision(2));
+                        } else {
+                            consumerPositions.push(0);
+                        }
+                        //tailPositions.push(offsetData.tail);
+                        //consumerPositions.push(offsetData.offset);
+                    });
+
+                    // Push data into graph sources
+                    ConsumerPositionsGraph.graphData.labels = labels;
+                    ConsumerPositionsGraph.graphData.datasets[0].data = tailPositions;
+                    ConsumerPositionsGraph.graphData.datasets[1].data = consumerPositions;
+
+                    // Update graph
+                    if (ConsumerPositionsGraph.graph == null) {
+                        var ctx = document.getElementById("ConsumerPositionsChart").getContext('2d');
+                        ConsumerPositionsGraph.chart = new Chart(ctx, {
+                            type: 'horizontalBar',
+                            data: ConsumerPositionsGraph.graphData,
+                            options: ConsumerPositionsGraph.graphOptions
+                        });
+                    } else {
+                        // Redraw
+                        ConsumerPositionsGraph.chart.update({duration: 0});
+                    }
+                }
+            };
+
+            // ConsumerPositions Graph
+            var ConsumerPositionsGraph = {
+                graphData: {
+                    labels: [],
+                        datasets: [{
+                        stack: 0,
+                        label: "Tail Position",
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255,99,132,1)',
+                        borderWidth: 1
+                    }, {
+                        stack: 0,
+                        label: "Consumer Position",
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                    display: true,
+                        text: "Consumer Lag (Percent Consumed)"
+                    },
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        yAxes: [{
+                            stacked: false,
+                            categoryPercentage: 1,
+                            barPercentage: 1
+                        }],
+                        xAxes: [{
+                            stacked: false,
+                            ticks: {
+                                beginAtZero: false
+                            }
+                        }, {
+                            display: false,
+                            stacked: false,
+                            ticks: {
+                                beginAtZero: false
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(toolTipItem, data) {
+                                var isTail = false;
+                                if (toolTipItem.datasetIndex == 0) {
+                                    isTail = true;
+                                }
+                                var partitionId = toolTipItem.index;
+                                var tailPosition = 0;
+                                var consumerPosition = 0;
+
+                                jQuery.each(ConsumerInfo.lastOffsetData, function(index, offsetData) {
+                                    if (offsetData.partition == partitionId) {
+                                        tailPosition = offsetData.tail;
+                                        consumerPosition = offsetData.offset;
+                                        return true;
+                                    }
+                                });
+
+                                var percentageValue = data.datasets[toolTipItem.datasetIndex].data[partitionId];
+                                if (isTail) {
+                                    return "Tail Position: " + tailPosition;
+                                } else {
+                                    return "Consumer Position: " + consumerPosition + " (" + percentageValue + "%)";
+                                }
+                            }
+                        }
+                    }
+                },
+                graph: null
+            };
+
+            // On load, fire off ajax request to load results.
+            jQuery(document).ready(function() {
+                ConsumerInfo.refreshConsumerDetails();
+                ConsumerInfo.refreshConsumerOffsets();
+            });
+        </script>
+
+        <!-- Consumer Details -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong> Consumer <strong th:text="${consumerId}"></strong>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumer-details-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumer-details-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumer-details-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Membership Details -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Consumer <strong th:text="${consumerId}"></strong> Membership
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a id="enable-refresh-details-toggle" class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerDetails(false); return false;">
+                                <i class="icon-refresh"></i>
+                                &nbsp;Refreshing
+                            </a>
+                            <a id="disable-refresh-details-toggle" class="btn" href="#" style="padding-bottom: 0; display: none;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerDetails(true); return false;">
+                                <i class="icon-control-pause"></i>
+                                &nbsp;Paused
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumer-membership-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumer-membership-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Member Id</th>
+                                <th>Partitions</th>
+                                <th>Hostname</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumer-membership-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumer Offsets -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Consumer <strong th:text="${consumerId}"></strong> Positions
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a id="enable-refresh-offsets-toggle" class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerOffsets(false); return false;">
+                                <i class="icon-refresh"></i>
+                                &nbsp;Refreshing
+                            </a>
+                            <a id="disable-refresh-offsets-toggle" class="btn" href="#" style="padding-bottom: 0; display: none;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerOffsets(true); return false;">
+                                <i class="icon-control-pause"></i>
+                                &nbsp;Paused
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumer-offsets-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                        class="progress-bar progress-bar-striped progress-bar-animated"
+                                        role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                        style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumer-offsets-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Partition</th>
+                                <th>Member Id</th>
+                                <th>Tail Offset</th>
+                                <th>Consumer Offset</th>
+                                <th>Lag</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumer-offsets-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumer Positions Chart -->
+        <div style="height: 500px">
+            <canvas id="ConsumerPositionsChart"></canvas>
+        </div>
+
+        <!-- Consumer Details Template -->
+        <script id="consumer-details-template" type="text/x-handlebars-template">
+            <tr>
+                <td><strong>Cluster</strong></td>
+                <td>{{clusterName}}</td>
+            </tr>
+            <tr>
+                <td><strong>Consumer Id</strong></td>
+                <td>{{consumerId}}</td>
+            </tr>
+            <tr>
+                <td><strong>Topic</strong></td>
+                <td>{{topic}}</td>
+            </tr>
+            <tr>
+                <td><strong>State</strong></td>
+                <td>{{state}}</td>
+            </tr>
+            <tr>
+                <td><strong>Members</strong></td>
+                <td>{{numberOfMembers}}</td>
+            </tr>
+            <tr>
+                <td><strong>Coordinator</strong></td>
+                <td>
+                    <ul>
+                        <li>
+                            BrokerId: {{coordinatorId}}
+                        </li>
+                        <li>
+                            Host: {{coordinatorHost}}:{{coordinatorPort}}
+                        </li>
+                        <li>
+                            Rack: {{coordinatorRack}}
+                        </li>
+                    </ul>
+
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Partition Assignor</strong></td>
+                <td>{{partitionAssignor}}</td>
+            </tr>
+            <tr>
+                <td><strong>Simple Consumer</strong></td>
+                <td>
+                    {{#if isSimple}}
+                    <span class="badge badge-success">Yes</span>
+                    {{else}}
+                    <span class="badge badge-warning">No</span>
+                    {{/if}}
+                </td>
+            </tr>
+        </script>
+
+        <!-- Consumer Membership Template -->
+        <script id="consumer-membership-template" type="text/x-handlebars-template">
+            <tr onclick="ConsumerInfo.toggleMembershipDetails(this); return false;">
+                <td>
+                    <a href="#" onclick="return false;">{{memberId}}</a>
+                </td>
+                <td>{{partitionCount}}</td>
+                <td>{{hostname}}</td>
+            </tr>
+            <tr class="membership-summary" style="display: none;">
+                <td colspan="3">
+                    <table class="table table-bordered table-striped table-sm">
+                        <tr>
+                            <td>Assigned Partitions</td>
+                            <td>
+                                <ul>
+                                    {{#each partitions}}
+                                    <li>
+                                        Partition {{this}}
+                                    </li>
+                                    {{/each}}
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </script>
+
+        <!-- Consumer Offsets Template -->
+        <script id="consumer-offsets-template" type="text/x-handlebars-template">
+            <tr id="partition-{{partition}}">
+                <td>{{partition}}</td>
+                <td>{{memberId}}</td>
+                <td>{{tail}} {{#if tailDiff }} (+{{tailDiff}}) {{/if}}</td>
+                <td>{{position}} {{#if positionDiff }} (+{{positionDiff}}) {{/if}}</td>
+                <td>{{lag}} {{#if lagDiff }} ({{lagDiff}}) {{/if}}</td>
+            </tr>
+        </script>
+
+    </div>
+</section>
+
+</body>
+</html>
