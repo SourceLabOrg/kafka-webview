@@ -45,46 +45,46 @@ public class LdapAppProperties {
     /**
      * User DN lookup pattern.
      */
-    @Value("${app.user.ldap.userDnPattern}")
+    @Value("${app.user.ldap.userDnPattern:}")
     private String userDnPattern;
 
     /**
      * Group search base.
      */
-    @Value("${app.user.ldap.groupSearchBase}")
+    @Value("${app.user.ldap.groupSearchBase:}")
     private String groupSearchBase;
 
-    @Value("${app.user.ldap.groupRoleAttribute}")
+    @Value("${app.user.ldap.groupRoleAttribute:}")
     private String groupRoleAttribute;
 
     /**
      * Ldap server url.
      */
-    @Value("${app.user.ldap.url}")
+    @Value("${app.user.ldap.url:}")
     private String url;
 
     /**
      * Password attribute.
      */
-    @Value("${app.user.ldap.passwordAttribute}")
+    @Value("${app.user.ldap.passwordAttribute:}")
     private String passwordAttribute;
 
     /**
      * Password encoder class.
      */
-    @Value("${app.user.ldap.passwordEncoderClass}")
+    @Value("${app.user.ldap.passwordEncoderClass:org.springframework.security.crypto.password.LdapShaPasswordEncoder}")
     private String passwordEncoderClass;
 
     /**
      * List of ldap groups that if a user is a member of they will be granted administrator access.
      */
-    @Value("${app.user.ldap.adminGroups}")
+    @Value("${app.user.ldap.adminGroups:}")
     private String[] adminGroups;
 
     /**
      * List of ldap groups that if a user is a member of they will be granted user access.
      */
-    @Value("${app.user.ldap.userGroups}")
+    @Value("${app.user.ldap.userGroups:}")
     private String[] userGroups;
 
     public boolean isEnabled() {

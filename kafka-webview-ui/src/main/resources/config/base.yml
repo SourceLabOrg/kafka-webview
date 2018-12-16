@@ -59,5 +59,7 @@ app:
       passwordAttribute: "userPassword"
       ## Must implement PasswordEncoder interface
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
+      ## Comma separated list of user groups to be granted admin access
       adminGroups: ""
+      ## Comma separated list of user groups to be granted user access
       userGroups: ""

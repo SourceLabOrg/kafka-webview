@@ -39,7 +39,7 @@ public class ApplicationTest {
      * This is a sanity test that we can load the spring boot app in a 'test' context.
      */
     @Test
-    public void contextLoads() throws Exception {
+    public void contextLoads() {
         assertTrue("We loaded, yey", true);
     }
 }
