@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -52,11 +53,17 @@ public class AppProperties {
     private boolean requireSsl = false;
 
     /**
-     * Flag read from configuratio file to determine if the app should
+     * Flag read from configuration file to determine if the app should
      * enforce User authentication.
      */
     @Value("${app.user.enabled:true}")
     private boolean userAuthEnabled = true;
+
+    /**
+     * Contains LDAP related properties.
+     */
+    @Autowired
+    private LdapAppProperties ldapProperties;
 
     public String getName() {
         return name;
@@ -84,6 +91,10 @@ public class AppProperties {
 
     public boolean isUserAuthEnabled() {
         return userAuthEnabled;
+    }
+
+    public LdapAppProperties getLdapProperties() {
+        return ldapProperties;
     }
 
     @Override

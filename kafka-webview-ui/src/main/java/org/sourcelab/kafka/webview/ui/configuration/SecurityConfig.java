@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.configuration;
 import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.ldap.LdapUserDetailsService;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -89,16 +90,63 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(final AuthenticationManagerBuilder auth) throws Exception {
-        if (appProperties.isUserAuthEnabled()) {
-            auth
-                // Define our custom user details service.
-                .userDetailsService(new CustomUserDetailsService(userRepository))
-                .passwordEncoder(getPasswordEncoder());
-        } else {
-            auth
-                // Define our custom user details service.
-                .userDetailsService(new AnonymousUserDetailsService());
+        // If user auth is disabled.
+        if (!appProperties.isUserAuthEnabled()) {
+            // Define our no user auth user details service.
+            auth.userDetailsService(new AnonymousUserDetailsService());
+            return;
         }
+
+        // If configured to use ldap for user auth
+        if (appProperties.getLdapProperties().isEnabled()) {
+            setupLdapUserAuthentication(auth);
+            return;
+        }
+
+        // Setup local user management and authentication.
+        setupLocalUserAuthentication(auth);
+    }
+
+    private void setupLdapUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
+        final LdapAppProperties ldapAppProperties = appProperties.getLdapProperties();
+
+        // Get password encoder instance
+        final Class<? extends PasswordEncoder> encoderClass;
+        try {
+            encoderClass = (Class<? extends PasswordEncoder>) getClass()
+                .getClassLoader()
+                .loadClass(ldapAppProperties.getPasswordEncoderClass());
+        } catch (final ClassNotFoundException classNotFoundException) {
+            throw new RuntimeException("" +
+                "Unable to load class " + ldapAppProperties.getPasswordEncoderClass() + " from configuration.  Make sure this class exists and implements PasswordEncoder interface!",
+                classNotFoundException
+            );
+        }
+
+        // Setup for ldap
+        auth
+            .ldapAuthentication()
+            .userDetailsContextMapper(new LdapUserDetailsService(ldapAppProperties))
+            .rolePrefix("")
+            .userDnPatterns(ldapAppProperties.getUserDnPattern())
+            .groupRoleAttribute(ldapAppProperties.getGroupRoleAttribute())
+            .groupSearchBase(ldapAppProperties.getGroupSearchBase())
+            .contextSource()
+            .url(ldapAppProperties.getUrl())
+            .and()
+            .passwordCompare()
+            .passwordEncoder(encoderClass.newInstance())
+            .passwordAttribute(ldapAppProperties.getPasswordAttribute());
+
+        return;
+    }
+
+    private void setupLocalUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
+        // Fall through to use local user management.
+        auth
+            // Define our custom user details service.
+            .userDetailsService(new CustomUserDetailsService(userRepository))
+            .passwordEncoder(getPasswordEncoder());
     }
 
     /**

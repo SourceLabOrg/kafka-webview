@@ -57,7 +57,7 @@ public class CustomUserDetails implements UserDetails {
         this.userModel = userModel;
 
         // Generate authorities/roles
-        List<GrantedAuthority> roles = new ArrayList<>();
+        final List<GrantedAuthority> roles = new ArrayList<>();
 
         // Everyone gets user
         roles.add(new SimpleGrantedAuthority("ROLE_USER"));
@@ -66,6 +66,22 @@ public class CustomUserDetails implements UserDetails {
         if (UserRole.ROLE_ADMIN.equals(userModel.getRole())) {
             roles.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
+
+        // Save to immutable collection.
+        authorities = Collections.unmodifiableList(roles);
+    }
+
+    public CustomUserDetails(final User userModel, Collection<UserRole> userRoles) {
+        // set model
+        this.userModel = userModel;
+
+        // Generate authorities/roles
+        final List<GrantedAuthority> roles = new ArrayList<>();
+        userRoles.forEach(
+            (userRole) -> {
+                roles.add(new SimpleGrantedAuthority(userRole.name()));
+            }
+        );
 
         // Save to immutable collection.
         authorities = Collections.unmodifiableList(roles);
