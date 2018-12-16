@@ -27,3 +27,23 @@ app:
     ## Require user authentication
     ## Setting to false will disable login requirement.
     enabled: true
+      ## If you want to use LDAP for user authentication instead of locally defined users.
+      ldap:
+        ## Disabled by default.
+        enabled: false
+
+        ## Example values defined below, adjust as needed.
+        userDnPattern: "uid={0},ou=people"
+        groupSearchBase: "ou=groups"
+        groupRoleAttribute: "cn"
+        url: "ldap://localhost:8389/dc=example,dc=org"
+        passwordAttribute: "userPassword"
+
+        ## How passwords are validated, must implement PasswordEncoder interface
+        passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
+
+        ## Comma separated list of groups which should get admin access to the app.
+        adminGroups: "ADMINGROUP1,ADMINGROUP2"
+
+        ## Comma separated list of groups which should get user access to the app.
+        userGroups: "USERGROUP1,USERGROUP2"

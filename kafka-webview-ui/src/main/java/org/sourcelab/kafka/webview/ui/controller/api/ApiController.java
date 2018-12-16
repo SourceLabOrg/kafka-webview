@@ -32,7 +32,6 @@ import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequ
 import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
-import org.sourcelab.kafka.webview.ui.manager.encryption.Sha1Tools;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;

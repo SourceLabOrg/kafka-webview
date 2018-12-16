@@ -27,7 +27,7 @@ package org.sourcelab.kafka.webview.ui.configuration;
 import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
-import org.sourcelab.kafka.webview.ui.manager.user.ldap.LdapUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.LdapUserDetailsService;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -107,6 +107,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         setupLocalUserAuthentication(auth);
     }
 
+    /**
+     * Configures the app for LDAP authentication.
+     * @param auth Authentication builder for configuring LDAP.
+     */
     private void setupLdapUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
         final LdapAppProperties ldapAppProperties = appProperties.getLdapProperties();
 
@@ -117,8 +121,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .getClassLoader()
                 .loadClass(ldapAppProperties.getPasswordEncoderClass());
         } catch (final ClassNotFoundException classNotFoundException) {
-            throw new RuntimeException("" +
-                "Unable to load class " + ldapAppProperties.getPasswordEncoderClass() + " from configuration.  Make sure this class exists and implements PasswordEncoder interface!",
+            throw new RuntimeException(
+                "Unable to load class " + ldapAppProperties.getPasswordEncoderClass()
+                + " from configuration.  Make sure this class exists and implements PasswordEncoder interface!",
                 classNotFoundException
             );
         }
@@ -137,10 +142,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .passwordCompare()
             .passwordEncoder(encoderClass.newInstance())
             .passwordAttribute(ldapAppProperties.getPasswordAttribute());
-
-        return;
     }
 
+    /**
+     * Sets up the app to authenticate from locally defined users in the database.
+     * @param auth Authentication builder for configuring LDAP.
+     */
     private void setupLocalUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
         // Fall through to use local user management.
         auth

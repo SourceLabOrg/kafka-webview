@@ -24,7 +24,7 @@ app:
       userDnPattern: "uid={0},ou=people"
       groupSearchBase: "ou=groups"
       groupRoleAttribute: "cn"
-      url: "ldap://localhost:54972/dc=springframework,dc=org"
+      url: "ldap://localhost:56410/dc=springframework,dc=org"
       passwordAttribute: "userPassword"
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
       adminGroups: "MANAGERS"

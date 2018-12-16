@@ -54,7 +54,10 @@ app:
       enabled: false
       userDnPattern: "uid={0},ou=people"
       groupSearchBase: "ou=groups"
-      url: "ldap://localhost:8389/dc=springframework,dc=org"
+      groupRoleAttribute: "cn"
+      url: "ldap://localhost:8389/dc=example,dc=org"
       passwordAttribute: "userPassword"
       ## Must implement PasswordEncoder interface
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
+      adminGroups: ""
+      userGroups: ""

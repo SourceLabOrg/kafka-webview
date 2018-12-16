@@ -50,7 +50,8 @@ public class CustomUserDetails implements UserDetails {
     private final List<GrantedAuthority> authorities;
 
     /**
-     * Constructor.
+     * Constructor when authenticating from local user as defined in database.
+     * @param userModel User entity model to authenticate as.
      */
     public CustomUserDetails(final User userModel) {
         // set model
@@ -66,22 +67,6 @@ public class CustomUserDetails implements UserDetails {
         if (UserRole.ROLE_ADMIN.equals(userModel.getRole())) {
             roles.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
-
-        // Save to immutable collection.
-        authorities = Collections.unmodifiableList(roles);
-    }
-
-    public CustomUserDetails(final User userModel, Collection<UserRole> userRoles) {
-        // set model
-        this.userModel = userModel;
-
-        // Generate authorities/roles
-        final List<GrantedAuthority> roles = new ArrayList<>();
-        userRoles.forEach(
-            (userRole) -> {
-                roles.add(new SimpleGrantedAuthority(userRole.name()));
-            }
-        );
 
         // Save to immutable collection.
         authorities = Collections.unmodifiableList(roles);

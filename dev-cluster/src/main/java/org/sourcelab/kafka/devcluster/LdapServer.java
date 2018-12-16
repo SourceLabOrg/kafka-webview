@@ -1,53 +1,51 @@
+/**
+ * MIT License
+ *
+ * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.sourcelab.kafka.devcluster;
 
 import com.unboundid.ldap.listener.InMemoryDirectoryServer;
 import com.unboundid.ldap.listener.InMemoryDirectoryServerConfig;
 import com.unboundid.ldap.listener.InMemoryListenerConfig;
-import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPException;
-import com.unboundid.ldap.sdk.extensions.StartTLSExtendedRequest;
-import com.unboundid.util.LDAPTestUtils;
-import com.unboundid.util.ssl.KeyStoreKeyManager;
-import com.unboundid.util.ssl.SSLUtil;
-import com.unboundid.util.ssl.TrustStoreTrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.GeneralSecurityException;
-
 /**
- * A test LDAP server.
+ * A test LDAP server for usage during development.
  */
 public class LdapServer {
-    private final static Logger logger = LoggerFactory.getLogger(LdapServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(LdapServer.class);
 
-    public static void main(final String[] args) throws LDAPException, GeneralSecurityException, InterruptedException {
+    /**
+     * Main app entry point.
+     * @param args command line arguments (none).
+     */
+    public static void main(final String[] args) throws LDAPException, InterruptedException {
         // Create a base configuration for the server.
-        final InMemoryDirectoryServerConfig config = new InMemoryDirectoryServerConfig("dc=springframework,dc=org");
-        //config.setSchema(null);
-
-        // Add Users
-//        config.addAdditionalBindCredentials("cn=Admin User", "admin-secret");
-//        config.addAdditionalBindCredentials("cn=User", "user-secret");
-
-        // Update the configuration to support LDAP (with StartTLS) and LDAPS
-        // listeners.
-//        final SSLUtil serverSSLUtil = new SSLUtil(
-//            new KeyStoreKeyManager(serverKeyStorePath, serverKeyStorePIN, "JKS", "server-cert"),
-//            new TrustStoreTrustManager(serverTrustStorePath)
-//        );
-//        final SSLUtil clientSSLUtil = new SSLUtil(new TrustStoreTrustManager(clientTrustStorePath));
-//        config.setListenerConfigs(
-//            InMemoryListenerConfig.createLDAPConfig("LDAP", // Listener name
-//                null, // Listen address. (null = listen on all interfaces)
-//                0, // Listen port (0 = automatically choose an available port)
-//                serverSSLUtil.createSSLSocketFactory()), // StartTLS factory
-//            InMemoryListenerConfig.createLDAPSConfig("LDAPS", // Listener name
-//                null, // Listen address. (null = listen on all interfaces)
-//                0, // Listen port (0 = automatically choose an available port)
-//                serverSSLUtil.createSSLServerSocketFactory(), // Server factory
-//                clientSSLUtil.createSSLSocketFactory())); // Client factory
-
+        final InMemoryDirectoryServerConfig config = new InMemoryDirectoryServerConfig(
+            "dc=springframework,dc=org"
+        );
 
         // Create new listener
         config.setListenerConfigs(
