@@ -76,10 +76,10 @@
                 <span class="d-md-down-none" sec:authentication="name"></span>
             </a>
             <div class="dropdown-menu dropdown-menu-right">
-                <div class="dropdown-header text-center">
+                <div class="dropdown-header text-center" th:if="${MenuShowUserConfig}">
                     <strong>Settings</strong>
                 </div>
-                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}">
+                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}" th:if="${MenuShowUserConfig}">
                     <i class="fa fa-user"></i> Profile
                 </a>
                 <div class="divider"></div>
@@ -142,7 +142,7 @@
                         Configuration
                     </a>
                     <ul class="nav-dropdown-items">
-                        <li class="nav-item">
+                        <li class="nav-item" th:if="${MenuShowUserConfig}">
                             <a class="nav-link" href="/configuration/user" target="_top">
                                 <i class="icon-people"></i>
                                 Users

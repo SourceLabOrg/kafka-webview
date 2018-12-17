@@ -60,13 +60,15 @@ public abstract class BaseController {
      * @return True if so, false if not.
      */
     protected boolean isLoggedIn() {
-        // For now bypass auth
+        // If not authenticated.
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             return false;
         }
 
+        // If anonymous user, but user auth is enabled
         if (auth instanceof AnonymousAuthenticationToken && appProperties.isUserAuthEnabled()) {
+            // Then we are not authenticated.
             return false;
         }
         return true;
@@ -110,6 +112,12 @@ public abstract class BaseController {
         model.addAttribute("MenuClusters", clusters);
         model.addAttribute("MenuViews", views);
         model.addAttribute("UserId", getLoggedInUserId());
+
+        if (!appProperties.isUserAuthEnabled() || appProperties.getLdapProperties().isEnabled()) {
+            model.addAttribute("MenuShowUserConfig", false);
+        } else {
+            model.addAttribute("MenuShowUserConfig", true);
+        }
     }
 
     /**

@@ -50,14 +50,15 @@ public class CustomUserDetails implements UserDetails {
     private final List<GrantedAuthority> authorities;
 
     /**
-     * Constructor.
+     * Constructor when authenticating from local user as defined in database.
+     * @param userModel User entity model to authenticate as.
      */
     public CustomUserDetails(final User userModel) {
         // set model
         this.userModel = userModel;
 
         // Generate authorities/roles
-        List<GrantedAuthority> roles = new ArrayList<>();
+        final List<GrantedAuthority> roles = new ArrayList<>();
 
         // Everyone gets user
         roles.add(new SimpleGrantedAuthority("ROLE_USER"));
