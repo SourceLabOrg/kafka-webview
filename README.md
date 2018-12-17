@@ -6,18 +6,21 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 
 ### Features
 
-- Connect to multiple remote Kafka Clusters
-- Connect to SSL authenticated clusters
-- Supports standard key and value deserializers
-- Supports uploading custom key and value deserializers
-- Supports both customizable and enforced filtering over topics
-- Basic user management
-- Web Based Consumer Supports
-  - Seeking to offsets
-  - Seeking to timestamps
-  - Filtering by partition
-  - Configurable server-side filtering logic
-- "Live" web socket based streaming consumer
+- Connect to multiple remote Kafka Clusters.
+- Connect to SSL and SASL authenticated clusters.
+- Supports standard key and value deserializers.
+- Supports uploading custom key and value deserializers.
+- Supports both customizable and enforced filtering over topics.
+- Supports multiple user management and access control options:
+  - Use in app defined users (default).
+  - Use LDAP server for authentication and authorization.
+  - Disable user authorization entirely (open anonymous access).
+- Web Based Consumer Supports:
+  - Seeking to offsets.
+  - Seeking to timestamps.
+  - Filtering by partition.
+  - Configurable server-side filtering logic.
+- "Live" web socket based streaming consumer.
   
 ### Screen Shots
 
@@ -75,6 +78,11 @@ app:
     ## Require user authentication
     ## Setting to false will disable login requirement.
     enabled: true
+    
+    ## Optional: if you want to use LDAP for user authentication instead of locally defined users.
+    ldap:
+      ## Disabled by default.  See below for more details on how to configure.
+      enabled: false
 ```
 
 ### Starting the service
@@ -96,9 +104,104 @@ To build and run from the latest source code requires JDK 1.8 and Maven 3.3.9+. 
 
 Point your browser at `http://localhost:8080` follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
 
+## Configure user authentication method
+
+Kafka WebView supports three different methods for authenticating and authorizing users for access control.
+
+#### Locally defined users
+
+Using the default configuration, Kafka WebView will require users to login and access the app.  These users are locally defined
+by an administrator user and managed within the application.  
+
+Your application yml file should be configured with the following options:
+
+```yml
+## App Configs
+app:
+  ## User authentication options
+  user:
+    ## Ensure user authentication is ENABLED
+    enabled: true
+    
+    ## Ensure that LDAP authentication is DISABLED
+    ldap:
+      enabled: false
+```
+
+#### LDAP Authenticated users
+
+Kafka WebView can be configured to authenticate users via an LDAP service. When LDAP authentication is enabled, you will 
+no longer be able to manage users from within the application.
+
+Your application yml file should be configured with the following options:
+    
+```yml
+## App Configs
+app:
+  ## User authentication options
+  user:
+    ## Ensure user authentication is ENABLED
+    enabled: true
+    
+    ## Ensure that LDAP authentication is ENABLED
+    ldap:
+      enabled: true
+      
+      ## Example values defined below, adjust as needed.
+      ## How to find user records
+      userDnPattern: "uid={0},ou=people"
+      
+      ## The attribute in which the password is stored.
+      passwordAttribute: "userPassword"
+      
+      ## Where to find user group membership
+      groupSearchBase: "ou=groups"
+      groupRoleAttribute: "cn"
+
+      ## How passwords are validated, must implement PasswordEncoder interface
+      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
+
+      ## Comma separated list of groups. A user which is a member of this group will be granted
+      ## administrator access to Kafka WebView.
+      adminGroups: "ADMINGROUP1,ADMINGROUP2"
+
+      ## Comma separated list of groups. A user which is a member of this group will be granted
+      ## standard user level access to Kafka WebView.
+      userGroups: "USERGROUP1,USERGROUP2"
+
+      ## Any user who is not a member of at least one of the above groups will be denied access
+      ## to Kafka WebView.
+
+      ## URL/Hostname for your LDAP server
+      url: "ldap://localhost:8389/dc=example,dc=org"
+
+      ## If LDAP does not allow anonymous access, define the user/password to connect using.
+      ## If not required, leave both fields empty
+      bindUser: "cn=ManagementUser"
+      bindUserPassword: "password-here"
+```
+
+#### Anonymous / Open access
+
+Kafka WebView can also be configured for open and anonymous access.  
+
+Your application yml file should be configured with the following options:
+
+```yml
+## App Configs
+app:
+  ## User authentication options
+  user:
+    ## Ensure user authentication is DISABLED
+    enabled: false
+```
+
 ## Logging in for the first time
 
-**NOTE** If you've disabled user authentication in your configuration, no login will be required.
+**NOTE** If you've **disabled user authentication** in your configuration, no login will be required. Skip directly to **Step 2**.
+
+**NOTE** If you've **enabled LDAP user authentication** in your configuration, you will instead login with a user defined in
+your LDAP service that is a member of a group you've configured with admin user access. After successfully authenticating, skip directly to **Step 2**.
 
 On first start up a default Administrator user will be created for you.  Login using `admin@example.com` with password `admin`
 
@@ -123,6 +226,8 @@ You'll need to let WebView know about what Kafka clusters you want to connect.
 
 WebView supports connecting to Clusters using plaintext or SSL.  You'll need to follow the [standard Kafka consumer client directions](https://kafka.apache.org/documentation.html#security_ssl) to
 create a Java Key Store (JKS) for your Trusted CA (TrustStore), and a JKS for your Consumer Key (KeyStore).
+
+If authenticating to a cluster using SASL, you'll need to define your authentication method and JAAS configuration.
 
 ### 3. Configure custom Message Formats (Optional)
 

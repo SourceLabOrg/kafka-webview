@@ -26,12 +26,9 @@ package org.sourcelab.kafka.devcluster;
 
 import com.salesforce.kafka.test.KafkaTestCluster;
 import com.salesforce.kafka.test.KafkaTestUtils;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

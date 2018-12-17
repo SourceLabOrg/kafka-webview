@@ -38,6 +38,7 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
+    open-in-view: true
 
 ## Various App Configs
 app:
@@ -49,3 +50,19 @@ app:
   requireSsl: true
   user:
     enabled: true
+    ## Ldap auth settings
+    ldap:
+      enabled: false
+      userDnPattern: "uid={0},ou=people"
+      groupSearchBase: "ou=groups"
+      groupRoleAttribute: "cn"
+      passwordAttribute: "userPassword"
+      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
+      adminGroups: ""
+      userGroups: ""
+      url: "ldap://localhost:63182/dc=example,dc=org"
+      ## If LDAP does not allow anonymous access, define the user/password to connect using.
+      ## If not required, leave both fields empty
+      bindUser:
+      bindUserPassword:
+
