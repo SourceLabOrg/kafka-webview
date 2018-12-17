@@ -38,6 +38,7 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
+    open-in-view: true
 
 ## Various App Configs
 app:
@@ -55,7 +56,7 @@ app:
       userDnPattern: "uid={0},ou=people"
       groupSearchBase: "ou=groups"
       groupRoleAttribute: "cn"
-      url: "ldap://localhost:8389/dc=example,dc=org"
+      url: "ldap://localhost:63182/dc=example,dc=org"
       passwordAttribute: "userPassword"
       ## Must implement PasswordEncoder interface
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
