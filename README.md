@@ -11,9 +11,9 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 - Supports standard key and value deserializers.
 - Supports uploading custom key and value deserializers.
 - Supports both customizable and enforced filtering over topics.
-- Supports multiple different user management and access control options:
-  - Use locally defined users.
-  - Use an LDAP server for authentication and authorization.
+- Supports multiple user management and access control options:
+  - Use in app defined users (default).
+  - Use LDAP server for authentication and authorization.
   - Disable user authorization entirely (open anonymous access).
 - Web Based Consumer Supports:
   - Seeking to offsets.
@@ -111,7 +111,7 @@ Kafka WebView supports three different methods for authenticating and authorizin
 #### Locally defined users
 
 Using the default configuration, Kafka WebView will require users to login and access the app.  These users are locally defined
-by an administrator user within the application.  
+by an administrator user and managed within the application.  
 
 Your application yml file should be configured with the following options:
 
@@ -130,8 +130,8 @@ app:
 
 #### LDAP Authenticated users
 
-Kafka WebView can be configured to authenticate users via an LDAP service. When LDAP authentication is enabled, you will not be able to manager
-users from within the application.  
+Kafka WebView can be configured to authenticate users via an LDAP service. When LDAP authentication is enabled, you will 
+no longer be able to manage users from within the application.
 
 Your application yml file should be configured with the following options:
     
