@@ -125,7 +125,6 @@ app:
     
     ## Ensure that LDAP authentication is DISABLED
     ldap:
-      ## Disabled by default.
       enabled: false
 ```
 
@@ -146,8 +145,7 @@ app:
     
     ## Ensure that LDAP authentication is ENABLED
     ldap:
-      ## Disabled by default.
-      enabled: false
+      enabled: true
       
       ## Example values defined below, adjust as needed.
       ## How to find user records
