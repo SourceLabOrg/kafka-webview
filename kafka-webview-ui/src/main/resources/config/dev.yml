@@ -20,7 +20,9 @@ app:
     enabled: true
     ## Development server Ldap auth settings
     ldap:
-      enabled: false
+      enabled: true
       url: "ldap://localhost:55555/dc=springframework,dc=org"
       adminGroups: "MANAGERS"
       userGroups: "DEVELOPERS"
+      bindUser: "cn=BindUser"
+      bindUserPassword: "pasasdssword"

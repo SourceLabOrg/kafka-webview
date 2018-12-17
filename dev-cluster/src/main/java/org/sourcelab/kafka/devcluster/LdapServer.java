@@ -52,6 +52,9 @@ public class LdapServer {
             InMemoryListenerConfig.createLDAPConfig("LDAP", 55555)
         );
 
+        // Require bind username and password
+        config.addAdditionalBindCredentials("cn=BindUser", "password");
+
         final String ldifFile = LdapServer.class.getClassLoader().getResource("test-server.ldif").getFile();
 
         // Create and start the server instance and populate it with an initial set

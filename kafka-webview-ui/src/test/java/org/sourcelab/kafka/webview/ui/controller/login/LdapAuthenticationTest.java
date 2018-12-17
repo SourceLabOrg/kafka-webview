@@ -39,12 +39,21 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Smoke test authentication using LDAP authentication.
+ * Smoke test authentication using LDAP authentication where LDAP server does NOT require binding credentials.
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(value = {"app.user.enabled=true", "app.user.ldap.enabled=true", "app.user.ldap.url=ldap://localhost:55555/dc=example,dc=com"})
+@SpringBootTest(value = {
+    // User auth is enable
+    "app.user.enabled=true",
+
+    // Ldap Auth is enabled
+    "app.user.ldap.enabled=true",
+
+    // Configured to use our embedded ldap server
+    "app.user.ldap.url=ldap://localhost:55555/dc=example,dc=com"
+})
 @AutoConfigureMockMvc
-public class ApplicationLdapAuthenticationTest extends AbstractLoginTest {
+public class LdapAuthenticationTest extends AbstractLoginTest {
 
     /**
      * Start embedded LDAP server.

@@ -57,3 +57,5 @@ app:
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
       adminGroups: "MANAGERS,SUBMANAGERS"
       userGroups: "DEVELOPERS"
+      bindUser:
+      bindUserPassword:

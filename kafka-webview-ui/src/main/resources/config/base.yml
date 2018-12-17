@@ -56,11 +56,13 @@ app:
       userDnPattern: "uid={0},ou=people"
       groupSearchBase: "ou=groups"
       groupRoleAttribute: "cn"
-      url: "ldap://localhost:63182/dc=example,dc=org"
       passwordAttribute: "userPassword"
-      ## Must implement PasswordEncoder interface
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
-      ## Comma separated list of user groups to be granted admin access
       adminGroups: ""
-      ## Comma separated list of user groups to be granted user access
       userGroups: ""
+      url: "ldap://localhost:63182/dc=example,dc=org"
+      ## If LDAP does not allow anonymous access, define the user/password to connect using.
+      ## If not required, leave both fields empty
+      bindUser:
+      bindUserPassword:
+

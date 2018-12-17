@@ -132,6 +132,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             );
         }
 
+        String managerDn = null;
+        String managerDnPassword = null;
+        if (ldapAppProperties.getBindUser() != null && !ldapAppProperties.getBindUser().isEmpty()) {
+            managerDn = ldapAppProperties.getBindUser();
+            managerDnPassword = ldapAppProperties.getBindUserPassword();
+        }
+
         // Setup for ldap
         auth
             .ldapAuthentication()
@@ -142,6 +149,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .groupSearchBase(ldapAppProperties.getGroupSearchBase())
             .contextSource()
             .url(ldapAppProperties.getUrl())
+            .managerDn(managerDn)
+            .managerPassword(managerDnPassword)
             .and()
             .passwordCompare()
             .passwordEncoder(encoderClass.newInstance())

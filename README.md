@@ -81,24 +81,8 @@ app:
     
     ## Optional: if you want to use LDAP for user authentication instead of locally defined users.
     ldap:
-      ## Disabled by default.
+      ## Disabled by default.  See below for more details on how to configure.
       enabled: false
-
-      ## Example values defined below, adjust as needed.
-      userDnPattern: "uid={0},ou=people"
-      groupSearchBase: "ou=groups"
-      groupRoleAttribute: "cn"
-      url: "ldap://your.ldap.host:8389/dc=example,dc=org"
-      passwordAttribute: "userPassword"
-
-      ## How passwords are validated, must implement PasswordEncoder interface
-      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
-
-      ## Comma separated list of groups which should get admin access to the app.
-      adminGroups: "ADMINGROUP1,ADMINGROUP2"
-
-      ## Comma separated list of groups which should get user access to the app.
-      userGroups: "USERGROUP1,USERGROUP2"
 ```
 
 ### Starting the service
@@ -165,18 +149,16 @@ app:
       ## Disabled by default.
       enabled: false
       
+      ## Example values defined below, adjust as needed.
       ## How to find user records
       userDnPattern: "uid={0},ou=people"
+      
+      ## The attribute in which the password is stored.
+      passwordAttribute: "userPassword"
       
       ## Where to find user group membership
       groupSearchBase: "ou=groups"
       groupRoleAttribute: "cn"
-      
-      ## URL/Hostname for your LDAP server
-      url: "ldap://your.ldap.host:8389/dc=example,dc=org"
-      
-      ## The attribute in which the password is stored.
-      passwordAttribute: "userPassword"
 
       ## How passwords are validated, must implement PasswordEncoder interface
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
@@ -188,9 +170,17 @@ app:
       ## Comma separated list of groups. A user which is a member of this group will be granted
       ## standard user level access to Kafka WebView.
       userGroups: "USERGROUP1,USERGROUP2"
-      
+
       ## Any user who is not a member of at least one of the above groups will be denied access
       ## to Kafka WebView.
+
+      ## URL/Hostname for your LDAP server
+      url: "ldap://localhost:8389/dc=example,dc=org"
+
+      ## If LDAP does not allow anonymous access, define the user/password to connect using.
+      ## If not required, leave both fields empty
+      bindUser: "cn=ManagementUser"
+      bindUserPassword: "password-here"
 ```
 
 #### Anonymous / Open access

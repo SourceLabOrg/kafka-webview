@@ -87,6 +87,15 @@ public class LdapAppProperties {
     @Value("${app.user.ldap.userGroups:}")
     private String[] userGroups;
 
+    /**
+     * If LDAP server requires a username/password to connect with, provide it.
+     */
+    @Value("${app.user.ldap.bindUser}")
+    private String bindUser = null;
+
+    @Value("${app.user.ldap.bindUserPassword}")
+    private String bindUserPassword = null;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -113,6 +122,14 @@ public class LdapAppProperties {
 
     public String getGroupRoleAttribute() {
         return groupRoleAttribute;
+    }
+
+    public String getBindUser() {
+        return bindUser;
+    }
+
+    public String getBindUserPassword() {
+        return bindUserPassword;
     }
 
     /**
@@ -147,6 +164,8 @@ public class LdapAppProperties {
             + ", passwordEncoderClass='" + passwordEncoderClass + '\''
             + ", adminGroups=" + Arrays.toString(adminGroups)
             + ", userGroups=" + Arrays.toString(userGroups)
+            + ", bindUser='" + bindUser + '\''
+            + ", bindUserPassword='XXXXXX'"
             + '}';
     }
 }
