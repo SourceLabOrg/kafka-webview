@@ -49,7 +49,7 @@ public class LdapServer {
 
         // Create new listener
         config.setListenerConfigs(
-            InMemoryListenerConfig.createLDAPConfig("LDAP", 0)
+            InMemoryListenerConfig.createLDAPConfig("LDAP", 55555)
         );
 
         final String ldifFile = LdapServer.class.getClassLoader().getResource("test-server.ldif").getFile();

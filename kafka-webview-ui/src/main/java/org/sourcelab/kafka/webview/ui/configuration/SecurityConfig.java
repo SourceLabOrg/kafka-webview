@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
@@ -49,6 +51,7 @@ import java.util.ArrayList;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -113,6 +116,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      */
     private void setupLdapUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
         final LdapAppProperties ldapAppProperties = appProperties.getLdapProperties();
+        logger.info("Configuring with LDAP authenticated user access using URL: {}", ldapAppProperties.getUrl());
 
         // Get password encoder instance
         final Class<? extends PasswordEncoder> encoderClass;
@@ -149,6 +153,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * @param auth Authentication builder for configuring LDAP.
      */
     private void setupLocalUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
+        logger.info("Configuring with locally authenticated user access");
+
         // Fall through to use local user management.
         auth
             // Define our custom user details service.
@@ -160,6 +166,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * Sets up HttpSecurity for standard local user authentication.
      */
     private void enableUserAuth(final HttpSecurity http) throws Exception {
+        logger.info("Configuring with authenticated user access.");
+
         http
             .authorizeRequests()
             // Paths to static resources are available to anyone
@@ -210,6 +218,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * Sets up HttpSecurity for standard local user authentication.
      */
     private void disableUserAuth(final HttpSecurity http) throws Exception {
+        logger.info("Configuring with anonymous user access.");
+
         // Define the "User" that anonymous web clients will assume.
         final CustomUserDetails customUserDetails = AnonymousUserDetailsService.getDefaultAnonymousUser();
 

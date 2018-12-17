@@ -45,3 +45,15 @@ app:
   requireSsl: false
   user:
     enabled: true
+
+    ## Test LDAP settings
+    ldap:
+      enabled: false
+      userDnPattern: "uid={0},ou=people"
+      groupSearchBase: "ou=groups"
+      groupRoleAttribute: "cn"
+      url: "ldap://localhost:55555/dc=example,dc=com"
+      passwordAttribute: "userPassword"
+      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
+      adminGroups: "MANAGERS,SUBMANAGERS"
+      userGroups: "DEVELOPERS"
