@@ -51,9 +51,18 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class KafkaConsumerFactoryTest {
-
     @ClassRule
     public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
+
+    /**
+     * Factory instance used by tests tests.
+     */
+    private final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
+        new KafkaClientConfigUtil(
+            "not/used",
+            "TestPrefix"
+        )
+    );
 
     /**
      * Simple Smoke Test.
@@ -77,9 +86,6 @@ public class KafkaConsumerFactoryTest {
         sharedKafkaTestResource
             .getKafkaTestUtils()
             .produceRecords(maxRecordsPerPoll, topicName, 1);
-
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
@@ -138,9 +144,6 @@ public class KafkaConsumerFactoryTest {
         sharedKafkaTestResource
             .getKafkaTestUtils()
             .produceRecords(maxRecordsPerPoll, topicName, 1);
-
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
@@ -204,9 +207,6 @@ public class KafkaConsumerFactoryTest {
             .getKafkaTestUtils()
             .produceRecords(maxRecordsPerPoll, topicName, 1);
 
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
-
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
@@ -265,9 +265,6 @@ public class KafkaConsumerFactoryTest {
         sharedKafkaTestResource
             .getKafkaTestUtils()
             .createTopic(topicName, 1, (short) 1);
-
-        // Create factory
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", "TestPrefix");
 
         // Create cluster Config
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()

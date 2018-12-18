@@ -33,6 +33,8 @@ import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslProperties;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
@@ -70,6 +72,9 @@ public class ClusterConfigController extends BaseController {
 
     @Autowired
     private KafkaOperationsFactory kafkaOperationsFactory;
+
+    @Autowired
+    private SaslUtility saslUtility;
 
     /**
      * GET Displays main configuration index.
@@ -127,9 +132,24 @@ public class ClusterConfigController extends BaseController {
         clusterForm.setId(cluster.getId());
         clusterForm.setName(cluster.getName());
         clusterForm.setBrokerHosts(cluster.getBrokerHosts());
+
+        // Set SSL options
         clusterForm.setSsl(cluster.isSslEnabled());
         clusterForm.setKeyStoreFilename(cluster.getKeyStoreFile());
         clusterForm.setTrustStoreFilename(cluster.getTrustStoreFile());
+
+        // Set SASL options
+        final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
+        clusterForm.setSasl(cluster.isSaslEnabled());
+
+        clusterForm.setSaslMechanism(cluster.getSaslMechanism());
+        if (!cluster.getSaslMechanism().equals("PLAIN") && !cluster.getSaslMechanism().equals("GSSAPI")) {
+            clusterForm.setSaslMechanism("custom");
+        }
+        clusterForm.setSaslCustomMechanism(cluster.getSaslMechanism());
+        clusterForm.setSaslUsername(saslProperties.getPlainUsername());
+        clusterForm.setSaslPassword(saslProperties.getPlainPassword());
+        clusterForm.setSaslCustomJaas(saslProperties.getJaas());
 
         // Display template
         return "configuration/cluster/create";
@@ -281,6 +301,46 @@ public class ClusterConfigController extends BaseController {
             cluster.setTrustStorePassword(null);
         }
 
+        // If sasl is enabled
+        if (clusterForm.getSasl()) {
+            // Flip enabled bit
+            cluster.setSaslEnabled(true);
+
+            // Build sasl properties
+            final SaslProperties.Builder saslBuilder = SaslProperties.newBuilder();
+
+            // Save mechanism
+            if (clusterForm.isCustomSaslMechanism()) {
+                saslBuilder.withMechanism(clusterForm.getSaslCustomMechanism());
+            } else {
+                saslBuilder.withMechanism(clusterForm.getSaslMechanism());
+            }
+
+            // If doing plain mechanism
+            if (clusterForm.isPlainSaslMechanism()) {
+                // Grab username and password
+                saslBuilder
+                    .withPlainUsername(clusterForm.getSaslUsername())
+                    .withPlainPassword(clusterForm.getSaslPassword())
+                    .withJaas("");
+            } else {
+                saslBuilder
+                    .withJaas(clusterForm.getSaslCustomJaas());
+            }
+
+            // Build properties
+            final SaslProperties saslProperties = saslBuilder.build();
+
+            // Persist Properties into cluster instance.
+            cluster.setSaslMechanism(saslProperties.getMechanism());
+            cluster.setSaslConfig(saslUtility.encryptProperties(saslProperties));
+        } else {
+            // Clear sasl values.
+            cluster.setSaslEnabled(false);
+            cluster.setSaslMechanism("");
+            cluster.setSaslConfig("");
+        }
+
         // Update properties
         cluster.setName(clusterForm.getName());
         cluster.setBrokerHosts(clusterForm.getBrokerHosts());
@@ -341,10 +401,6 @@ public class ClusterConfigController extends BaseController {
         }
         final Cluster cluster = clusterOptional.get();
 
-        // Build a client
-        // TODO use a clientId unique to the client + cluster + topic
-        final String clientId = "TestingClient-" + cluster.getId();
-
         // Create new Operational Client
         try {
             try (final KafkaOperations kafkaOperations = kafkaOperationsFactory.create(cluster, getLoggedInUserId())) {
@@ -357,7 +413,7 @@ public class ClusterConfigController extends BaseController {
                 // Set success msg
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Cluster configuration is valid!"));
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             String reason = e.getMessage();
             if (e instanceof KafkaException && e.getCause() != null) {
                 reason = e.getCause().getMessage();

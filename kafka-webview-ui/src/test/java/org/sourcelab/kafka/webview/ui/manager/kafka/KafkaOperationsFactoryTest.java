@@ -46,7 +46,8 @@ public class KafkaOperationsFactoryTest {
     public void smokeTestNonSslOperationsClient() {
         // Create dependencies.
         final SecretManager secretManager = new SecretManager("notused");
-        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("NotUsed");
+        final KafkaClientConfigUtil configUtil = new KafkaClientConfigUtil("Not-Used", "Test-Prefix");
+        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(configUtil);
         final KafkaOperationsFactory operationsFactory = new KafkaOperationsFactory(secretManager, kafkaAdminFactory);
 
         // Create cluster model.

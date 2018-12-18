@@ -76,7 +76,13 @@ public class KafkaOperationsTest {
     @ClassRule
     public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 
-    private final static KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("./uploads");
+    private final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(
+        new KafkaClientConfigUtil(
+            "./uploads",
+            "TestPrefix"
+        )
+    );
+
     private static KafkaOperations kafkaOperations = null;
 
     @Before
@@ -84,8 +90,8 @@ public class KafkaOperationsTest {
         if (kafkaOperations != null) {
             return;
         }
-        // Setup client once.
 
+        // Setup client once.
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
             .build();
@@ -153,7 +159,10 @@ public class KafkaOperationsTest {
      */
     @Test
     public void testGetClusterNodes() {
-        final String[] brokerHostBits = sharedKafkaTestResource.getKafkaConnectString().split(":");
+        final String[] brokerHostBits = sharedKafkaTestResource
+            .getKafkaConnectString()
+            .replaceAll("PLAINTEXT://", "")
+            .split(":");
         final String brokerHost = brokerHostBits[0];
         final int brokerPort = Integer.valueOf(brokerHostBits[1]);
 
@@ -170,7 +179,10 @@ public class KafkaOperationsTest {
      */
     @Test
     public void testGetTopicDetails() {
-        final String[] brokerHostBits = sharedKafkaTestResource.getKafkaConnectString().split(":");
+        final String[] brokerHostBits = sharedKafkaTestResource
+            .getKafkaConnectString()
+            .replaceAll("PLAINTEXT://", "")
+            .split(":");
         final String brokerHost = brokerHostBits[0];
         final int brokerPort = Integer.valueOf(brokerHostBits[1]);
 
@@ -718,7 +730,7 @@ public class KafkaOperationsTest {
             .build();
 
         // Create consumer and consume the entries, storing state in Kafka.
-        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory("not/used", consumerPrefix);
+        final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(new KafkaClientConfigUtil("not/used", consumerPrefix));
         final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
 
         // "Subscribe" to topic.

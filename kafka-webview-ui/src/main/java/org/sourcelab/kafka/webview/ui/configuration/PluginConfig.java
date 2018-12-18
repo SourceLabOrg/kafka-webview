@@ -28,11 +28,13 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
+import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -92,25 +94,26 @@ public class PluginConfig {
      * @return Web Kafka Consumer Factory instance.
      */
     @Bean
-    public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties) {
+    public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties, final KafkaClientConfigUtil configUtil) {
         return new WebKafkaConsumerFactory(
             getDeserializerPluginFactory(appProperties),
             getRecordFilterPluginFactory(appProperties),
             getSecretManager(appProperties),
-            getKafkaConsumerFactory(appProperties)
+            getKafkaConsumerFactory(configUtil)
         );
     }
 
     /**
      * For creating Kafka operational consumers.
      * @param appProperties Definition of app properties.
+     * @param configUtil Utility for configuring kafka clients.
      * @return Web Kafka Operations Client Factory instance.
      */
     @Bean
-    public KafkaOperationsFactory getKafkaOperationsFactory(final AppProperties appProperties) {
+    public KafkaOperationsFactory getKafkaOperationsFactory(final AppProperties appProperties, final KafkaClientConfigUtil configUtil) {
         return new KafkaOperationsFactory(
             getSecretManager(appProperties),
-            getKafkaAdminFactory(appProperties)
+            getKafkaAdminFactory(configUtil)
         );
     }
 
@@ -129,17 +132,41 @@ public class PluginConfig {
     /**
      * For creating instances of AdminClient.
      */
-    private KafkaAdminFactory getKafkaAdminFactory(final AppProperties appProperties) {
-        return new KafkaAdminFactory(appProperties.getUploadPath() + "/keyStores");
+    private KafkaAdminFactory getKafkaAdminFactory(final KafkaClientConfigUtil configUtil) {
+        return new KafkaAdminFactory(
+            configUtil
+        );
     }
 
     /**
      * For creating instances of KafkaConsumers.
      */
-    private KafkaConsumerFactory getKafkaConsumerFactory(final AppProperties appProperties) {
+    private KafkaConsumerFactory getKafkaConsumerFactory(final KafkaClientConfigUtil configUtil) {
         return new KafkaConsumerFactory(
+            configUtil
+        );
+    }
+
+    /**
+     * Utility class for generating common kafka client configs.
+     * @param appProperties Definition of app properties.
+     * @return KafkaClientConfigUtil
+     */
+    @Bean
+    public KafkaClientConfigUtil getKafkaClientConfigUtil(final AppProperties appProperties) {
+        return new KafkaClientConfigUtil(
             appProperties.getUploadPath() + "/keyStores",
             appProperties.getConsumerIdPrefix()
         );
+    }
+
+    /**
+     * Utility for managing Sasl properties persisted on cluster table.
+     * @param secretManager For handling encryption/decryption of secrets.
+     * @return SaslUtility instance.
+     */
+    @Bean
+    public SaslUtility getSaslUtility(final SecretManager secretManager) {
+        return new SaslUtility(secretManager);
     }
 }

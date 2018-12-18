@@ -24,31 +24,32 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Factory class for Creating new KafkaAdmin instances.
  */
 public class KafkaAdminFactory {
-    private final String keyStoreRootPath;
-    private final int requestTimeout = 15000;
+    /**
+     * Utility class for setting up common kafka client properties.
+     */
+    private final KafkaClientConfigUtil configUtil;
 
     /**
      * Constructor.
      */
-    public KafkaAdminFactory(final String keyStoreRootPath) {
-        this.keyStoreRootPath = keyStoreRootPath;
+    public KafkaAdminFactory(final KafkaClientConfigUtil configUtil) {
+        if (configUtil == null) {
+            throw new RuntimeException("Missing dependency KafkaClientConfigUtil!");
+        }
+        this.configUtil = configUtil;
     }
 
     /**
@@ -59,9 +60,9 @@ public class KafkaAdminFactory {
      */
     public AdminClient create(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
-        final Map<String, Object> config = buildClientProperties(clusterConfig, clientId);
+        final Map<String, Object> config = configUtil.applyCommonSettings(clusterConfig, clientId);
 
-        // Create instance.
+        // Build admin client.
         return KafkaAdminClient.create(config);
     }
 
@@ -73,7 +74,7 @@ public class KafkaAdminFactory {
      */
     public KafkaConsumer<String, String> createConsumer(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
-        final Map<String, Object> config = buildClientProperties(clusterConfig, clientId);
+        final Map<String, Object> config = configUtil.applyCommonSettings(clusterConfig, clientId);
 
         // Set required deserializer classes.
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -81,28 +82,5 @@ public class KafkaAdminFactory {
 
         // Create consumer
         return new KafkaConsumer<>(config);
-    }
-
-    /**
-     * Utility method to generate the appropriate Kafka client configuration from the ClusterConfig definition.
-     * @param clusterConfig Details about the cluster to connect to.
-     * @param clientId What clientId to associate with connection with.
-     * @return Map of Kafka client properties.
-     */
-    private Map<String, Object> buildClientProperties(final ClusterConfig clusterConfig, final String clientId) {
-        // Create a map
-        final Map<String, Object> config = new HashMap<>();
-        config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getConnectString());
-        config.put(AdminClientConfig.CLIENT_ID_CONFIG, clientId);
-        config.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeout);
-
-        if (clusterConfig.isUseSsl()) {
-            config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-            config.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
-            config.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());
-            config.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getTrustStoreFile());
-            config.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clusterConfig.getTrustStorePassword());
-        }
-        return config;
     }
 }

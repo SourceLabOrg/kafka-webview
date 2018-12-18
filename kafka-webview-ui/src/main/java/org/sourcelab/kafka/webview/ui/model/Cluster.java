@@ -63,6 +63,23 @@ public class Cluster {
     private String keyStorePassword;
 
     @Column(nullable = false)
+    private boolean isSaslEnabled;
+
+    /**
+     * Stores the name of the SASL mechanism.
+     */
+    private String saslMechanism;
+
+    /**
+     * JSON representation of sasl configuration options.
+     * Typically with the format of:
+     * { username: "", password: "", jaas: "" }
+     *
+     * Since this contains sensitive data, this value is stored encrypted.
+     */
+    private String saslConfig;
+
+    @Column(nullable = false)
     private boolean isValid;
 
     public long getId() {
@@ -137,16 +154,42 @@ public class Cluster {
         isValid = valid;
     }
 
+    public boolean isSaslEnabled() {
+        return isSaslEnabled;
+    }
+
+    public void setSaslEnabled(final boolean saslEnabled) {
+        isSaslEnabled = saslEnabled;
+    }
+
+    public String getSaslMechanism() {
+        return saslMechanism;
+    }
+
+    public void setSaslMechanism(final String saslMechanism) {
+        this.saslMechanism = saslMechanism;
+    }
+
+    public String getSaslConfig() {
+        return saslConfig;
+    }
+
+    public void setSaslConfig(final String saslConfig) {
+        this.saslConfig = saslConfig;
+    }
+
     @Override
     public String toString() {
         return "Cluster{"
-            + "+ id=" + id
-            + ", + name='" + name + '\''
-            + ", + brokerHosts='" + brokerHosts + '\''
-            + ", + isSslEnabled=" + isSslEnabled
-            + ", + trustStoreFile='" + trustStoreFile + '\''
-            + ", + keyStoreFile='" + keyStoreFile + '\''
-            + ", + isValid=" + isValid
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", brokerHosts='" + brokerHosts + '\''
+            + ", isSslEnabled=" + isSslEnabled
+            + ", trustStoreFile='" + trustStoreFile + '\''
+            + ", keyStoreFile='" + keyStoreFile + '\''
+            + ", isSaslEnabled=" + isSaslEnabled
+            + ", saslMechanism='" + saslMechanism + '\''
+            + ", isValid=" + isValid
             + '}';
     }
 }

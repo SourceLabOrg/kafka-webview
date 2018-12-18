@@ -25,6 +25,8 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.config;
 
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslProperties;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 
 import java.util.Arrays;
@@ -37,6 +39,10 @@ import java.util.stream.Collectors;
  */
 public class ClusterConfig {
     private final Set<String> brokerHosts;
+
+    /**
+     * SSL Configuration Options.
+     */
     private final boolean useSsl;
     private final String keyStoreFile;
     private final String keyStorePassword;
@@ -44,12 +50,13 @@ public class ClusterConfig {
     private final String trustStorePassword;
 
     /**
-     * Private Constructor for connecting to NON-SSL brokers.
-     * @param brokerHosts List of one or more broker hosts.
+     * SASL Configuration Options.
      */
-    private ClusterConfig(final Set<String> brokerHosts) {
-        this(brokerHosts, false, null, null, null, null);
-    }
+    private final boolean useSasl;
+    private final String saslPlaintextUsername;
+    private final String saslPlaintextPassword;
+    private final String saslMechanism;
+    private final String saslJaas;
 
     /**
      * Private constructor for connecting to SSL brokers.
@@ -60,14 +67,28 @@ public class ClusterConfig {
         final String keyStoreFile,
         final String keyStorePassword,
         final String trustStoreFile,
-        final String trustStorePassword) {
+        final String trustStorePassword,
+        final boolean useSasl,
+        final String saslPlaintextUsername,
+        final String saslPlaintextPassword,
+        final String saslMechanism,
+        final String saslJaas) {
 
         this.brokerHosts = brokerHosts;
+
+        // SSL Options
         this.useSsl = useSsl;
         this.keyStoreFile = keyStoreFile;
         this.keyStorePassword = keyStorePassword;
         this.trustStoreFile = trustStoreFile;
         this.trustStorePassword = trustStorePassword;
+
+        // SASL Options
+        this.useSasl = useSasl;
+        this.saslPlaintextUsername = saslPlaintextUsername;
+        this.saslPlaintextPassword = saslPlaintextPassword;
+        this.saslMechanism = saslMechanism;
+        this.saslJaas = saslJaas;
     }
 
     public Set<String> getBrokerHosts() {
@@ -98,6 +119,26 @@ public class ClusterConfig {
         return trustStorePassword;
     }
 
+    public boolean isUseSasl() {
+        return useSasl;
+    }
+
+    public String getSaslPlaintextUsername() {
+        return saslPlaintextUsername;
+    }
+
+    public String getSaslPlaintextPassword() {
+        return saslPlaintextPassword;
+    }
+
+    public String getSaslMechanism() {
+        return saslMechanism;
+    }
+
+    public String getSaslJaas() {
+        return saslJaas;
+    }
+
     @Override
     public String toString() {
         return "ClusterConfig{"
@@ -105,6 +146,8 @@ public class ClusterConfig {
             + ", useSsl=" + useSsl
             + ", keyStoreFile='" + keyStoreFile + '\''
             + ", trustStoreFile='" + trustStoreFile + '\''
+            + ", useSasl=" + useSasl
+            + ", saslMechanism='" + saslMechanism + '\''
             + '}';
     }
 
@@ -138,6 +181,21 @@ public class ClusterConfig {
             builder.withUseSsl(false);
         }
 
+        if (cluster.isSaslEnabled()) {
+            // Parse Properties.
+            final SaslUtility saslUtility = new SaslUtility(secretManager);
+            final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
+
+            builder
+                .withUseSasl(true)
+                .withSaslMechanism(saslProperties.getMechanism())
+                .withSaslPlaintextUsername(saslProperties.getPlainUsername())
+                .withSaslPlaintextPassword(saslProperties.getPlainPassword())
+                .withSaslJaas(saslProperties.getJaas());
+        } else {
+            builder.withUseSasl(false);
+        }
+
         return builder;
     }
 
@@ -146,11 +204,24 @@ public class ClusterConfig {
      */
     public static final class Builder {
         private Set<String> brokerHosts;
+
+        /**
+         * SSL Configuration Options.
+         */
         private boolean useSsl = false;
         private String keyStoreFile;
         private String keyStorePassword;
         private String trustStoreFile;
         private String trustStorePassword;
+
+        /**
+         * SASL Configuration Options.
+         */
+        private boolean useSasl = false;
+        private String saslPlaintextUsername;
+        private String saslPlaintextPassword;
+        private String saslMechanism;
+        private String saslJaas;
 
         private Builder() {
         }
@@ -213,13 +284,64 @@ public class ClusterConfig {
         }
 
         /**
+         * Declare if the brokers use SASL.
+         */
+        public Builder withUseSasl(final boolean useSasl) {
+            this.useSasl = useSasl;
+            return this;
+        }
+
+        /**
+         * Declare SASL plaintext username.
+         */
+        public Builder withSaslPlaintextUsername(final String saslPlaintextUsername) {
+            this.saslPlaintextUsername = saslPlaintextUsername;
+            return this;
+        }
+
+        /**
+         * Declare SASL plaintext password.
+         */
+        public Builder withSaslPlaintextPassword(final String saslPlaintextPassword) {
+            this.saslPlaintextPassword = saslPlaintextPassword;
+            return this;
+        }
+
+        /**
+         * Declare SASL mechanism.
+         */
+        public Builder withSaslMechanism(final String saslMechanism) {
+            this.saslMechanism = saslMechanism;
+            return this;
+        }
+
+        /**
+         * Declare SASL JAAS configuration.
+         */
+        public Builder withSaslJaas(final String saslJaas) {
+            this.saslJaas = saslJaas;
+            return this;
+        }
+
+        /**
          * Create ClusterConfig instance from builder values.
          */
         public ClusterConfig build() {
-            if (!useSsl) {
-                return new ClusterConfig(brokerHosts);
-            }
-            return new ClusterConfig(brokerHosts, true, keyStoreFile, keyStorePassword, trustStoreFile, trustStorePassword);
+            return new ClusterConfig(
+                brokerHosts,
+                // SSL Options.
+                useSsl,
+                keyStoreFile,
+                keyStorePassword,
+                trustStoreFile,
+                trustStorePassword,
+                // SASL Options
+                useSasl,
+                saslPlaintextUsername,
+                saslPlaintextPassword,
+                saslMechanism,
+                saslJaas
+            );
         }
     }
 }

@@ -10,11 +10,13 @@ spring:
   application:
     name: Kafka Webview
   datasource:
-    schema: "classpath:/schema/schema.sql"
     url: "jdbc:h2:mem:test"
     username: sa
     password:
     driver-class-name: org.h2.Driver
+  flyway:
+    locations: classpath:schema/migration
+    baselineOnMigrate: true
 
   servlet:
     multipart:

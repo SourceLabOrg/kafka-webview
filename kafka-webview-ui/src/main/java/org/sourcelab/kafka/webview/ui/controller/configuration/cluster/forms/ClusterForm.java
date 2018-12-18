@@ -56,6 +56,40 @@ public class ClusterForm {
 
     private String keyStorePassword;
 
+    // SASL Options
+    /**
+     * Global on/off switch for SASL.
+     */
+    private Boolean sasl = false;
+
+    /**
+     * Defines which SASL mechanism to use.
+     * If has a value of "other" then refer to value stored in saslCustomMechanism.
+     */
+    private String saslMechanism = "PLAIN";
+
+    /**
+     * If user selects to use a custom SASL mechanism,
+     * the value here is used.
+     */
+    private String saslCustomMechanism;
+
+    /**
+     * For SASL mechanism PLAIN, the username to use.
+     */
+    private String saslUsername;
+
+    /**
+     * For SASL mechanism PLAIN, the password to use.
+     */
+    private String saslPassword;
+
+    /**
+     * If user selects to use a custom JAAS configuration,
+     * this is the value of that.
+     */
+    private String saslCustomJaas;
+
     public Long getId() {
         return id;
     }
@@ -154,6 +188,62 @@ public class ClusterForm {
         return getId() != null;
     }
 
+    public Boolean getSasl() {
+        return sasl;
+    }
+
+    public void setSasl(final Boolean sasl) {
+        this.sasl = sasl;
+    }
+
+    public String getSaslMechanism() {
+        return saslMechanism;
+    }
+
+    public void setSaslMechanism(final String saslMechanism) {
+        this.saslMechanism = saslMechanism;
+    }
+
+    public String getSaslCustomMechanism() {
+        return saslCustomMechanism;
+    }
+
+    public void setSaslCustomMechanism(final String saslCustomMechanism) {
+        this.saslCustomMechanism = saslCustomMechanism;
+    }
+
+    public String getSaslUsername() {
+        return saslUsername;
+    }
+
+    public void setSaslUsername(final String saslUsername) {
+        this.saslUsername = saslUsername;
+    }
+
+    public String getSaslPassword() {
+        return saslPassword;
+    }
+
+    public void setSaslPassword(final String saslPassword) {
+        this.saslPassword = saslPassword;
+    }
+
+    public String getSaslCustomJaas() {
+        return saslCustomJaas;
+    }
+
+    public void setSaslCustomJaas(final String saslCustomJaas) {
+        this.saslCustomJaas = saslCustomJaas;
+    }
+
+    public boolean isCustomSaslMechanism() {
+        return "custom".equals(saslMechanism);
+    }
+
+    public boolean isPlainSaslMechanism() {
+        return "PLAIN".equals(saslMechanism);
+    }
+
     @Override
     public String toString() {
         return "ClusterForm{"
@@ -161,10 +251,11 @@ public class ClusterForm {
             + ", name='" + name + '\''
             + ", brokerHosts='" + brokerHosts + '\''
             + ", ssl=" + ssl
-            + ", trustStoreFile=" + trustStoreFile
             + ", trustStoreFilename='" + trustStoreFilename + '\''
-            + ", keyStoreFile=" + keyStoreFile
             + ", keyStoreFilename='" + keyStoreFilename + '\''
+            + ", sasl=" + sasl
+            + ", saslMechanism='" + saslMechanism + '\''
+            + ", saslCustomMechanism='" + saslCustomMechanism + '\''
             + '}';
     }
 }

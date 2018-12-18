@@ -43,8 +43,14 @@ import static org.hibernate.validator.internal.util.Contracts.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+/**
+ * Tests KafkaAdminFactory against a cluster configured WITHOUT SSL and WITHOUT SASL.
+ */
 public class KafkaAdminFactoryTest {
 
+    /**
+     * Setup broker without SSL or SASL support.
+     */
     @ClassRule
     public static SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 
@@ -58,7 +64,9 @@ public class KafkaAdminFactoryTest {
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
             .build();
 
-        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("NotUsed");
+        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(
+            new KafkaClientConfigUtil("not/used", "MyPrefix")
+        );
 
         // Create instance
         try (final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, "MyClientId")) {
@@ -88,7 +96,7 @@ public class KafkaAdminFactoryTest {
         final String topicName = "MyRandomTopic";
         sharedKafkaTestResource.getKafkaTestUtils().createTopic(topicName, 1, (short) 1);
 
-        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory("NotUsed");
+        final KafkaAdminFactory kafkaAdminFactory = new KafkaAdminFactory(new KafkaClientConfigUtil("NotUsed", "Prefix"));
 
         // Create instance
         try (final KafkaConsumer<String, String> consumerClient = kafkaAdminFactory.createConsumer(clusterConfig, "MyClientId")) {

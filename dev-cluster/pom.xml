@@ -52,7 +52,7 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit-core</artifactId>
-            <version>3.0.1</version>
+            <version>3.1.0</version>
         </dependency>
 
         <!-- Include Kafka 1.1.x -->
@@ -65,6 +65,13 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>1.1.1</version>
+        </dependency>
+
+        <!-- Command line argument parsing -->
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>1.4</version>
         </dependency>
 
         <!-- LDAP Server -->

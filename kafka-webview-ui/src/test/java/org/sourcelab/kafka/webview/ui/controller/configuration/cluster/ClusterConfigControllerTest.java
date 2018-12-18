@@ -29,6 +29,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslProperties;
+import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
@@ -71,6 +73,9 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
     @Autowired
     private ClusterRepository clusterRepository;
+
+    @Autowired
+    private SaslUtility saslUtility;
 
     /**
      * Where JKS files are uploaded to.
@@ -161,6 +166,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
         assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
         assertEquals("Should not be valid by default", false, cluster.isValid());
+        validateNonSaslCluster(cluster);
     }
 
     /**
@@ -196,6 +202,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
         assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
         assertEquals("Should be set back to NOT valid", false, cluster.isValid());
+        validateNonSaslCluster(cluster);
     }
 
     /**
@@ -240,6 +247,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have passwords set", cluster.getKeyStorePassword());
         assertNotNull("Should have trust store file path", cluster.getTrustStoreFile());
         assertNotNull("Should have key store file path", cluster.getKeyStoreFile());
+        validateNonSaslCluster(cluster);
 
         final boolean doesKeystoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
         assertTrue("KeyStore file should have been uploaded", doesKeystoreFileExist);
@@ -306,6 +314,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertEquals("Password should be unchanged", "DummyKeyStorePassword", cluster.getKeyStorePassword());
         assertEquals("Should have trust store file path", "Cluster.TrustStore.jks", cluster.getTrustStoreFile());
         assertEquals("Should have key store file path", "Cluster.KeyStore.jks", cluster.getKeyStoreFile());
+        validateNonSaslCluster(cluster);
 
         // Validate file exists
         final boolean doesKeystoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
@@ -375,6 +384,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertEquals("Should not be valid by default", false, cluster.isValid());
         assertEquals("Password should be unchanged", "DummyKeyStorePassword", cluster.getKeyStorePassword());
         assertEquals("Should have key store file path", "Cluster.KeyStore.jks", cluster.getKeyStoreFile());
+        validateNonSaslCluster(cluster);
 
         // Keystore should remain
         final boolean doesKeystoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
@@ -448,6 +458,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertEquals("Should not be valid by default", false, cluster.isValid());
         assertEquals("Password should be unchanged", "DummyTrustStorePassword", cluster.getTrustStorePassword());
         assertEquals("Should have trust store file path", "Cluster.TrustStore.jks", cluster.getTrustStoreFile());
+        validateNonSaslCluster(cluster);
 
         // trust store should remain
         final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
@@ -520,6 +531,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNull("Password should be null", cluster.getKeyStorePassword());
         assertNull("File reference should be null", cluster.getTrustStoreFile());
         assertNull("File reference should be null", cluster.getKeyStorePassword());
+        validateNonSaslCluster(cluster);
 
         // trust store file should not exist
         final boolean doesTruststoreFileExist = Files.exists(trustStoreFilePath);
@@ -528,5 +540,220 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // KeyStore file should not exist
         final boolean doesKeyStoreFileExist = Files.exists(keyStoreFilePath);
         assertFalse("keyStore file should have been removed", doesKeyStoreFileExist);
+    }
+
+    /**
+     * Test creating new sasl PLAIN cluster.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_newSaslPlain_Cluster() throws Exception {
+        final String expectedClusterName = "My New Cluster Name";
+        final String expectedBrokerHosts = "localhost:9092";
+        final String expectedSaslMechanism = "PLAIN";
+        final String expectedSaslUsername = "USERname";
+        final String expectedSaslPassword = "PASSword";
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/cluster/update")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("name", expectedClusterName)
+                .param("brokerHosts", expectedBrokerHosts)
+                .param("sasl", "true")
+                .param("saslMechanism", expectedSaslMechanism)
+                .param("saslUsername", expectedSaslUsername)
+                .param("saslPassword", expectedSaslPassword)
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findByName(expectedClusterName);
+        assertNotNull("Should have new cluster", cluster);
+        assertEquals("Has correct name", expectedClusterName, cluster.getName());
+        assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
+        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
+        assertEquals("Should not be valid by default", false, cluster.isValid());
+
+        // Validate sasl properties
+        assertEquals("Should have sasl enabled", true, cluster.isSaslEnabled());
+        assertEquals("Should have correct mechanism", expectedSaslMechanism, cluster.getSaslMechanism());
+        assertNotNull("Should have non-null sasl config", cluster.getSaslConfig());
+
+        // Attempt to decode encrypted config to validate
+        final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
+        assertNotNull("Should be non-null", saslProperties);
+        assertEquals("Should have expected mechanism", expectedSaslMechanism, saslProperties.getMechanism());
+        assertEquals("Should have expected username", expectedSaslUsername, saslProperties.getPlainUsername());
+        assertEquals("Should have expected password", expectedSaslPassword, saslProperties.getPlainPassword());
+        assertEquals(
+            "Should have default jaas for plain",
+            "org.apache.kafka.common.security.plain.PlainLoginModule required\n"
+            + "username=\"USERname\"\n"
+            + "password=\"PASSword\";",
+            saslProperties.getJaas()
+        );
+    }
+
+    /**
+     * Test creating new sasl GSSAPI cluster.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_newSaslGSSAPI_Cluster() throws Exception {
+        final String expectedClusterName = "My New Cluster Name";
+        final String expectedBrokerHosts = "localhost:9092";
+        final String expectedSaslMechanism = "GSSAPI";
+        final String expectedSaslUsername = "";
+        final String expectedSaslPassword = "";
+        final String expectedSaslJaas = "This is my custom jaas \n and another line";
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/cluster/update")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("name", expectedClusterName)
+                .param("brokerHosts", expectedBrokerHosts)
+                .param("sasl", "true")
+                .param("saslMechanism", expectedSaslMechanism)
+                .param("saslCustomJaas", expectedSaslJaas)
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findByName(expectedClusterName);
+        assertNotNull("Should have new cluster", cluster);
+        assertEquals("Has correct name", expectedClusterName, cluster.getName());
+        assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
+        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
+        assertEquals("Should not be valid by default", false, cluster.isValid());
+
+        // Validate sasl properties
+        assertEquals("Should have sasl enabled", true, cluster.isSaslEnabled());
+        assertEquals("Should have correct mechanism", expectedSaslMechanism, cluster.getSaslMechanism());
+        assertNotNull("Should have non-null sasl config", cluster.getSaslConfig());
+
+        // Attempt to decode encrypted config to validate
+        final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
+        assertNotNull("Should be non-null", saslProperties);
+        assertEquals("Should have expected mechanism", expectedSaslMechanism, saslProperties.getMechanism());
+        assertEquals("Should have expected username", expectedSaslUsername, saslProperties.getPlainUsername());
+        assertEquals("Should have expected password", expectedSaslPassword, saslProperties.getPlainPassword());
+        assertEquals("Should have expected custom jaas", expectedSaslJaas, saslProperties.getJaas());
+    }
+
+    /**
+     * Test creating new sasl custom cluster.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_newSaslCustom_Cluster() throws Exception {
+        final String expectedClusterName = "My New Cluster Name";
+        final String expectedBrokerHosts = "localhost:9092";
+        final String expectedSaslMechanism = "CustomThing";
+        final String expectedSaslUsername = "";
+        final String expectedSaslPassword = "";
+        final String expectedSaslJaas = "This is my custom jaas \n and another line";
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/cluster/update")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("name", expectedClusterName)
+                .param("brokerHosts", expectedBrokerHosts)
+                .param("sasl", "true")
+                .param("saslMechanism", "custom")
+                .param("saslCustomMechanism", expectedSaslMechanism)
+                .param("saslCustomJaas", expectedSaslJaas)
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findByName(expectedClusterName);
+        assertNotNull("Should have new cluster", cluster);
+        assertEquals("Has correct name", expectedClusterName, cluster.getName());
+        assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
+        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
+        assertEquals("Should not be valid by default", false, cluster.isValid());
+
+        // Validate sasl properties
+        assertEquals("Should have sasl enabled", true, cluster.isSaslEnabled());
+        assertEquals("Should have correct mechanism", expectedSaslMechanism, cluster.getSaslMechanism());
+        assertNotNull("Should have non-null sasl config", cluster.getSaslConfig());
+
+        // Attempt to decode encrypted config to validate
+        final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
+        assertNotNull("Should be non-null", saslProperties);
+        assertEquals("Should have expected mechanism", expectedSaslMechanism, saslProperties.getMechanism());
+        assertEquals("Should have expected username", expectedSaslUsername, saslProperties.getPlainUsername());
+        assertEquals("Should have expected password", expectedSaslPassword, saslProperties.getPlainPassword());
+        assertEquals("Should have expected custom jaas", expectedSaslJaas, saslProperties.getJaas());
+    }
+
+    /**
+     * Test updating SASL cluster and make it non-sasl clears out properties relating to SASL.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_existingSaslCluster() throws Exception {
+        final SaslProperties saslProperties = SaslProperties.newBuilder()
+            .withJaas("Custom Jaas")
+            .withMechanism("PLAIN")
+            .withPlainUsername("USERNAME")
+            .withPlainPassword("PASSWORD")
+            .build();
+
+        // Create an existing cluster
+        final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster");
+        originalCluster.setValid(true);
+        originalCluster.setSaslEnabled(true);
+        originalCluster.setSaslMechanism("PLAIN");
+        originalCluster.setSaslConfig(
+            saslUtility.encryptProperties(saslProperties)
+        );
+        clusterRepository.save(originalCluster);
+
+        final String expectedClusterName = "My New Cluster Name" + System.currentTimeMillis();
+        final String expectedBrokerHosts = "newHost:9092";
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/cluster/update")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", String.valueOf(originalCluster.getId()))
+                .param("name", expectedClusterName)
+                .param("brokerHosts", expectedBrokerHosts))
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
+        assertNotNull("Should have cluster", cluster);
+        assertEquals("Has correct name", expectedClusterName, cluster.getName());
+        assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
+        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
+        assertEquals("Should be set back to NOT valid", false, cluster.isValid());
+        validateNonSaslCluster(cluster);
+    }
+
+    /**
+     * Utility method for validating a cluster is not configured with SASL.
+     * @param cluster cluster to validate.
+     */
+    private void validateNonSaslCluster(final Cluster cluster) {
+        assertEquals("Should not be sasl enabled", false, cluster.isSaslEnabled());
+        assertEquals("Should have empty sasl mechanism", "", cluster.getSaslMechanism());
+        assertEquals("Should have empty sasl config", "", cluster.getSaslConfig());
     }
 }
