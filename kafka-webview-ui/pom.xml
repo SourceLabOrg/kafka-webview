@@ -169,7 +169,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Test case for custom deserializer for protobufs -->
+        <!-- Test case for bug when deserializing protocol buffers -->
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>

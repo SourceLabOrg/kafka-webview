@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ser.impl.UnknownSerializer;
 import java.io.IOException;
 
 /**
- * Uses object's toString() method to serialize.
+ * Attempts to serialize using Jackson, if that fails, falls back to using toString.
  */
 public class ToStringSerializer extends JsonSerializer<Object> {
     @Override
@@ -46,15 +46,17 @@ public class ToStringSerializer extends JsonSerializer<Object> {
             return;
         }
 
-        try {
-            // See if we have a serializer that is NOT the unknown serializer
-            final JsonSerializer serializer = serializers.findValueSerializer(value.getClass());
-            if (serializer != null && !(serializer instanceof UnknownSerializer)) {
+        // See if we have a serializer that is NOT the unknown serializer
+        final JsonSerializer serializer = serializers.findValueSerializer(value.getClass());
+        if (serializer != null && !(serializer instanceof UnknownSerializer)) {
+            try {
+                // IF serialization is successful, we return.
                 serializer.serialize(value, gen, serializers);
+                return;
+            } catch (final Exception exception) {
+                // Non-ideal case -- Fall back to using toString()
             }
-        } catch (final Exception exception) {
-            // Non-ideal case -- Fall back to using toString()
-            gen.writeString(value.toString());
         }
+        gen.writeString(value.toString());
     }
 }
