@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
@@ -33,7 +34,9 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -110,6 +113,32 @@ public class PluginConfig {
             getSecretManager(appProperties),
             getKafkaAdminFactory(appProperties)
         );
+    }
+
+    /**
+     * Customize the jackson object map builder.
+     * @return Jackson2ObjectMapperBuilderCustomizer instance.
+     */
+    @Bean
+    public Jackson2ObjectMapperBuilderCustomizer addCustomBigDecimalDeserialization() {
+        return jacksonObjectMapperBuilder -> {
+            // Register custom protocol buffer serializer as protocol buffers is a common serialization format.
+            jacksonObjectMapperBuilder.modulesToInstall(new ProtobufModule());
+        };
+    }
+
+    /**
+     * Customize the jackson object map builder.
+     * @return ObjectMapperBuilder instance.
+     */
+    @Bean
+    public Jackson2ObjectMapperBuilder objectMapperBuilder() {
+        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+
+        // Register custom protocol buffer serializer as protocol buffers is a common serialization format.
+        builder.modulesToInstall(new ProtobufModule());
+
+        return builder;
     }
 
     /**
