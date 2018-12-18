@@ -1,0 +1,45 @@
+syntax = "proto3";
+package ProtocolBuffers; // the namespace for the compiled classes
+option java_package = "org.sourcelab.kafka.webview.ui.manager.deserializer.protobuf";
+option java_outer_classname = "TestProtocolBuffers";
+
+// Sample ProtocolBuffer that defines all field types.
+message ProtoA {
+
+    double double_field = 1;
+    float float_field = 2;
+    int32 int32_field = 3;
+    int64 int64_field = 4;
+    uint32 uint32_field = 5;
+    uint64 uint64_field = 6;
+    sint32 sint32_field = 7;
+    sint64 sint64_field = 8;
+    fixed32 fixed32_field = 9;
+    fixed64 fixed64_field = 10;
+    sfixed32 sfixed32_field = 11;
+    sfixed64 sfixed64_field = 12;
+    bool bool_field = 13;
+    string string_field = 14;
+    bytes bytes_field = 15;
+
+    // Enumeration Type
+    enum CustomEnum {
+        A = 0;
+        B = 1;
+        C = 3;
+        D = 4;
+    }
+    CustomEnum custom_enum_field = 16;
+
+    // Repeated (Array)
+    repeated string array_field = 17;
+
+    // Embedded Object
+    message Embedded {
+        string name = 1;
+    }
+    Embedded embedded_field = 18;
+
+    // Map field
+    map<string, int32> map_field = 19;
+}
