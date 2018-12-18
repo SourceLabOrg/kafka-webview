@@ -36,7 +36,6 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -126,21 +125,7 @@ public class PluginConfig {
             jacksonObjectMapperBuilder.modulesToInstall(new ProtobufModule());
         };
     }
-
-    /**
-     * Customize the jackson object map builder.
-     * @return ObjectMapperBuilder instance.
-     */
-    @Bean
-    public Jackson2ObjectMapperBuilder objectMapperBuilder() {
-        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
-
-        // Register custom protocol buffer serializer as protocol buffers is a common serialization format.
-        builder.modulesToInstall(new ProtobufModule());
-
-        return builder;
-    }
-
+    
     /**
      * For creating instances of AdminClient.
      */
