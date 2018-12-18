@@ -24,9 +24,12 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.LdapUserDetailsService;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +51,7 @@ import java.util.ArrayList;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -89,22 +93,90 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(final AuthenticationManagerBuilder auth) throws Exception {
-        if (appProperties.isUserAuthEnabled()) {
-            auth
-                // Define our custom user details service.
-                .userDetailsService(new CustomUserDetailsService(userRepository))
-                .passwordEncoder(getPasswordEncoder());
-        } else {
-            auth
-                // Define our custom user details service.
-                .userDetailsService(new AnonymousUserDetailsService());
+        // If user auth is disabled.
+        if (!appProperties.isUserAuthEnabled()) {
+            // Define our no user auth user details service.
+            auth.userDetailsService(new AnonymousUserDetailsService());
+            return;
         }
+
+        // If configured to use ldap for user auth
+        if (appProperties.getLdapProperties().isEnabled()) {
+            setupLdapUserAuthentication(auth);
+            return;
+        }
+
+        // Setup local user management and authentication.
+        setupLocalUserAuthentication(auth);
+    }
+
+    /**
+     * Configures the app for LDAP authentication.
+     * @param auth Authentication builder for configuring LDAP.
+     */
+    private void setupLdapUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
+        final LdapAppProperties ldapAppProperties = appProperties.getLdapProperties();
+        logger.info("Configuring with LDAP authenticated user access using URL: {}", ldapAppProperties.getUrl());
+
+        // Get password encoder instance
+        final Class<? extends PasswordEncoder> encoderClass;
+        try {
+            encoderClass = (Class<? extends PasswordEncoder>) getClass()
+                .getClassLoader()
+                .loadClass(ldapAppProperties.getPasswordEncoderClass());
+        } catch (final ClassNotFoundException classNotFoundException) {
+            throw new RuntimeException(
+                "Unable to load class " + ldapAppProperties.getPasswordEncoderClass()
+                + " from configuration.  Make sure this class exists and implements PasswordEncoder interface!",
+                classNotFoundException
+            );
+        }
+
+        String managerDn = null;
+        String managerDnPassword = null;
+        if (ldapAppProperties.getBindUser() != null && !ldapAppProperties.getBindUser().isEmpty()) {
+            managerDn = ldapAppProperties.getBindUser();
+            managerDnPassword = ldapAppProperties.getBindUserPassword();
+        }
+
+        // Setup for ldap
+        auth
+            .ldapAuthentication()
+            .userDetailsContextMapper(new LdapUserDetailsService(ldapAppProperties))
+            .rolePrefix("")
+            .userDnPatterns(ldapAppProperties.getUserDnPattern())
+            .groupRoleAttribute(ldapAppProperties.getGroupRoleAttribute())
+            .groupSearchBase(ldapAppProperties.getGroupSearchBase())
+            .contextSource()
+            .url(ldapAppProperties.getUrl())
+            .managerDn(managerDn)
+            .managerPassword(managerDnPassword)
+            .and()
+            .passwordCompare()
+            .passwordEncoder(encoderClass.newInstance())
+            .passwordAttribute(ldapAppProperties.getPasswordAttribute());
+    }
+
+    /**
+     * Sets up the app to authenticate from locally defined users in the database.
+     * @param auth Authentication builder for configuring LDAP.
+     */
+    private void setupLocalUserAuthentication(final AuthenticationManagerBuilder auth) throws Exception {
+        logger.info("Configuring with locally authenticated user access");
+
+        // Fall through to use local user management.
+        auth
+            // Define our custom user details service.
+            .userDetailsService(new CustomUserDetailsService(userRepository))
+            .passwordEncoder(getPasswordEncoder());
     }
 
     /**
      * Sets up HttpSecurity for standard local user authentication.
      */
     private void enableUserAuth(final HttpSecurity http) throws Exception {
+        logger.info("Configuring with authenticated user access.");
+
         http
             .authorizeRequests()
             // Paths to static resources are available to anyone
@@ -122,7 +194,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/api/cluster/*/create/**",
 
                 // Modify topic
-                "/api/cluster/*/modify/**"
+                "/api/cluster/*/modify/**",
+
+                // Remove consumer group
+                "/api/cluster/*/consumer/remove"
+
             ).hasRole("ADMIN")
 
             // All other requests must be authenticated
@@ -151,6 +227,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * Sets up HttpSecurity for standard local user authentication.
      */
     private void disableUserAuth(final HttpSecurity http) throws Exception {
+        logger.info("Configuring with anonymous user access.");
+
         // Define the "User" that anonymous web clients will assume.
         final CustomUserDetails customUserDetails = AnonymousUserDetailsService.getDefaultAnonymousUser();
 

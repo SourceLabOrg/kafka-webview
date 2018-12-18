@@ -22,24 +22,38 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui;
+package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import static org.junit.Assert.assertTrue;
-
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class ApplicationTest {
+/**
+ * Represents information about a consumer group identifier.
+ */
+public class ConsumerGroupIdentifier {
+    private final String id;
+    private final boolean isSimple;
 
     /**
-     * This is a sanity test that we can load the spring boot app in a 'test' context.
+     * Constructor.
+     * @param id consumer group id/name.
+     * @param isSimple If its a simple consumer or not.
      */
-    @Test
-    public void contextLoads() {
-        assertTrue("We loaded, yey", true);
+    public ConsumerGroupIdentifier(final String id, final boolean isSimple) {
+        this.id = id;
+        this.isSimple = isSimple;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public boolean isSimple() {
+        return isSimple;
+    }
+
+    @Override
+    public String toString() {
+        return "ConsumerGroupIdentifier{"
+            + "id='" + id + '\''
+            + ", isSimple=" + isSimple
+            + '}';
     }
 }

@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
@@ -61,7 +62,8 @@ public class KafkaOperationsFactory {
         // Create new Operational Client
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
         final AdminClient adminClient = kafkaAdminFactory.create(clusterConfig, clientId);
+        final KafkaConsumer<String, String> kafkaConsumer = kafkaAdminFactory.createConsumer(clusterConfig, clientId);
 
-        return new KafkaOperations(adminClient);
+        return new KafkaOperations(adminClient, kafkaConsumer);
     }
 }

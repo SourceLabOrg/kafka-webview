@@ -109,7 +109,7 @@ public class WebKafkaConsumerFactoryTest {
         view.setResultsPerPartition(resultsPerPartition);
 
         // Create SessionId
-        final SessionIdentifier sessionId = new SessionIdentifier(12L, "MySession");
+        final SessionIdentifier sessionId = SessionIdentifier.newWebIdentifier(12L, "MySession");
 
         // Ok lets see what happens
         try (final WebKafkaConsumer webKafkaConsumer = factory.createWebClient(view, new ArrayList<>(), sessionId)) {
@@ -146,7 +146,7 @@ public class WebKafkaConsumerFactoryTest {
         view.setPartitions("1");
 
         // Create SessionId
-        final SessionIdentifier sessionId = new SessionIdentifier(12L, "MySession");
+        final SessionIdentifier sessionId = SessionIdentifier.newWebIdentifier(12L, "MySession");
 
         // Ok lets see what happens
         try (final WebKafkaConsumer webKafkaConsumer = factory.createWebClient(view, new ArrayList<>(), sessionId)) {
@@ -196,7 +196,7 @@ public class WebKafkaConsumerFactoryTest {
         filterDefinitions.add(filterDefinition);
 
         // Create SessionId
-        final SessionIdentifier sessionId = new SessionIdentifier(12L, "MySession");
+        final SessionIdentifier sessionId = SessionIdentifier.newWebIdentifier(12L, "MySession");
 
         // Ok lets see what happens
         try (final WebKafkaConsumer webKafkaConsumer = factory.createWebClient(view, filterDefinitions, sessionId)) {

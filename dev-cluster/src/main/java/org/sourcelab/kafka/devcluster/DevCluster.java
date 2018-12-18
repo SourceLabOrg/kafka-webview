@@ -26,8 +26,14 @@ package org.sourcelab.kafka.devcluster;
 
 import com.salesforce.kafka.test.KafkaTestCluster;
 import com.salesforce.kafka.test.KafkaTestUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.Properties;
 
 /**
  * Simple applicatin for firing up a Kafka cluster of 1 or more nodes.  This exists solely
@@ -61,22 +67,98 @@ public class DevCluster {
 
         // Create a topic
         final String topicName = "TestTopicA";
+        final int partitionsCount = 5 * clusterSize;
         final KafkaTestUtils utils = new KafkaTestUtils(kafkaTestCluster);
-        utils.createTopic(topicName, clusterSize, (short) clusterSize);
+        utils.createTopic(topicName, partitionsCount, (short) clusterSize);
 
         // Publish some data into that topic
-        for (int partition = 0; partition < clusterSize; partition++) {
+        for (int partition = 0; partition < partitionsCount; partition++) {
             utils.produceRecords(1000, topicName, partition);
         }
 
         kafkaTestCluster
             .getKafkaBrokers()
             .stream()
-            .forEach((broker) -> logger.info("Started broker with Id {} at {}", broker.getBrokerId(), broker.getConnectString()));
+            .forEach((broker) -> {
+                logger.info("Started broker with Id {} at {}", broker.getBrokerId(), broker.getConnectString());
+            });
 
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
 
+        runEndlessConsumer(topicName, utils);
+        runEndlessProducer(topicName, partitionsCount, utils);
+
         // Wait forever.
         Thread.currentThread().join();
+    }
+
+    /**
+     * Fire up a new thread running an endless producer script into the given topic and partitions.
+     * @param topicName Name of the topic to produce records into.
+     * @param partitionCount number of partitions that exist on that topic.
+     * @param utils KafkaUtils instance.
+     */
+    private static void runEndlessProducer(
+        final String topicName,
+        final int partitionCount,
+        final KafkaTestUtils utils
+    ) {
+        final Thread producerThread = new Thread(() -> {
+            do {
+
+                // Publish some data into that topic
+                for (int partition = 0; partition < partitionCount; partition++) {
+                    utils.produceRecords(1000, topicName, partition);
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                }
+                try {
+                    Thread.sleep(5000L);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            } while (true);
+        });
+        producerThread.start();
+
+    }
+
+    /**
+     * Fire up a new thread running an enless consumer script that reads from the given topic.
+     * @param topicName Topic to consume from.
+     * @param utils KafkaUtils instance.
+     */
+    private static void runEndlessConsumer(final String topicName, final KafkaTestUtils utils) {
+        final Thread consumerThread = new Thread(() -> {
+            // Start a consumer
+            final Properties properties = new Properties();
+            properties.put("max.poll.records", 37);
+            properties.put("group.id", "MyConsumerId");
+
+            try (final KafkaConsumer<String, String> consumer
+                     = utils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, properties)) {
+
+                consumer.subscribe(Collections.singleton(topicName));
+                do {
+                    final ConsumerRecords<String, String> records = consumer.poll(1000);
+                    consumer.commitSync();
+
+                    logger.info("Consumed {} records", records.count());
+
+                    if (records.isEmpty()) {
+                        consumer.seekToBeginning(consumer.assignment());
+                        consumer.commitSync();
+                    }
+                    Thread.sleep(1000);
+                } while (true);
+
+            } catch (final InterruptedException e) {
+                return;
+            }
+        });
+        consumerThread.start();
     }
 }

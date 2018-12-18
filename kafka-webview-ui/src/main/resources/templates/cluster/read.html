@@ -48,6 +48,7 @@
 
                     if (results.length == 0) {
                         jQuery('#nodes-no-results').toggle(true);
+                        jQuery('#nodes-table').toggle(false);
                     } else {
                         jQuery('#nodes-no-results').toggle(false);
                         jQuery('#nodes-table').toggle(true);
@@ -85,17 +86,90 @@
 
                     if (results.length == 0) {
                         jQuery('#topics-no-results').toggle(true);
+                        jQuery('#topics-table').toggle(false);
                     } else {
                         jQuery('#topics-no-results').toggle(false);
                         jQuery('#topics-table').toggle(true);
                     }
                 },
+
+                // Handle all consumers results ajax result
+                handleConsumers: function(results) {
+                    // Clear topics table
+                    var table = jQuery('#consumers-tbody');
+                    jQuery(table).empty();
+
+                    // Get and compile template
+                    var source   = jQuery('#consumers-template').html();
+                    var template = Handlebars.compile(source);
+
+                    jQuery.each(results, function(index, result) {
+                        // Collect unique topics
+                        var topics = [];
+                        jQuery.each(result.members, function(index, member) {
+                            // Loop thru each assignment
+                            jQuery.each(member.assignment, function(index, assigned) {
+                                topics.push(assigned.topic);
+                            });
+                        });
+
+                        var uniqueTopics = topics.filter(function (value, index, self) {
+                            return self.indexOf(value) === index;
+                        });
+
+                        // Generate html from template
+                        var properties = {
+                            id: result.consumerId,
+                            encodedId: encodeURIComponent(result.consumerId),
+                            topic: uniqueTopics,
+                            state: result.state,
+                            numberOfMembers: result.members.length,
+                            clusterId: ClusterInfo.clusterId
+                        };
+                        var resultHtml = template(properties);
+
+                        // Append it to our table
+                        jQuery(table).append(resultHtml);
+                    });
+
+                    // Hide loader
+                    jQuery('#consumers-loader').toggle(false);
+
+                    if (results.length == 0) {
+                        jQuery('#consumers-no-results').toggle(true);
+                        jQuery('#consumers-table').toggle(false);
+                    } else {
+                        jQuery('#consumers-no-results').toggle(false);
+                        jQuery('#consumers-table').toggle(true);
+                    }
+                },
+
                 loadTopics: function() {
                     // Fire off request to get topic details
                     ApiClient.getAllTopicsDetails(ClusterInfo.clusterId, function(results) {
                         // Handle results
                         ClusterInfo.handleAllTopicsDetails(results);
                     });
+                },
+                loadConsumers: function() {
+                    // Fire off request to get consumer details
+                    ApiClient.getAllConsumersWithDetails(ClusterInfo.clusterId, function(results) {
+                        // Handle results
+                        ClusterInfo.handleConsumers(results);
+                    });
+                },
+                removeConsumer: function(consumerId) {
+                    if (!confirm('Are you sure you want to remove this consumer group?')) {
+                        return;
+                    }
+                    ApiClient.removeConsumer(ClusterInfo.clusterId, consumerId, function(result) {
+                        UITools.showSuccess('Successfully remove consumer group.');
+
+                        // Display success
+                        // On success reload consumers
+                        ClusterInfo.loadConsumers();
+                    });
+
                 },
                 // Handle submitting new topic form.
                 createNewTopic: function() {
@@ -135,6 +209,9 @@
 
                     // Fire off request to get topic details
                     ClusterInfo.loadTopics();
+
+                    // Fire off request to get consumers
+                    ClusterInfo.loadConsumers();
                 });
             });
         </script>
@@ -232,6 +309,51 @@
             </div>
         </div>
 
+        <!-- Consumer Groups -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        Cluster <strong th:text="${cluster.name}"></strong> Consumer Groups
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Loader First -->
+                        <div class="alert alert-light" role="alert" id="consumers-loader" style="display: block;">
+                            <div class="progress">
+                                <div
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Results Found -->
+                        <div class="alert alert-light" role="alert" id="consumers-no-results" style="display: none;">
+                            <h4 class="alert-heading">No Consumers Found</h4>
+                            <p>Looks like we couldn't find any consumers!</p>
+                        </div>
+
+                        <!-- Hide Results Table -->
+                        <table class="table table-bordered table-striped table-sm" id="consumers-table" style="display: none;">
+                            <thead>
+                            <tr>
+                                <th>Consumer Group</th>
+                                <th>Topic</th>
+                                <th>State</th>
+                                <th>Members</th>
+                                <th sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="consumers-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Nodes Template -->
         <script id="nodes-template" type="text/x-handlebars-template">
             <tr>
@@ -267,6 +389,40 @@
                     {{#if internal}}
                         <span class="badge badge-info">Internal topic</span>
                     {{/if}}
+                </td>
+            </tr>
+        </script>
+
+        <!-- Topics Details Template -->
+        <script id="consumers-template" type="text/x-handlebars-template">
+            <tr>
+                <td>
+                    <a href="/cluster/{{clusterId}}/consumer/{{encodedId}}">
+                        {{id}}
+                    </a>
+                </td>
+                <td>
+                    {{topic}}
+                </td>
+                <td>
+                    {{state}}
+                </td>
+                <td>
+                    {{numberOfMembers}}
+                </td>
+                <td sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" x-placement="bottom-start" style="position: absolute; transform: translate3d(29px, 31px, 0px); top: 0px; left: 0px; will-change: transform;">
+
+                            <button class="dropdown-item" onclick="ClusterInfo.removeConsumer('{{id}}'); return false;">
+                                <i class="fa fa-remove"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 </td>
             </tr>
         </script>

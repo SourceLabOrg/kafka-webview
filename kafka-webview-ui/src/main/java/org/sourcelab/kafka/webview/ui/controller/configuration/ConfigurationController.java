@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 @RequestMapping("/configuration")
 public class ConfigurationController extends BaseController {
+
     /**
      * GET Displays main configuration index.
      */
@@ -45,7 +46,6 @@ public class ConfigurationController extends BaseController {
         // Setup breadcrumbs
         new BreadCrumbManager(model)
             .addCrumb("Configuration", null);
-
         return "configuration/index";
     }
 }

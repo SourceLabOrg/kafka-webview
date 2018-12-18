@@ -25,6 +25,11 @@
 package org.sourcelab.kafka.webview.ui.controller.api;
 
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +44,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.containsString;
@@ -46,6 +55,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -70,6 +80,7 @@ public class ApiControllerTest extends AbstractMvcTest {
     public void test_withoutAdminRole() throws Exception {
         testUrlWithOutAdminRole("/api/cluster/1/create/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/modify/topic", true);
+        testUrlWithOutAdminRole("/api/cluster/1/consumer/remove", true);
     }
 
     /**
@@ -177,5 +188,309 @@ public class ApiControllerTest extends AbstractMvcTest {
 
         assertTrue(resultJsonStr.contains(targetItem1));
         assertTrue(resultJsonStr.contains(targetItem2));
+    }
+
+    /**
+     * Test the list Consumers end point.
+     */
+    @Test
+    @Transactional
+    public void test_listConsumers() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState();
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumers")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("{\"id\":\"" + consumerId + "\",\"simple\":false}")));
+    }
+
+    /**
+     * Test the remove Consumer end point with admin role.
+     */
+    @Test
+    @Transactional
+    public void test_removeConsumer_withAdminRole() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState();
+
+        // Construct payload
+        final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
+
+        // Hit end point
+        mockMvc
+            .perform(post("/api/cluster/" + cluster.getId() + "/consumer/remove")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("true")));
+
+        // Verify consumer no longer exists
+        try (final AdminClient adminClient = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getAdminClient()) {
+
+            final ListConsumerGroupsResult request = adminClient.listConsumerGroups();
+            final Collection<ConsumerGroupListing> results = request.all().get();
+
+            final Optional<ConsumerGroupListing> match = results.stream()
+                .filter((entry) -> (entry.groupId().equals(consumerId)))
+                .findFirst();
+
+            assertFalse("Should not have found entry", match.isPresent());
+        }
+    }
+
+    /**
+     * Test the remove Consumer end point with non admin role.
+     */
+    @Test
+    @Transactional
+    public void test_removeConsumer_withNonAdminRole() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState();
+
+        // Construct payload
+        final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
+
+        // Hit end point
+        mockMvc
+            .perform(post("/api/cluster/" + cluster.getId() + "/consumer/remove")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().is4xxClientError());
+
+        // Verify consumer still exists
+        try (final AdminClient adminClient = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getAdminClient()) {
+
+            final ListConsumerGroupsResult request = adminClient.listConsumerGroups();
+            final Collection<ConsumerGroupListing> results = request.all().get();
+
+            final Optional<ConsumerGroupListing> match = results.stream()
+                .filter((entry) -> (entry.groupId().equals(consumerId)))
+                .findFirst();
+
+            assertTrue("Should have found entry", match.isPresent());
+        }
+    }
+
+    /**
+     * Test the list Consumers end point.
+     */
+    @Test
+    @Transactional
+    public void test_listConsumersAndDetails() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState();
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumersAndDetails")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // {"consumerId":"test-consumer-id-1543825835154","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":52168,"rack":null},"simple":false}]
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("partitionAssignor")))
+            .andExpect(content().string(containsString("state")))
+            .andExpect(content().string(containsString("members")))
+            .andExpect(content().string(containsString("coordinator")))
+            .andExpect(content().string(containsString("\"simple\":false")));
+    }
+
+    /**
+     * Test the get specific consumer end point.
+     */
+    @Test
+    @Transactional
+    public void test_specificConsumerDetails() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState();
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumer/" + consumerId + "/details")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // {"consumerId":"test-consumer-id-1543909384618","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":51229,"rack":null},"simple":false}
+
+            // Validate submit button seems to show up.
+            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("partitionAssignor")))
+            .andExpect(content().string(containsString("state")))
+            .andExpect(content().string(containsString("members")))
+            .andExpect(content().string(containsString("coordinator")))
+            .andExpect(content().string(containsString("\"simple\":false")));
+    }
+
+    /**
+     * Test the get specific consumer offsets.
+     */
+    @Test
+    @Transactional
+    public void test_specificConsumerOffsets() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState();
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumer/" + consumerId + "/offsets")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // {"consumerId":"test-consumer-id-1543909610144","topic":"TestTopic-1543909610145","offsets":[{"partition":0,"offset":10}],"partitions":[0]}
+
+            // Validate results seem right.
+            .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
+            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10}]")))
+            .andExpect(content().string(containsString("\"partitions\":[0]")));
+    }
+
+    /**
+     * Test the get specific consumer offsets with tail offsets.
+     */
+    @Test
+    @Transactional
+    public void test_specificConsumerOffsetsWithTailOffsets() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a consumer with state on the cluster.
+        final String consumerId = createConsumerWithState();
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/consumer/" + consumerId + "/offsetsAndTailPositions")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Should have content similar to:
+            // {"consumerId":"test-consumer-id-1544775318028","topic":"TestTopic-1544775318028","offsets":[{"partition":0,"offset":10,"tail":10}],"partitions":[0]}
+
+            // Validate results seem right.
+            .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
+            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}]")))
+            .andExpect(content().string(containsString("\"partitions\":[0]")));
+    }
+
+    /**
+     * Helper method to create a consumer with state on the given cluster.
+     * @return Consumer group id created.
+     */
+    private String createConsumerWithState() {
+        final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
+
+        // Define our new topic name
+        final String newTopic = "TestTopic-" + System.currentTimeMillis();
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(newTopic, 1, (short)1);
+
+        // Publish records into topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, newTopic, 0);
+
+        // Create a consumer and consume from the records, maintaining state.
+        final Properties consumerProperties = new Properties();
+        consumerProperties.put("client.id", consumerId);
+        consumerProperties.put("group.id", consumerId);
+
+        try (final KafkaConsumer consumer = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, consumerProperties)) {
+
+            // Consume
+            consumer.subscribe(Collections.singleton(newTopic));
+            consumer.poll(2000L);
+
+            // Save state.
+            consumer.commitSync();
+        }
+
+        return consumerId;
     }
 }

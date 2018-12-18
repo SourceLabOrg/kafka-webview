@@ -28,7 +28,10 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.HashMap;
@@ -52,8 +55,41 @@ public class KafkaAdminFactory {
      * Create a new AdminClient instance.
      * @param clusterConfig What cluster to connect to.
      * @param clientId What clientId to associate the connection with.
+     * @return AdminClient instance.
      */
     public AdminClient create(final ClusterConfig clusterConfig, final String clientId) {
+        // Create a map
+        final Map<String, Object> config = buildClientProperties(clusterConfig, clientId);
+
+        // Create instance.
+        return KafkaAdminClient.create(config);
+    }
+
+    /**
+     * Create a new KafkaConsumer instance.
+     * @param clusterConfig What cluster to connect to.
+     * @param clientId What clientId to associate the connection with.
+     * @return KafkaConsumer instance.
+     */
+    public KafkaConsumer<String, String> createConsumer(final ClusterConfig clusterConfig, final String clientId) {
+        // Create a map
+        final Map<String, Object> config = buildClientProperties(clusterConfig, clientId);
+
+        // Set required deserializer classes.
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+
+        // Create consumer
+        return new KafkaConsumer<>(config);
+    }
+
+    /**
+     * Utility method to generate the appropriate Kafka client configuration from the ClusterConfig definition.
+     * @param clusterConfig Details about the cluster to connect to.
+     * @param clientId What clientId to associate with connection with.
+     * @return Map of Kafka client properties.
+     */
+    private Map<String, Object> buildClientProperties(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
         final Map<String, Object> config = new HashMap<>();
         config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getConnectString());
@@ -67,7 +103,6 @@ public class KafkaAdminFactory {
             config.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getTrustStoreFile());
             config.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clusterConfig.getTrustStorePassword());
         }
-
-        return KafkaAdminClient.create(config);
+        return config;
     }
 }

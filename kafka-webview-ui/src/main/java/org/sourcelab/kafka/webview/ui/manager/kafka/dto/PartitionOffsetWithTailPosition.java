@@ -22,24 +22,44 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui;
+package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import static org.junit.Assert.assertTrue;
-
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class ApplicationTest {
+/**
+ * Represents metadata about a consumer offset stored on a particular partition along with the current
+ * tail offset position for the same partition.
+ */
+public class PartitionOffsetWithTailPosition {
+    private final int partition;
+    private final long offset;
+    private final long tail;
 
     /**
-     * This is a sanity test that we can load the spring boot app in a 'test' context.
+     * Constructor.
      */
-    @Test
-    public void contextLoads() {
-        assertTrue("We loaded, yey", true);
+    public PartitionOffsetWithTailPosition(final int partition, final long offset, final long tail) {
+        this.partition = partition;
+        this.offset = offset;
+        this.tail = tail;
+    }
+
+    public int getPartition() {
+        return partition;
+    }
+
+    public long getOffset() {
+        return offset;
+    }
+
+    public long getTail() {
+        return tail;
+    }
+
+    @Override
+    public String toString() {
+        return "PartitionOffsetWithTailPosition{"
+            + "partition=" + partition
+            + ", offset=" + offset
+            + ", tail=" + tail
+            + '}';
     }
 }

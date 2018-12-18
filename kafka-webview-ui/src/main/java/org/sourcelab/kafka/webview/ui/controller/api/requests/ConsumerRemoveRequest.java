@@ -22,24 +22,39 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui;
+package org.sourcelab.kafka.webview.ui.controller.api.requests;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+/**
+ * Defines a request to remove a consumer.
+ */
+public class ConsumerRemoveRequest {
+    private Long clusterId;
+    private String consumerId;
 
-import static org.junit.Assert.assertTrue;
+    public ConsumerRemoveRequest() {
+    }
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class ApplicationTest {
+    public Long getClusterId() {
+        return clusterId;
+    }
 
-    /**
-     * This is a sanity test that we can load the spring boot app in a 'test' context.
-     */
-    @Test
-    public void contextLoads() {
-        assertTrue("We loaded, yey", true);
+    public void setClusterId(final Long clusterId) {
+        this.clusterId = clusterId;
+    }
+
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(final String consumerId) {
+        this.consumerId = consumerId;
+    }
+
+    @Override
+    public String toString() {
+        return "ConsumerRemoveRequest{"
+            + "clusterId='" + clusterId + '\''
+            + ", consumerId='" + consumerId + '\''
+            + '}';
     }
 }

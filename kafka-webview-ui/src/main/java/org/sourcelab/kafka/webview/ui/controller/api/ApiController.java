@@ -28,6 +28,7 @@ import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.api.exceptions.ApiException;
 import org.sourcelab.kafka.webview.ui.controller.api.exceptions.NotFoundApiException;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
@@ -40,6 +41,10 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsetsWithTailPositions;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerState;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
@@ -143,8 +148,15 @@ public class ApiController extends BaseController {
      * POST manually set a consumer's offsets.
      */
     @ResponseBody
-    @RequestMapping(path = "/consumer/view/{id}/offsets", method = RequestMethod.POST, produces = "application/json")
-    public ConsumerState setConsumerOffsets(@PathVariable final Long id,  @RequestBody final Map<Integer, Long> partitionOffsetMap) {
+    @RequestMapping(
+        path = "/consumer/view/{id}/offsets",
+        method = RequestMethod.POST,
+        produces = "application/json"
+    )
+    public ConsumerState setConsumerOffsets(
+        @PathVariable final Long id,
+        @RequestBody final Map<Integer, Long> partitionOffsetMap
+    ) {
         // Retrieve View
         final View view = retrieveViewById(id);
 
@@ -160,8 +172,15 @@ public class ApiController extends BaseController {
      * POST manually set a consumer's offsets using a timestamp.
      */
     @ResponseBody
-    @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
-    public ConsumerState setConsumerOffsetsByTimestamp(@PathVariable final Long id, @PathVariable final Long timestamp) {
+    @RequestMapping(
+        path = "/consumer/view/{id}/timestamp/{timestamp}",
+        method = RequestMethod.POST,
+        produces = "application/json"
+    )
+    public ConsumerState setConsumerOffsetsByTimestamp(
+        @PathVariable final Long id,
+        @PathVariable final Long timestamp
+    ) {
         // Retrieve View
         final View view = retrieveViewById(id);
 
@@ -398,6 +417,153 @@ public class ApiController extends BaseController {
     }
 
     /**
+     * GET list all consumer groups for a specific cluster.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumers", method = RequestMethod.GET, produces = "application/json")
+    public List<ConsumerGroupIdentifier> listConsumers(@PathVariable final Long id) {
+
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.listConsumers();
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET list all consumer groups for a specific cluster with details about each one.
+     */
+    @ResponseBody
+    @RequestMapping(
+        path = "/cluster/{id}/consumersAndDetails",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
+    public List<ConsumerGroupDetails> listConsumersAndDetails(@PathVariable final Long id) {
+
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            // First get list of all consumerGroups.
+            final List<ConsumerGroupIdentifier> consumerGroupIdentifiers = operations.listConsumers();
+            if (consumerGroupIdentifiers.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            final List<String> stringIds = new ArrayList<>();
+            consumerGroupIdentifiers.forEach(groupId -> {
+                stringIds.add(groupId.getId());
+            });
+
+            // Now get details about all of em.
+            return operations.getConsumerGroupDetails(stringIds);
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET Retrieve details about a single specific consumer.
+     */
+    @ResponseBody
+    @RequestMapping(
+        path = "/cluster/{id}/consumer/{consumerGroupId}/details",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
+    public ConsumerGroupDetails getConsumerDetails(
+        @PathVariable final Long id,
+        @PathVariable final String consumerGroupId
+    ) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            final List<String> stringIds = new ArrayList<>();
+            stringIds.add(consumerGroupId);
+
+            // Now get details about all of em.
+            final List<ConsumerGroupDetails> detailsList = operations.getConsumerGroupDetails(stringIds);
+            if (detailsList.isEmpty()) {
+                throw new RuntimeException("Unable to find consumer group id " + consumerGroupId);
+            }
+
+            return detailsList.get(0);
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET Retrieve offsets for a specific consumer group id.
+     */
+    @ResponseBody
+    @RequestMapping(
+        path = "/cluster/{id}/consumer/{consumerGroupId}/offsets",
+        method = RequestMethod.GET,
+        produces = "application/json"
+    )
+    public ConsumerGroupOffsets getConsumerOffsets(
+        @PathVariable final Long id,
+        @PathVariable final String consumerGroupId
+    ) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.getConsumerGroupOffsets(consumerGroupId);
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * GET Retrieve offsets for a specific consumer group id with tail positions.
+     */
+    @ResponseBody
+    @RequestMapping(
+        path = "/cluster/{id}/consumer/{consumerGroupId}/offsetsAndTailPositions",
+        method = RequestMethod.GET, produces = "application/json"
+    )
+    public ConsumerGroupOffsetsWithTailPositions getConsumerOffsetsWithTailPositions(
+        @PathVariable final Long id,
+        @PathVariable final String consumerGroupId
+    ) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.getConsumerGroupOffsetsWithTailOffsets(consumerGroupId);
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * POST list all consumer groups for a specific cluster.
+     * This should require ADMIN role.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/consumer/remove", method = RequestMethod.POST, produces = "application/json")
+    public boolean removeConsumer(
+        @PathVariable final Long id,
+        @RequestBody final ConsumerRemoveRequest consumerRemoveRequest) {
+
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(consumerRemoveRequest.getClusterId());
+
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            return operations.removeConsumerGroup(consumerRemoveRequest.getConsumerId());
+        } catch (final Exception exception) {
+            throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
      * Error handler for ApiExceptions.
      */
     @ResponseBody
@@ -418,7 +584,10 @@ public class ApiController extends BaseController {
      * Creates a WebKafkaConsumer instance.
      */
     private WebKafkaConsumer setup(final View view, final Collection<FilterDefinition> filterDefinitions) {
-        final SessionIdentifier sessionIdentifier = new SessionIdentifier(getLoggedInUserId(), getLoggedInUserSessionId());
+        final SessionIdentifier sessionIdentifier = SessionIdentifier.newWebIdentifier(
+            getLoggedInUserId(),
+            getLoggedInUserSessionId()
+        );
         return webKafkaConsumerFactory.createWebClient(view, filterDefinitions, sessionIdentifier);
     }
 
