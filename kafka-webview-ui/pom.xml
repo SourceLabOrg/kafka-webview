@@ -168,6 +168,15 @@
             <version>1.1.1</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Test case for custom deserializer for protobufs -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.6.1</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

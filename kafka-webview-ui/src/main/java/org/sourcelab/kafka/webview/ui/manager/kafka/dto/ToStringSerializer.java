@@ -46,14 +46,15 @@ public class ToStringSerializer extends JsonSerializer<Object> {
             return;
         }
 
-        // See if we have a serializer that is NOT the unknown serializer
-        final JsonSerializer serializer = serializers.findValueSerializer(value.getClass());
-        if (serializer != null && !(serializer instanceof UnknownSerializer)) {
-            serializer.serialize(value, gen, serializers);
-            return;
+        try {
+            // See if we have a serializer that is NOT the unknown serializer
+            final JsonSerializer serializer = serializers.findValueSerializer(value.getClass());
+            if (serializer != null && !(serializer instanceof UnknownSerializer)) {
+                serializer.serialize(value, gen, serializers);
+            }
+        } catch (final Exception exception) {
+            // Non-ideal case -- Fall back to using toString()
+            gen.writeString(value.toString());
         }
-
-        // Fall back to using toString()
-        gen.writeString(value.toString());
     }
 }
