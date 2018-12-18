@@ -264,6 +264,8 @@ have a Deserializer implementation for consuming from Kafka then you simply can 
 
 If you don't already have an implementation, you can view the [interface here](https://github.com/apache/kafka/blob/0.11.0/clients/src/main/java/org/apache/kafka/common/serialization/Deserializer.java).
 
+**Important Note:** Kafka WebView will attempt to automatically convert objects returned from the Deserializer interface into a JSON representation for easy display in the browser (by way of [Jackson](https://github.com/FasterXML/jackson)).  This process is imperfect -- If you want your objects to be rendered within the browser in a specific way, it is **highly recommended** that your Deserializer implementation returns a pre-formatted String instead of a complex object.
+
 ## Writing Custom Filters
 
 The [RecordFilter Interface](https://github.com/SourceLabOrg/kafka-webview/blob/master/kafka-webview-plugin/src/main/java/org/sourcelab/kafka/webview/ui/plugin/filter/RecordFilter.java)
