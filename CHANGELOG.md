@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 #### Bug fixes
 - Topics shown on brokers now include "internal" topics.
 - Generated consumer client.id shortened.
+- [#111](https://github.com/SourceLabOrg/kafka-webview/issues/111) Add ProtocolBuffer support to Jackson via third party module.
 
 #### Internal Dependency Updates
 - Upgrade from Spring Boot 2.0.5 to 2.0.7
