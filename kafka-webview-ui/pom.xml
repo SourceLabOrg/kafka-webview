@@ -130,10 +130,18 @@
             <artifactId>jackson-datatype-protobuf</artifactId>
             <version>0.9.10-jackson2.9-proto3</version>
             <exclusions>
-                <!-- exclude non-required and out-dated dependency -->
+                <!-- exclude out-dated dependency -->
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
                 </exclusion>
 
             </exclusions>
