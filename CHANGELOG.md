@@ -5,6 +5,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.1.0 (12/20/2018)
 #### New Features
 - Add support for SASL authentication to Kafka clusters.
+- Add support for LDAP user authentication to application.
 - Consumer details can now be viewed on Clusters.
 - Explicitly expose user login session timeout configuration value in documentation.
 
