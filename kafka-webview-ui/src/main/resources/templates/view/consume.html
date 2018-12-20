@@ -23,10 +23,16 @@
                 viewId: '[[${view.id}]]',
                 formatDates: true,
                 resultsPerPartition: '[[${view.resultsPerPartition}]]',
+
+                // JSON Render settings.
+                useJsonRender: true,
+                jsonRenderToLevel: 1000
             };
 
             // On load, fire off ajax request to load results.
             jQuery(document).ready(function() {
+                renderjson.set_show_to_level(ConsumerInfo.jsonRenderToLevel);
+
                 // Fire off initial consume request
                 executeConsume('next');
 
@@ -160,12 +166,44 @@
 
                 // Loop over results
                 jQuery.each(results.results, function (index, result) {
+                    // Determine how to render key
+                    var keyIsJson = false;
+                    var key = result.key;
+
+                    // Determine if result.value is a string, or JSON object
+                    if (result.key instanceof Object && !(result.key instanceof String)) {
+                        // Use fancy json rendering.
+                        if (ConsumerInfo.useJsonRender) {
+                            keyIsJson = true;
+                        } else {
+                            // Convert to String
+                            key = JSON.stringify(result.key);
+                        }
+                    }
+
+                    // Determine how to render value
+                    var valueIsJson = false;
+                    var value = result.value;
+
+                    // Determine if result.value is a string, or JSON object
+                    if (result.value instanceof Object && !(result.value instanceof String)) {
+                        // Use fancy json rendering.
+                        if (ConsumerInfo.useJsonRender) {
+                            valueIsJson = true;
+                        } else {
+                            // Convert to String
+                            value = JSON.stringify(result.value);
+                        }
+                    }
+
                     // Generate html from template
                     var properties = {
                         partition: result.partition,
                         offset: result.offset,
-                        key: result.key,
-                        value: result.value,
+                        key: key,
+                        keyIsJson: keyIsJson,
+                        value: value,
+                        valueIsJson: valueIsJson,
                         timestamp: result.timestamp,
                         date: DateTools.displayTimestamp(result.timestamp),
                         timezone: DateTools.localTimezone,
@@ -175,6 +213,14 @@
 
                     // Append it to our table
                     jQuery(table).append(resultHtml);
+
+                    // If json, generate formatted json
+                    if (keyIsJson) {
+                        jQuery("td#key-" + result.partition + "-" + result.offset).html(renderjson(result.key));
+                    }
+                    if (valueIsJson) {
+                        jQuery("td#value-" + result.partition + "-" + result.offset).html(renderjson(result.value));
+                    }
                 });
 
                 // Hide loader
@@ -393,8 +439,12 @@
                     <span class="timestamp" title="{{date}}">{{timestamp}}</span>
                     {{/if}}
                 </td>
-                <td><pre>{{key}}</pre></td>
-                <td><pre>{{value}}</pre></td>
+                <td id="key-{{partition}}-{{offset}}">
+                    {{#unless keyIsJson }}<pre>{{key}}</pre>{{/unless}}
+                </td>
+                <td id="value-{{partition}}-{{offset}}">
+                    {{#unless isJson }}<pre>{{value}}</pre>{{/unless}}
+                </td>
             </tr>
         </script>
     </div>

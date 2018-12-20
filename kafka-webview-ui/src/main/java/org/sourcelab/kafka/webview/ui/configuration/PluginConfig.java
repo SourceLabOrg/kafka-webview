@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
@@ -36,6 +37,7 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -122,11 +124,16 @@ public class PluginConfig {
      * @return Jackson2ObjectMapperBuilderCustomizer instance.
      */
     @Bean
-    public Jackson2ObjectMapperBuilderCustomizer addCustomBigDecimalDeserialization() {
+    public Jackson2ObjectMapperBuilderCustomizer registerJacksonProtobufModule() {
         return jacksonObjectMapperBuilder -> {
-            // Register custom protocol buffer serializer as protocol buffers is a common serialization format.
+            // Register custom protocol buffer serializer.
             jacksonObjectMapperBuilder.modulesToInstall(new ProtobufModule());
         };
+    }
+
+    @Autowired(required = true)
+    public void configureJackson(ObjectMapper jackson2ObjectMapper) {
+        jackson2ObjectMapper.registerModule(new ProtobufModule());
     }
     
     /**
