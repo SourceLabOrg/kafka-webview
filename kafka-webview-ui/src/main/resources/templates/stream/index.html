@@ -109,6 +109,10 @@
             // End point to consume a view
             consumerBaseUrl: "/user/topic/view",
 
+            // JSON Render settings.
+            useJsonRender: true,
+            jsonRenderToLevel: 1000,
+
             getConsumerUrl : function() {
                 return SocketDetails.consumerBaseUrl + '/' + SocketDetails.viewId + '/' + SocketDetails.userId;
             },
@@ -245,12 +249,44 @@
 
             // Append results to browser
             appendResult: function(result) {
+                // Determine how to render key
+                var keyIsJson = false;
+                var key = result.key;
+
+                // Determine if result.value is a string, or JSON object
+                if (result.key instanceof Object && !(result.key instanceof String)) {
+                    // Use fancy json rendering.
+                    if (SocketDetails.useJsonRender) {
+                        keyIsJson = true;
+                    } else {
+                        // Convert to String
+                        key = JSON.stringify(result.key);
+                    }
+                }
+
+                // Determine how to render value
+                var valueIsJson = false;
+                var value = result.value;
+
+                // Determine if result.value is a string, or JSON object
+                if (result.value instanceof Object && !(result.value instanceof String)) {
+                    // Use fancy json rendering.
+                    if (SocketDetails.useJsonRender) {
+                        valueIsJson = true;
+                    } else {
+                        // Convert to String
+                        value = JSON.stringify(result.value);
+                    }
+                }
+
                 // Generate html from template
                 var properties = {
                     partition: result.partition,
                     offset: result.offset,
-                    key: result.key,
-                    value: result.value,
+                    key: key,
+                    keyIsJson: keyIsJson,
+                    value: value,
+                    valueIsJson: valueIsJson,
                     timestamp: result.timestamp,
                     date: DateTools.displayTimestamp(result.timestamp),
                     timezone: DateTools.localTimezone,
@@ -260,6 +296,14 @@
 
                 // Prepend it to the top of our table
                 SocketDetails.resultsTable.prepend(resultHtml);
+
+                // If json, generate formatted json
+                if (keyIsJson) {
+                    jQuery("td#key-" + result.partition + "-" + result.offset).html(renderjson(result.key));
+                }
+                if (valueIsJson) {
+                    jQuery("td#value-" + result.partition + "-" + result.offset).html(renderjson(result.value));
+                }
 
                 // Remove rows > max results from the end
                 var resultRows = SocketDetails.resultsTable.children();
@@ -294,6 +338,8 @@
              * for the selected value.
              */
             jQuery('#startPositionSelector').change(function(event) {
+                renderjson.set_show_to_level(SocketDetails.jsonRenderToLevel);
+
                 var selected = jQuery(this).val();
 
                 // Hide all options
@@ -320,8 +366,12 @@
                 <span class="timestamp" title="{{date}}">{{timestamp}}</span>
                 {{/if}}
             </td>
-            <td><pre>{{key}}</pre></td>
-            <td><pre>{{value}}</pre></td>
+            <td id="key-{{partition}}-{{offset}}">
+                {{#unless keyIsJson }}<pre>{{key}}</pre>{{/unless}}
+            </td>
+            <td id="value-{{partition}}-{{offset}}">
+                {{#unless valueIsJson }}<pre>{{value}}</pre>{{/unless}}
+            </td>
         </tr>
     </script>
 </section>

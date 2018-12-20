@@ -24,10 +24,17 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import java.util.List;
 
 /**
  * Application configuration for Web resources.
@@ -57,4 +64,20 @@ public class WebConfig extends WebMvcConfigurerAdapter {
             .addResourceHandler("/img/**")
             .addResourceLocations("classpath:/static/img/");
     }
+
+    /**
+     * Ensure that ProtobufModule is registered so protobufs can easily be serialized.
+     * @param converters list of converters registered.
+     */
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.clear();
+
+        final ObjectMapper mapper = Jackson2ObjectMapperBuilder
+            .json()
+            .modulesToInstall(new ProtobufModule())
+            .build();
+        converters.add(new MappingJackson2HttpMessageConverter(mapper));
+    }
+
 }

@@ -40,6 +40,7 @@ var vendorsJS = [
   'node_modules/pace-progress/pace.min.js',
   'node_modules/popper.js/dist/umd/popper.min.js',
   'node_modules/popper.js/dist/umd/popper.min.js.map',
+  'node_modules/renderjson/renderjson.js',
   'node_modules/select2/dist/js/select2.min.js',
   'node_modules/toastr/toastr.js',
   'node_modules/handlebars/dist/handlebars.js',
