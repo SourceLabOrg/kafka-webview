@@ -38,8 +38,10 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,11 +143,23 @@ public class DevCluster {
                 logger.info("Started broker with Id {} at {}", broker.getBrokerId(), broker.getConnectString());
             });
 
+        if (topicNames != null && topicNames.length > 0) {
+            final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
+            if (cmd.hasOption("consumer")) {
+                for (final String topicName : topicNames) {
+                    runEndlessConsumer(topicName, testUtils);
+                }
+            }
+
+            if (cmd.hasOption("producer")) {
+                for (final String topicName : topicNames) {
+                    runEndlessProducer(topicName, testUtils);
+                }
+            }
+        }
+
         // Log cluster connect string.
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
-
-        //runEndlessConsumer(topicName, utils);
-        //runEndlessProducer(topicName, partitionsCount, utils);
 
         // Wait forever.
         Thread.currentThread().join();
@@ -189,6 +203,24 @@ public class DevCluster {
             .build()
         );
 
+        // Optionally start an endless consumer
+        options.addOption(Option.builder("consumer")
+            .desc("Start an endless consumer for each of the defined topics.")
+            .required(false)
+            .hasArg(false)
+            .type(Boolean.class)
+            .build()
+        );
+
+        // Optionally start an endless consumer
+        options.addOption(Option.builder("producer")
+            .desc("Start an endless producer for each of the defined topics.")
+            .required(false)
+            .hasArg(false)
+            .type(Boolean.class)
+            .build()
+        );
+
         try {
             final CommandLineParser parser = new DefaultParser();
             return parser.parse(options, args);
@@ -206,20 +238,20 @@ public class DevCluster {
     /**
      * Fire up a new thread running an endless producer script into the given topic and partitions.
      * @param topicName Name of the topic to produce records into.
-     * @param partitionCount number of partitions that exist on that topic.
      * @param utils KafkaUtils instance.
      */
     private static void runEndlessProducer(
         final String topicName,
-        final int partitionCount,
         final KafkaTestUtils utils
     ) {
         final Thread producerThread = new Thread(() -> {
-            do {
+            // Determine how many partitions there are
+            final TopicDescription topicDescription = utils.describeTopic(topicName);
 
-                // Publish some data into that topic
-                for (int partition = 0; partition < partitionCount; partition++) {
-                    utils.produceRecords(1000, topicName, partition);
+            do {
+                // Publish some data into that topic for each partition.
+                for (final TopicPartitionInfo partitionInfo : topicDescription.partitions()) {
+                    utils.produceRecords(1000, topicName, partitionInfo.partition());
                     try {
                         Thread.sleep(1000L);
                     } catch (InterruptedException e) {
@@ -233,8 +265,10 @@ public class DevCluster {
                 }
             } while (true);
         });
-        producerThread.start();
 
+        logger.info("Starting endless producer for topic {}", topicName);
+        producerThread.setName("Endless producer for topic " + topicName);
+        producerThread.start();
     }
 
     /**
@@ -270,6 +304,9 @@ public class DevCluster {
                 return;
             }
         });
+
+        logger.info("Starting endless consumer for topic {}", topicName);
+        consumerThread.setName("Endless consumer for topic " + topicName);
         consumerThread.start();
     }
 }

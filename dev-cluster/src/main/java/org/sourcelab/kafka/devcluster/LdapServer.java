@@ -42,9 +42,11 @@ public class LdapServer {
      * @param args command line arguments (none).
      */
     public static void main(final String[] args) throws LDAPException, InterruptedException {
+        final String baseDn = "dc=springframework,dc=org";
+
         // Create a base configuration for the server.
         final InMemoryDirectoryServerConfig config = new InMemoryDirectoryServerConfig(
-            "dc=springframework,dc=org"
+            baseDn
         );
 
         // Create new listener
@@ -66,9 +68,10 @@ public class LdapServer {
         server.startListening();
 
         logger.info(
-            "Server running at: {}:{}",
+            "Server running at: ldap://{}:{}/{}",
             server.getConnection("LDAP").getConnectedAddress(),
-            server.getConnection("LDAP").getConnectedPort()
+            server.getConnection("LDAP").getConnectedPort(),
+            baseDn
         );
 
         Thread.currentThread().join();
