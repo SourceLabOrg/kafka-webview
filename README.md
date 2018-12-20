@@ -285,14 +285,15 @@ Steps for performing a release:
 3. Update CHANGELOG and README files.
 4. Merge to master.
 5. Deploy to Maven Central: mvn clean deploy -P release-kafka-webview
-6. Create release on Github project.
-7 Build and upload new Docker images:
+6. Build and upload new Docker images:
     - Edit Dockerfile and update version and sha1 hash.
     - `docker build -t kafka-webview .`
     - `docker tag kafka-webview sourcelaborg/kafka-webview:latest`
     - `docker push sourcelaborg/kafka-webview:latest`
-    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.0.VERSIONHERE`
-    - `docker push sourcelaborg/kafka-webview:2.0.VERSIONHERE`
+    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.1.VERSIONHERE`
+    - `docker push sourcelaborg/kafka-webview:2.1.VERSIONHERE`
+    - Commit updated docker files.
+7. Create release on Github project.
 
 
 # Changelog
