@@ -188,10 +188,15 @@ public class ClusterConfigController extends BaseController {
                         "clusterForm", "trustStoreFile", null, true, null, null, "Select a TrustStore JKS to upload")
                     );
                 }
-                if (clusterForm.getKeyStoreFile() == null || clusterForm.getKeyStoreFile().isEmpty()) {
-                    bindingResult.addError(new FieldError(
-                        "clusterForm", "keyStoreFile", null, true, null, null, "Select a KeyStore JKS to upload")
-                    );
+
+                // Only require KeyStore if NOT using SASL
+                if (!clusterForm.getSasl()) {
+                    // If no keystore file provided, add validation error.
+                    if (clusterForm.getKeyStoreFile() == null || clusterForm.getKeyStoreFile().isEmpty()) {
+                        bindingResult.addError(new FieldError(
+                            "clusterForm", "keyStoreFile", null, true, null, null, "Select a KeyStore JKS to upload")
+                        );
+                    }
                 }
             }
         }
@@ -258,32 +263,34 @@ public class ClusterConfigController extends BaseController {
                 }
             }
 
-            // Handle key store update
             if (!clusterForm.exists() || (clusterForm.getKeyStoreFile() != null && !clusterForm.getKeyStoreFile().isEmpty())) {
-                // Delete previous key store if updating
-                if (cluster.getKeyStoreFile() != null) {
+                // Delete previous key store if updating, or if SASL is enabled.
+                if (clusterForm.getSasl() || cluster.getKeyStoreFile() != null) {
                     uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
                     cluster.setKeyStoreFile(null);
                     cluster.setKeyStorePassword(null);
                 }
 
-                // Sanitize filename
-                final String filename = clusterForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".keystore.jks";
+                // If not using SASL, handle upload of keystore.
+                if (!clusterForm.getSasl()) {
+                    // Sanitize filename
+                    final String filename = clusterForm.getName().replaceAll("[^A-Za-z0-9]", "_") + ".keystore.jks";
 
-                // Persist JKS on filesystem
-                try {
-                    // Encrypt password
-                    final String encrypted = secretManager.encrypt(clusterForm.getKeyStorePassword());
+                    // Persist JKS on filesystem
+                    try {
+                        // Encrypt password
+                        final String encrypted = secretManager.encrypt(clusterForm.getKeyStorePassword());
 
-                    // Handle upload
-                    uploadManager.handleKeystoreUpload(clusterForm.getKeyStoreFile(), filename);
+                        // Handle upload
+                        uploadManager.handleKeystoreUpload(clusterForm.getKeyStoreFile(), filename);
 
-                    // Persist in model
-                    cluster.setKeyStoreFile(filename);
-                    cluster.setKeyStorePassword(encrypted);
-                } catch (IOException exception) {
-                    // TODO handle
-                    throw new RuntimeException(exception.getMessage(), exception);
+                        // Persist in model
+                        cluster.setKeyStoreFile(filename);
+                        cluster.setKeyStorePassword(encrypted);
+                    } catch (IOException exception) {
+                        // TODO handle
+                        throw new RuntimeException(exception.getMessage(), exception);
+                    }
                 }
             }
         } else {
