@@ -248,6 +248,8 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
                 </configuration>
             </plugin>
 
@@ -300,7 +302,7 @@
                         <phase>generate-resources</phase>
                         <configuration>
                             <nodeVersion>v8.6.0</nodeVersion>
-                            <npmVersion>5.5.1</npmVersion>
+                            <npmVersion>6.5.0</npmVersion>
                             <workingDirectory>src/main/frontend</workingDirectory>
                             <installDirectory>target/</installDirectory>
                         </configuration>

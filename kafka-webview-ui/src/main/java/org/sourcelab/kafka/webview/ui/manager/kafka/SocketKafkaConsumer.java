@@ -36,6 +36,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +63,7 @@ public class SocketKafkaConsumer implements Runnable {
 
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
+    private final Duration pollTimeoutDuration = Duration.ofMillis(POLL_TIMEOUT_MS);
     private final BlockingQueue<KafkaResult> outputQueue;
 
     private volatile boolean requestStop = false;
@@ -107,7 +109,7 @@ public class SocketKafkaConsumer implements Runnable {
 
         do {
             // Start trying to consume messages from kafka
-            final ConsumerRecords consumerRecords = kafkaConsumer.poll(POLL_TIMEOUT_MS);
+            final ConsumerRecords consumerRecords = kafkaConsumer.poll(pollTimeoutDuration);
 
             // If no records found
             if (consumerRecords.isEmpty()) {
