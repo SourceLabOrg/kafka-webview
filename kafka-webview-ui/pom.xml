@@ -302,7 +302,7 @@
                         <phase>generate-resources</phase>
                         <configuration>
                             <nodeVersion>v8.6.0</nodeVersion>
-                            <npmVersion>6.5.0</npmVersion>
+                            <npmVersion>5.5.1</npmVersion>
                             <workingDirectory>src/main/frontend</workingDirectory>
                             <installDirectory>target/</installDirectory>
                         </configuration>

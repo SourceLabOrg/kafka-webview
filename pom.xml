@@ -61,6 +61,9 @@
         <!-- https://github.com/spring-projects/spring-boot/issues/8635 -->
         <logback.version>1.2.3</logback.version>
 
+        <!-- Override Jackson version for security fix -->
+        <jackson.version>2.9.8</jackson.version>
+
         <!-- test toggling -->
         <skipTests>false</skipTests>
         <skipCheckStyle>false</skipCheckStyle>
