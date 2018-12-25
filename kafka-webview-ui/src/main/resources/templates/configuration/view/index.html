@@ -61,6 +61,12 @@
                                                 <i class="fa fa-edit"></i>
                                                 Edit
                                             </a>
+                                            <form th:action="@{/configuration/view/copy/{id}(id=${view.id})}" method="post">
+                                                <button class="dropdown-item" type="submit" style="border-bottom: 1px solid #c2cfd6;">
+                                                    <i class="fa fa-copy"></i>
+                                                    Copy
+                                                </button>
+                                            </form>
                                             <form th:action="@{/configuration/view/delete/{id}(id=${view.id})}" method="post">
                                                 <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
                                                     <i class="fa fa-remove"></i>

@@ -32,6 +32,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
+import org.sourcelab.kafka.webview.ui.manager.model.view.ViewCopyManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
@@ -47,6 +48,7 @@ import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewToFilterOptionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -461,6 +463,31 @@ public class ViewConfigController extends BaseController {
             viewRepository.deleteById(id);
 
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted view!"));
+        }
+
+        // redirect to cluster index
+        return "redirect:/configuration/view";
+    }
+
+    /**
+     * POST copies the selected view.
+     */
+    @RequestMapping(path = "/copy/{id}", method = RequestMethod.POST)
+    @Transactional
+    public String copyView(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
+        // Retrieve it
+        if (!viewRepository.existsById(id)) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find view!"));
+        } else {
+            // Retrieve view
+            viewRepository.findById(id).ifPresent((view) -> {
+                // Create Copy manager
+                final ViewCopyManager copyManager = new ViewCopyManager(viewRepository);
+                copyManager.copy(view, "Copy of " + view.getName());
+
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Copied view!"));
+            });
         }
 
         // redirect to cluster index
