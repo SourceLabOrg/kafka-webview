@@ -2,6 +2,10 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.1.1 (UNRELEASED)
+#### Bug fixes
+- [ISSUE-116](https://github.com/SourceLabOrg/kafka-webview/issues/116) No longer require KeyStore and KeyStore password when configuring a SSL+SASL cluster.
+
 ## 2.1.0 (12/20/2018)
 #### New Features
 - Add support for SASL authentication to Kafka clusters.
