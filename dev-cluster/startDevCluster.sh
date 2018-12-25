@@ -14,7 +14,7 @@ cd "${0%/*}"
 if [ ! -f $KEY_STORE_FILE ] || [ ! -f $TRUST_STORE_FILE ]; then
     echo "Key store files do no exist...generating now...";
     ## Build certificates
-    ././../generateDummySslCertificates.sh
+    ./../../generateDummySslCertificates.sh
 fi
 
 ## If jar doesn't exit, build it.
