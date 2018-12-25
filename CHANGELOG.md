@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 #### Bug fixes
 - [ISSUE-116](https://github.com/SourceLabOrg/kafka-webview/issues/116) No longer require KeyStore and KeyStore password when configuring a SSL+SASL cluster.
 
+#### Internal Dependency Updates
+- Jackson updated from 2.9.7 to 2.9.8 for security fix.
+
 ## 2.1.0 (12/20/2018)
 #### New Features
 - Add support for SASL authentication to Kafka clusters.
