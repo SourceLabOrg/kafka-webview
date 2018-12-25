@@ -121,9 +121,11 @@ public class KafkaClientConfigUtil {
             config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name);
         } else {
             config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name);
+
+            // KeyStore and KeyStore password only needed if NOT using SASL
+            config.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
+            config.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());
         }
-        config.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getKeyStoreFile());
-        config.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, clusterConfig.getKeyStorePassword());
         config.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, keyStoreRootPath + "/" + clusterConfig.getTrustStoreFile());
         config.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, clusterConfig.getTrustStorePassword());
     }
@@ -143,6 +145,10 @@ public class KafkaClientConfigUtil {
         if (clusterConfig.isUseSsl()) {
             // SASL+SSL
             config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name);
+
+            // Keystore and keystore password not required if using SASL+SSL
+            config.remove(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG);
+            config.remove(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG);
         } else {
             // Just SASL PLAINTEXT
             config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_PLAINTEXT.name);

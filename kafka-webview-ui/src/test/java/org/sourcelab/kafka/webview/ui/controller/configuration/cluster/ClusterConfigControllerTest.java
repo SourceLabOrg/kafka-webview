@@ -40,7 +40,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Errors;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,8 +58,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -164,8 +167,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertFalse("Should not be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
         validateNonSaslCluster(cluster);
     }
 
@@ -200,8 +203,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
-        assertEquals("Should be set back to NOT valid", false, cluster.isValid());
+        assertFalse("Should not be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should be set back to NOT valid", cluster.isValid());
         validateNonSaslCluster(cluster);
     }
 
@@ -221,7 +224,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         mockMvc
-            .perform(fileUpload("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/update")
                 .file(trustStoreUpload)
                 .file(keyStoreUpload)
                 .with(user(adminUserDetails))
@@ -241,8 +244,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should be ssl enabled", true, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertTrue("Should be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
         assertNotNull("Should have passwords set", cluster.getTrustStorePassword());
         assertNotNull("Should have passwords set", cluster.getKeyStorePassword());
         assertNotNull("Should have trust store file path", cluster.getTrustStoreFile());
@@ -254,7 +257,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         final String keyStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
         assertEquals("KeyStore file should have correct contents", "KeyStoreFile", keyStoreContents);
 
-        final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
+        final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
         assertTrue("trustStore file should have been uploaded", doesTruststoreFileExist);
         final String trustStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
         assertEquals("TrustStore file should have correct contents", "TrustStoreFile", trustStoreContents);
@@ -262,6 +265,55 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Cleanup
         Files.deleteIfExists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
         Files.deleteIfExists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
+    }
+
+    /**
+     * Test creating new ssl cluster but not providing a keystore will fail validation.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_newSslCluster_missingKeyStore_failsValidation() throws Exception {
+        final String expectedClusterName = "My New Cluster Name" + System.currentTimeMillis();
+        final String expectedBrokerHosts = "localhost:9092";
+        final String expectedKeystorePassword = "KeyStorePassword";
+        final String expectedTruststorePassword = "TrustStorePassword";
+
+        final MockMultipartFile trustStoreUpload = new MockMultipartFile("trustStoreFile", "TrustStoreFile".getBytes(Charsets.UTF_8));
+
+        // Hit create page.
+        final MvcResult result = mockMvc
+            .perform(multipart("/configuration/cluster/update")
+                .file(trustStoreUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("name", expectedClusterName)
+                .param("brokerHosts", expectedBrokerHosts)
+                .param("ssl", "true")
+                .param("trustStorePassword", expectedTruststorePassword)
+                .param("keyStorePassword", expectedKeystorePassword)
+            )
+            .andDo(print())
+            .andExpect(status().is2xxSuccessful())
+            .andExpect(content().string(containsString("Select a KeyStore JKS to upload")))
+            .andReturn();
+
+        // Verify Response
+        final ModelAndView modelAndView = result.getModelAndView();
+        assertEquals(
+            "Should have reloaded existing view",
+            "configuration/cluster/create",
+            modelAndView.getViewName()
+        );
+        assertTrue("Should have clusterForm attribute", modelAndView.getModel().containsKey("clusterForm"));
+
+        assertTrue("Should have bound errors", modelAndView.getModel().containsKey("org.springframework.validation.BindingResult.clusterForm"));
+        final Errors validationResult = (Errors) modelAndView.getModel().get("org.springframework.validation.BindingResult.clusterForm");
+        assertEquals("Should have 1 error", 1, validationResult.getErrorCount());
+        assertNotNull("Should have field error on keyStoreFile field", validationResult.getFieldError("keyStoreFile"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findByName(expectedClusterName);
+        assertNull("Should have no new cluster", cluster);
     }
 
     /**
@@ -291,7 +343,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         mockMvc
-            .perform(fileUpload("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/update")
                 .with(user(adminUserDetails))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
@@ -308,8 +360,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should be ssl enabled", true, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertTrue("Should be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
         assertEquals("Password should be unchanged", "DummyTrustStorePassword", cluster.getTrustStorePassword());
         assertEquals("Password should be unchanged", "DummyKeyStorePassword", cluster.getKeyStorePassword());
         assertEquals("Should have trust store file path", "Cluster.TrustStore.jks", cluster.getTrustStoreFile());
@@ -322,7 +374,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         final String keyStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getKeyStoreFile());
         assertEquals("KeyStore file should have remained untouched", "KeyStoreFile", keyStoreContents);
 
-        final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getKeyStoreFile()));
+        final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
         assertTrue("trustStore file should have been left untouched", doesTruststoreFileExist);
         final String trustStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
         assertEquals("TrustStore file should have remained untouched", "TrustStoreFile", trustStoreContents);
@@ -361,7 +413,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         mockMvc
-            .perform(fileUpload("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/update")
                 .file(trustStoreUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -380,8 +432,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should be ssl enabled", true, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertTrue("Should be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
         assertEquals("Password should be unchanged", "DummyKeyStorePassword", cluster.getKeyStorePassword());
         assertEquals("Should have key store file path", "Cluster.KeyStore.jks", cluster.getKeyStoreFile());
         validateNonSaslCluster(cluster);
@@ -435,7 +487,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         mockMvc
-            .perform(fileUpload("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/update")
                 .file(keyStoreUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -509,7 +561,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         mockMvc
-            .perform(fileUpload("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/update")
                 .with(user(adminUserDetails))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
@@ -525,8 +577,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should be ssl disabled", false, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertFalse("Should be ssl disabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
         assertNull("Password should be null", cluster.getTrustStorePassword());
         assertNull("Password should be null", cluster.getKeyStorePassword());
         assertNull("File reference should be null", cluster.getTrustStoreFile());
@@ -575,11 +627,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertFalse("Should not be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
 
         // Validate sasl properties
-        assertEquals("Should have sasl enabled", true, cluster.isSaslEnabled());
+        assertTrue("Should have sasl enabled", cluster.isSaslEnabled());
         assertEquals("Should have correct mechanism", expectedSaslMechanism, cluster.getSaslMechanism());
         assertNotNull("Should have non-null sasl config", cluster.getSaslConfig());
 
@@ -631,11 +683,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertFalse("Should not be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
 
         // Validate sasl properties
-        assertEquals("Should have sasl enabled", true, cluster.isSaslEnabled());
+        assertTrue("Should have sasl enabled", cluster.isSaslEnabled());
         assertEquals("Should have correct mechanism", expectedSaslMechanism, cluster.getSaslMechanism());
         assertNotNull("Should have non-null sasl config", cluster.getSaslConfig());
 
@@ -682,11 +734,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have new cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
-        assertEquals("Should not be valid by default", false, cluster.isValid());
+        assertFalse("Should not be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
 
         // Validate sasl properties
-        assertEquals("Should have sasl enabled", true, cluster.isSaslEnabled());
+        assertTrue("Should have sasl enabled", cluster.isSaslEnabled());
         assertEquals("Should have correct mechanism", expectedSaslMechanism, cluster.getSaslMechanism());
         assertNotNull("Should have non-null sasl config", cluster.getSaslConfig());
 
@@ -742,9 +794,88 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         assertNotNull("Should have cluster", cluster);
         assertEquals("Has correct name", expectedClusterName, cluster.getName());
         assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
-        assertEquals("Should not be ssl enabled", false, cluster.isSslEnabled());
-        assertEquals("Should be set back to NOT valid", false, cluster.isValid());
+        assertFalse("Should not be ssl enabled", cluster.isSslEnabled());
+        assertFalse("Should be set back to NOT valid", cluster.isValid());
         validateNonSaslCluster(cluster);
+    }
+
+    /**
+     * Test creating new sasl PLAIN cluster with SSL.
+     *
+     * This should require a trust store, but no keystore or keystore password.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_newSaslSSL_Cluster() throws Exception {
+        final String expectedClusterName = "My New Cluster Name using SASL+SSL" + System.currentTimeMillis();
+        final String expectedBrokerHosts = "localhost:9092";
+        final String expectedSaslMechanism = "PLAIN";
+        final String expectedSaslUsername = "USERname";
+        final String expectedSaslPassword = "PASSword";
+        final String expectedTruststorePassword = "TrustStorePassword";
+
+        final MockMultipartFile trustStoreUpload = new MockMultipartFile("trustStoreFile", "TrustStoreFile".getBytes(Charsets.UTF_8));
+
+        // Hit Update end point.
+        mockMvc
+            .perform(multipart("/configuration/cluster/update")
+                .file(trustStoreUpload)
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("name", expectedClusterName)
+                .param("brokerHosts", expectedBrokerHosts)
+                // SSL Options
+                .param("ssl", "true")
+                .param("trustStorePassword", expectedTruststorePassword)
+                // SASL Options
+                .param("sasl", "true")
+                .param("saslMechanism", expectedSaslMechanism)
+                .param("saslUsername", expectedSaslUsername)
+                .param("saslPassword", expectedSaslPassword)
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findByName(expectedClusterName);
+        assertNotNull("Should have new cluster", cluster);
+        assertEquals("Has correct name", expectedClusterName, cluster.getName());
+        assertEquals("Has correct brokerHosts", expectedBrokerHosts, cluster.getBrokerHosts());
+        assertTrue("Should be ssl enabled", cluster.isSslEnabled());
+        assertNotNull("Should have truststore password set", cluster.getTrustStorePassword());
+        assertNull("Should NOT have keystore password set", cluster.getKeyStorePassword());
+        assertNotNull("Should have trust store file path", cluster.getTrustStoreFile());
+        assertNull("Should NOT have key store file path", cluster.getKeyStoreFile());
+        assertFalse("Should not be valid by default", cluster.isValid());
+
+        // Validate sasl properties
+        assertTrue("Should have sasl enabled", cluster.isSaslEnabled());
+        assertEquals("Should have correct mechanism", expectedSaslMechanism, cluster.getSaslMechanism());
+        assertNotNull("Should have non-null sasl config", cluster.getSaslConfig());
+
+        // Attempt to decode encrypted config to validate
+        final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
+        assertNotNull("Should be non-null", saslProperties);
+        assertEquals("Should have expected mechanism", expectedSaslMechanism, saslProperties.getMechanism());
+        assertEquals("Should have expected username", expectedSaslUsername, saslProperties.getPlainUsername());
+        assertEquals("Should have expected password", expectedSaslPassword, saslProperties.getPlainPassword());
+        assertEquals(
+            "Should have default jaas for plain",
+            "org.apache.kafka.common.security.plain.PlainLoginModule required\n"
+                + "username=\"USERname\"\n"
+                + "password=\"PASSword\";",
+            saslProperties.getJaas()
+        );
+
+        // Trust store should exist
+        final boolean doesTruststoreFileExist = Files.exists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
+        assertTrue("trustStore file should have been uploaded", doesTruststoreFileExist);
+        final String trustStoreContents = FileTestTools.readFile(keyStoreUploadPath + cluster.getTrustStoreFile());
+        assertEquals("TrustStore file should have correct contents", "TrustStoreFile", trustStoreContents);
+
+        // Cleanup
+        Files.deleteIfExists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
     }
 
     /**
@@ -752,7 +883,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      * @param cluster cluster to validate.
      */
     private void validateNonSaslCluster(final Cluster cluster) {
-        assertEquals("Should not be sasl enabled", false, cluster.isSaslEnabled());
+        assertFalse("Should not be sasl enabled", cluster.isSaslEnabled());
         assertEquals("Should have empty sasl mechanism", "", cluster.getSaslMechanism());
         assertEquals("Should have empty sasl config", "", cluster.getSaslConfig());
     }

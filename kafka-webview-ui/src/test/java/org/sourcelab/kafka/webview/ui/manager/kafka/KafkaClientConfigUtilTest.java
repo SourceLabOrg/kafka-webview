@@ -99,7 +99,7 @@ public class KafkaClientConfigUtilTest {
 
         // Validate
         validateDefaultKeys(config);
-        validateSsl(config, "SSL");
+        validateSsl(config, "SSL", true);
         validateNoSasl(config);
     }
 
@@ -170,17 +170,27 @@ public class KafkaClientConfigUtilTest {
 
         // Validate
         validateDefaultKeys(config);
-        validateSsl(config, "SASL_SSL");
+        validateSsl(config, "SASL_SSL", false);
         validateSaslPlainMechanism(config, "SASL_SSL");
     }
 
-    private void validateSsl(final Map<String, Object> config, final String expectedSecurityProtocol) {
+    private void validateSsl(
+        final Map<String, Object> config,
+        final String expectedSecurityProtocol,
+        final boolean shouldHaveKeyStoreConfiguration
+    ) {
         assertNotNull(config);
         validateKey(config, CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, expectedSecurityProtocol);
-        validateKey(config, SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/tmp/" + expectedKeyStoreFile);
-        validateKey(config, SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, expectedKeyStorePassword);
         validateKey(config, SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/tmp/" + expectedTrustStoreFile);
         validateKey(config, SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, expectedTrustStorePassword);
+
+        if (shouldHaveKeyStoreConfiguration) {
+            validateKey(config, SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/tmp/" + expectedKeyStoreFile);
+            validateKey(config, SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, expectedKeyStorePassword);
+        } else {
+            validateNoKey(config, SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG);
+            validateNoKey(config, SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG);
+        }
     }
 
     private void validateNoSsl(final Map<String, Object> config) {

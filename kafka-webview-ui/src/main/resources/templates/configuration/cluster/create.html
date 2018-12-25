@@ -16,10 +16,21 @@
             jQuery('#ssl').click(function() {
                 var isChecked = jQuery('#ssl').is(':checked');
                 jQuery('#ssl-options').toggle(isChecked);
+
+                // If SASL is enabled, we hide SSL Keystore options
+                // If SASL is disabled, we show SSL Keystore options.
+                var isSaslChecked = jQuery('#sasl').is(':checked');
+                jQuery('#ssl-keystore-options').toggle(!isSaslChecked);
             });
             jQuery('#sasl').click(function() {
                 var isChecked = jQuery('#sasl').is(':checked');
+
+                // Toggle SASL Options on/off
                 jQuery('#sasl-options').toggle(isChecked);
+
+                // If SASL is enabled, we hide SSL Keystore options
+                // If SASL is disabled, we show SSL Keystore options.
+                jQuery('#ssl-keystore-options').toggle(!isChecked);
             });
             jQuery('#saslMechanism').change(function() {
                 var selected = jQuery(this).val();
@@ -138,36 +149,38 @@
                                 </div>
 
                                 <!-- Client KeyStore file -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 form-control-label" for="keyStoreFile">
-                                        Key Store JKS
-                                        <div
-                                            th:if="${clusterForm.getKeyStoreFilename()} != null"
-                                            th:text="'Current: ' + ${clusterForm.getKeyStoreFilename()}">
+                                <div id="ssl-keystore-options" th:styleappend="${clusterForm.getSsl() && !clusterForm.getSasl()} ? 'display: block;' : 'display: none;'">
+                                    <div class="form-group row">
+                                        <label class="col-md-3 form-control-label" for="keyStoreFile">
+                                            Key Store JKS
+                                            <div
+                                                th:if="${clusterForm.getKeyStoreFilename()} != null"
+                                                th:text="'Current: ' + ${clusterForm.getKeyStoreFilename()}">
+                                            </div>
+                                        </label>
+                                        <div class="col-md-9">
+                                            <input
+                                                id="keyStoreFile" name="keyStoreFile" class="form-control" type="file"
+                                                placeholder="Select KeyStore JKS"
+                                                th:errorclass="is-invalid"
+                                                th:value="*{keyStoreFile}">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStoreFile')}" th:errors="*{keyStoreFile}"/>
                                         </div>
-                                    </label>
-                                    <div class="col-md-9">
-                                        <input
-                                            id="keyStoreFile" name="keyStoreFile" class="form-control" type="file"
-                                            placeholder="Select KeyStore JKS"
-                                            th:errorclass="is-invalid"
-                                            th:value="*{keyStoreFile}">
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStoreFile')}" th:errors="*{keyStoreFile}"/>
                                     </div>
-                                </div>
 
-                                <!-- Client KeyStore Password -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 form-control-label" for="keyStorePassword">
-                                        Key Store Password
-                                    </label>
-                                    <div class="col-md-9">
-                                        <input
-                                            id="keyStorePassword" name="keyStorePassword" class="form-control" type="password"
-                                            placeholder="Key Store password"
-                                            th:errorclass="is-invalid"
-                                            th:value="*{keyStorePassword}">
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStorePassword')}" th:errors="*{keyStorePassword}"/>
+                                    <!-- Client KeyStore Password -->
+                                    <div class="form-group row">
+                                        <label class="col-md-3 form-control-label" for="keyStorePassword">
+                                            Key Store Password
+                                        </label>
+                                        <div class="col-md-9">
+                                            <input
+                                                id="keyStorePassword" name="keyStorePassword" class="form-control" type="password"
+                                                placeholder="Key Store password"
+                                                th:errorclass="is-invalid"
+                                                th:value="*{keyStorePassword}">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('keyStorePassword')}" th:errors="*{keyStorePassword}"/>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
