@@ -59,7 +59,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private AppProperties appProperties;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
@@ -153,7 +153,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .managerPassword(managerDnPassword)
             .and()
             .passwordCompare()
-            .passwordEncoder(encoderClass.newInstance())
+            .passwordEncoder(encoderClass.getDeclaredConstructor().newInstance())
             .passwordAttribute(ldapAppProperties.getPasswordAttribute());
     }
 

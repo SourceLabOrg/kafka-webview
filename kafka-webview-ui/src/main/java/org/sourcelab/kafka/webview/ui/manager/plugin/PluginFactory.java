@@ -28,6 +28,7 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.UnableToFindClassException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.WrongImplementationException;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -121,7 +122,7 @@ public class PluginFactory<T> {
     public T getPlugin(final String jarName, final String classpath) throws LoaderException {
         final Class<? extends T> dClass = getPluginClass(jarName, classpath);
         try {
-            return dClass.newInstance();
+            return dClass.getDeclaredConstructor().newInstance();
         } catch (final NoClassDefFoundError e) {
             // Typically this happens if the uploaded JAR references some dependency that was
             // not package in the JAR.  Attempt to provide a useful error msg.
@@ -131,6 +132,11 @@ public class PluginFactory<T> {
             throw new LoaderException(errorMsg, e);
         } catch (final InstantiationException | IllegalAccessException e) {
             throw new LoaderException(e.getMessage(), e);
+        } catch (final NoSuchMethodException | InvocationTargetException e) {
+            // Typically this happens if referenced class in the uploaded JAR has no default constructor.
+            final String errorMsg = e.getMessage()
+                + " - Does your class contain a default no argument constructor?";
+            throw new LoaderException(errorMsg, e);
         }
     }
 

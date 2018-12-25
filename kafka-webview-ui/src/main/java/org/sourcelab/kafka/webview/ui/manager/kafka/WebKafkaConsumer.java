@@ -38,6 +38,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionOffset;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ public class WebKafkaConsumer implements AutoCloseable {
     private final KafkaConsumer kafkaConsumer;
     private final ClientConfig clientConfig;
     private List<TopicPartition> cachedTopicsAndPartitions = null;
+    private final Duration pollTimeoutDuration;
 
     /**
      * Constructor.
@@ -65,11 +67,12 @@ public class WebKafkaConsumer implements AutoCloseable {
     public WebKafkaConsumer(final KafkaConsumer kafkaConsumer, final ClientConfig clientConfig) {
         this.kafkaConsumer = kafkaConsumer;
         this.clientConfig = clientConfig;
+        this.pollTimeoutDuration = Duration.ofMillis(clientConfig.getPollTimeoutMs());
     }
 
     private List<KafkaResult> consume() {
         final List<KafkaResult> kafkaResultList = new ArrayList<>();
-        final ConsumerRecords consumerRecords = kafkaConsumer.poll(clientConfig.getPollTimeoutMs());
+        final ConsumerRecords consumerRecords = kafkaConsumer.poll(pollTimeoutDuration);
 
         logger.info("Consumed {} records", consumerRecords.count());
         final Iterator<ConsumerRecord> recordIterator = consumerRecords.iterator();
