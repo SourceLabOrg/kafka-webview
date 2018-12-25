@@ -43,7 +43,7 @@ public class SecretManagerTest {
      * Simple smoke test over secret manager.
      */
     @Test
-    public void doTest() throws Exception {
+    public void doTest() {
         final SecretManager secretManager = new SecretManager("key");
 
         final String input = "My Test Input String";
@@ -56,7 +56,7 @@ public class SecretManagerTest {
      * Null input into encryption = exception.
      */
     @Test
-    public void doTestWithNullInput() throws Exception {
+    public void doTestWithNullInput() {
         final SecretManager secretManager = new SecretManager("key");
 
 
@@ -68,7 +68,7 @@ public class SecretManagerTest {
      * Null input into decryption = null result
      */
     @Test
-    public void doTestWithNullDecrypt() throws Exception {
+    public void doTestWithNullDecrypt() {
         final SecretManager secretManager = new SecretManager("key");
         assertNull("Should have null result", secretManager.decrypt(null));
     }
@@ -77,7 +77,7 @@ public class SecretManagerTest {
      * Empty string input into decryption = empty string result
      */
     @Test
-    public void doTestWithEmptyDecrypt() throws Exception {
+    public void doTestWithEmptyDecrypt() {
         final SecretManager secretManager = new SecretManager("key");
         assertEquals("Should have empty string result", "", secretManager.decrypt(""));
     }

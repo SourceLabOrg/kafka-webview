@@ -24,12 +24,18 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.view;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.Filter;
+import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
+import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
+import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
 import org.sourcelab.kafka.webview.ui.tools.FilterTestTools;
+import org.sourcelab.kafka.webview.ui.tools.MessageFormatTestTools;
 import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -38,10 +44,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -55,6 +67,15 @@ public class ViewConfigControllerTest extends AbstractMvcTest {
     @Autowired
     private ViewTestTools viewTestTools;
 
+    @Autowired
+    private ClusterTestTools clusterTestTools;
+
+    @Autowired
+    private MessageFormatTestTools messageFormatTestTools;
+
+    @Autowired
+    private ViewRepository viewRepository;
+
     /**
      * Test cannot load pages w/o admin role.
      */
@@ -66,6 +87,7 @@ public class ViewConfigControllerTest extends AbstractMvcTest {
         testUrlWithOutAdminRole("/configuration/view/edit/1", false);
         testUrlWithOutAdminRole("/configuration/view/update", true);
         testUrlWithOutAdminRole("/configuration/view/delete/1", true);
+        testUrlWithOutAdminRole("/configuration/view/copy/1", true);
     }
 
     /**
@@ -124,5 +146,57 @@ public class ViewConfigControllerTest extends AbstractMvcTest {
 
             // Validate submit button seems to show up.
             .andExpect(content().string(containsString("type=\"submit\"")));
+    }
+
+    /**
+     * Quick and dirty smoke test copy View end point.
+     * More complete test coverage exists for underlying CopyViewManager class.
+     */
+    @Test
+    @Transactional
+    public void testCopyView() throws Exception {
+        final String originalViewName = "My Original View";
+        final String partitions = "1,2,4";
+        final String topic = "MyTopic";
+
+        final String expectedCopyName = "Copy of " + originalViewName;
+
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
+        final MessageFormat keyMessageFormat = messageFormatTestTools.createMessageFormat("Key Message Format");
+        final MessageFormat valueMessageFormat = messageFormatTestTools.createMessageFormat("Value Message Format");
+
+        // Create source view
+        final View sourceView = viewTestTools.createView(originalViewName, cluster, keyMessageFormat);
+        sourceView.setKeyMessageFormat(keyMessageFormat);
+        sourceView.setValueMessageFormat(valueMessageFormat);
+        sourceView.setTopic(topic);
+        sourceView.setPartitions(partitions);
+
+        viewRepository.save(sourceView);
+
+        // Hit index.
+        mockMvc
+            .perform(post("/configuration/view/copy/" + sourceView.getId())
+                .with(csrf())
+                .with(user(adminUserDetails))
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/view"));
+
+        // Validate view now exists
+        final View copiedView = viewRepository.findByName(expectedCopyName);
+        assertNotNull(copiedView);
+
+        // Validate properties
+        Assert.assertNotNull("Should be non-null", copiedView);
+        Assert.assertNotNull("Should have an id", copiedView.getId());
+        assertNotEquals("Should have a new id", copiedView.getId(), sourceView.getId());
+        assertEquals("Has new name", expectedCopyName, copiedView.getName());
+        assertEquals("Has topic", topic, copiedView.getTopic());
+        assertEquals("Has partitions", partitions, copiedView.getPartitions());
+        assertEquals("Has cluster", cluster.getId(), copiedView.getCluster().getId());
+        assertEquals("Has key format", keyMessageFormat.getId(), copiedView.getKeyMessageFormat().getId());
+        assertEquals("Has value format", valueMessageFormat.getId(), copiedView.getValueMessageFormat().getId());
     }
 }
