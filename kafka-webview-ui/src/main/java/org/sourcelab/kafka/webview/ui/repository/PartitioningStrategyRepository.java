@@ -25,31 +25,12 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.PartitioningStrategy;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
  * For access records on the message_format table.
  */
 @Repository
-public interface PartitioningStrategyRepository extends CrudRepository<PartitioningStrategy, Long> {
-    /**
-     * Retrieve by name.
-     * @param name Name to search for.
-     * @return PartitioningStrategy found, or null.
-     */
-    PartitioningStrategy findByName(final String name);
+public interface PartitioningStrategyRepository extends UploadableJarRepository<PartitioningStrategy> {
 
-    /**
-     * Find all partitioning strategies ordered by name.
-     * @return all Partitioning Strategies ordered by name.
-     */
-    Iterable<PartitioningStrategy> findAllByOrderByNameAsc();
-
-    /**
-     * Find all partitioning strategies by type, ordered by name.
-     * @param isDefault Only return items that match the is_default field being true or false.
-     * @return all message formats ordered by name.
-     */
-    Iterable<PartitioningStrategy> findByIsDefaultOrderByNameAsc(final boolean isDefault);
 }

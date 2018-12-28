@@ -24,10 +24,14 @@
 
 package org.sourcelab.kafka.webview.ui.model;
 
+import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
+
+import java.beans.Transient;
+
 /**
  * Common interface for records that represent uploadable jars.
  */
-public interface UploadableJar {
+public interface UploadableJarEntity {
     long getId();
 
     void setId(final long id);
@@ -51,4 +55,7 @@ public interface UploadableJar {
     String getOptionParameters();
 
     void setOptionParameters(final String optionParameters);
+
+    @Transient
+    UploadManager.UploadType getUploadType();
 }

@@ -22,22 +22,34 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.configuration.partitioningstrategy.forms;
+package org.sourcelab.kafka.webview.ui.repository;
 
-import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarForm;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.NoRepositoryBean;
 
 /**
- * Represents the form to create/update a PartitioningStrategy.
+ * Interface over uploadable jar entities.
  */
-public class PartitioningStrategyForm extends UploadableJarForm {
+@NoRepositoryBean
+public interface UploadableJarRepository<T> extends CrudRepository<T, Long> {
 
+    /**
+     * Retrieve by name.
+     * @param name Name to search for.
+     * @return PartitioningStrategy found, or null.
+     */
+    T findByName(final String name);
+
+    /**
+     * Find all partitioning strategies ordered by name.
+     * @return all Partitioning Strategies ordered by name.
+     */
+    Iterable<T> findAllByOrderByNameAsc();
+
+    /**
+     * Find all partitioning strategies by type, ordered by name.
+     * @param isDefault Only return items that match the is_default field being true or false.
+     * @return all message formats ordered by name.
+     */
+    Iterable<T> findByIsDefaultOrderByNameAsc(final boolean isDefault);
 }

@@ -127,6 +127,20 @@ public class UploadManager {
         return handleFileUpload(file, outFileName, getKeyStoreUploadPath());
     }
 
+    public String handleUpload(final MultipartFile file, final String outFileName, final UploadType uploadType) throws IOException {
+        switch (uploadType) {
+            case DESERIALIZER:
+                handleDeserializerUpload(file, outFileName);
+            case FILTER:
+                return handleFilterUpload(file, outFileName);
+            case KEYSTORE:
+                return handleKeystoreUpload(file, outFileName);
+            case PARTITIONING_STRATEGY:
+                return handlePartitioningStrategyUpload(file, outFileName);
+        }
+        throw new IllegalArgumentException("Unknown upload type");
+    }
+
     /**
      * Enables the ability to delete a keystore file.
      * @param keyStoreFile Filename of keystore file to be removed.
@@ -180,5 +194,16 @@ public class UploadManager {
         Files.write(fullOutputPath, bytes);
 
         return fullOutputPath.toString();
+    }
+
+    /**
+     * Enum describing the different upload types.
+     */
+    public enum UploadType {
+        DESERIALIZER,
+        FILTER,
+        KEYSTORE,
+        PARTITIONING_STRATEGY,
+        SERIALIZER;
     }
 }

@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.model;
 
+import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,7 +36,7 @@ import javax.persistence.Id;
  * Represents entity that defines how to serialize data into kafka.
  */
 @Entity
-public class SerializerFormat implements UploadableJar {
+public class SerializerFormat implements UploadableJarEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -100,6 +102,11 @@ public class SerializerFormat implements UploadableJar {
 
     public void setOptionParameters(final String optionParameters) {
         this.optionParameters = optionParameters;
+    }
+
+    @Override
+    public UploadManager.UploadType getUploadType() {
+        return UploadManager.UploadType.SERIALIZER;
     }
 
     @Override
