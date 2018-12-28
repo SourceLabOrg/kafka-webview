@@ -21,24 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer;
 
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
 /**
+ * For mapping web entered data to a serializer instance.
  *
+ * @param <T> value that the serializer instance is expecting.
  */
 public interface ValueTransformer<T> {
     /**
      * Transformation logic.
-     * @param valueMap
-     * @return
+     * @param topic The topic being produced to.
+     * @param valueMap Map of values to produce.
+     * @return Serialized/flattened value that will get passed to the serializer instance.
      */
-    T transform(final Map<String, String> valueMap);
+    T transform(final String topic, final Map<String, String> valueMap);
 
     /**
      * Underlying Kafka value serializer class.

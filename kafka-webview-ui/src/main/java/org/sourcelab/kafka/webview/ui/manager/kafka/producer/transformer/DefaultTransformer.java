@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer;
 
 import javax.validation.constraints.NotNull;
@@ -29,19 +30,21 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Abstract implementation for default serializers.
+ * Abstract implementation for default serializers bundled with Kafka client package.
+ * @param <T> value that the serializer instance is expecting.
  */
-abstract public class DefaultTransformer<T> implements ValueTransformer<T> {
+public abstract class DefaultTransformer<T> implements ValueTransformer<T> {
 
-    private final static String defaultFieldName = "value";
-    private final static Collection<String> defaultFieldNames = Collections.singletonList(defaultFieldName);
+    private static final String defaultFieldName = "value";
+    private static final Collection<String> defaultFieldNames = Collections.singletonList(defaultFieldName);
 
     /**
      * Transformation logic.
-     * @param valueMap
-     * @return
+     * @param topic Name of topic being published to.
+     * @param valueMap map of field names to the values entered by the user.
+     * @return T object of instance type expected by the serializer.
      */
-    public T transform(final Map<String, String> valueMap) {
+    public T transform(final String topic, final Map<String, String> valueMap) {
         final String value = valueMap.getOrDefault(defaultFieldName, null);
         if (value == null) {
             return null;
@@ -49,6 +52,11 @@ abstract public class DefaultTransformer<T> implements ValueTransformer<T> {
         return transformField(valueMap.get(defaultFieldName));
     }
 
+    /**
+     * Implement to transform into the single value.
+     * @param value value to be transformed from a String into type T
+     * @return T object of instance type expected by the serializer.
+     */
     public abstract T transformField(@NotNull String value);
 
     /**
@@ -59,6 +67,11 @@ abstract public class DefaultTransformer<T> implements ValueTransformer<T> {
         return defaultFieldNames;
     }
 
+    /**
+     * Utility method for constructing value maps for Default transformers.
+     * @param value String value
+     * @return Value map.
+     */
     public static Map<String, String> createDefaultValueMap(final String value) {
         return Collections.singletonMap(defaultFieldName, value);
     }

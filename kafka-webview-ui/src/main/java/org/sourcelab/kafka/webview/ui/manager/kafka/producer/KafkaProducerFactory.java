@@ -21,24 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
 import org.sourcelab.kafka.webview.ui.manager.kafka.producer.config.WebProducerConfig;
 
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Creates KafkaProducer instances.
  */
 public class KafkaProducerFactory {
-    private final static Logger logger = LoggerFactory.getLogger(KafkaProducerFactory.class);
-
     /**
      * Utility class for setting up common kafka client properties.
      */
@@ -55,6 +51,11 @@ public class KafkaProducerFactory {
         this.configUtil = configUtil;
     }
 
+    /**
+     * Factory method.
+     * @param producerConfig Configuration for the producer.
+     * @return new WebKafkaProducer instance.
+     */
     public WebKafkaProducer createWebProducer(final WebProducerConfig producerConfig) {
         final Map<String, Object> producerProperties = buildProducerProperties(producerConfig);
         final KafkaProducer kafkaProducer = createProducer(producerProperties);
@@ -62,21 +63,36 @@ public class KafkaProducerFactory {
         return new WebKafkaProducer(kafkaProducer, producerConfig);
     }
 
+    /**
+     * Create underlying KafkaProducer instance.
+     * @param producerProperties kafka producer configuration properties.
+     * @return new KafkaProducer instance.
+     */
     private KafkaProducer createProducer(final Map<String, Object> producerProperties) {
         return new KafkaProducer(producerProperties);
     }
 
-    private Map<String, Object> buildProducerProperties(final WebProducerConfig producerConfig) {
+    /**
+     * Build configuration for KafkaProducer.
+     * @param webProducerConfig Configuration set.
+     * @return Map of KafkaProducer options.
+     */
+    private Map<String, Object> buildProducerProperties(final WebProducerConfig webProducerConfig) {
         final Map<String, Object> producerProperties = configUtil.applyCommonSettings(
-            producerConfig.getClusterConfig(),
-            producerConfig.getProducerClientId()
+            webProducerConfig.getClusterConfig(),
+            webProducerConfig.getProducerClientId()
         );
-        producerProperties.put("acks", "all");
-        producerProperties.put("max.in.flight.requests.per.connection", 1);
-        producerProperties.put("retries", 5);
-        producerProperties.put("batch.size", 0);
-        producerProperties.put("key.serializer", producerConfig.getKeyTransformer().getSerializerClass());
-        producerProperties.put("value.serializer", producerConfig.getValueTransformer().getSerializerClass());
+
+        // Default options
+        producerProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 1);
+        producerProperties.put(ProducerConfig.RETRIES_CONFIG, 5);
+        producerProperties.put(ProducerConfig.BATCH_SIZE_CONFIG, 0);
+
+        // Configurable options
+        producerProperties.put(ProducerConfig.ACKS_CONFIG, webProducerConfig.getAckRequirement());
+        producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, webProducerConfig.getKeyTransformer().getSerializerClass());
+        producerProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, webProducerConfig.getValueTransformer().getSerializerClass());
+        producerProperties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, webProducerConfig.getPartitionerClass());
 
         return producerProperties;
     }

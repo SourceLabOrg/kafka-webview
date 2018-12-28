@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer;
 
 import org.apache.kafka.common.serialization.LongSerializer;
@@ -29,7 +30,7 @@ import org.apache.kafka.common.serialization.Serializer;
 import javax.validation.constraints.NotNull;
 
 /**
- *
+ * For transforming single string input to a Long for the LongSerializer.
  */
 public class LongTransformer extends DefaultTransformer<Long> {
     @Override

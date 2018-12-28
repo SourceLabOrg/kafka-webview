@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer;
 
 import java.util.Collections;
@@ -31,9 +32,21 @@ import java.util.Map;
  * Represents records to be published via WebKafkaProducer.
  */
 public class WebProducerRecord {
+    /**
+     * Map of fieldName to values for key.
+     */
     private final Map<String, String> keyValues;
+
+    /**
+     * Map of fieldName to values for value.
+     */
     private final Map<String, String> valueValues;
 
+    /**
+     * Constructor.
+     * @param keyValues Map of fieldName to values for key.
+     * @param valueValues Map of fieldName to values for value.
+     */
     public WebProducerRecord(final Map<String, String> keyValues, final Map<String, String> valueValues) {
         this.keyValues = Collections.unmodifiableMap(new HashMap<>(keyValues));
         this.valueValues = Collections.unmodifiableMap(new HashMap<>(valueValues));

@@ -21,8 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer.config;
 
+import org.apache.kafka.clients.producer.Partitioner;
+import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.ValueTransformer;
 
@@ -35,15 +38,43 @@ public class WebProducerConfig {
     private final ClusterConfig clusterConfig;
     private final String topic;
     private final String producerClientId;
+
+    // Serialization options
     private final ValueTransformer keyTransformer;
     private final ValueTransformer valueTransformer;
 
+    // Partitioning Options
+    private final Class<? extends Partitioner> partitionerClass;
+
     /**
      * Producer timeout, in millis seconds.  Defaults 15 secs.
+     * TODO allow configuring.
      */
     private final long timeoutMs = TimeUnit.SECONDS.toMillis(15);
 
-    public WebProducerConfig(final ClusterConfig clusterConfig, final String topic, final String producerClientId, final ValueTransformer keyTransformer, final ValueTransformer valueTransformer) {
+    /**
+     * What level of acknowledgement is required during the publish.
+     * TODO Allow configuring.
+     */
+    private final String ackRequirement = "1";
+
+    /**
+     * Constructor.
+     * @param clusterConfig defines what cluster to connect to.
+     * @param topic defines which topic to produce to.
+     * @param producerClientId identifier for who is publishing.
+     * @param keyTransformer how to serialize keys.
+     * @param valueTransformer how to serialize values.
+     * @param partitionerClass how to partition records published to kafka.
+     */
+    public WebProducerConfig(
+        final ClusterConfig clusterConfig,
+        final String topic,
+        final String producerClientId,
+        final ValueTransformer keyTransformer,
+        final ValueTransformer valueTransformer,
+        final Class<? extends Partitioner> partitionerClass
+    ) {
         if (clusterConfig == null) {
             throw new IllegalArgumentException("Cluster Config may not be null");
         }
@@ -59,12 +90,16 @@ public class WebProducerConfig {
         if (valueTransformer == null) {
             throw new IllegalArgumentException("value transformer may not be null");
         }
+        if (partitionerClass == null) {
+            throw new IllegalArgumentException("partitioner may not be null");
+        }
 
         this.clusterConfig = clusterConfig;
         this.topic = topic;
         this.producerClientId = producerClientId;
         this.keyTransformer = keyTransformer;
         this.valueTransformer = valueTransformer;
+        this.partitionerClass = partitionerClass;
     }
 
     public ClusterConfig getClusterConfig() {
@@ -91,16 +126,28 @@ public class WebProducerConfig {
         return timeoutMs;
     }
 
+    public String getAckRequirement() {
+        return ackRequirement;
+    }
+
+    public Class<? extends Partitioner> getPartitionerClass() {
+        return partitionerClass;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
 
+    /**
+     * Builder instance for WebProducerConfig.
+     */
     public static final class Builder {
         private ClusterConfig clusterConfig;
         private String topic;
         private String producerClientId;
         private ValueTransformer keyTransformer;
         private ValueTransformer valueTransformer;
+        private Class<? extends Partitioner> partitionerClass = DefaultPartitioner.class;
 
         private Builder() {
         }
@@ -130,8 +177,13 @@ public class WebProducerConfig {
             return this;
         }
 
+        public Builder withPartitionerClass(Class<? extends Partitioner> partitionerClass) {
+            this.partitionerClass = partitionerClass;
+            return this;
+        }
+
         public WebProducerConfig build() {
-            return new WebProducerConfig(clusterConfig, topic, producerClientId, keyTransformer, valueTransformer);
+            return new WebProducerConfig(clusterConfig, topic, producerClientId, keyTransformer, valueTransformer, partitionerClass);
         }
     }
 }

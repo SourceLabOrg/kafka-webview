@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -41,7 +42,7 @@ import java.util.concurrent.TimeoutException;
  * Intended to be an abstraction around KafkaProducer for use in publishing from a web interface.
  */
 public class WebKafkaProducer {
-    private final static Logger logger = LoggerFactory.getLogger(WebKafkaProducer.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebKafkaProducer.class);
 
     /**
      * The abstracted KafkaProducer instance for talking to kafka.
@@ -70,11 +71,13 @@ public class WebKafkaProducer {
     public void produce(final WebProducerRecord webRecord) {
         // Convert Key to appropriate value.
         final Object key = producerConfig.getKeyTransformer().transform(
+            producerConfig.getTopic(),
             webRecord.getKeyValues()
         );
 
         // Convert Value to appropriate value.
         final Object value = producerConfig.getValueTransformer().transform(
+            producerConfig.getTopic(),
             webRecord.getValueValues()
         );
 
