@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Partitioning Strategy Configuration</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <strong th:text="${partitioningStrategyForm.exists()} ? 'Edit' : 'Create'">Create</strong>
+                        <span th:text="${partitioningStrategyForm.exists()} ? ${partitioningStrategyForm.name} : 'New Partitioning Strategy'"></span>
+                    </div>
+                    <form
+                        th:action="@{/configuration/partitionStrategy/update}"
+                        th:object="${partitioningStrategyForm}"
+                        method="post" class="form-horizontal" enctype="multipart/form-data">
+                        <div class="card-body">
+                            <!-- Name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="name">
+                                    Partitioning Strategy Name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="name" name="name" class="form-control" type="text"
+                                        placeholder="A unique name to identify this partitioning strategy"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{name}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"/>
+                                </div>
+                            </div>
+
+                            <!-- Jar Upload -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="file">
+                                    Jar upload
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="file" name="file" class="form-control" type="file"
+                                        placeholder="Select a jar to upload"
+                                        th:errorclass="is-invalid"
+                                        th:value="*{file}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('file')}" th:errors="*{file}"/>
+                                </div>
+                            </div>
+
+                            <!-- Fully qualified class name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="classpath">
+                                    Fully qualified class name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="classpath" name="classpath" class="form-control" type="text"
+                                        placeholder="Fully qualified class name for deserializer implementation"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{classpath}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('classpath')}" th:errors="*{classpath}"/>
+                                </div>
+                            </div>
+
+                            <!-- Custom Settings -->
+                            <h6>
+                                Configuration Properties
+                                <small class="form-text text-muted">
+                                    If your Partitioning Strategy requires additional settings define them here.
+                                </small>
+                            </h6>
+                            <hr>
+
+                            <!-- Defined Options -->
+                            <div id="optionsContainer">
+                                <!-- Loop over each option -->
+                                <div class="form-group row custom-option" th:each="optionEntry : ${partitioningStrategyForm.getCustomOptionsAsMap().entrySet()}">
+                                    <label class="col-md-3 form-control-label" for="classpath">
+                                        <i th:text="${optionEntry.getKey()}"></i>
+                                    </label>
+                                    <div class="col-md-8">
+                                        <input
+                                            th:value="${optionEntry.getValue()}"
+                                            type="text" name="customOptionValues" class="form-control"
+                                            placeholder="Set property value">
+                                        <input
+                                            th:value="${optionEntry.getKey()}"
+                                            type="hidden" name="customOptionNames">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn removeOption" type="button" onclick="removeOption(this);">-</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <!-- Dynamic Fields -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="newOption">
+                                    Add new property
+                                </label>
+                                <div class="col-md-8">
+                                    <input
+                                        autocomplete="off" class="form-control" id="newOption" name="newOption" type="text"
+                                        placeholder="Enter property name"/>
+                                </div>
+                                <div class="col-md-1">
+                                    <button id="addOption" class="btn add-more" type="button">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <input type="hidden" name="id" th:if="${partitioningStrategyForm.exists()}" th:field="*{id}">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa fa-dot-circle-o"></i>
+                                Submit
+                            </button>
+                            <a class="btn btn-sm btn-danger" href="/configuration/partitionStrategy" role="button">
+                                <i class="fa fa-ban"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="application/javascript">
+        jQuery().ready(function() {
+            jQuery('#addOption').click(function(e) {
+                e.preventDefault();
+
+                // Get and compile template
+                var source   = jQuery('#options-template').html();
+                var template = Handlebars.compile(source);
+
+                // Get name from input
+                var optionName = jQuery('#newOption').val();
+                if (optionName == null || optionName.trim().length == 0) {
+                    alert('Must enter a name for property');
+                    return;
+                }
+
+                // Generate html from template
+                var properties = {
+                    optionName: optionName,
+                    optionValueFieldName: "",
+                    optionNameFieldName: "customOptionNames"
+                };
+                var optionsHtml = template(properties);
+
+                // Append it to our div
+                jQuery('#optionsContainer').append(optionsHtml);
+
+                // Clear input
+                jQuery('#newOption').val("");
+            });
+        });
+
+        // Handle removing custom options
+        function removeOption(element) {
+            if (confirm('Are you sure you want to remove this property?')) {
+                jQuery(element).closest('.custom-option').remove();
+            }
+        }
+    </script>
+
+    <!-- Options Template -->
+    <script id="options-template" type="text/x-handlebars-template">
+        <!-- User Defined Option -->
+        <div class="form-group row custom-option">
+            <label class="col-md-3 form-control-label" for="classpath">
+                <i>{{optionName}}</i>
+            </label>
+            <div class="col-md-8">
+                <input
+                    type="text" name="customOptionValues" class="form-control"
+                    placeholder="Set property value">
+                <input
+                    type="hidden" name="customOptionNames" value="{{optionName}}">
+            </div>
+            <div class="col-md-1">
+                <button class="btn removeOption" type="button" onclick="removeOption(this);">-</button>
+            </div>
+        </div>
+    </script>
+</section>
+
+</body>
+</html>

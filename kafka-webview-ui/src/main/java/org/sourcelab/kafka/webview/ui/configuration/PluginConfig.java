@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
@@ -78,6 +79,17 @@ public class PluginConfig {
     public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/filters";
         return new PluginFactory<>(jarDirectory, RecordFilter.class);
+    }
+
+    /**
+     * PluginFactory for creating instances of Partitioners.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Partitioners.
+     */
+    @Bean
+    public PluginFactory<Partitioner> getPartitionerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getUploadPath() + "/partitioners";
+        return new PluginFactory<>(jarDirectory, Partitioner.class);
     }
 
     /**

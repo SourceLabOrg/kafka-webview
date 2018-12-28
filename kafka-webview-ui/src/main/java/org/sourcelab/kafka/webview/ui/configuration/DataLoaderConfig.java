@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
+import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.DoubleDeserializer;
@@ -34,8 +35,10 @@ import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
+import org.sourcelab.kafka.webview.ui.model.PartitioningStrategy;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
+import org.sourcelab.kafka.webview.ui.repository.PartitioningStrategyRepository;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -53,14 +56,20 @@ public final class DataLoaderConfig implements ApplicationRunner {
 
     private final MessageFormatRepository messageFormatRepository;
     private final UserRepository userRepository;
+    private final PartitioningStrategyRepository partitioningStrategyRepository;
 
     /**
      * Constructor.
      */
     @Autowired
-    private DataLoaderConfig(final MessageFormatRepository messageFormatRepository, final UserRepository userRepository) {
+    private DataLoaderConfig(
+        final MessageFormatRepository messageFormatRepository,
+        final UserRepository userRepository,
+        final PartitioningStrategyRepository partitioningStrategyRepository
+    ) {
         this.messageFormatRepository = messageFormatRepository;
         this.userRepository = userRepository;
+        this.partitioningStrategyRepository = partitioningStrategyRepository;
     }
 
     /**
@@ -69,6 +78,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
     private void createData() {
         createDefaultUser();
         createDefaultMessageFormats();
+        createDefaultPartitioningStrategies();
     }
 
     /**
@@ -118,10 +128,31 @@ public final class DataLoaderConfig implements ApplicationRunner {
     }
 
     /**
+     * Creates default partitioning strategies.
+     */
+    private void createDefaultPartitioningStrategies() {
+        final Map<String, String> defaultEntries = new HashMap<>();
+        defaultEntries.put("Default Partitioner", DefaultPartitioner.class.getName());
+
+        // Create if needed.
+        for (final Map.Entry<String, String> entry : defaultEntries.entrySet()) {
+            PartitioningStrategy partitioningStrategy = partitioningStrategyRepository.findByName(entry.getKey());
+            if (partitioningStrategy == null) {
+                partitioningStrategy = new PartitioningStrategy();
+            }
+            partitioningStrategy.setName(entry.getKey());
+            partitioningStrategy.setClasspath(entry.getValue());
+            partitioningStrategy.setJar("n/a");
+            partitioningStrategy.setDefault(true);
+            partitioningStrategyRepository.save(partitioningStrategy);
+        }
+    }
+
+    /**
      * Run on startup.
      */
     @Override
-    public void run(final ApplicationArguments args) throws Exception {
+    public void run(final ApplicationArguments args) {
         createData();
     }
 }

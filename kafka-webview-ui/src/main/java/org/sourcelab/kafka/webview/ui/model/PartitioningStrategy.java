@@ -29,13 +29,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Transient;
 
 /**
- * Represents a record in the message_format table.
+ * Represents a partitioning strategy.
  */
 @Entity
-public class MessageFormat implements UploadableJar {
+public class PartitioningStrategy implements UploadableJar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -50,7 +49,7 @@ public class MessageFormat implements UploadableJar {
     private String jar;
 
     @Column(nullable = false)
-    private boolean isDefaultFormat = false;
+    private boolean isDefault = false;
 
     @Column(nullable = false)
     private String optionParameters = "{}";
@@ -87,24 +86,12 @@ public class MessageFormat implements UploadableJar {
         this.jar = jar;
     }
 
-    @Transient
-    @Override
     public boolean isDefault() {
-        return isDefaultFormat();
+        return isDefault;
     }
 
-    @Transient
-    @Override
-    public void setDefault(final boolean defaultFormat) {
-        setDefaultFormat(defaultFormat);
-    }
-
-    public boolean isDefaultFormat() {
-        return isDefaultFormat;
-    }
-
-    public void setDefaultFormat(final boolean defaultFormat) {
-        isDefaultFormat = defaultFormat;
+    public void setDefault(final boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     public String getOptionParameters() {
@@ -117,12 +104,12 @@ public class MessageFormat implements UploadableJar {
 
     @Override
     public String toString() {
-        return "MessageFormat{"
+        return "PartitioningStrategy{"
             + "id=" + id
             + ", name='" + name + '\''
             + ", classpath='" + classpath + '\''
             + ", jar='" + jar + '\''
-            + ", isDefaultFormat=" + isDefaultFormat
+            + ", isDefault=" + isDefault
             + ", optionParameters='" + optionParameters + '\''
             + '}';
     }

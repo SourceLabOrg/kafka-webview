@@ -56,6 +56,11 @@ public class UploadManager {
     private final String keyStoreUploadPath;
 
     /**
+     * Where to upload JARs associated with partitioning strategies.
+     */
+    private final String partitioningStrategyUploadPath;
+
+    /**
      * Constructor.
      * @param uploadPath Parent upload directory.
      */
@@ -63,10 +68,15 @@ public class UploadManager {
         this.deserializerUploadPath = uploadPath + "/deserializers";
         this.filterUploadPath = uploadPath + "/filters";
         this.keyStoreUploadPath = uploadPath + "/keyStores";
+        this.partitioningStrategyUploadPath = uploadPath + "/partitioners";
     }
 
     String getDeserializerUploadPath() {
         return deserializerUploadPath;
+    }
+
+    String getPartitioningStrategyUploadPath() {
+        return partitioningStrategyUploadPath;
     }
 
     String getFilterUploadPath() {
@@ -85,6 +95,16 @@ public class UploadManager {
      */
     public String handleDeserializerUpload(final MultipartFile file, final String outFileName) throws IOException {
         return handleFileUpload(file, outFileName, getDeserializerUploadPath());
+    }
+
+    /**
+     * Handle uploading a Deserializer Jar.
+     * @param file The Uploaded MultiPart file.
+     * @param outFileName What we want to name the output file.
+     * @return Path to uploaded file.
+     */
+    public String handlePartitioningStrategyUpload(final MultipartFile file, final String outFileName) throws IOException {
+        return handleFileUpload(file, outFileName, getPartitioningStrategyUploadPath());
     }
 
     /**
