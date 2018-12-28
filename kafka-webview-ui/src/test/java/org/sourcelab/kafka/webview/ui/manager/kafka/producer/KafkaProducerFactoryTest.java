@@ -62,6 +62,7 @@ public class KafkaProducerFactoryTest {
             .withValueTransformer(new StringTransformer())
             .withProducerClientId("MyClientId")
             .withClusterConfig(clusterConfig)
+            .withTopic("MyTopic")
             .build();
 
         final WebKafkaProducer kafkaProducer = factory.createWebProducer(config);
