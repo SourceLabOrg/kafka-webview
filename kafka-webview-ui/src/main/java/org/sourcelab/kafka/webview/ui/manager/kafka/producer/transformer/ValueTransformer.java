@@ -35,6 +35,14 @@ import java.util.Map;
  * @param <T> value that the serializer instance is expecting.
  */
 public interface ValueTransformer<T> {
+
+    /**
+     * Configure this class.
+     * @param configs configs in key/value pairs
+     * @param isKey whether is for key or value
+     */
+    void configure(final Map<String, ?> configs, boolean isKey);
+
     /**
      * Transformation logic.
      * @param topic The topic being produced to.

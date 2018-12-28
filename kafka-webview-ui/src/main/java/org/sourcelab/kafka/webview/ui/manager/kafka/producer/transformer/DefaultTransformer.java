@@ -39,6 +39,15 @@ public abstract class DefaultTransformer<T> implements ValueTransformer<T> {
     private static final Collection<String> defaultFieldNames = Collections.singletonList(defaultFieldName);
 
     /**
+     * Configure this class.
+     * @param configs configs in key/value pairs
+     * @param isKey whether is for key or value
+     */
+    public void configure(final Map<String, ?> configs, boolean isKey) {
+        // No-op.
+    }
+
+    /**
      * Transformation logic.
      * @param topic Name of topic being published to.
      * @param valueMap map of field names to the values entered by the user.
