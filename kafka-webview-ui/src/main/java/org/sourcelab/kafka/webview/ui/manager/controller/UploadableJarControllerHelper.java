@@ -45,7 +45,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 
@@ -170,7 +172,7 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
 
         // If we have errors just display the form again.
         if (bindingResult.hasErrors()) {
-            return "configuration/partitionStrategy/create";
+            return this.moduleName + "/create";
         }
 
         // Grab uploaded file
@@ -179,9 +181,9 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         // If the partitioning strategy doesn't exist, and no file uploaded.
         if (!form.exists() && file.isEmpty()) {
             bindingResult.addError(new FieldError(
-                "PartitioningStrategyForm", "file", "", true, null, null, "Select a jar to upload")
+                bindingResult.getObjectName(), "file", "", true, null, null, "Select a jar to upload")
             );
-            return "configuration/partitionStrategy/create";
+            return this.moduleName + "/create";
         }
 
         // If Partitioning Strategy exists
@@ -231,7 +233,7 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
 
                     // Add an error
                     bindingResult.addError(new FieldError(
-                        "PartitioningStrategyForm", "file", "", true, null, null, exception.getMessage())
+                        bindingResult.getObjectName(), "file", "", true, null, null, exception.getMessage())
                     );
                     // And re-display the form.
                     return this.moduleName + "/create";
@@ -246,7 +248,7 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
                 // 2 - move tempFilename => filename.
                 // Lets just delete the temp path and re-handle the upload.
                 Files.deleteIfExists(Paths.get(jarPath));
-                uploadManager.handlePartitioningStrategyUpload(file, newFilename);
+                uploadManager.handleUpload(file, newFilename, entity.getUploadType());
 
                 // 3 - Update the jar and class path properties.
                 entity.setJar(newFilename);
@@ -259,7 +261,7 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
                     FlashMessage.newWarning("Unable to save uploaded JAR: " + e.getMessage()));
 
                 // redirect to cluster index
-                return "redirect:/configuration/partitionStrategy";
+                return "redirect:/" + this.moduleName;
             }
         }
 
@@ -275,9 +277,13 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         return "redirect:/" + this.moduleName;
     }
 
-    public String processDelete(final Long id, final RedirectAttributes redirectAttributes) {
+    public String processDelete(
+        final Long id,
+        final RedirectAttributes redirectAttributes,
+        final EntityUsageManager entityUsageManager
+    ) {
         // Where to redirect.
-        final String redirectUrl = "redirect:/configuration/partitionStrategy";
+        final String redirectUrl = "redirect:/" + this.moduleName;
 
         // Retrieve it
         final Optional<ENTITY> entityOptional = entityRepository.findById(id);
@@ -290,8 +296,22 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         }
         final ENTITY entity = entityOptional.get();
 
-        // See if its in use by any producer templates
-        // TODO
+        // See if its in use by anything.
+        final Map<String, Collection<String>> usages = entityUsageManager.findUsages(id);
+        if (!usages.isEmpty()) {
+            // Build message
+            String errorMessage = this.entityDisplayNameSingular + " in use by ";
+            Collection<String> errorMsgUsages = new HashSet<>();
+            for (final Map.Entry<String, Collection<String>> entry : usages.entrySet()) {
+                errorMsgUsages.add(entry.getKey() + ": " + entry.getValue().toString());
+            }
+
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute(
+                "FlashMessage",
+                FlashMessage.newWarning(errorMessage + String.join(", ", errorMsgUsages)));
+            return redirectUrl;
+        }
 
         try {
             // Delete entity

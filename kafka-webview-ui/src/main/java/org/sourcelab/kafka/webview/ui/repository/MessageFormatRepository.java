@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -32,24 +33,21 @@ import org.springframework.stereotype.Repository;
  * For access records on the message_format table.
  */
 @Repository
-public interface MessageFormatRepository extends CrudRepository<MessageFormat, Long> {
-    /**
-     * Retrieve by name.
-     * @param name Name to search for.
-     * @return MessageFormat found, or null.
-     */
-    MessageFormat findByName(final String name);
-
-    /**
-     * Find all message formats ordered by name.
-     * @return all Message Formats ordered by name.
-     */
-    Iterable<MessageFormat> findAllByOrderByNameAsc();
-
+public interface MessageFormatRepository extends UploadableJarRepository<MessageFormat> {
     /**
      * Find all message formats by type, ordered by name.
      * @param isDefaultFormat Only return items that match the default_format field being true or false.
      * @return all message formats ordered by name.
      */
+    @Deprecated
     Iterable<MessageFormat> findByIsDefaultFormatOrderByNameAsc(final boolean isDefaultFormat);
+
+    /**
+     * Find all partitioning strategies by type, ordered by name.
+     * @param isDefault Only return items that match the is_default field being true or false.
+     * @return all message formats ordered by name.
+     */
+    @Override
+    @Query("SELECT f FROM MessageFormat f WHERE f.isDefaultFormat = :isDefault order by name asc")
+    Iterable<MessageFormat> findByIsDefaultOrderByNameAsc(final boolean isDefault);
 }

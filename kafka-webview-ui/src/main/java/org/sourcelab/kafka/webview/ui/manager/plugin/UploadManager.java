@@ -130,7 +130,7 @@ public class UploadManager {
     public String handleUpload(final MultipartFile file, final String outFileName, final UploadType uploadType) throws IOException {
         switch (uploadType) {
             case DESERIALIZER:
-                handleDeserializerUpload(file, outFileName);
+                return handleDeserializerUpload(file, outFileName);
             case FILTER:
                 return handleFilterUpload(file, outFileName);
             case KEYSTORE:

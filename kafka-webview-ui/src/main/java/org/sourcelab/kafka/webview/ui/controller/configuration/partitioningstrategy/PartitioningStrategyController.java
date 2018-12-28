@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.partitioningstra
 import org.apache.kafka.clients.producer.Partitioner;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.partitioningstrategy.forms.PartitioningStrategyForm;
+import org.sourcelab.kafka.webview.ui.manager.controller.EntityUsageManager;
 import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarControllerHelper;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
@@ -43,6 +44,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -73,7 +76,7 @@ public class PartitioningStrategyController extends BaseController {
      * GET Displays create partitioning strategy form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
-    public String createPartitionStrategy(final PartitioningStrategyForm PartitioningStrategyForm, final Model model) {
+    public String createPartitionStrategy(final PartitioningStrategyForm form, final Model model) {
         return getHelper().buildCreate(model);
     }
 
@@ -83,12 +86,12 @@ public class PartitioningStrategyController extends BaseController {
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
     public String editPartitionStrategy(
         @PathVariable final Long id,
-        final PartitioningStrategyForm partitioningStrategyForm,
+        final PartitioningStrategyForm form,
         final Model model,
         final RedirectAttributes redirectAttributes) {
 
         return getHelper()
-            .buildEdit(id, partitioningStrategyForm, model, redirectAttributes);
+            .buildEdit(id, form, model, redirectAttributes);
     }
 
     /**
@@ -106,13 +109,13 @@ public class PartitioningStrategyController extends BaseController {
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
     public String create(
-        @Valid final PartitioningStrategyForm partitioningStrategyForm,
+        @Valid final PartitioningStrategyForm form,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
         @RequestParam final Map<String, String> allRequestParams) {
 
        return getHelper()
-           .handleUpdate(partitioningStrategyForm, bindingResult, redirectAttributes);
+           .handleUpdate(form, bindingResult, redirectAttributes);
     }
 
     /**
@@ -121,7 +124,7 @@ public class PartitioningStrategyController extends BaseController {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String deletePartitioningStrategy(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         return getHelper()
-            .processDelete(id, redirectAttributes);
+            .processDelete(id, redirectAttributes, entityId -> Collections.emptyMap());
     }
 
     private UploadableJarControllerHelper<PartitioningStrategy> getHelper() {

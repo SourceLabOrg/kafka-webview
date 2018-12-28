@@ -21,22 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package org.sourcelab.kafka.webview.ui.manager.controller;
 
-package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms;
-
-import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarForm;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 /**
- * Represents the form to create/update a MessageFormat.
+ *
  */
-public class MessageFormatForm extends UploadableJarForm {
+public interface EntityUsageManager {
+    Map<String, Collection<String>> findUsages(final long id);
 }

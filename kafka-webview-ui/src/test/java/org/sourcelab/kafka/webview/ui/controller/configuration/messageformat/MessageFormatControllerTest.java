@@ -42,6 +42,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
@@ -60,6 +61,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -159,7 +161,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit index.
         mockMvc
-            .perform(fileUpload("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -207,7 +209,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         mockMvc
-            .perform(fileUpload("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -237,7 +239,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         mockMvc
-            .perform(fileUpload("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -268,7 +270,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         final MvcResult result = mockMvc
-            .perform(fileUpload("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -314,7 +316,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         mockMvc
-            .perform(fileUpload("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -373,7 +375,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         mockMvc
-            .perform(fileUpload("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -437,7 +439,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         mockMvc
-            .perform(fileUpload("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
@@ -542,22 +544,31 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         final MessageFormat format = messageFormatTestTools.createMessageFormat("Format 1");
         final long formatId = format.getId();
 
-        // Create a View that uses our format.
-        final View view = viewTestTools.createViewWithFormat("My Name", format);
+        // Create a Views that uses our format.
+        final View view1 = viewTestTools.createViewWithFormat("My Name", format);
+        final View view2 = viewTestTools.createViewWithFormat("My Other Name", format);
 
         // Generate a dummy file
         final Path expectedJarPath = Paths.get(deserializerUploadPath, format.getJar());
         FileTestTools.createDummyFile(expectedJarPath.toString(), "MyContests");
         assertTrue("Sanity test", Files.exists(expectedJarPath));
 
+        final String expectedError = "Message Format in use by views: [My Name, My Other Name]";
+
         // Hit index.
-        mockMvc
+        final MvcResult result = mockMvc
             .perform(post("/configuration/messageFormat/delete/" + formatId)
                 .with(user(adminUserDetails))
                 .with(csrf()))
             .andDo(print())
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/configuration/messageFormat"));
+            .andExpect(redirectedUrl("/configuration/messageFormat"))
+            .andReturn();
+
+        final FlashMessage flashMessage = (FlashMessage) result.getFlashMap().get("FlashMessage");
+        assertNotNull("Should have a flash message set", flashMessage);
+        assertTrue("Should be warning", flashMessage.isWarning());
+        assertEquals("Should have our error msg", expectedError, flashMessage.getMessage());
 
         // Validate
         final MessageFormat messageFormat = messageFormatRepository.findById(formatId).get();
