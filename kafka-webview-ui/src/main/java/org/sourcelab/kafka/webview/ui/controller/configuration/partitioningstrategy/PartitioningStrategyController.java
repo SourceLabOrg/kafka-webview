@@ -27,7 +27,6 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.partitioningstra
 import org.apache.kafka.clients.producer.Partitioner;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.partitioningstrategy.forms.PartitioningStrategyForm;
-import org.sourcelab.kafka.webview.ui.manager.controller.EntityUsageManager;
 import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarControllerHelper;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
@@ -44,7 +43,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
