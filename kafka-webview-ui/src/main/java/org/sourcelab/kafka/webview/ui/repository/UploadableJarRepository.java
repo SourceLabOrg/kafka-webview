@@ -29,6 +29,8 @@ import org.springframework.data.repository.NoRepositoryBean;
 
 /**
  * Interface over uploadable jar entities.
+ *
+ * @param <T> Entity type the repository operates on.
  */
 @NoRepositoryBean
 public interface UploadableJarRepository<T> extends CrudRepository<T, Long> {

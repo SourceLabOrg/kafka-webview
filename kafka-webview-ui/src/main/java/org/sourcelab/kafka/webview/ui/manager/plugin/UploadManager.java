@@ -127,6 +127,13 @@ public class UploadManager {
         return handleFileUpload(file, outFileName, getKeyStoreUploadPath());
     }
 
+    /**
+     * Handle upload for a given upload type.
+     * @param file The Uploaded MultiPart file.
+     * @param outFileName What we want to name the output file.
+     * @param uploadType the type of upload.
+     * @return Path to uploaded file.
+     */
     public String handleUpload(final MultipartFile file, final String outFileName, final UploadType uploadType) throws IOException {
         switch (uploadType) {
             case DESERIALIZER:
@@ -137,8 +144,10 @@ public class UploadManager {
                 return handleKeystoreUpload(file, outFileName);
             case PARTITIONING_STRATEGY:
                 return handlePartitioningStrategyUpload(file, outFileName);
+            case SERIALIZER:
+            default:
+                throw new IllegalArgumentException("Unknown upload type: " + uploadType);
         }
-        throw new IllegalArgumentException("Unknown upload type");
     }
 
     /**
@@ -150,6 +159,12 @@ public class UploadManager {
         return deleteFile(keyStoreFile, keyStoreUploadPath);
     }
 
+    /**
+     * Removes a file if it exists.
+     * @param filename filename to remove
+     * @param rootPath the directory in which the file should exist.
+     * @return true if removed, false on errors.
+     */
     private boolean deleteFile(final String filename, final String rootPath) {
         // Handle nulls gracefully.
         if (filename == null || filename.trim().isEmpty()) {

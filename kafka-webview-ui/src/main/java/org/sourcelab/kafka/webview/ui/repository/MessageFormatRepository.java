@@ -26,7 +26,6 @@ package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -34,13 +33,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface MessageFormatRepository extends UploadableJarRepository<MessageFormat> {
-    /**
-     * Find all message formats by type, ordered by name.
-     * @param isDefaultFormat Only return items that match the default_format field being true or false.
-     * @return all message formats ordered by name.
-     */
-    @Deprecated
-    Iterable<MessageFormat> findByIsDefaultFormatOrderByNameAsc(final boolean isDefaultFormat);
 
     /**
      * Find all partitioning strategies by type, ordered by name.

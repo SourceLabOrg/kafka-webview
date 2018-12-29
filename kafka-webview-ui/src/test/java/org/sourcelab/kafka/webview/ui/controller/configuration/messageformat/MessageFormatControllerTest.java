@@ -553,7 +553,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         FileTestTools.createDummyFile(expectedJarPath.toString(), "MyContests");
         assertTrue("Sanity test", Files.exists(expectedJarPath));
 
-        final String expectedError = "Message Format in use by views: [My Name, My Other Name]";
+        final String expectedError = "Message Format in use by View: [My Name, My Other Name]";
 
         // Hit index.
         final MvcResult result = mockMvc

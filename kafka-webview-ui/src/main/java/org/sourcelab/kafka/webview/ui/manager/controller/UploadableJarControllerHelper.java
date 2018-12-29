@@ -52,41 +52,45 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
+ * Abstracted out common controller code for UploadableJarEntity instances.
  *
+ * @param <EntityT> The entity the controller is performing operations on.
  */
-public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
+public class UploadableJarControllerHelper<EntityT extends UploadableJarEntity> {
 
     /**
      * Dependencies.
      */
     private final UploadManager uploadManager;
     private final PluginFactory<?> pluginFactory;
-    private final UploadableJarRepository<ENTITY> entityRepository;
+    private final UploadableJarRepository<EntityT> entityRepository;
 
     /**
-     * Configuration
+     * Configuration.
      */
     private final String moduleName;
     private final String entityDisplayNameSingular;
     private final String entityDisplayNamePlural;
-    private final Class<ENTITY> entityClass;
+    private final Class<EntityT> entityClass;
 
     /**
      * Constructor.
-     * @param moduleName
-     * @param uploadManager
-     * @param pluginFactory
-     * @param entityRepository
-     * @param entityDisplayName
+     * @param entityDisplayNameSingular Display name of entity, in singular form.  Example "Message Format"
+     * @param entityDisplayNamePlural Display name of the entity, in plural form.  Example "Message Formats"
+     * @param moduleName path of the module in the UI.  example: "messageFormat"
+     * @param entityClass Class of the entity.
+     * @param uploadManager UploadManager instance.
+     * @param pluginFactory PluginFactory instance.
+     * @param entityRepository EntityT's repository instance.
      */
     public UploadableJarControllerHelper(
         final String entityDisplayNameSingular,
         final String entityDisplayNamePlural,
         final String moduleName,
-        final Class<ENTITY> entityClass,
+        final Class<EntityT> entityClass,
         final UploadManager uploadManager,
         final PluginFactory<?> pluginFactory,
-        final UploadableJarRepository<ENTITY> entityRepository) {
+        final UploadableJarRepository<EntityT> entityRepository) {
 
         this.uploadManager = uploadManager;
         this.pluginFactory = pluginFactory;
@@ -97,15 +101,20 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         this.entityClass = entityClass;
     }
 
+    /**
+     * Build the controllers index response.
+     * @param model controller's model instance.
+     * @return Controller response.
+     */
     public String buildIndex(final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", null);
 
         // Retrieve all default formats
-        final Iterable<ENTITY> defaultEntries = entityRepository.findByIsDefaultOrderByNameAsc(true);
+        final Iterable<EntityT> defaultEntries = entityRepository.findByIsDefaultOrderByNameAsc(true);
 
         // Retrieve all custom formats
-        final Iterable<ENTITY> customEntries = entityRepository.findByIsDefaultOrderByNameAsc(false);
+        final Iterable<EntityT> customEntries = entityRepository.findByIsDefaultOrderByNameAsc(false);
 
         // Set view attributes
         model.addAttribute("defaultEntries", defaultEntries);
@@ -114,6 +123,11 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         return this.moduleName + "/index";
     }
 
+    /**
+     * Build the controllers create response.
+     * @param model controller's model instance.
+     * @return Controller response.
+     */
     public String buildCreate(final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", null);
@@ -121,12 +135,23 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         return this.moduleName + "/create";
     }
 
-    public String buildEdit(final long id,
-                            final UploadableJarForm form,
-                            final Model model,
-                            final RedirectAttributes redirectAttributes) {
+    /**
+     * Build the controllers edit response.
+     * @param id id of entity
+     * @param form Controller's form instance.
+     * @param model Controller's model instance.
+     * @param redirectAttributes Controller's redirectAttributes instance.
+     * @return Controller response.
+     */
+    public String buildEdit(
+        final long id,
+        final UploadableJarForm form,
+        final Model model,
+        final RedirectAttributes redirectAttributes
+    ) {
+
         // Retrieve it
-        final Optional<ENTITY> entityOptional = entityRepository.findById(id);
+        final Optional<EntityT> entityOptional = entityRepository.findById(id);
         if (!entityOptional.isPresent()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute(
@@ -135,7 +160,7 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
             );
             return "redirect:/" + this.moduleName;
         }
-        final ENTITY entity = entityOptional.get();
+        final EntityT entity = entityOptional.get();
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit " + entity.getName(), null);
@@ -164,6 +189,13 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         return this.moduleName + "/create";
     }
 
+    /**
+     * Handle processing controller's update response.
+     * @param form Controller's form instance.
+     * @param bindingResult Controller's binding result instance.
+     * @param redirectAttributes Controller's redirectAttributes instance.
+     * @return Controller response.
+     */
     public String handleUpdate(
         final UploadableJarForm form,
         final BindingResult bindingResult,
@@ -187,10 +219,10 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         }
 
         // If Partitioning Strategy exists
-        final ENTITY entity;
+        final EntityT entity;
         if (form.exists()) {
             // Retrieve partitioning strategy
-            final Optional<ENTITY> entityOptional = entityRepository.findById(form.getId());
+            final Optional<EntityT> entityOptional = entityRepository.findById(form.getId());
 
             // If we can't find the entry
             if (!entityOptional.isPresent()) {
@@ -277,6 +309,13 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         return "redirect:/" + this.moduleName;
     }
 
+    /**
+     * Process a delete request for a UploadableJarEntity controller.
+     * @param id of entity to process delete for.
+     * @param redirectAttributes Controllers redirect attributes.
+     * @param entityUsageManager Implementation for finding usages of this entity.
+     * @return controller response.
+     */
     public String processDelete(
         final Long id,
         final RedirectAttributes redirectAttributes,
@@ -286,7 +325,7 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         final String redirectUrl = "redirect:/" + this.moduleName;
 
         // Retrieve it
-        final Optional<ENTITY> entityOptional = entityRepository.findById(id);
+        final Optional<EntityT> entityOptional = entityRepository.findById(id);
         if (!entityOptional.isPresent() || entityOptional.get().isDefault()) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute(
@@ -294,16 +333,16 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
                 FlashMessage.newWarning("Unable to remove " + this.entityDisplayNameSingular + "!"));
             return redirectUrl;
         }
-        final ENTITY entity = entityOptional.get();
+        final EntityT entity = entityOptional.get();
 
         // See if its in use by anything.
-        final Map<String, Collection<String>> usages = entityUsageManager.findUsages(id);
+        final Collection<EntityUsageManager.Usage> usages = entityUsageManager.findUsages(id);
         if (!usages.isEmpty()) {
             // Build message
             String errorMessage = this.entityDisplayNameSingular + " in use by ";
             Collection<String> errorMsgUsages = new HashSet<>();
-            for (final Map.Entry<String, Collection<String>> entry : usages.entrySet()) {
-                errorMsgUsages.add(entry.getKey() + ": " + entry.getValue().toString());
+            for (final EntityUsageManager.Usage usage : usages) {
+                errorMsgUsages.add(usage.toString());
             }
 
             // Set flash message & redirect
@@ -356,6 +395,12 @@ public class UploadableJarControllerHelper<ENTITY extends UploadableJarEntity> {
         }
     }
 
+    /**
+     * Sets up breadcrumbs in UI.
+     * @param model controller model instance.
+     * @param name name of entity, or null.
+     * @param url Optional URL to display.
+     */
     private void setupBreadCrumbs(final Model model, final String name, final String url) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model)

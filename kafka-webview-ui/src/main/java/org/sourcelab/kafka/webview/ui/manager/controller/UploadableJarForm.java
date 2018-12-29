@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package org.sourcelab.kafka.webview.ui.manager.controller;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * Abstracted common UploadableJarEntity form methods into re-usable abstract instance.
  */
 public abstract class UploadableJarForm {
     private Long id = null;

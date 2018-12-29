@@ -51,7 +51,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/configuration/partitionStrategy")
-public class PartitioningStrategyController extends BaseController {
+public class PartitionStrategyController extends BaseController {
 
     @Autowired
     private UploadManager uploadManager;
@@ -110,10 +110,9 @@ public class PartitioningStrategyController extends BaseController {
         @Valid final PartitioningStrategyForm form,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
-        @RequestParam final Map<String, String> allRequestParams) {
-
-       return getHelper()
-           .handleUpdate(form, bindingResult, redirectAttributes);
+        @RequestParam final Map<String, String> allRequestParams
+    ) {
+        return getHelper().handleUpdate(form, bindingResult, redirectAttributes);
     }
 
     /**
@@ -122,7 +121,7 @@ public class PartitioningStrategyController extends BaseController {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String deletePartitioningStrategy(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         return getHelper()
-            .processDelete(id, redirectAttributes, entityId -> Collections.emptyMap());
+            .processDelete(id, redirectAttributes, entityId -> Collections.emptyList());
     }
 
     private UploadableJarControllerHelper<PartitioningStrategy> getHelper() {

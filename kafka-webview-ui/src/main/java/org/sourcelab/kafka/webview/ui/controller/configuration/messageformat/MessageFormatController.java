@@ -24,8 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
@@ -33,11 +31,7 @@ import org.sourcelab.kafka.webview.ui.manager.controller.EntityUsageManager;
 import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarControllerHelper;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
-import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
-import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
-import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
-import org.sourcelab.kafka.webview.ui.model.PartitioningStrategy;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
@@ -45,25 +39,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Controller for MessageFormat CRUD operations.
@@ -143,20 +126,16 @@ public class MessageFormatController extends BaseController {
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String deleteCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
 
-        return getHelper()
-            .processDelete(id, redirectAttributes, entityId -> {
-                final Iterable<View> views = viewRepository.findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(entityId, entityId);
+        return getHelper().processDelete(id, redirectAttributes, entityId -> {
+            final Iterable<View> views =
+                viewRepository.findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(entityId, entityId);
 
-                final Collection<String> viewNames = new ArrayList<>();
-                for (final View view: views) {
-                    viewNames.add(view.getName());
-                }
-
-                if (viewNames.isEmpty()) {
-                    return Collections.emptyMap();
-                }
-                return Collections.singletonMap("views", viewNames);
-            });
+            final EntityUsageManager.UsageBuilder builder = EntityUsageManager.Usage.newBuilder();
+            for (final View view: views) {
+                builder.withInstance("View", view.getName(), view.getId());
+            }
+            return builder.build();
+        });
     }
 
     private UploadableJarControllerHelper<MessageFormat> getHelper() {

@@ -25,15 +25,6 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.partitioningstrategy.forms;
 
 import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarForm;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Represents the form to create/update a PartitioningStrategy.
