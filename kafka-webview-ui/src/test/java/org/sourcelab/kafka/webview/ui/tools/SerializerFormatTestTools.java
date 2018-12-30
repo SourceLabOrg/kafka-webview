@@ -22,15 +22,39 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.repository;
+package org.sourcelab.kafka.webview.ui.tools;
 
 import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
-import org.springframework.stereotype.Repository;
+import org.sourcelab.kafka.webview.ui.repository.SerializerFormatRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
- * For access records on the message_format table.
+ * Helpful tools for Filters in tests.
  */
-@Repository
-public interface SerializerFormatRepository extends UploadableJarRepository<SerializerFormat> {
+@Component
+public class SerializerFormatTestTools {
 
+    private final SerializerFormatRepository serializerFormatRepository;
+
+    @Autowired
+    public SerializerFormatTestTools(final SerializerFormatRepository serializerFormatRepository) {
+        this.serializerFormatRepository = serializerFormatRepository;
+    }
+
+    /**
+     * Utility for creating partitioning strategies.
+     * @param name Name of the strategy.
+     * @return Persisted Strategy.
+     */
+    public SerializerFormat createStrategy(final String name) {
+        final SerializerFormat format = new SerializerFormat();
+        format.setName(name);
+        format.setClasspath("com.example." + name);
+        format.setJar(name + ".jar");
+        format.setOptionParameters("{\"key\": \"value\"}");
+        serializerFormatRepository.save(format);
+
+        return format;
+    }
 }

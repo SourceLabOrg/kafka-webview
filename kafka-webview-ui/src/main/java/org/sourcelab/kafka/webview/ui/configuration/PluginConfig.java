@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
@@ -90,6 +91,17 @@ public class PluginConfig {
     public PluginFactory<Partitioner> getPartitionerPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/partitioners";
         return new PluginFactory<>(jarDirectory, Partitioner.class);
+    }
+
+    /**
+     * PluginFactory for creating instances of Serializers.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Serializers.
+     */
+    @Bean
+    public PluginFactory<Serializer> getSerializerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getUploadPath() + "/serializers";
+        return new PluginFactory<>(jarDirectory, Serializer.class);
     }
 
     /**
