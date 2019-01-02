@@ -22,7 +22,8 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer;
+package org.sourcelab.kafka.webview.ui.plugin.serializer;
+
 
 import org.apache.kafka.common.serialization.Serializer;
 
@@ -30,12 +31,14 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * For mapping web entered data to a serializer instance.
+ * For translation of values input from Kafka WebView UI/Browser, to a Kafka serializer.
  *
- * @param <T> value that the serializer instance is expecting.
+ * Typically an implementation of this interface is only needed in situations where you want to serialize
+ * complex/composite objects which require multiple input values from the browser interface.
+ *
+ * @param <T> Object type the Kafka Serializer instance will be serializing.
  */
-public interface ValueTransformer<T> {
-
+public interface SerializerTransformer<T> {
     /**
      * Configure this class.
      * @param configs configs in key/value pairs
@@ -58,7 +61,7 @@ public interface ValueTransformer<T> {
     Class<? extends Serializer> getSerializerClass();
 
     /**
-     * Return collection of field names to collect values for.
+     * Return collection of field names to collect values from the web interface.
      * @return Collection of file names.
      */
     Collection<String> getFieldNames();

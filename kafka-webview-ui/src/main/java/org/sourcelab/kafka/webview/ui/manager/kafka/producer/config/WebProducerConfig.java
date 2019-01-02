@@ -27,7 +27,7 @@ package org.sourcelab.kafka.webview.ui.manager.kafka.producer.config;
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.clients.producer.internals.DefaultPartitioner;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
-import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.ValueTransformer;
+import org.sourcelab.kafka.webview.ui.plugin.serializer.SerializerTransformer;
 
 import java.util.concurrent.TimeUnit;
 
@@ -40,8 +40,8 @@ public class WebProducerConfig {
     private final String producerClientId;
 
     // Serialization options
-    private final ValueTransformer keyTransformer;
-    private final ValueTransformer valueTransformer;
+    private final SerializerTransformer keyTransformer;
+    private final SerializerTransformer valueTransformer;
 
     // Partitioning Options
     private final Class<? extends Partitioner> partitionerClass;
@@ -71,8 +71,8 @@ public class WebProducerConfig {
         final ClusterConfig clusterConfig,
         final String topic,
         final String producerClientId,
-        final ValueTransformer keyTransformer,
-        final ValueTransformer valueTransformer,
+        final SerializerTransformer keyTransformer,
+        final SerializerTransformer valueTransformer,
         final Class<? extends Partitioner> partitionerClass
     ) {
         if (clusterConfig == null) {
@@ -114,11 +114,11 @@ public class WebProducerConfig {
         return producerClientId;
     }
 
-    public ValueTransformer getKeyTransformer() {
+    public SerializerTransformer getKeyTransformer() {
         return keyTransformer;
     }
 
-    public ValueTransformer getValueTransformer() {
+    public SerializerTransformer getValueTransformer() {
         return valueTransformer;
     }
 
@@ -145,39 +145,39 @@ public class WebProducerConfig {
         private ClusterConfig clusterConfig;
         private String topic;
         private String producerClientId;
-        private ValueTransformer keyTransformer;
-        private ValueTransformer valueTransformer;
+        private SerializerTransformer keyTransformer;
+        private SerializerTransformer valueTransformer;
         private Class<? extends Partitioner> partitionerClass = DefaultPartitioner.class;
 
         private Builder() {
         }
 
-        public Builder withClusterConfig(ClusterConfig clusterConfig) {
+        public Builder withClusterConfig(final ClusterConfig clusterConfig) {
             this.clusterConfig = clusterConfig;
             return this;
         }
 
-        public Builder withTopic(String topic) {
+        public Builder withTopic(final String topic) {
             this.topic = topic;
             return this;
         }
 
-        public Builder withProducerClientId(String producerClientId) {
+        public Builder withProducerClientId(final String producerClientId) {
             this.producerClientId = producerClientId;
             return this;
         }
 
-        public Builder withKeyTransformer(ValueTransformer keyTransformer) {
+        public Builder withKeyTransformer(final SerializerTransformer keyTransformer) {
             this.keyTransformer = keyTransformer;
             return this;
         }
 
-        public Builder withValueTransformer(ValueTransformer valueTransformer) {
+        public Builder withValueTransformer(final SerializerTransformer valueTransformer) {
             this.valueTransformer = valueTransformer;
             return this;
         }
 
-        public Builder withPartitionerClass(Class<? extends Partitioner> partitionerClass) {
+        public Builder withPartitionerClass(final Class<? extends Partitioner> partitionerClass) {
             this.partitionerClass = partitionerClass;
             return this;
         }

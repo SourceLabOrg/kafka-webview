@@ -31,6 +31,7 @@ import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarController
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
+import org.sourcelab.kafka.webview.ui.plugin.serializer.SerializerTransformer;
 import org.sourcelab.kafka.webview.ui.repository.SerializerFormatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -57,7 +58,7 @@ public class SerializerController extends BaseController {
     private UploadManager uploadManager;
 
     @Autowired
-    private PluginFactory<Serializer> serializerPluginFactory;
+    private PluginFactory<SerializerTransformer> serializerPluginFactory;
 
     @Autowired
     private SerializerFormatRepository serializerFormatRepository;

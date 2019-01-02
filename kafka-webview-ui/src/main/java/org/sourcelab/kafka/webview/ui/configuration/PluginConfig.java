@@ -65,7 +65,7 @@ public class PluginConfig {
      * @param appProperties Definition of app properties.
      * @return PluginFactory for Deserializers.
      */
-    @Bean
+    //@Bean
     public PluginFactory<Deserializer> getDeserializerPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/deserializers";
         return new PluginFactory<>(jarDirectory, Deserializer.class);

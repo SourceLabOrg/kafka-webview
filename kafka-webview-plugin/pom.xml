@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kafka-webview-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
 
     <!-- Module Description and Ownership -->
     <name>Kafka WebView Plugin</name>
@@ -32,6 +32,12 @@
     </properties>
 
     <dependencies>
-        <!-- None! -->
+        <!-- Kafka Dependency Provided -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
