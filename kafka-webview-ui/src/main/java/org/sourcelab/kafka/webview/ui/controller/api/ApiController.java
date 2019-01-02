@@ -570,7 +570,7 @@ public class ApiController extends BaseController {
     @ExceptionHandler(ApiException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiErrorResponse handleApiException(final ApiException exception) {
-        return new ApiErrorResponse(exception.getType(), exception.getMessage());
+        return new ApiErrorResponse(exception.getType(), exception.getMessage(), ApiErrorResponse.buildCauseList(exception));
     }
 
     /**
