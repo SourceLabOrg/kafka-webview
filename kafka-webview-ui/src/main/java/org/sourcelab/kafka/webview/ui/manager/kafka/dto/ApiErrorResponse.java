@@ -24,6 +24,10 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Represents an error returned over the API.
  */
@@ -31,13 +35,15 @@ public class ApiErrorResponse {
     private final boolean error = true;
     private final String message;
     private final String requestType;
+    private final ApiErrorCause[] causes;
 
     /**
      * Constructor.
      */
-    public ApiErrorResponse(final String requestType, final String message) {
+    public ApiErrorResponse(final String requestType, final String message, final ApiErrorCause[] causes) {
         this.message = message;
         this.requestType = requestType;
+        this.causes = causes;
     }
 
     public boolean isError() {
@@ -52,12 +58,55 @@ public class ApiErrorResponse {
         return requestType;
     }
 
+    public ApiErrorCause[] getCauses() {
+        return causes;
+    }
+
     @Override
     public String toString() {
         return "ApiErrorResponse{"
             + "error=" + error
             + ", message='" + message + '\''
             + ", requestType='" + requestType + '\''
+            + ", causes=" + Arrays.toString(causes)
             + '}';
+    }
+
+    /**
+     * Utility method to generate underlying ApiErrorCause array from exception.
+     * @param exception exception.
+     * @return Array of ApiErrorCauses.
+     */
+    public static ApiErrorCause[] buildCauseList(final Exception exception) {
+        if (exception == null) {
+            return new ApiErrorCause[0];
+        }
+
+        final List<ApiErrorCause> causeList = new ArrayList<>();
+        Throwable cause = exception.getCause();
+        while (cause != null) {
+            final StackTraceElement[] trace = cause.getStackTrace();
+            String file = "";
+            String method = "";
+            int line = 0;
+
+            if (trace.length > 0) {
+                file = trace[0].getFileName();
+                method = trace[0].getClassName() + "::" + trace[0].getMethodName();
+                line = trace[0].getLineNumber();
+            }
+
+            causeList.add(new ApiErrorCause(
+                cause.getClass().getName(),
+                cause.getMessage(),
+                file,
+                method,
+                line
+            ));
+
+            // Continue loop.
+            cause = cause.getCause();
+        }
+        return causeList.toArray(new ApiErrorCause[0]);
     }
 }
