@@ -44,6 +44,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
@@ -485,7 +486,7 @@ public class ApiControllerTest extends AbstractMvcTest {
 
             // Consume
             consumer.subscribe(Collections.singleton(newTopic));
-            consumer.poll(2000L);
+            consumer.poll(Duration.ofSeconds(2));
 
             // Save state.
             consumer.commitSync();

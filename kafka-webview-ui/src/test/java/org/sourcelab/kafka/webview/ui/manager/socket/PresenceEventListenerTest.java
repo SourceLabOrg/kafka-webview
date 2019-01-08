@@ -27,12 +27,11 @@ package org.sourcelab.kafka.webview.ui.manager.socket;
 import org.junit.Test;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 
 public class PresenceEventListenerTest {
 

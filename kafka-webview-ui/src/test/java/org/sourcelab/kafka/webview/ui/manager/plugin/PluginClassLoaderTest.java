@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.manager.plugin;
 import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.security.PermissionCollection;
 import java.security.ProtectionDomain;
@@ -43,7 +44,8 @@ public class PluginClassLoaderTest {
      * Tests loading a class from a jar.
      */
     @Test
-    public void testLoadingFilterPlugin() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public void testLoadingFilterPlugin() throws ClassNotFoundException, IllegalAccessException,
+        InstantiationException, NoSuchMethodException, InvocationTargetException {
         // Get URL to our jar
         final URL jar = getClass().getClassLoader().getResource("testDeserializer/testPlugins.jar");
         final String classPath = "examples.filter.LowOffsetFilter";
@@ -55,7 +57,7 @@ public class PluginClassLoaderTest {
         assertNotNull("Should not be null", filterPlugin);
 
         // Create an instance of it and validate.
-        final RecordFilter filter = filterPlugin.newInstance();
+        final RecordFilter filter = filterPlugin.getDeclaredConstructor().newInstance();
         final String topic = "MyTopic";
         final int partition = 2;
         final long offset = 2423L;
