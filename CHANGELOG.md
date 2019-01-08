@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.1.1 (UNRELEASED)
+## 2.1.1 (01/08/2019)
 #### New Features
 - Added ability to Copy previously created views.
 - Better expose underlying exceptions/errors when things go wrong.
