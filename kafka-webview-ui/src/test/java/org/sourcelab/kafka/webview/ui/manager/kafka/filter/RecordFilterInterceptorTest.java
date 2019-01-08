@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,9 +40,9 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -104,8 +104,8 @@ public class RecordFilterInterceptorTest {
         final RecordFilter mockFilter1 = mock(RecordFilter.class);
         final RecordFilter mockFilter2 = mock(RecordFilter.class);
 
-        when(mockFilter1.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
-        when(mockFilter2.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject())).thenReturn(true);
+        when(mockFilter1.includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any())).thenReturn(true);
+        when(mockFilter2.includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any())).thenReturn(true);
 
         final RecordFilterDefinition recordFilterDefinition1 = new RecordFilterDefinition(mockFilter1, new HashMap<>());
         final RecordFilterDefinition recordFilterDefinition2 = new RecordFilterDefinition(mockFilter2, new HashMap<>());
@@ -131,9 +131,9 @@ public class RecordFilterInterceptorTest {
 
         // Verify mocks
         verify(mockFilter1, times(totalRecords))
-            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any());
         verify(mockFilter2, times(totalRecords))
-            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any());
     }
 
     /**
@@ -147,9 +147,9 @@ public class RecordFilterInterceptorTest {
         final RecordFilter mockFilter1 = mock(RecordFilter.class);
         final RecordFilter mockFilter2 = mock(RecordFilter.class);
 
-        when(mockFilter1.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject()))
+        when(mockFilter1.includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any()))
             .thenReturn(true, false, true, true, true);
-        when(mockFilter2.includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject()))
+        when(mockFilter2.includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any()))
             .thenReturn(true, true, false, true);
 
         final RecordFilterDefinition recordFilterDefinition1 = new RecordFilterDefinition(mockFilter1, new HashMap<>());
@@ -182,9 +182,9 @@ public class RecordFilterInterceptorTest {
 
         // Verify mocks
         verify(mockFilter1, times(totalRecords))
-            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any());
         verify(mockFilter2, times(totalRecords - 1))
-            .includeRecord(eq("MyTopic"), eq(0), anyLong(), anyObject(), anyObject());
+            .includeRecord(eq("MyTopic"), eq(0), anyLong(), any(), any());
     }
 
     private ConsumerRecords createConsumerRecords(final int count) {

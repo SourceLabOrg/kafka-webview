@@ -25,35 +25,59 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 /**
- * Represents information about a consumer group identifier.
+ * Underlying causes for Api Error.
  */
-public class ConsumerGroupIdentifier {
-    private final String id;
-    private final boolean isSimple;
+public class ApiErrorCause {
+    private final String type;
+    private final String message;
+    private final String file;
+    private final String method;
+    private final int line;
 
     /**
      * Constructor.
-     * @param id consumer group id/name.
-     * @param isSimple If its a simple consumer or not.
+     * @param type Classname of exception.
+     * @param message Error msg.
+     * @param file File the exception was generated from.
+     * @param method Method the exception was generated from.
+     * @param line line number the exception was generated from.
      */
-    public ConsumerGroupIdentifier(final String id, final boolean isSimple) {
-        this.id = id;
-        this.isSimple = isSimple;
+    public ApiErrorCause(final String type, final String message, final String file, final String method, final int line) {
+        this.type = type;
+        this.message = message;
+        this.file = file;
+        this.method = method;
+        this.line = line;
     }
 
-    public String getId() {
-        return id;
+    public String getType() {
+        return type;
     }
 
-    public boolean isSimple() {
-        return isSimple;
+    public String getMessage() {
+        return message;
+    }
+
+    public String getFile() {
+        return file;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public int getLine() {
+        return line;
     }
 
     @Override
     public String toString() {
-        return "ConsumerGroupIdentifier{"
-            + "id='" + id + '\''
-            + ", isSimple=" + isSimple
+        return "ApiErrorCause{"
+            + "type='" + type + '\''
+            + ", message='" + message + '\''
+            + ", file='" + file + '\''
+            + ", method='" + method + '\''
+            + ", line=" + line
             + '}';
     }
 }

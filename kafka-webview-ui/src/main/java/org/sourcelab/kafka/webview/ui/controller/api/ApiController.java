@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -570,7 +570,7 @@ public class ApiController extends BaseController {
     @ExceptionHandler(ApiException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiErrorResponse handleApiException(final ApiException exception) {
-        return new ApiErrorResponse(exception.getType(), exception.getMessage());
+        return new ApiErrorResponse(exception.getType(), exception.getMessage(), ApiErrorResponse.buildCauseList(exception));
     }
 
     /**

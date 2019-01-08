@@ -21,6 +21,7 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
   - Filtering by partition.
   - Configurable server-side filtering logic.
 - "Live" web socket based streaming consumer.
+- Consumer group state monitoring
   
 ### Screen Shots
 

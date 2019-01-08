@@ -340,7 +340,7 @@ var ApiClient = {
     defaultErrorHandler: function(jqXHR, textStatus, errorThrown) {
         // convert response to json
         var response = jQuery.parseJSON(jqXHR.responseText);
-        UITools.showAlert(response.message, 15)
+        UITools.showApiErrorWithStack(response);
     }
 };
 
@@ -361,6 +361,21 @@ var UITools = {
                 jQuery(alertElement).alert('close');
             }, timeoutInSecs * 1000);
         }
+    },
+    showApiErrorWithStack: function(apiException) {
+        var html = apiException.message
+            + ' (<a data-toggle="collapse" href="#stackTrace" role="button" aria-expanded="false" aria-controls="stackTrace">show more</a>)<br/>'
+            + '<div class="collapse" id="stackTrace"><ol>';
+
+
+        var stackHtml = '';
+        apiException.causes.forEach(function(entry, index) {
+            stackHtml = stackHtml + '<li>' + entry.type + ' thrown at ' + entry.method + ' -> ' + entry.message + '</li>';
+        });
+
+        html = html + stackHtml + '</ul></div>';
+
+        UITools.showAlert(html, null);
     },
     showSuccess: function(message, timeoutInSecs) {
         var alertContainer = jQuery(UITools.alertContainerId);
