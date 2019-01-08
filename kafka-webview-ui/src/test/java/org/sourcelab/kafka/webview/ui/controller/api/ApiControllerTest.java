@@ -28,6 +28,7 @@ import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.ClassRule;
@@ -462,6 +463,7 @@ public class ApiControllerTest extends AbstractMvcTest {
      * @return Consumer group id created.
      */
     private String createConsumerWithState() {
+        final int totalRecords = 10;
         final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
 
         // Define our new topic name
@@ -473,12 +475,12 @@ public class ApiControllerTest extends AbstractMvcTest {
         // Publish records into topic
         sharedKafkaTestResource
             .getKafkaTestUtils()
-            .produceRecords(10, newTopic, 0);
+            .produceRecords(totalRecords, newTopic, 0);
 
         // Create a consumer and consume from the records, maintaining state.
         final Properties consumerProperties = new Properties();
-        consumerProperties.put("client.id", consumerId);
-        consumerProperties.put("group.id", consumerId);
+        consumerProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerId);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerId);
 
         try (final KafkaConsumer consumer = sharedKafkaTestResource
             .getKafkaTestUtils()
@@ -486,7 +488,7 @@ public class ApiControllerTest extends AbstractMvcTest {
 
             // Consume
             consumer.subscribe(Collections.singleton(newTopic));
-            consumer.poll(Duration.ofSeconds(2));
+            consumer.poll(Duration.ofSeconds(5));
 
             // Save state.
             consumer.commitSync();
