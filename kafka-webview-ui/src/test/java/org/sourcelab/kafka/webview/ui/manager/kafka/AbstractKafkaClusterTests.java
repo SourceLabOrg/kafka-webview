@@ -42,6 +42,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -177,11 +178,11 @@ public abstract class AbstractKafkaClusterTests {
         final KafkaConsumerFactory kafkaConsumerFactory = buildKafkaConsumerFactory();
         try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
             // Attempt to consume, should pull first 10
-            ConsumerRecords<String, String> records = consumer.poll(2000L);
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
             assertEquals("Should have 10 records", maxRecordsPerPoll, records.count());
 
             // Attempt to consume, should pull 2nd 10
-            records = consumer.poll(2000L);
+            records = consumer.poll(Duration.ofSeconds(2));
             assertEquals("Should have 10 records", maxRecordsPerPoll, records.count());
         }
     }

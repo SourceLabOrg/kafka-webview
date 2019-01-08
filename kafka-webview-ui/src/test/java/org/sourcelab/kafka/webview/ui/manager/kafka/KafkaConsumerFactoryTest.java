@@ -43,6 +43,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig;
 import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,11 +114,11 @@ public class KafkaConsumerFactoryTest {
         // Create consumer
         try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
             // Attempt to consume, should pull first 10
-            ConsumerRecords<String, String> records = consumer.poll(2000L);
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
             assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records.count());
 
             // Attempt to consume, should pull 2nd 10
-            records = consumer.poll(2000L);
+            records = consumer.poll(Duration.ofSeconds(2));
             assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records.count());
         }
     }
@@ -171,7 +172,7 @@ public class KafkaConsumerFactoryTest {
         // Create consumer
         try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
             // Attempt to consume, should pull first 10
-            ConsumerRecords<String, String> records = consumer.poll(2000L);
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
             assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records.count());
 
             for (final ConsumerRecord<String, String> record: records) {
@@ -179,7 +180,7 @@ public class KafkaConsumerFactoryTest {
             }
 
             // Attempt to consume, should come up empty
-            records = consumer.poll(2000L);
+            records = consumer.poll(Duration.ofSeconds(2));
             assertTrue("Should be empty", records.isEmpty());
         }
     }
@@ -188,7 +189,7 @@ public class KafkaConsumerFactoryTest {
      * Simple Smoke Test, using RecordFilter to filter everything from partition 0.
      */
     @Test
-    public void testBasicConsumerWithRecordFilter() throws InterruptedException {
+    public void testBasicConsumerWithRecordFilter() {
         final int maxRecordsPerPoll = 10;
 
         // Create a topic with 2 partitions, (partitionId 0, 1)
@@ -238,7 +239,7 @@ public class KafkaConsumerFactoryTest {
         // Create consumer
         try (final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
             // Attempt to consume, should pull first 10
-            ConsumerRecords<String, String> records = consumer.poll(10000L);
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
             assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records.count());
 
             for (final ConsumerRecord<String, String> record: records) {
@@ -246,7 +247,7 @@ public class KafkaConsumerFactoryTest {
             }
 
             // Attempt to consume, should come up empty
-            records = consumer.poll(2000L);
+            records = consumer.poll(Duration.ofSeconds(2));
             assertTrue("Should be empty", records.isEmpty());
         }
     }
@@ -256,7 +257,7 @@ public class KafkaConsumerFactoryTest {
      * We should get no results.
      */
     @Test
-    public void testDeserializerOptions() throws InterruptedException {
+    public void testDeserializerOptions() {
         // Reset state on our Test Deserializer
         TestDeserializer.reset();
 
