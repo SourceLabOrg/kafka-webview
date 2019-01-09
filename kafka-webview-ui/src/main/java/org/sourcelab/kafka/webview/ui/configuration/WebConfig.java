@@ -26,6 +26,9 @@ package org.sourcelab.kafka.webview.ui.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import org.apache.avro.generic.GenericData;
+import org.sourcelab.kafka.webview.ui.manager.jackson.SimpleAvroDataSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -42,6 +45,9 @@ import java.util.List;
 @Configuration
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
+    @Autowired
+    private AppProperties appProperties;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // css resource
@@ -76,6 +82,7 @@ public class WebConfig implements WebMvcConfigurer {
         final ObjectMapper mapper = Jackson2ObjectMapperBuilder
             .json()
             .modulesToInstall(new ProtobufModule())
+            .serializerByType(GenericData.Record.class, new SimpleAvroDataSerializer(appProperties.isAvroIncludeSchema()))
             .build();
         converters.add(new MappingJackson2HttpMessageConverter(mapper));
     }

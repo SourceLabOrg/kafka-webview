@@ -5,11 +5,11 @@
     <parent>
         <artifactId>kafka-webview</artifactId>
         <groupId>org.sourcelab</groupId>
-        <version>2.1.1</version>
+        <version>2.1.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kafka-webview-ui</artifactId>
-    <version>2.1.1</version>
+    <version>2.1.2</version>
 
     <!-- Module Description and Ownership -->
     <name>Kafka WebView UI</name>
@@ -30,9 +30,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+
+        <avro.version>1.8.2</avro.version>
         <bootstrap.version>4.0.0-beta</bootstrap.version>
-        <thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
         <kafka.version>2.0.0</kafka.version>
+        <protobuf.version>3.6.1</protobuf.version>
+        <thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
     </properties>
 
     <dependencies>
@@ -175,7 +178,27 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>3.6.1</version>
+            <version>${protobuf.version}</version>
+        </dependency>
+
+        <!-- Jackson support for avro-->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+            <exclusions>
+                <!-- exclude vulnerable dependency -->
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Explicitly include updated version -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.18</version>
         </dependency>
 
         <!-- For tests -->

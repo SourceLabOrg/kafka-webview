@@ -52,6 +52,9 @@ public class AppProperties {
     @Value("${app.requireSsl:false}")
     private boolean requireSsl = false;
 
+    @Value("${app.avro.includeSchema:true}")
+    private boolean avroIncludeSchema = true;
+
     /**
      * Flag read from configuration file to determine if the app should
      * enforce User authentication.
@@ -95,6 +98,10 @@ public class AppProperties {
 
     public LdapAppProperties getLdapProperties() {
         return ldapProperties;
+    }
+
+    public boolean isAvroIncludeSchema() {
+        return avroIncludeSchema;
     }
 
     @Override

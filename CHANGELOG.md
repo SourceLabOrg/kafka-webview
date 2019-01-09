@@ -2,6 +2,11 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.1.2 (UNRELEASED)
+
+#### Bug fixes
+- [ISSUE-114](https://github.com/SourceLabOrg/kafka-webview/issues/114) Better out of the box support for Avro decoding / Confluent Schema Registry.
+
 ## 2.1.1 (01/08/2019)
 #### New Features
 - Added ability to Copy previously created views.
