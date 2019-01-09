@@ -27,7 +27,7 @@ package org.sourcelab.kafka.webview.ui.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.avro.generic.GenericData;
-import org.sourcelab.kafka.webview.ui.manager.SimpleAvroDataSerializer;
+import org.sourcelab.kafka.webview.ui.manager.jackson.SimpleAvroDataSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
