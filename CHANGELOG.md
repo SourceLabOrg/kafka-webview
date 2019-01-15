@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [ISSUE-114](https://github.com/SourceLabOrg/kafka-webview/issues/114) Better out of the box support for Avro decoding / Confluent Schema Registry.
 
 #### Internal Dependency Updates
-- Upgrade from Spring Boot 2.0.5 to 2.0.7
+- Upgrade from Spring Boot 2.0.7 to 2.0.8
 
 
 ## 2.1.1 (01/08/2019)
