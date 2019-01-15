@@ -2,10 +2,14 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.1.2 (UNRELEASED)
+## 2.1.2 (01/15/2018)
 
 #### Bug fixes
 - [ISSUE-114](https://github.com/SourceLabOrg/kafka-webview/issues/114) Better out of the box support for Avro decoding / Confluent Schema Registry.
+
+#### Internal Dependency Updates
+- Upgrade from Spring Boot 2.0.5 to 2.0.7
+
 
 ## 2.1.1 (01/08/2019)
 #### New Features
