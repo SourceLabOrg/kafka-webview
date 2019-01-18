@@ -123,7 +123,7 @@ public abstract class AbstractStreamControllerTest {
      * @param password password to login with.
      * @return HttpHeaders from login process.
      */
-    public abstract HttpHeaders login(final String username, final String password);
+    public abstract UserLoginDetails login(final String username, final String password);
 
     @Before
     public void setup() {
@@ -170,9 +170,10 @@ public abstract class AbstractStreamControllerTest {
         final List<Map> consumedRecords = new ArrayList<>();
 
         // Login to instance.
-        final WebSocketHttpHeaders socketHttpHeaders = new WebSocketHttpHeaders(
-            login("admin@example.com", "admin")
-        );
+        final UserLoginDetails userLoginDetails = login("admin@example.com", "admin");
+
+        final WebSocketHttpHeaders socketHttpHeaders = new WebSocketHttpHeaders(userLoginDetails.getHttpHeaders());
+        final long userId = userLoginDetails.getUserId();
 
         // Create websocket client
         final SockJsClient sockJsClient = new SockJsClient(createTransportClient());
@@ -187,7 +188,7 @@ public abstract class AbstractStreamControllerTest {
             @Override
             public void afterConnected(final StompSession session, final StompHeaders connectedHeaders) {
                 session.setAutoReceipt(false);
-                subscribeToResults(session, view.getId(), 1L, countDownLatch, consumedRecords);
+                subscribeToResults(session, view.getId(), userId, countDownLatch, consumedRecords);
                 try {
                     requestNewStream(session, view.getId());
                 } catch (InterruptedException e) {
@@ -199,13 +200,13 @@ public abstract class AbstractStreamControllerTest {
         // Start the client.
         stompClient.start();
 
-        // Define a max time of 15 seconds
+        // Define a max time of 30 seconds
         Duration testTimeout = Duration.ofSeconds(15);
 
         while (countDownLatch.getCount() > 0) {
             // Sleep for a period and recheck.
             Thread.sleep(1000L);
-            testTimeout = testTimeout.minusMillis(1000);
+            testTimeout = testTimeout.minusSeconds(1);
 
             if (testTimeout.isNegative()) {
                 fail("Test timed out!");
@@ -249,5 +250,31 @@ public abstract class AbstractStreamControllerTest {
         transports.add(new WebSocketTransport(new StandardWebSocketClient()));
         transports.add(new RestTemplateXhrTransport(new RestTemplate()));
         return transports;
+    }
+
+    /**
+     * Defines login and user information for test cases.
+     */
+    public static class UserLoginDetails {
+        private final long userId;
+        private final HttpHeaders httpHeaders;
+
+        /**
+         * Constructor.
+         * @param userId logged in user's userId
+         * @param httpHeaders login headers
+         */
+        public UserLoginDetails(final long userId, final HttpHeaders httpHeaders) {
+            this.userId = userId;
+            this.httpHeaders = httpHeaders;
+        }
+
+        public long getUserId() {
+            return userId;
+        }
+
+        public HttpHeaders getHttpHeaders() {
+            return httpHeaders;
+        }
     }
 }

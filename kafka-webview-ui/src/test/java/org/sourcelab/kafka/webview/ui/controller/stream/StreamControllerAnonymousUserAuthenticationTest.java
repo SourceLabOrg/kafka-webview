@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.controller.stream;
 
 import org.junit.runner.RunWith;
+import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -37,7 +38,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class StreamControllerAnonymousUserAuthenticationTest extends AbstractStreamControllerTest {
 
     @Override
-    public HttpHeaders login(final String username, final String password) {
-        return new HttpHeaders();
+    public UserLoginDetails login(final String username, final String password) {
+        return new UserLoginDetails(
+            AnonymousUserDetailsService.getDefaultAnonymousUser().getUserId(),
+            new HttpHeaders()
+        );
     }
 }

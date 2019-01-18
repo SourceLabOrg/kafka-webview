@@ -78,7 +78,7 @@
                 <i class="icon-user"></i>
                 <span class="d-md-down-none" sec:authentication="name"></span>
             </a>
-            <div class="dropdown-menu dropdown-menu-right">
+            <div class="dropdown-menu dropdown-menu-right" th:if="${MenuShowUserConfig}">
                 <div class="dropdown-header text-center" th:if="${MenuShowUserConfig}">
                     <strong>Settings</strong>
                 </div>

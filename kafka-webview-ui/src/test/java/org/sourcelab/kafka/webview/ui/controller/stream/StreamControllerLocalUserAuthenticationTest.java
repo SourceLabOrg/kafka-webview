@@ -26,7 +26,6 @@ package org.sourcelab.kafka.webview.ui.controller.stream;
 
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
@@ -37,7 +36,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class StreamControllerLocalUserAuthenticationTest extends AbstractStreamControllerTest {
 
     @Override
-    public HttpHeaders login(final String username, final String password) {
-        return userLoginUtility.login(username, password);
+    public UserLoginDetails login(final String username, final String password) {
+        return new UserLoginDetails(
+            1L,
+            userLoginUtility.login(username, password)
+        );
     }
 }
