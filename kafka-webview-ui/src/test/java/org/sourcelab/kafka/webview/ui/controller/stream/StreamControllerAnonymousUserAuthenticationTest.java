@@ -30,6 +30,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static junit.framework.TestCase.assertTrue;
+
 /**
  * Test coverage for stream controller using anonymous user authentication.
  */
@@ -43,5 +45,13 @@ public class StreamControllerAnonymousUserAuthenticationTest extends AbstractStr
             AnonymousUserDetailsService.getDefaultAnonymousUser().getUserId(),
             new HttpHeaders()
         );
+    }
+
+    /**
+     * This test not valid for anonymous logins
+     */
+    @Override
+    public void test_unauthenticated_webSocketConnection() {
+        assertTrue("This test disabled for anonymous logins", true);
     }
 }

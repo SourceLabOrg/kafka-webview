@@ -41,7 +41,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
@@ -157,10 +159,10 @@ public abstract class AbstractStreamControllerTest {
     }
 
     /**
-     * Attempts to make a websocket connection as an anonymous user to verify it works as expected.
+     * Attempts to make a websocket connection as an authenticated user, and stream values from a view.
      */
     @Test
-    public void test_webSocketConnection() throws InterruptedException {
+    public void test_authenticated_webSocketConnection() throws InterruptedException {
         // Create a count down latch to know when we have consumed all of our records.
         final CountDownLatch countDownLatch = new CountDownLatch(kafkaRecords.size());
 
@@ -198,7 +200,7 @@ public abstract class AbstractStreamControllerTest {
         // Start the client.
         stompClient.start();
 
-        // Define a max time of 30 seconds
+        // Define a max time of 15 seconds
         Duration testTimeout = Duration.ofSeconds(15);
 
         while (countDownLatch.getCount() > 0) {
@@ -213,6 +215,59 @@ public abstract class AbstractStreamControllerTest {
 
         // Success!
         assertEquals("Found all messages!", consumedRecords.size(), kafkaRecords.size());
+    }
+
+    /**
+     * Attempts to make a websocket connection as an unauthenticated user, and stream values from a view.
+     * Except in the case of Anonymous user access being enabled, this should result in an error.
+     */
+    @Test
+    public void test_unauthenticated_webSocketConnection() throws InterruptedException {
+        // Create a count down latch to know when we have completed our test
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        // Create empty headers.
+        final WebSocketHttpHeaders socketHttpHeaders = new WebSocketHttpHeaders();
+
+        // Create websocket client
+        final SockJsClient sockJsClient = new SockJsClient(createTransportClient());
+        final WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+
+        // Connect to websocket
+        stompClient.connect(WEBSOCKET_URL, socketHttpHeaders, new StompSessionHandlerAdapter() {
+            @Override
+            public void afterConnected(final StompSession session, final StompHeaders connectedHeaders) {
+                fail("Should not have connected!");
+            }
+
+            /**
+             * This implementation is empty.
+             */
+            @Override
+            public void handleTransportError(StompSession session, Throwable exception) {
+                countDownLatch.countDown();
+            }
+        }, port);
+
+        // Start the client.
+        stompClient.start();
+
+        // Define a max time of 10 seconds
+        Duration testTimeout = Duration.ofSeconds(10);
+
+        while (countDownLatch.getCount() > 0) {
+            // Sleep for a period and recheck.
+            Thread.sleep(1000L);
+            testTimeout = testTimeout.minusSeconds(1);
+
+            if (testTimeout.isNegative()) {
+                fail("Test timed out!");
+            }
+        }
+
+        // Success!
+        assertEquals(0, countDownLatch.getCount());
     }
 
     private void subscribeToResults(final StompSession stompSession, long viewId, long userId, final CountDownLatch countDownLatch, final List<Map> consumedRecords) {
