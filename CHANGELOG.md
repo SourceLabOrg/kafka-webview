@@ -2,6 +2,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.1.3 (UNRELEASED)
+
+#### Bug fixes
+- [ISSUE-127](https://github.com/SourceLabOrg/kafka-webview/issues/127) Anonymous users were unable to stream views.
+
+
 ## 2.1.2 (01/15/2018)
 
 #### Bug fixes
