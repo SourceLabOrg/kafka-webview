@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.tools;
 
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,16 +43,34 @@ public class MessageFormatTestTools {
     }
 
     /**
-     * Utility for creating Filters.
-     * @param name Name of the filter.
-     * @return Persisted Filter.
+     * Utility for creating message formats.
+     * @param name Name of the message format.
+     * @return Persisted MessageFormat.
      */
     public MessageFormat createMessageFormat(final String name) {
         final MessageFormat format = new MessageFormat();
         format.setName(name);
         format.setClasspath("com.example." + name);
         format.setJar(name + ".jar");
+        format.setDefaultFormat(false);
         format.setOptionParameters("{\"key\": \"value\"}");
+        messageFormatRepository.save(format);
+
+        return format;
+    }
+
+    /**
+     * Creates a String message format.
+     * @param name Name of the message format.
+     * @return Persisted MessageFormat.
+     */
+    public MessageFormat createStringMessageFormat(final String name) {
+        final MessageFormat format = new MessageFormat();
+        format.setName(name);
+        format.setClasspath(StringDeserializer.class.getName());
+        format.setDefaultFormat(true);
+        format.setJar("");
+        format.setOptionParameters("{}");
         messageFormatRepository.save(format);
 
         return format;
