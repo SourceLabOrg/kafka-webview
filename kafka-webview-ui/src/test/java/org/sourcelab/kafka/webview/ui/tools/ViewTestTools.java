@@ -56,8 +56,8 @@ public class ViewTestTools {
         // Create a dummy cluster
         final Cluster cluster = clusterTestTools.createCluster(name);
 
-        // Create a dummy message format
-        final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat(name);
+        // Default to using String message format
+        final MessageFormat messageFormat = messageFormatTestTools.createStringMessageFormat(name);
 
         // Create it.
         return createView(name, cluster, messageFormat);

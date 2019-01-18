@@ -74,15 +74,23 @@
     <!-- User Settings Nav -->
     <ul class="nav navbar-nav ml-auto">
         <li class="nav-item dropdown" style="padding-right: 50px;">
-            <a class="nav-link dropdown-toggle nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            <a
+                class="nav-link nav-link"
+                th:classappend="${MenuShowUserConfig} ? dropdown-toggle : blank"
+                data-toggle="dropdown"
+                href="#"
+                role="button"
+                aria-haspopup="true"
+                aria-expanded="false">
+
                 <i class="icon-user"></i>
                 <span class="d-md-down-none" sec:authentication="name"></span>
             </a>
-            <div class="dropdown-menu dropdown-menu-right">
-                <div class="dropdown-header text-center" th:if="${MenuShowUserConfig}">
+            <div class="dropdown-menu dropdown-menu-right" th:if="${MenuShowUserConfig}">
+                <div class="dropdown-header text-center">
                     <strong>Settings</strong>
                 </div>
-                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}" th:if="${MenuShowUserConfig}">
+                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}">
                     <i class="fa fa-user"></i> Profile
                 </a>
                 <div class="divider"></div>

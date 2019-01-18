@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.controller.stream;
 
+import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
@@ -33,6 +34,7 @@ import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 import org.sourcelab.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
@@ -58,6 +60,9 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/stream")
 public class StreamController extends BaseController {
+    @Autowired
+    private AppProperties appProperties;
+
     @Autowired
     private ViewRepository viewRepository;
 
@@ -186,6 +191,11 @@ public class StreamController extends BaseController {
      * @return Currently logged in user's details.
      */
     private CustomUserDetails getLoggedInUser(final SimpMessageHeaderAccessor headerAccessor) {
-        return (CustomUserDetails) ((Authentication)headerAccessor.getUser()).getPrincipal();
+        // If we're using anonymous access
+        if (!appProperties.isUserAuthEnabled()) {
+            // Return default 'anonymous' user.
+            return AnonymousUserDetailsService.getDefaultAnonymousUser();
+        }
+        return (CustomUserDetails) ((Authentication) headerAccessor.getUser()).getPrincipal();
     }
 }
