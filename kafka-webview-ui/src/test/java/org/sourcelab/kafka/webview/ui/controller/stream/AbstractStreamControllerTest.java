@@ -119,11 +119,9 @@ public abstract class AbstractStreamControllerTest {
 
     /**
      * Handle logging into the app.
-     * @param username username to login with.
-     * @param password password to login with.
-     * @return HttpHeaders from login process.
+     * @return UserLoginDetails from login process.
      */
-    public abstract UserLoginDetails login(final String username, final String password);
+    public abstract UserLoginDetails login();
 
     @Before
     public void setup() {
@@ -170,7 +168,7 @@ public abstract class AbstractStreamControllerTest {
         final List<Map> consumedRecords = new ArrayList<>();
 
         // Login to instance.
-        final UserLoginDetails userLoginDetails = login("admin@example.com", "admin");
+        final UserLoginDetails userLoginDetails = login();
 
         final WebSocketHttpHeaders socketHttpHeaders = new WebSocketHttpHeaders(userLoginDetails.getHttpHeaders());
         final long userId = userLoginDetails.getUserId();

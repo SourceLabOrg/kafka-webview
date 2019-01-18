@@ -24,22 +24,46 @@
 
 package org.sourcelab.kafka.webview.ui.controller.stream;
 
+import org.junit.Rule;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.zapodot.junit.ldap.EmbeddedLdapRule;
+import org.zapodot.junit.ldap.EmbeddedLdapRuleBuilder;
 
 /**
- * Test coverage for stream controller using normal user login/authentication.
+ * Test coverage for stream controller using ldap user login/authentication.
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, value = {"app.user.enabled=true", "app.user.ldap.enabled=false"})
-public class StreamControllerLocalUserAuthenticationTest extends AbstractStreamControllerTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, value = {
+    // User auth is enable
+    "app.user.enabled=true",
+
+    // Ldap Auth is enabled
+    "app.user.ldap.enabled=true",
+
+    // Configured to use our embedded ldap server
+    "app.user.ldap.url=ldap://localhost:55555/dc=example,dc=com"
+})
+public class StreamControllerLdapUserAuthenticationTest extends AbstractStreamControllerTest {
+    /**
+     * Start embedded LDAP server.
+     */
+    @Rule
+    public EmbeddedLdapRule embeddedLdapRule = EmbeddedLdapRuleBuilder
+        .newInstance()
+        .usingDomainDsn("dc=example,dc=com")
+        .importingLdifs("test-server.ldif")
+        .bindingToPort(55555)
+        .build();
 
     @Override
     public UserLoginDetails login() {
         return new UserLoginDetails(
-            1L,
-            userLoginUtility.login("admin@example.com", "admin")
+            0L,
+            userLoginUtility.login("ben", "benspassword")
         );
     }
 }

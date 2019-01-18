@@ -38,7 +38,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class StreamControllerAnonymousUserAuthenticationTest extends AbstractStreamControllerTest {
 
     @Override
-    public UserLoginDetails login(final String username, final String password) {
+    public UserLoginDetails login() {
         return new UserLoginDetails(
             AnonymousUserDetailsService.getDefaultAnonymousUser().getUserId(),
             new HttpHeaders()
