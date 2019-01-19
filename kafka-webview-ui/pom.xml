@@ -35,7 +35,7 @@
         <bootstrap.version>4.0.0-beta</bootstrap.version>
         <kafka.version>2.0.0</kafka.version>
         <protobuf.version>3.6.1</protobuf.version>
-        <thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
+        <thymeleaf.version>3.0.11.RELEASE</thymeleaf.version>
     </properties>
 
     <dependencies>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity4</artifactId>
-            <version>3.0.2.RELEASE</version>
+            <version>3.0.4.RELEASE</version>
         </dependency>
 
         <!-- JPA -->
@@ -127,7 +127,7 @@
         <dependency>
             <groupId>javax.interceptor</groupId>
             <artifactId>javax.interceptor-api</artifactId>
-            <version>1.2.1</version>
+            <version>1.2.2</version>
         </dependency>
 
         <dependency>
