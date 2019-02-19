@@ -2,8 +2,6 @@ server:
   servlet:
     session:
       persistent: true
-    context-path: /appname
-  port: 8081
 
 spring:
   # H2 Datbase
