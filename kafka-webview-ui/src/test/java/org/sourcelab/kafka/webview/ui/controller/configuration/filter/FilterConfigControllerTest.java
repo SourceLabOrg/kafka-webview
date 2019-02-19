@@ -76,7 +76,7 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(get("/configuration/filter").with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate cluster 1
             .andExpect(content().string(containsString(filter1.getName())))

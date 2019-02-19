@@ -118,7 +118,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(get("/configuration/messageFormat").with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate cluster 1
             .andExpect(content().string(containsString(format1.getName())))
@@ -138,7 +138,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(get("/configuration/messageFormat/create").with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk());
     }
 
@@ -169,7 +169,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .param("customOptionNames", "option2")
                 .param("customOptionValues", "value1")
                 .param("customOptionValues", "value2"))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(model().hasNoErrors())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
@@ -213,7 +213,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .param("name", expectedName)
                 .param("classpath", expectedClassPath))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(model().hasErrors())
             .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
             .andExpect(status().isOk());
@@ -243,7 +243,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .param("name", expectedName)
                 .param("classpath", expectedClassPath))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(model().hasErrors())
             .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
             .andExpect(status().isOk());
@@ -275,7 +275,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .param("id", "-1000")
                 .param("name", expectedName)
                 .param("classpath", expectedClassPath))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(flash().attributeExists("FlashMessage"))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"))
@@ -325,7 +325,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .param("customOptionNames", "option2")
                 .param("customOptionValues", "value1")
                 .param("customOptionValues", "value2"))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(model().hasErrors())
             .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
             .andExpect(status().isOk());
@@ -384,7 +384,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .param("customOptionNames", "option2")
                 .param("customOptionValues", "value1")
                 .param("customOptionValues", "value2"))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(model().hasNoErrors())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
@@ -444,7 +444,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .param("id", String.valueOf(messageFormat.getId()))
                 .param("name", newName)
                 .param("classpath", newClasspath))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(model().hasNoErrors())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
@@ -485,7 +485,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/configuration/messageFormat/edit/" + format.getId())
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             .andExpect(content().string(containsString(format.getName())))
             .andExpect(content().string(containsString(format.getClasspath())))
@@ -520,7 +520,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .perform(post("/configuration/messageFormat/delete/" + formatId)
                 .with(user(adminUserDetails))
                 .with(csrf()))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
@@ -555,7 +555,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .perform(post("/configuration/messageFormat/delete/" + formatId)
                 .with(user(adminUserDetails))
                 .with(csrf()))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 

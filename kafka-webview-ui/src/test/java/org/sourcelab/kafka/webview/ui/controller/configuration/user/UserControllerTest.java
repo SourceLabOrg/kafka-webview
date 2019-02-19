@@ -68,7 +68,7 @@ public class UserControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(get("/configuration/user").with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate user 1
             .andExpect(content().string(containsString(adminUser.getEmail())))
@@ -88,13 +88,17 @@ public class UserControllerTest extends AbstractMvcTest {
         // Hit edit page for same user as logged in with.
         mockMvc
             .perform(get("/configuration/user/edit/" + adminUser.getId()).with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Validate content
             .andExpect(content().string(containsString(adminUser.getEmail())))
             .andExpect(content().string(containsString(adminUser.getDisplayName())))
-            .andExpect(content().string(containsString("value=\"" + adminUser.getId() + "\"")));
+            .andExpect(content().string(containsString("value=\"" + adminUser.getId() + "\"")))
+
+            // Validate cancel link
+            .andExpect(content().string(containsString("Cancel")))
+            .andExpect(content().string(containsString("href=\"/configuration/user\"")));
     }
 
     /**
@@ -106,13 +110,17 @@ public class UserControllerTest extends AbstractMvcTest {
         // Hit edit page for same user as logged in with.
         mockMvc
             .perform(get("/configuration/user/edit/" + nonAdminUser.getId()).with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Validate content
             .andExpect(content().string(containsString(nonAdminUser.getEmail())))
             .andExpect(content().string(containsString(nonAdminUser.getDisplayName())))
-            .andExpect(content().string(containsString("value=\"" + nonAdminUser.getId() + "\"")));
+            .andExpect(content().string(containsString("value=\"" + nonAdminUser.getId() + "\"")))
+
+            // Validate cancel link
+            .andExpect(content().string(containsString("Cancel")))
+            .andExpect(content().string(containsString("href=\"/\"")));
     }
 
     /**
@@ -124,13 +132,17 @@ public class UserControllerTest extends AbstractMvcTest {
         // Hit edit page for same user as logged in with.
         mockMvc
             .perform(get("/configuration/user/edit/" + nonAdminUser.getId()).with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Validate content
             .andExpect(content().string(containsString(nonAdminUser.getEmail())))
             .andExpect(content().string(containsString(nonAdminUser.getDisplayName())))
-            .andExpect(content().string(containsString("value=\"" + nonAdminUser.getId() + "\"")));
+            .andExpect(content().string(containsString("value=\"" + nonAdminUser.getId() + "\"")))
+
+            // Validate cancel link
+            .andExpect(content().string(containsString("Cancel")))
+            .andExpect(content().string(containsString("href=\"/\"")));
     }
 
     /**
@@ -143,7 +155,7 @@ public class UserControllerTest extends AbstractMvcTest {
         // Hit edit page for same user as logged in with.
         mockMvc
             .perform(get("/configuration/user/edit/" + adminUser.getId()).with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/"));
     }

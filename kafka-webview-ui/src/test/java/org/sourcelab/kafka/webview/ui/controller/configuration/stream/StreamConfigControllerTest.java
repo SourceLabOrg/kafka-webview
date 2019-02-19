@@ -160,7 +160,7 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(get("/configuration/stream").with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate consumer 1
             .andExpect(content().string(containsString(userName1)))
@@ -208,7 +208,7 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
             .perform(post("/configuration/stream/close/" + sessionHash)
                 .with(user(adminUserDetails))
                 .with(csrf())
-            ).andDo(print())
+            )//.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/stream"))
             .andExpect(flash().attributeExists("FlashMessage"))
@@ -243,7 +243,7 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
             .perform(post("/configuration/stream/close/" + sessionHash)
                 .with(user(adminUserDetails))
                 .with(csrf())
-            ).andDo(print())
+            )//.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/stream"))
             .andExpect(flash().attributeExists("FlashMessage"))
