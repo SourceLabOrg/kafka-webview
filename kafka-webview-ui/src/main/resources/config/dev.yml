@@ -2,6 +2,7 @@ server:
   servlet:
     session:
       persistent: true
+    context-path: /appname
 
 spring:
   # H2 Datbase
