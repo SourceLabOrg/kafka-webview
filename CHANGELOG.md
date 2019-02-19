@@ -3,6 +3,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.1.4 (UNRELEASED)
+- [ISSUE-136](https://github.com/SourceLabOrg/kafka-webview/issues/136) Incomplete fix for running Kafka-Webview behind a reverse proxy.  Additional work needs to be done to completely resolve this issue.
 
 ## 2.1.3 (01/19/2019)
 

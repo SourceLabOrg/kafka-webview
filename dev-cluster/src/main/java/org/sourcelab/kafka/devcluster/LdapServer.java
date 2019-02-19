@@ -56,10 +56,9 @@ public class LdapServer {
         );
 
         // Require bind username and password
-        //config.addAdditionalBindCredentials("cn=BindUser", "password");
-        config.setAuthenticationRequiredOperationTypes(
-            OperationType.values()
-        );
+//        config.setAuthenticationRequiredOperationTypes(
+//            OperationType.values()
+//        );
 
         final String ldifFile = LdapServer.class.getClassLoader().getResource("test-server.ldif").getFile();
 
