@@ -74,6 +74,13 @@ public class ClusterTestTools {
     }
 
     /**
+     * Clear all clusters from the database.
+     */
+    public void deleteAllClusters() {
+        clusterRepository.deleteAll();
+    }
+
+    /**
      * Easy access to clusterRepository.
      * @param cluster Cluster to persist.
      */

@@ -14,9 +14,13 @@
     <logger name="com.zaxxer.hikari" level="WARN"/>
 
     <!-- Internal Kafka Clients -->
-    <logger name="org.apache.kafka.clients.admin.AdminClientConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.consumer.internals" level="WARN"/>
     <logger name="org.apache.kafka.clients.consumer.ConsumerConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.producer.internals" level="WARN"/>
     <logger name="org.apache.kafka.clients.producer.ProducerConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.admin.internals" level="WARN"/>
+    <logger name="org.apache.kafka.clients.admin.AdminClientConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.Metadata" level="WARN"/>
     <logger name="org.apache.zookeeper.ZooKeeper" level="WARN"/>
     <logger name="org.apache.zookeeper.ClientCnxn" level="WARN"/>
 

@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.controller.cluster;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
@@ -55,6 +56,15 @@ public class ClusterControllerTest extends AbstractMvcTest {
 
     @Autowired
     private ClusterTestTools clusterTestTools;
+
+    /**
+     * Clear out all clusters prior to running test.
+     */
+    @Before
+    public void setup() {
+        // Ensure all clusters have been removed.
+        clusterTestTools.deleteAllClusters();
+    }
 
     /**
      * Ensure authentication is required.

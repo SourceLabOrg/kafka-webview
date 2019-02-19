@@ -104,6 +104,13 @@ public class ViewTestTools {
     }
 
     /**
+     * Clear all views from the database.
+     */
+    public void deleteAllViews() {
+        viewRepository.deleteAll();
+    }
+
+    /**
      * Easy access to viewRepository.
      * @param view View to persist.
      */
