@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <logger name="org.springframework.web" level="INFO"/>
+
+    <!-- Internal Kafka Clients -->
+    <logger name="org.apache.kafka.clients.admin.AdminClientConfig" level="WARN"/>
+    <logger name="org.apache.zookeeper.ZooKeeper" level="WARN"/>
+    <logger name="org.apache.zookeeper.ClientCnxn" level="WARN"/>
+
+    <!-- Logging for internal Kafka/Zookeeper -->
+    <logger name="org.apache.zookeeper.server" level="WARN"/>
+    <logger name="kafka.controller" level="WARN"/>
+    <logger name="kafka.coordinator" level="WARN"/>
+    <logger name="kafka.server" level="WARN"/>
+    <logger name="kafka.network" level="WARN"/>
+    <logger name="kafka.log" level="WARN"/>
+    <logger name="kafka.zk" level="WARN"/>
+    <logger name="kafka.zookeeper" level="WARN"/>
+    <logger name="org.apache.kafka.common.utils.AppInfoParser" level="WARN"/>
+
+</configuration>
