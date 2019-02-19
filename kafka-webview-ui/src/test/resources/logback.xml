@@ -3,8 +3,20 @@
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <logger name="org.springframework.web" level="INFO"/>
 
+    <!-- Springboot startup noise -->
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="WARN"/>
+    <logger name="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping" level="WARN"/>
+    <logger name="org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping" level="WARN"/>
+    <logger name="org.flywaydb.core" level="WARN"/>
+
+    <!-- Springboot noise -->
+    <logger name="org.springframework.test.context.transaction" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
     <!-- Internal Kafka Clients -->
     <logger name="org.apache.kafka.clients.admin.AdminClientConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.consumer.ConsumerConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.producer.ProducerConfig" level="WARN"/>
     <logger name="org.apache.zookeeper.ZooKeeper" level="WARN"/>
     <logger name="org.apache.zookeeper.ClientCnxn" level="WARN"/>
 
@@ -12,6 +24,7 @@
     <logger name="org.apache.zookeeper.server" level="WARN"/>
     <logger name="kafka.controller" level="WARN"/>
     <logger name="kafka.coordinator" level="WARN"/>
+    <logger name="kafka.cluster" level="WARN"/>
     <logger name="kafka.server" level="WARN"/>
     <logger name="kafka.network" level="WARN"/>
     <logger name="kafka.log" level="WARN"/>

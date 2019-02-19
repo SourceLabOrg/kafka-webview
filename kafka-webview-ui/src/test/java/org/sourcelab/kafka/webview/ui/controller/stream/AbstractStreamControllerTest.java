@@ -46,6 +46,7 @@ import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -160,6 +161,7 @@ public abstract class AbstractStreamControllerTest {
      * Attempts to make a websocket connection as an authenticated user, and stream values from a view.
      */
     @Test
+    @Transactional
     public void test_authenticated_webSocketConnection() throws InterruptedException {
         // Create a count down latch to know when we have consumed all of our records.
         final CountDownLatch countDownLatch = new CountDownLatch(kafkaRecords.size());
@@ -220,6 +222,7 @@ public abstract class AbstractStreamControllerTest {
      * Except in the case of Anonymous user access being enabled, this should result in an error.
      */
     @Test
+    @Transactional
     public void test_unauthenticated_webSocketConnection() throws InterruptedException {
         // Create a count down latch to know when we have completed our test
         final CountDownLatch countDownLatch = new CountDownLatch(1);
