@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.controller.stream;
 
 import com.salesforce.kafka.test.ProducedKafkaRecord;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -154,6 +155,12 @@ public abstract class AbstractStreamControllerTest {
 
         // Create user login utility instance.
         userLoginUtility = new UserLoginUtility("http://localhost:" + port, "/login", restTemplate);
+    }
+
+    @After
+    public void cleanup() {
+        viewTestTools.deleteAllViews();
+        clusterTestTools.deleteAllClusters();
     }
 
     /**
