@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
 <head>
@@ -10,7 +11,12 @@
 <body>
 <section layout:fragment="content">
     <div class="container">
-        <div class="row">
+        <div th:replace="fragments/noKafkaClustersFound :: display(${clusterList})">
+            <!-- Display no kafka clusters found -->
+        </div>
+
+        <div class="row" th:if="${not clusterList.isEmpty()}">
+            <!-- Clusters found -->
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
@@ -29,10 +35,10 @@
                             <tbody>
                             <tr th:each="cluster : ${clusterList}">
                                 <td>
-                                    <a th:href="'/cluster/' + ${cluster.id}" th:text="${cluster.name}"></a>
+                                    <a th:href="@{/cluster/{id}(id=${cluster.id})}" th:text="${cluster.name}"></a>
                                 </td>
                                 <td>
-                                    <a th:href="'/view?clusterId=' + ${cluster.id}" th:text="${viewsByClusterId.get(cluster.getId())} + ' Views'"></a>
+                                    <a th:href="@{/view?clusterId={id}(id=${cluster.id})}" th:text="${viewsByClusterId.get(cluster.getId())} + ' Views'"></a>
                                 </td>
                                 <td>
                                     <span

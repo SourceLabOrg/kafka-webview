@@ -26,18 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class ViewControllerTest extends AbstractMvcTest {
 
-    // Clusters text
-    private static final String NO_CLUSTERS_SETUP_TEXT = "It looks like you have no Kafka Clusters configured yet";
-    private static final String CREATE_CLUSTER_TEXT = "Setup new Cluster";
-    private static final String ASK_ADMIN_CREATE_CLUSTER_TEXT = "Ask an Administrator to configure a cluster.";
-    private static final String CREATE_CLUSTER_LINK = "/configuration/cluster/create";
-
-    // Views text
-    private static final String NO_VIEWS_SETUP_TEXT= "It looks like you have no Views configured yet!";
-    private static final String CREATE_VIEW_TEXT="Let's head over and set one up now!";
-    private static final String ASK_ADMIN_CREATE_VIEW_TEXT = "Ask an Administrator to configure a view.";
-    private static final String CREATE_VIEW_LINK = "/configuration/view/create";
-
     @Autowired
     private ClusterTestTools clusterTestTools;
 
@@ -73,11 +61,11 @@ public class ViewControllerTest extends AbstractMvcTest {
             .andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
-            .andExpect(content().string(containsString(NO_CLUSTERS_SETUP_TEXT)))
-            .andExpect(content().string(containsString(CREATE_CLUSTER_TEXT)))
-            .andExpect(content().string(containsString(CREATE_CLUSTER_LINK)))
+            .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
+            .andExpect(content().string(containsString(ClusterTestTools.CREATE_CLUSTER_TEXT)))
+            .andExpect(content().string(containsString(ClusterTestTools.CREATE_CLUSTER_LINK)))
             // But not this
-            .andExpect(content().string(not(containsString(ASK_ADMIN_CREATE_CLUSTER_TEXT))));
+            .andExpect(content().string(not(containsString(ClusterTestTools.ASK_ADMIN_CREATE_CLUSTER_TEXT))));
     }
 
     /**
@@ -94,11 +82,11 @@ public class ViewControllerTest extends AbstractMvcTest {
             .andDo(print())
             .andExpect(status().isOk())
             // Validate no clusters exists text
-            .andExpect(content().string(containsString(NO_CLUSTERS_SETUP_TEXT)))
-            .andExpect(content().string(containsString(ASK_ADMIN_CREATE_CLUSTER_TEXT)))
+            .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
+            .andExpect(content().string(containsString(ClusterTestTools.ASK_ADMIN_CREATE_CLUSTER_TEXT)))
             // Shouldn't have these links
-            .andExpect(content().string(not(containsString(CREATE_CLUSTER_TEXT))))
-            .andExpect(content().string(not(containsString(CREATE_CLUSTER_LINK))));
+            .andExpect(content().string(not(containsString(ClusterTestTools.CREATE_CLUSTER_TEXT))))
+            .andExpect(content().string(not(containsString(ClusterTestTools.CREATE_CLUSTER_LINK))));
     }
 
     /**
@@ -118,12 +106,12 @@ public class ViewControllerTest extends AbstractMvcTest {
             .andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
-            .andExpect(content().string(containsString(NO_VIEWS_SETUP_TEXT)))
-            .andExpect(content().string(containsString(CREATE_VIEW_TEXT)))
-            .andExpect(content().string(containsString(CREATE_VIEW_LINK)))
+            .andExpect(content().string(containsString(ViewTestTools.NO_VIEWS_SETUP_TEXT)))
+            .andExpect(content().string(containsString(ViewTestTools.CREATE_VIEW_TEXT)))
+            .andExpect(content().string(containsString(ViewTestTools.CREATE_VIEW_LINK)))
             // But not this
-            .andExpect(content().string(not(containsString(ASK_ADMIN_CREATE_VIEW_TEXT))))
-            .andExpect(content().string(not(containsString(NO_CLUSTERS_SETUP_TEXT))));
+            .andExpect(content().string(not(containsString(ViewTestTools.ASK_ADMIN_CREATE_VIEW_TEXT))))
+            .andExpect(content().string(not(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT))));
     }
 
     /**
@@ -143,13 +131,13 @@ public class ViewControllerTest extends AbstractMvcTest {
             .andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
-            .andExpect(content().string(containsString(NO_VIEWS_SETUP_TEXT)))
-            .andExpect(content().string(containsString(ASK_ADMIN_CREATE_VIEW_TEXT)))
+            .andExpect(content().string(containsString(ViewTestTools.NO_VIEWS_SETUP_TEXT)))
+            .andExpect(content().string(containsString(ViewTestTools.ASK_ADMIN_CREATE_VIEW_TEXT)))
 
             // But not this
-            .andExpect(content().string(not(containsString(CREATE_VIEW_TEXT))))
-            .andExpect(content().string(not(containsString(CREATE_VIEW_LINK))))
-            .andExpect(content().string(not(containsString(NO_CLUSTERS_SETUP_TEXT))));
+            .andExpect(content().string(not(containsString(ViewTestTools.CREATE_VIEW_TEXT))))
+            .andExpect(content().string(not(containsString(ViewTestTools.CREATE_VIEW_LINK))))
+            .andExpect(content().string(not(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT))));
     }
 
     /**
@@ -201,11 +189,11 @@ public class ViewControllerTest extends AbstractMvcTest {
             .andExpect(content().string(containsString(view2Topic)))
 
             // But not this
-            .andExpect(content().string(not(containsString(ASK_ADMIN_CREATE_VIEW_TEXT))))
-            .andExpect(content().string(not(containsString(ASK_ADMIN_CREATE_CLUSTER_TEXT))))
-            .andExpect(content().string(not(containsString(NO_CLUSTERS_SETUP_TEXT))))
-            .andExpect(content().string(not(containsString(NO_VIEWS_SETUP_TEXT))))
-            .andExpect(content().string(not(containsString(CREATE_VIEW_TEXT))))
-            .andExpect(content().string(not(containsString(CREATE_VIEW_LINK))));
+            .andExpect(content().string(not(containsString(ViewTestTools.ASK_ADMIN_CREATE_VIEW_TEXT))))
+            .andExpect(content().string(not(containsString(ClusterTestTools.ASK_ADMIN_CREATE_CLUSTER_TEXT))))
+            .andExpect(content().string(not(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT))))
+            .andExpect(content().string(not(containsString(ViewTestTools.NO_VIEWS_SETUP_TEXT))))
+            .andExpect(content().string(not(containsString(ViewTestTools.CREATE_VIEW_TEXT))))
+            .andExpect(content().string(not(containsString(ViewTestTools.CREATE_VIEW_LINK))));
     }
 }
