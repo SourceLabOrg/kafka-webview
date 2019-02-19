@@ -75,7 +75,7 @@ public class StreamControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/stream/" + view.getId())
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Contains some basic text
             .andExpect(content().string(containsString(view.getName())))

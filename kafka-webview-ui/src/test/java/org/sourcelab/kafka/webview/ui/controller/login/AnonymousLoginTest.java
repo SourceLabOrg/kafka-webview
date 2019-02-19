@@ -55,7 +55,7 @@ public class AnonymousLoginTest {
         // Attempt to login now
         final MvcResult result = mockMvc
             .perform(get("/configuration"))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             .andReturn();
     }

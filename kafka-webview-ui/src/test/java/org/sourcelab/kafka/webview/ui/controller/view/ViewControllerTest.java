@@ -82,7 +82,7 @@ public class ViewControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/view/")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
@@ -103,7 +103,7 @@ public class ViewControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/view/")
                 .with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate no clusters exists text
             .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
@@ -127,7 +127,7 @@ public class ViewControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/view/")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString(ViewTestTools.NO_VIEWS_SETUP_TEXT)))
@@ -152,7 +152,7 @@ public class ViewControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/view/")
                 .with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString(ViewTestTools.NO_VIEWS_SETUP_TEXT)))
@@ -196,7 +196,7 @@ public class ViewControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/view/")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString(cluster1Name)))

@@ -77,7 +77,7 @@ public abstract class AbstractLoginTest {
                     .with(csrf())
                     .param("email", testCase.getUsername())
                     .param("password", testCase.getPassword()))
-                .andDo(print())
+                //.andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?error=true"))
                 .andReturn();
@@ -101,7 +101,7 @@ public abstract class AbstractLoginTest {
                     .with(csrf())
                     .param("email", testCase.getUsername())
                     .param("password", testCase.getPassword()))
-                .andDo(print())
+                //.andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"))
                 .andReturn();
@@ -155,7 +155,7 @@ public abstract class AbstractLoginTest {
         final MvcResult result = mockMvc
             .perform(get("/")
                 .with(anonymous()))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("http://localhost/login"))
             .andReturn();

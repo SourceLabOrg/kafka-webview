@@ -75,7 +75,7 @@ public class HomeControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Basic text validations
             .andExpect(content().string(containsString("Let's get started!")))
@@ -98,7 +98,7 @@ public class HomeControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrlPattern("/view*"));
     }
@@ -113,7 +113,7 @@ public class HomeControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/help")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Basic text validations
             .andExpect(content().string(containsString("Documentation and Help")))

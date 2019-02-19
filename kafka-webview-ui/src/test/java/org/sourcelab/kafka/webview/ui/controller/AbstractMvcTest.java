@@ -104,7 +104,7 @@ public abstract class AbstractMvcTest {
 
         mockMvc
             .perform(action.with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isForbidden());
     }
 
@@ -125,7 +125,7 @@ public abstract class AbstractMvcTest {
 
         mockMvc
             .perform(action)
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrlPattern("**/login"));
     }
