@@ -238,7 +238,7 @@
         <script id="broker-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/topic/{{encodedTopic}}">
+                    <a th:href="@{/cluster/{{clusterId}}/topic/{{encodedTopic}}}">
                         {{topic}}
                     </a>
                 </td>
