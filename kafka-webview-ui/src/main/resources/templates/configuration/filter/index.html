@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
 <head>
@@ -18,12 +19,12 @@
                         Filters
 
                         <div class="btn-group float-right" role="group" aria-label="Button group">
-                            <a class="btn" href="/help#filters" style="padding-bottom: 0;">
+                            <a class="btn" th:href="@{/help#filters}" style="padding-bottom: 0;">
                                 <i class="icon-question"></i>
                                 &nbsp; Help
                             </a>
 
-                            <a class="btn" href="/configuration/filter/create" style="padding-bottom: 0;">
+                            <a class="btn" th:href="@{/configuration/filter/create}" style="padding-bottom: 0;">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
                             </a>
