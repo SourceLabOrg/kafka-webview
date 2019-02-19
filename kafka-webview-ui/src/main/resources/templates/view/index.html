@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
     layout:decorate="~{layout}">
 
@@ -24,7 +25,7 @@
                         <p class="mb-0">
                             <span sec:authorize="hasRole('ROLE_ADMIN')">
                                 Let's head over and set one up now!
-                                <a href="/configuration/cluster/create">Setup new Cluster</a>
+                                <a th:href="@{/configuration/cluster/create}">Setup new Cluster</a>
                             </span>
                             <span sec:authorize="!hasRole('ROLE_ADMIN')">
                                 Ask an Administrator to configure a cluster.
@@ -47,7 +48,7 @@
                         <p class="mb-0">
                             <span sec:authorize="hasRole('ROLE_ADMIN')">
                                 Let's head over and set one up now!
-                                <a href="/configuration/view/create">Setup new View</a>
+                                <a th:href="@{/configuration/view/create}">Setup new View</a>
                             </span>
                             <span sec:authorize="!hasRole('ROLE_ADMIN')">
                                 Ask an Administrator to configure a view.
@@ -84,13 +85,13 @@
                                 <td th:text="${view.name}"></td>
                                 <td th:text="${view.topic}"></td>
                                 <td>
-                                    <a th:href="'/cluster/' + ${view.cluster.id}" th:text="${clustersById.get(view.cluster.id).name}"></a>
+                                    <a th:href="@{/cluster/{id}(id=${view.cluster.id})}" th:text="${clustersById.get(view.cluster.id).name}"></a>
                                 </td>
                                 <td>
-                                    <a th:href="'/view/' + ${view.id}">Browse</a>
+                                    <a th:href="@{/view/{id}(id=${view.id})}">Browse</a>
                                 </td>
                                 <td>
-                                    <a th:href="'/stream/' + ${view.id}">Stream</a>
+                                    <a th:href="@{/stream/{id}(id=${view.id})}">Stream</a>
                                 </td>
                             </tr>
                             </tbody>

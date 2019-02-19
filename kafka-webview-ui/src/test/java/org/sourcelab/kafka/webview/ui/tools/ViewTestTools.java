@@ -63,6 +63,14 @@ public class ViewTestTools {
         return createView(name, cluster, messageFormat);
     }
 
+    public View createViewWithCluster(final String name, final Cluster cluster) {
+        // Default to using String message format
+        final MessageFormat messageFormat = messageFormatTestTools.createStringMessageFormat(name);
+
+        // Create it.
+        return createView(name, cluster, messageFormat);
+    }
+
     public View createViewWithFormat(final String name, final MessageFormat messageFormat) {
         // Create a dummy cluster
         final Cluster cluster = clusterTestTools.createCluster(name);
