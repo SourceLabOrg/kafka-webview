@@ -37,7 +37,7 @@ public class ViewControllerTest extends AbstractMvcTest {
     private static final String CREATE_VIEW_TEXT="Let's head over and set one up now!";
     private static final String ASK_ADMIN_CREATE_VIEW_TEXT = "Ask an Administrator to configure a view.";
     private static final String CREATE_VIEW_LINK = "/configuration/view/create";
-    
+
     @Autowired
     private ClusterTestTools clusterTestTools;
 
