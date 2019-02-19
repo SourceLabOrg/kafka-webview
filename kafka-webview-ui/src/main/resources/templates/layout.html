@@ -213,7 +213,7 @@
         <!-- Handles showing breadcrumbs -->
         <ol class="breadcrumb" th:if="${BreadCrumbs != null}">
             <li class="breadcrumb-item" th:classappend="${itrStat.last} ? 'active'" th:each="crumb, itrStat: ${BreadCrumbs.getCrumbs()}">
-                <a th:if="${crumb.url != null}" th:href="${crumb.url}" th:text="${crumb.name}"></a>
+                <a th:if="${crumb.url != null}" th:href="@{${crumb.url}}" th:text="${crumb.name}"></a>
                 <span th:if="${crumb.url == null}" th:text="${crumb.name}"></span>
             </li>
 
