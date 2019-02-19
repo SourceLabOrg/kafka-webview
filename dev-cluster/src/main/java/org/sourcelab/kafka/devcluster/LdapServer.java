@@ -28,6 +28,7 @@ import com.unboundid.ldap.listener.InMemoryDirectoryServer;
 import com.unboundid.ldap.listener.InMemoryDirectoryServerConfig;
 import com.unboundid.ldap.listener.InMemoryListenerConfig;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.OperationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,9 @@ public class LdapServer {
         );
 
         // Require bind username and password
-        config.addAdditionalBindCredentials("cn=BindUser", "password");
+//        config.setAuthenticationRequiredOperationTypes(
+//            OperationType.values()
+//        );
 
         final String ldifFile = LdapServer.class.getClassLoader().getResource("test-server.ldif").getFile();
 

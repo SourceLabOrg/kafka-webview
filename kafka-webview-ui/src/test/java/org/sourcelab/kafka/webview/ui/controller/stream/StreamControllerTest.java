@@ -22,13 +22,13 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.configuration.filter;
+package org.sourcelab.kafka.webview.ui.controller.stream;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
-import org.sourcelab.kafka.webview.ui.model.Filter;
-import org.sourcelab.kafka.webview.ui.tools.FilterTestTools;
+import org.sourcelab.kafka.webview.ui.model.View;
+import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,45 +44,42 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class FilterConfigControllerTest extends AbstractMvcTest {
+public class StreamControllerTest extends AbstractMvcTest {
 
     @Autowired
-    private FilterTestTools filterTestTools;
+    private ViewTestTools viewTestTools;
 
     /**
-     * Test cannot load pages w/o admin role.
+     * Ensure authentication is required.
      */
     @Test
     @Transactional
-    public void test_withoutAdminRole() throws Exception {
-        testUrlWithOutAdminRole("/configuration/filter", false);
-        testUrlWithOutAdminRole("/configuration/filter/create", false);
-        testUrlWithOutAdminRole("/configuration/filter/edit/1", false);
-        testUrlWithOutAdminRole("/configuration/filter/update", true);
-        testUrlWithOutAdminRole("/configuration/filter/delete/1", true);
+    public void testUrlsRequireAuthentication() throws Exception {
+        final View view = viewTestTools.createView("TestView");
+
+        // View "stream" page.
+        testUrlRequiresAuthentication("/stream/" + view.getId(), false);
     }
 
     /**
-     * Smoke test the Filter Index page.
+     * Smoke test stream page loads.  Does no real inspection that the page functions beyond
+     * simply loading.
      */
     @Test
     @Transactional
-    public void testIndex() throws Exception {
-        // Create some dummy filters
-        final Filter filter1 = filterTestTools.createFilter("Filter1");
-        final Filter filter2 = filterTestTools.createFilter("Filter2");
+    public void smokeTestStream() throws Exception {
+        final View view = viewTestTools.createView("TestView");
 
-        // Hit index.
+        // Hit the stream page for specified view.
         mockMvc
-            .perform(get("/configuration/filter").with(user(adminUserDetails)))
+            .perform(get("/stream/" + view.getId())
+                .with(user(adminUserDetails)))
             //.andDo(print())
             .andExpect(status().isOk())
-            // Validate cluster 1
-            .andExpect(content().string(containsString(filter1.getName())))
-            .andExpect(content().string(containsString(filter1.getClasspath())))
-
-            // Validate cluster 2
-            .andExpect(content().string(containsString(filter2.getName())))
-            .andExpect(content().string(containsString(filter2.getClasspath())));
+            // Contains some basic text
+            .andExpect(content().string(containsString(view.getName())))
+            .andExpect(content().string(containsString(view.getTopic())))
+            .andExpect(content().string(containsString("Switch to View")))
+            .andExpect(content().string(containsString("href=\"/view/" + view.getId() + "\"")));
     }
 }
