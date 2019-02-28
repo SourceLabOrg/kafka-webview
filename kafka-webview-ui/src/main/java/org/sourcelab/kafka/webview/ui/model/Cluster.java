@@ -79,6 +79,11 @@ public class Cluster {
      */
     private String saslConfig;
 
+    /**
+     * Allow defining a default consumerGroupId for any views created using this cluster.
+     */
+    private String defaultConsumerGroupId;
+
     @Column(nullable = false)
     private boolean isValid;
 
@@ -178,6 +183,14 @@ public class Cluster {
         this.saslConfig = saslConfig;
     }
 
+    public String getDefaultConsumerGroupId() {
+        return defaultConsumerGroupId;
+    }
+
+    public void setDefaultConsumerGroupId(final String defaultConsumerGroupId) {
+        this.defaultConsumerGroupId = defaultConsumerGroupId;
+    }
+
     @Override
     public String toString() {
         return "Cluster{"
@@ -189,6 +202,7 @@ public class Cluster {
             + ", keyStoreFile='" + keyStoreFile + '\''
             + ", isSaslEnabled=" + isSaslEnabled
             + ", saslMechanism='" + saslMechanism + '\''
+            + ", defaultConsumerGroupId='" + defaultConsumerGroupId + '\''
             + ", isValid=" + isValid
             + '}';
     }

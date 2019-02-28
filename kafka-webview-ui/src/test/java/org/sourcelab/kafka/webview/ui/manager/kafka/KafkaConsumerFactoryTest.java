@@ -332,6 +332,76 @@ public class KafkaConsumerFactoryTest {
     }
 
     /**
+     * Test two consumers running at the same time within the same consumer group both consume all their expected
+     * records.
+     */
+    @Test
+    public void testBasicConsumerMultiplePartitionsMultipleConsumersInSameConsumerGroup() {
+        final int maxRecordsPerPoll = 10;
+
+        // Create a topic with 2 partitions, (partitionId 0, 1)
+        final String topicName = "TestTopic";
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
+
+        // Produce 10 records into partition 0 of topic.
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(maxRecordsPerPoll, topicName, 0);
+
+        // Produce 10 records into partition 1 of topic.
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(maxRecordsPerPoll, topicName, 1);
+
+        // Create cluster Config
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
+            .build();
+
+        // Create Deserializer Config
+        final DeserializerConfig deserializerConfig = DeserializerConfig.newBuilder()
+            .withKeyDeserializerClass(StringDeserializer.class)
+            .withValueDeserializerClass(StringDeserializer.class)
+            .build();
+
+        // Create Topic Config
+        final TopicConfig topicConfig = new TopicConfig(clusterConfig, deserializerConfig, topicName);
+
+        // Create ClientConfig
+        final ClientConfig clientConfig = ClientConfig.newBuilder()
+            .withConsumerId("MyConsumerId")
+            .withNoFilters()
+            .withAllPartitions()
+            .withMaxResultsPerPartition(maxRecordsPerPoll)
+            .withTopicConfig(topicConfig)
+            .build();
+
+        // Create consumer #1
+        try (final KafkaConsumer<String, String> consumer1 = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
+            // Create consumer #2
+            try (final KafkaConsumer<String, String> consumer2 = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig)) {
+                // Attempt to consume, should pull first 10
+                ConsumerRecords<String, String> records = consumer1.poll(Duration.ofSeconds(2));
+                assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records.count());
+
+                // Attempt to consume using consumer 2, should pull first 10
+                ConsumerRecords<String, String> records2 = consumer2.poll(Duration.ofSeconds(2));
+                assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records2.count());
+
+                // Attempt to consume, should pull 2nd 10
+                records = consumer1.poll(Duration.ofSeconds(2));
+                assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records.count());
+
+                // Attempt to consume, should pull 2nd 10
+                records2 = consumer2.poll(Duration.ofSeconds(2));
+                assertEquals("Should have found " + maxRecordsPerPoll + " records", maxRecordsPerPoll, records2.count());
+            }
+        }
+    }
+
+    /**
      * Test Implementation that filters everything from partition 0.
      */
     public static class PartitionFilter implements RecordFilter {

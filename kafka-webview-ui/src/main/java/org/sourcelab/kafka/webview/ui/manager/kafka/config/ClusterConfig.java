@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
  */
 public class ClusterConfig {
     private final Set<String> brokerHosts;
+    private final String defaultConsumerGroupId;
 
     /**
      * SSL Configuration Options.
@@ -63,6 +64,7 @@ public class ClusterConfig {
      */
     private ClusterConfig(
         final Set<String> brokerHosts,
+        final String defaultConsumerGroupId,
         final boolean useSsl,
         final String keyStoreFile,
         final String keyStorePassword,
@@ -75,6 +77,7 @@ public class ClusterConfig {
         final String saslJaas) {
 
         this.brokerHosts = brokerHosts;
+        this.defaultConsumerGroupId = defaultConsumerGroupId;
 
         // SSL Options
         this.useSsl = useSsl;
@@ -93,6 +96,21 @@ public class ClusterConfig {
 
     public Set<String> getBrokerHosts() {
         return brokerHosts;
+    }
+
+    public String getDefaultConsumerGroupId() {
+        return defaultConsumerGroupId;
+    }
+
+    /**
+     * Is a default consumer group id configured for this cluster?
+     * @return True if one is defined, false if not.
+     */
+    public boolean hasDefaultConsumerGroupId() {
+        if (defaultConsumerGroupId == null || defaultConsumerGroupId.trim().isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
     public boolean isUseSsl() {
@@ -205,6 +223,8 @@ public class ClusterConfig {
     public static final class Builder {
         private Set<String> brokerHosts;
 
+        private String defaultConsumerGroupId = null;
+
         /**
          * SSL Configuration Options.
          */
@@ -240,6 +260,11 @@ public class ClusterConfig {
         public Builder withBrokerHosts(final String... brokerHosts) {
             this.brokerHosts = new HashSet<>();
             this.brokerHosts.addAll(Arrays.asList(brokerHosts));
+            return this;
+        }
+
+        public Builder withDefaultConsumerGroupId(final String defaultConsumerGroupId) {
+            this.defaultConsumerGroupId = defaultConsumerGroupId;
             return this;
         }
 
@@ -329,6 +354,7 @@ public class ClusterConfig {
         public ClusterConfig build() {
             return new ClusterConfig(
                 brokerHosts,
+                defaultConsumerGroupId,
                 // SSL Options.
                 useSsl,
                 keyStoreFile,
