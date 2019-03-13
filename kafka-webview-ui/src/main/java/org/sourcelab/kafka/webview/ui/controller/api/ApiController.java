@@ -70,6 +70,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -225,13 +226,22 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
-    public List<TopicListing> getTopics(@PathVariable final Long id) {
+    public List<TopicListing> getTopics(@PathVariable final Long id, @RequestParam(required = false) final String search) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
-            final TopicList topics = operations.getAvailableTopics();
+            // Get all topics available on cluster.
+            TopicList topics = operations.getAvailableTopics();
+
+            // If search value supplied
+            if (search != null && !search.trim().isEmpty()) {
+                // filter
+                topics = topics.filterByTopicName(search);
+            }
+
+            // return matched topics.
             return topics.getTopics();
         } catch (final Exception e) {
             throw new ApiException("Topics", e);

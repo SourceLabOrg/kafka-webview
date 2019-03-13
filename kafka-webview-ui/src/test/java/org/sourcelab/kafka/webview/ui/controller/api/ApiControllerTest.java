@@ -31,6 +31,7 @@ import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -456,6 +457,99 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
             .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}]")))
             .andExpect(content().string(containsString("\"partitions\":[0]")));
+    }
+
+    /**
+     * Test listing topics without a search string.
+     */
+    @Test
+    @Transactional
+    public void test_listTopics_noSearchString() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create some topics
+        final String expectedTopic1 = "A-ExpectedTopic1-" + System.currentTimeMillis();
+        final String expectedTopic2= "C-ExpectedTopic2-" + System.currentTimeMillis();
+        final String expectedTopic3 = "B-ExpectedTopic3-" + System.currentTimeMillis();
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic1, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic2, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic3, 1, (short) 1);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/topics/list")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate all topics show up.
+            .andExpect(content().string(containsString(expectedTopic1)))
+            .andExpect(content().string(containsString(expectedTopic2)))
+            .andExpect(content().string(containsString(expectedTopic3)));
+    }
+
+    /**
+     * Test listing topics with a search string only returns filtered results.
+     */
+    @Test
+    @Transactional
+    public void test_listTopics_withSearchString() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        final String searchStr = "CaT";
+
+        // Create some topics
+        final String expectedTopic1 = "ExpectedTopic1-" + System.currentTimeMillis();
+        final String expectedTopic2= "ExpectedCATTopic2-" + System.currentTimeMillis();
+        final String expectedTopic3 = "ExpectedTopic3-" + System.currentTimeMillis();
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic1, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic2, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic3, 1, (short) 1);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/topics/list")
+                .param("search", searchStr)
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate Only the filtered instance shows up.
+            .andExpect(content().string(containsString(expectedTopic2)))
+            .andExpect(content().string(Matchers.not(containsString(expectedTopic1))))
+            .andExpect(content().string(Matchers.not(containsString(expectedTopic3))));
     }
 
     /**
