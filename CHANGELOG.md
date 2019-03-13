@@ -2,6 +2,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.2.0 (UNRELEASED)
+
+#### New Features
+- Ability to remove topics from a cluster.
+- Ability to search topics within a cluster.
+
 ## 2.1.3 (01/19/2019)
 
 #### Bug fixes
