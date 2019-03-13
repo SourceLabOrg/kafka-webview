@@ -30,6 +30,7 @@ import org.sourcelab.kafka.webview.ui.controller.api.exceptions.NotFoundApiExcep
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.DeleteTopicRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
@@ -359,7 +360,7 @@ public class ApiController extends BaseController {
             final boolean result = operations.createTopic(createTopic);
 
             // Quick n dirty json response
-            return new ResultResponse("CreateTopic", result, "");
+            return new ResultResponse("CreateTopic", result, "Created topic '" + createTopicRequest.getName() + "'");
         } catch (final Exception e) {
             throw new ApiException("CreateTopic", e);
         }
@@ -393,6 +394,32 @@ public class ApiController extends BaseController {
             return operations.alterTopicConfig(name, configEntries).getConfigEntries();
         } catch (final Exception e) {
             throw new ApiException("ModifyTopic", e);
+        }
+    }
+
+    /**
+     * POST Delete existing topic on cluster.
+     * This should require ADMIN role.
+     */
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/delete/topic", method = RequestMethod.POST, produces = "application/json")
+    public ResultResponse deleteTopic(@PathVariable final Long id, @RequestBody final DeleteTopicRequest deleteTopicRequest) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        final String name = deleteTopicRequest.getName();
+        if (name == null || name.trim().isEmpty()) {
+            throw new ApiException("DeleteTopic", "Invalid topic name");
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            final boolean result = operations.removeTopic(deleteTopicRequest.getName());
+
+            // Quick n dirty json response
+            return new ResultResponse("DeleteTopic", result, "Removed topic '" + deleteTopicRequest.getName() + "'");
+        } catch (final Exception e) {
+            throw new ApiException("DeleteTopic", e);
         }
     }
 

@@ -83,6 +83,7 @@ public class ApiControllerTest extends AbstractMvcTest {
     public void test_withoutAdminRole() throws Exception {
         testUrlWithOutAdminRole("/api/cluster/1/create/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/modify/topic", true);
+        testUrlWithOutAdminRole("/api/cluster/1/delete/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/consumer/remove", true);
     }
 
@@ -124,7 +125,9 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
 
             // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("{\"operation\":\"CreateTopic\",\"result\":true,\"message\":\"\"}")));
+            .andExpect(content().string(containsString(
+                "{\"operation\":\"CreateTopic\",\"result\":true,\"message\":\"Created topic '" + newTopic + "'\"}"
+            )));
 
         // Validate topic now exists
         // Sanity test, verify topic doesn't exists
@@ -191,6 +194,56 @@ public class ApiControllerTest extends AbstractMvcTest {
 
         assertTrue(resultJsonStr.contains(targetItem1));
         assertTrue(resultJsonStr.contains(targetItem2));
+    }
+
+    /**
+     * Test the delete topic end point.
+     */
+    @Test
+    @Transactional
+    public void test_deleteTopic() throws Exception {
+        // Define our new topic name
+        final String topicName = "DeleteTestTopic-" + System.currentTimeMillis();
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a new topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 1, (short) 1);
+
+        // Sanity test - Validate topic exists
+        Set<String> topicNames = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getTopicNames();
+        assertTrue("Topic should exist now", topicNames.contains(topicName));
+
+        // Construct payload
+        final String payload = "{ \"name\": \"" + topicName + "\" }";
+
+        // Hit end point as admin user
+        mockMvc
+            .perform(post("/api/cluster/" + cluster.getId() + "/delete/topic")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate result message seems correct.
+            .andExpect(content().string(containsString("{\"operation\":\"DeleteTopic\",\"result\":true,\"message\":\"Removed topic '" + topicName + "'\"}")));
+
+        // Validate topic no longer exists
+        topicNames = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getTopicNames();
+        assertFalse("Topic should not exist now", topicNames.contains(topicName));
     }
 
     /**

@@ -196,6 +196,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // Modify topic
                 "/api/cluster/*/modify/**",
 
+                // Delete topic
+                "/api/cluster/*/delete/**",
+
                 // Remove consumer group
                 "/api/cluster/*/consumer/remove"
 

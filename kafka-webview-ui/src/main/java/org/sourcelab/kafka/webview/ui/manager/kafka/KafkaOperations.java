@@ -30,6 +30,8 @@ import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DeleteConsumerGroupsResult;
+import org.apache.kafka.clients.admin.DeleteTopicsOptions;
+import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeConsumerGroupsResult;
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
@@ -285,6 +287,26 @@ public class KafkaOperations implements AutoCloseable {
 
             // Lets return updated topic details
             return getTopicConfig(topic);
+        } catch (final InterruptedException | ExecutionException exception) {
+            // TODO Handle this
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
+    }
+
+    /**
+     * Remove a topic from a kafka cluster.  This is destructive!
+     * @param topic name of the topic to remove.
+     * @return true on success.
+     */
+    public boolean removeTopic(final String topic) {
+        try {
+            final DeleteTopicsResult result = adminClient.deleteTopics(Collections.singletonList(topic));
+
+            // Wait for the async request to process.
+            result.all().get();
+
+            // return true?
+            return true;
         } catch (final InterruptedException | ExecutionException exception) {
             // TODO Handle this
             throw new RuntimeException(exception.getMessage(), exception);
