@@ -17,6 +17,7 @@
             // Maintains state of our consumer
             var ClusterInfo = {
                 clusterId: '[[${cluster.id}]]',
+                cachedTopics: [],
 
                 // Handle cluster node results ajax result
                 handleClusterNodeResults: function(results) {
@@ -57,6 +58,15 @@
 
                 // Handle all topics details results ajax result
                 handleAllTopicsDetails: function(results) {
+                    ClusterInfo.cachedTopics = results;
+                    ClusterInfo.displayTopics();
+                },
+
+                displayTopics : function() {
+                    // Get our search text
+                    var searchStr = jQuery("#topicSearch").val();
+                    var matchedEntries = 0;
+
                     // Clear topics table
                     var table = jQuery('#topics-tbody');
                     jQuery(table).empty();
@@ -65,7 +75,15 @@
                     var source   = jQuery('#topics-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery.each(results, function(index, result) {
+                    jQuery.each(ClusterInfo.cachedTopics, function(index, result) {
+                        // Filter
+                        if (searchStr != null && searchStr.length > 0) {
+                            if (result.name.toLowerCase().indexOf(searchStr.toLowerCase()) === -1) {
+                                return;
+                            }
+                        }
+                        matchedEntries++;
+
                         // Generate html from template
                         var properties = {
                             topic: result.name,
@@ -84,7 +102,7 @@
                     // Hide loader
                     jQuery('#topics-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#topics-no-results').toggle(true);
                         jQuery('#topics-table').toggle(false);
                     } else {
@@ -300,8 +318,18 @@
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Topics
 
-                        <div class="btn-group float-right" role="group" aria-label="Button group" sec:authorize="hasRole('ROLE_ADMIN')">
-                            <a class="btn" href="#" style="padding-bottom: 0;" data-toggle="modal" data-target="#createTopicModal">
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="topicSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="ClusterInfo.displayTopics();">
+                            <a
+                                class="btn" href="#" style="padding-bottom: 0;"
+                                data-toggle="modal" data-target="#createTopicModal"
+                                sec:authorize="hasRole('ROLE_ADMIN')">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
                             </a>
