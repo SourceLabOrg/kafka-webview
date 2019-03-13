@@ -7,8 +7,8 @@
  -->
 <!DOCTYPE html>
 <html
-        lang="en"
-        xmlns:th="http://www.thymeleaf.org">
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="utf-8">
@@ -19,21 +19,22 @@
     <meta name="keyword" content="Kafka WebView">
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <link rel="shortcut icon" href="/img/favicon.png">
+    <meta name="_url_base" th:content="@{/}"/>
+    <link rel="shortcut icon" th:href="@{/img/favicon.png}">
     <title>Kafka WebView - Login</title>
 
     <!-- Icons -->
-    <link href="/vendors/css/font-awesome.min.css" rel="stylesheet">
-    <link href="/vendors/css/simple-line-icons.min.css" rel="stylesheet">
+    <link th:href="@{/vendors/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/css/simple-line-icons.min.css}" rel="stylesheet">
 
     <!-- Main styles for this application -->
-    <link href="/css/style.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
 
     <!-- Bootstrap and necessary plugins -->
-    <script src="/vendors/js/jquery.min.js"></script>
-    <script src="/vendors/js/popper.min.js"></script>
-    <script src="/vendors/js/bootstrap.min.js"></script>
-    <script src="/vendors/js/pace.min.js"></script>
+    <script th:src="@{/vendors/js/jquery.min.js}"></script>
+    <script th:src="@{/vendors/js/popper.min.js}"></script>
+    <script th:src="@{/vendors/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/js/pace.min.js}"></script>
 </head>
 
 <body class="app flex-row align-items-center">
@@ -65,7 +66,7 @@
                                     <button class="btn btn-primary px-4" type="submit">Login</button>
                                 </div>
                                 <div class="col-6 text-right">
-                                    <a href="/login/lostPassword" class="btn btn-link px-0">Forgot Password?</a>
+                                    <a th:href="@{/login/lostPassword}" class="btn btn-link px-0">Forgot Password?</a>
                                 </div>
                             </div>
                         </form>

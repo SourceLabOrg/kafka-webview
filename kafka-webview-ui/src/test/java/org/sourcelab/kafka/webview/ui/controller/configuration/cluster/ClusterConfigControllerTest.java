@@ -61,7 +61,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -116,7 +115,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(get("/configuration/cluster").with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate cluster 1
             .andExpect(content().string(containsString(cluster1.getName())))
@@ -137,7 +136,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/configuration/cluster/create")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk());
 
     }
@@ -158,7 +157,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -194,7 +193,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -235,7 +234,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("trustStorePassword", expectedTruststorePassword)
                 .param("keyStorePassword", expectedKeystorePassword)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -292,7 +291,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("trustStorePassword", expectedTruststorePassword)
                 .param("keyStorePassword", expectedKeystorePassword)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is2xxSuccessful())
             .andExpect(content().string(containsString("Select a KeyStore JKS to upload")))
             .andReturn();
@@ -351,7 +350,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("brokerHosts", expectedBrokerHosts)
                 .param("ssl", "true")
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -423,7 +422,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("ssl", "true")
                 .param("trustStorePassword", "NewPassword")
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -497,7 +496,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("ssl", "true")
                 .param("keyStorePassword", "NewPassword")
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -568,7 +567,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -618,7 +617,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("saslUsername", expectedSaslUsername)
                 .param("saslPassword", expectedSaslPassword)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -674,7 +673,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("saslMechanism", expectedSaslMechanism)
                 .param("saslCustomJaas", expectedSaslJaas)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -725,7 +724,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("saslCustomMechanism", expectedSaslMechanism)
                 .param("saslCustomJaas", expectedSaslJaas)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -785,7 +784,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -833,7 +832,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
                 .param("saslUsername", expectedSaslUsername)
                 .param("saslPassword", expectedSaslPassword)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 

@@ -420,7 +420,7 @@
         <script id="nodes-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/broker/{{id}}">{{id}}</a>
+                    <a th:href="@{/cluster/{{clusterId}}/broker/{{id}}}">{{id}}</a>
                 </td>
                 <td>{{host}}:{{port}}</td>
                 <td>
@@ -437,7 +437,7 @@
         <script id="topics-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/topic/{{encodedTopic}}">
+                    <a th:href="@{/cluster/{{clusterId}}/topic/{{encodedTopic}}}">
                         {{topic}}
                     </a>
                 </td>
@@ -472,7 +472,7 @@
         <script id="consumers-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/consumer/{{encodedId}}">
+                    <a th:href="@{/cluster/{{clusterId}}/consumer/{{encodedId}}}">
                         {{id}}
                     </a>
                 </td>

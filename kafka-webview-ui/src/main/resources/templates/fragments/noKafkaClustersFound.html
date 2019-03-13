@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head/>
+<body>
+
+<div class="row" th:fragment="display(clusterList)" th:if="${clusterList.isEmpty()}">
+    <!-- No Clusters Found -->
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading"><strong>No Kafka Clusters Found</strong></h4>
+                <p>
+                    It looks like you have no Kafka Clusters configured yet!<br/>
+                </p>
+                <p class="mb-0">
+                    <span sec:authorize="hasRole('ROLE_ADMIN')">
+                        Let's head over and set one up now!
+                        <a th:href="@{/configuration/cluster/create}">Setup new Cluster</a>
+                    </span>
+                    <span sec:authorize="!hasRole('ROLE_ADMIN')">
+                        Ask an Administrator to configure a cluster.
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

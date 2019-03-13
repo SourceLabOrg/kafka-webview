@@ -340,7 +340,7 @@
 
                         <!-- Link to Stream -->
                         <div class="btn-group float-right" role="group" aria-label="Button group">
-                            <a class="btn" th:href="'/stream/' + ${view.id}" style="padding-bottom: 0;">
+                            <a class="btn" th:href="@{/stream/{id}(id=${view.id})}" style="padding-bottom: 0;">
                                 <i class="icon-feed"></i>
                                 &nbsp;Switch to Stream
                             </a>
