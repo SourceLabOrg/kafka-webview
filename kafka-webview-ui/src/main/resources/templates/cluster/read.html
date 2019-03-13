@@ -196,6 +196,19 @@
                             ClusterInfo.loadTopics();
                         }
                     )
+                },
+                removeTopic : function(topicName) {
+                    if (!confirm('Are you sure you want to remove this topic? This is destructive and can NOT be un-done!')) {
+                        return;
+                    }
+                    ApiClient.removeTopic(
+                        ClusterInfo.clusterId,
+                        topicName,
+                        function(resultMsg) {
+                            UITools.showSuccess('Successfully removed topic.');
+                            ClusterInfo.loadTopics();
+                        }
+                    );
                 }
             };
 
@@ -299,6 +312,7 @@
                                 <th>Topic</th>
                                 <th>Partitions</th>
                                 <th>Status</th>
+                                <th sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">Action</th>
                             </tr>
                             </thead>
                             <tbody id="topics-tbody">
@@ -389,6 +403,19 @@
                     {{#if internal}}
                         <span class="badge badge-info">Internal topic</span>
                     {{/if}}
+                </td>
+                <td class="text-right" sec:authorize="hasRole('ROLE_ADMIN')">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-gear"></i>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" onclick="return ClusterInfo.removeTopic('{{topic}}');">
+                                <i class="fa fa-remove"></i>
+                                Delete
+                            </a>
+                        </div>
+                    </div>
                 </td>
             </tr>
         </script>

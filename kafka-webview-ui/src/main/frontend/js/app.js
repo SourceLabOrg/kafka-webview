@@ -316,6 +316,23 @@ var ApiClient = {
             }
         });
     },
+    removeTopic: function(clusterId, name, callback) {
+        var payload = JSON.stringify({
+            name: name
+        });
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/cluster/' + clusterId + '/delete/topic',
+            data: payload,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
     modifyTopicConfig: function(clusterId, topic, configName, configValue, callback) {
         var payloadJson = {
             topic: topic,
