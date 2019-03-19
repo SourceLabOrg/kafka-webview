@@ -26,44 +26,53 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.role;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.role.forms.RoleForm;
-import org.sourcelab.kafka.webview.ui.controller.configuration.user.forms.UserForm;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
+import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.RoleManager;
 import org.sourcelab.kafka.webview.ui.model.Role;
+import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.validation.Valid;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller for Role entity CRUD.
  */
 @Controller
 @RequestMapping("/configuration/role")
-public class RoleController extends BaseController {
+public class RoleConfigController extends BaseController {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final RoleManager roleManager;
 
     /**
      * Constructor.
      * @param roleRepository Repository for roles.
      * @param userRepository Repository for users.
+     * @param roleManager Manager for interacting with Roles.
      */
     @Autowired
-    public RoleController(
+    public RoleConfigController(
         final RoleRepository roleRepository,
-        final UserRepository userRepository) {
+        final UserRepository userRepository, final RoleManager roleManager) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
+        this.roleManager = roleManager;
     }
 
     /**
@@ -119,9 +128,102 @@ public class RoleController extends BaseController {
         final RedirectAttributes redirectAttributes,
         final Model model) {
 
+        // Retrieve by id
+        final Optional<Role> roleOptional = roleRepository.findById(id);
+
+        // If we couldn't find the role
+        if (!roleOptional.isPresent()) {
+            // redirect
+            // Set flash message
+            final FlashMessage flashMessage = FlashMessage.newWarning("Unable to find role!");
+            redirectAttributes.addFlashAttribute("FlashMessage", flashMessage);
+
+            // redirect to cluster index
+            return "redirect:/configuration/role";
+        }
+        final Role role = roleOptional.get();
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Edit: " + role.getName(), null);
+
+        // Build form
+        roleForm.setId(role.getId());
+        roleForm.setName(role.getName());
 
         // Display template
         return "configuration/role/create";
+    }
+
+    /**
+     * POST updates a role.
+     */
+    @RequestMapping(path = "/update", method = RequestMethod.POST)
+    public String update(
+        @Valid final RoleForm roleForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes,
+        final Model model) {
+
+        // Validate role name doesn't already exist!
+        final Role existingRole = roleRepository.findByName(roleForm.getName());
+        if ((roleForm.exists() && existingRole != null && existingRole.getId() != roleForm.getId())
+            || (!roleForm.exists() && existingRole != null)) {
+            bindingResult.addError(new FieldError(
+                "userRole",
+                "name",
+                roleForm.getName(),
+                true,
+                null,
+                null,
+                "Name is already used")
+            );
+        }
+
+        // If we have errors
+        if (bindingResult.hasErrors()) {
+            return createRole(roleForm, model, redirectAttributes);
+        }
+
+        if (!roleForm.exists()) {
+            // Create the role
+            final Role newRole = roleManager.createNewRole(roleForm.getName());
+
+            if (newRole == null) {
+                // Add error flash msg
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newWarning("Error creating new role!"));
+            } else {
+                // Add success flash msg
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newSuccess("Created new role " + newRole.getName() + "!"));
+            }
+        } else {
+            // Update existing role
+            final Optional<Role> roleOptional = roleRepository.findById(roleForm.getId());
+
+            // If the role doesn't exist
+            if (!roleOptional.isPresent()) {
+                // Add error flash msg
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error creating new role!"));
+            } else {
+                final Role role = roleOptional.get();
+
+                // Update role
+                role.setName(roleForm.getName());
+
+                // Update
+                roleRepository.save(role);
+
+                // Add success flash msg
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newSuccess("Updated role " + role.getName() + "!"));
+            }
+        }
+
+        return "redirect:/configuration/role";
     }
 
     /**

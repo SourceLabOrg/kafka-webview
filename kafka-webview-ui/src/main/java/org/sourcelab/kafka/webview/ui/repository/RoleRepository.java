@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.Role;
+import org.sourcelab.kafka.webview.ui.model.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -33,6 +34,13 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface RoleRepository extends CrudRepository<Role, Long> {
+
+    /**
+     * Find role by name.
+     * @param name Name of role to lookup.
+     * @return Role or null if none found.
+     */
+    Role findByName(final String name);
 
     /**
      * Find all roles, ordered by name.
