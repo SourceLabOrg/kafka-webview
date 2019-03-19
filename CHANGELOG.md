@@ -2,7 +2,15 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.1.5 (UNRELEASED)
+
+#### Bug fixes
+- [ISSUE-143](https://github.com/SourceLabOrg/kafka-webview/issues/143) Fix URLs for stream connections when running Kafka-Webview behind a reverse proxy with a URL Prefix.
+
+#### New features
+
 ## 2.1.4 (02/19/2019)
+
 - [ISSUE-136](https://github.com/SourceLabOrg/kafka-webview/issues/136) Fix URLs when running Kafka-Webview behind a reverse proxy with a URL prefix.  You can configure Kafka WebView by setting the following configuration option in your config.yml file:
 - Updated Kafka Client library version from 2.0.0 to 2.0.1
 
