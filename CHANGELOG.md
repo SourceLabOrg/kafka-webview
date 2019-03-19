@@ -17,7 +17,6 @@ server:
   servlet:
     context-path: /prefix/here
 ```
->>>>>>> 09b13e34f4aa14c65afb9d5fcd207b560e8e1a23
 
 ## 2.1.3 (01/19/2019)
 
