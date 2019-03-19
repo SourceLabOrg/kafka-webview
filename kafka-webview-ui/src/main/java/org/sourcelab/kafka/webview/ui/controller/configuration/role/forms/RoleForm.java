@@ -62,9 +62,9 @@ public class RoleForm {
 
     @Override
     public String toString() {
-        return "RoleForm{" +
-            "id=" + id +
-            ", name='" + name + '\'' +
-            '}';
+        return "RoleForm{"
+            + "id=" + id
+            + ", name='" + name + '\''
+            + '}';
     }
 }
