@@ -21,8 +21,8 @@
                         th:action="@{/configuration/role/update}"
                         th:object="${roleForm}"
                         method="post" class="form-horizontal" autocomplete="off">
-                        <div class="card-body">
 
+                        <div class="card-body">
                             <!-- Name Input -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="name">
@@ -35,6 +35,42 @@
                                         th:errorclass="is-invalid"
                                         th:value="*{name}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"/>
+                                </div>
+                            </div>
+
+                            <!-- Permissions Inputs -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="name">
+                                    Permissions
+                                </label>
+                                <div class="col-md-9">
+                                    <div class="row">
+                                        <div class="col-sm-3" th:each="permissionGroup : ${permissionGroups}">
+                                            <div class="card">
+                                                <div class="card-block">
+                                                    <h3 class="card-title" th:text="${permissionGroup.getName()}"></h3>
+                                                    <p class="card-text" th:text="${permissionGroup.getDescription()}"></p>
+                                                    <div class="form-check" th:each="permission : ${permissionGroup.getPermissions()}">
+                                                        <label class="form-check-label">
+                                                            <input
+                                                                class="form-check-input"
+                                                                type="checkbox"
+                                                                value="1"
+                                                                th:name="${permission.name()}"
+                                                            >
+                                                            <span th:text="${permission.getDisplayName()}"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="container-fluid">
+                                <div class="row">
+
                                 </div>
                             </div>
                         </div>

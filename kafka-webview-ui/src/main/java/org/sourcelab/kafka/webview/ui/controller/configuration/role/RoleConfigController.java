@@ -114,6 +114,7 @@ public class RoleConfigController extends BaseController {
     public String createRole(final RoleForm roleForm, final Model model, final RedirectAttributes redirectAttributes) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", "/configuration/role/create");
+        model.addAttribute("permissionGroups", roleManager.getDefaultPermissionGroups());
 
         return "configuration/role/create";
     }
@@ -145,6 +146,7 @@ public class RoleConfigController extends BaseController {
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit: " + role.getName(), null);
+        model.addAttribute("permissionGroups", roleManager.getDefaultPermissionGroups());
 
         // Build form
         roleForm.setId(role.getId());
