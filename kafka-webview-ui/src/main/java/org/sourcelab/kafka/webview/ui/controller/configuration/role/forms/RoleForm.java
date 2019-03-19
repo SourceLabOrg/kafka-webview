@@ -22,36 +22,49 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.repository;
+package org.sourcelab.kafka.webview.ui.controller.configuration.role.forms;
 
-import org.sourcelab.kafka.webview.ui.model.User;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
- * For interacting w/ the User database table.
+ * Represents the Role create/update form.
  */
-@Repository
-public interface UserRepository extends CrudRepository<User, Long> {
+public class RoleForm {
+    private Long id = null;
+
+    @NotNull(message = "Please enter a name")
+    @Size(min = 1, max = 64)
+    private String name;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(final Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(final String name) {
+        this.name = name;
+    }
 
     /**
-     * Find all users, ordered by email, where isActive = parameter
-     * @param status Is Active status flag.
-     * @return Collection of users.
+     * Does the User represented on the form already exist in the database.
      */
-    Iterable<User> findAllByIsActiveOrderByEmailAsc(final boolean status);
+    public boolean exists() {
+        return getId() != null;
+    }
 
-    /**
-     * Find user by email address.
-     * @param email Email to lookup user by
-     * @return User or null if none found.
-     */
-    User findByEmail(String email);
-
-    @Query(value = "SELECT roleId as roleId, count(id) as usages FROM user GROUP BY roleId")
-    List<Object[]> getRoleCounts();
-
+    @Override
+    public String toString() {
+        return "RoleForm{" +
+            "id=" + id +
+            ", name='" + name + '\'' +
+            '}';
+    }
 }

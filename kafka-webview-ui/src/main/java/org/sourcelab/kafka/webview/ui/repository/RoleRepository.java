@@ -24,34 +24,19 @@
 
 package org.sourcelab.kafka.webview.ui.repository;
 
-import org.sourcelab.kafka.webview.ui.model.User;
-import org.springframework.data.jpa.repository.Query;
+import org.sourcelab.kafka.webview.ui.model.Role;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 /**
- * For interacting w/ the User database table.
+ * For interacting w/ the Role database table.
  */
 @Repository
-public interface UserRepository extends CrudRepository<User, Long> {
+public interface RoleRepository extends CrudRepository<Role, Long> {
 
     /**
-     * Find all users, ordered by email, where isActive = parameter
-     * @param status Is Active status flag.
-     * @return Collection of users.
+     * Find all roles, ordered by name.
+     * @return Collection of Roles.
      */
-    Iterable<User> findAllByIsActiveOrderByEmailAsc(final boolean status);
-
-    /**
-     * Find user by email address.
-     * @param email Email to lookup user by
-     * @return User or null if none found.
-     */
-    User findByEmail(String email);
-
-    @Query(value = "SELECT roleId as roleId, count(id) as usages FROM user GROUP BY roleId")
-    List<Object[]> getRoleCounts();
-
+    Iterable<Role> findAllByOrderByNameAsc();
 }

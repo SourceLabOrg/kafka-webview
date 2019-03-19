@@ -29,6 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 import java.io.Serializable;
 
 /**
@@ -49,8 +50,8 @@ public class User implements Serializable {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, columnDefinition = "0")
-    private UserRole role;
+    @Column(nullable = false, name = "role_id")
+    private Long roleId;
 
     @Column(nullable = true, name = "reset_password_hash")
     private String resetPasswordHash;
@@ -101,12 +102,29 @@ public class User implements Serializable {
         isActive = active;
     }
 
+    /**
+     * TODO Remove this.
+     */
+    @Deprecated
+    @Transient
     public UserRole getRole() {
-        return role;
+        return UserRole.ROLE_ADMIN;
     }
 
+    /**
+     * TODO Remove this.
+     */
+    @Deprecated
     public void setRole(final UserRole role) {
-        this.role = role;
+        //this.role = role;
+    }
+
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(final long roleId) {
+        this.roleId = roleId;
     }
 
     public String getResetPasswordHash() {
