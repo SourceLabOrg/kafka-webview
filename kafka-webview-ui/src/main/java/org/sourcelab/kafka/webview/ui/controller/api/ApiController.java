@@ -401,7 +401,7 @@ public class ApiController extends BaseController {
      * POST Delete existing topic on cluster.
      * This should require ADMIN role.
      *
-     * @TODO explicitly disabled until custom user roles. https://github.com/SourceLabOrg/kafka-webview/issues/157
+     * @todo explicitly disabled until custom user roles. https://github.com/SourceLabOrg/kafka-webview/issues/157
      */
 //    @ResponseBody
 //    @RequestMapping(path = "/cluster/{id}/delete/topic", method = RequestMethod.POST, produces = "application/json")
