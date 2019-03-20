@@ -44,6 +44,7 @@ public final class UserBuilder {
     private String displayName;
     private String password;
     private UserRole role = UserRole.ROLE_USER;
+    private Long roleId;
     private boolean isActive = true;
     private boolean hasPassword = false;
 
@@ -95,6 +96,14 @@ public final class UserBuilder {
     }
 
     /**
+     * Set User's Role.
+     */
+    public UserBuilder withRoleId(final long roleId) {
+        this.roleId = roleId;
+        return this;
+    }
+
+    /**
      * Set if the user is active or not.
      */
     public UserBuilder withIsActive(final Boolean isActive) {
@@ -117,6 +126,10 @@ public final class UserBuilder {
         user.setDisplayName(displayName);
         user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
+        // TODO remove above and below check
+        if (roleId != null) {
+            user.setRoleId(roleId);
+        }
         user.setResetPasswordHash(null);
         user.setActive(isActive);
         user.setHasPassword(hasPassword);

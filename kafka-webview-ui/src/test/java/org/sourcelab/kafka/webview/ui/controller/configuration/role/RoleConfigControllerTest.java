@@ -402,7 +402,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
                 .with(user(adminUserDetails))
                 .with(csrf())
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/role"))
             .andReturn();
@@ -419,5 +419,176 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         // Lookup role
         final boolean doesExist = roleRepository.existsById(role.getId());
         assertTrue("Should have role still", doesExist);
+    }
+
+    /**
+     * Test removing the Role::READ permission from the current user's role.  It should be blocked.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_cannotRemoveRoleReadFromYourOwnUsersRole() throws Exception {
+        final String roleName = "My Original Role Name" + System.currentTimeMillis();
+
+        final List<Permissions> originalPermissions = new ArrayList<>();
+        originalPermissions.add(Permissions.ROLE_CREATE);
+        originalPermissions.add(Permissions.ROLE_DELETE);
+        originalPermissions.add(Permissions.ROLE_MODIFY);
+        originalPermissions.add(Permissions.ROLE_READ);
+
+        final List<String> expectedPermissions = new ArrayList<>();
+        expectedPermissions.add(Permissions.ROLE_CREATE.name());
+        expectedPermissions.add(Permissions.ROLE_DELETE.name());
+        expectedPermissions.add(Permissions.ROLE_MODIFY.name());
+        expectedPermissions.add(Permissions.ROLE_READ.name());
+
+        // Create role w/ permissions.
+        final Role role = roleTestTools.createRole(roleName, originalPermissions);
+
+        // Create a user using this specific role.
+        final User currentUser = userTestTools.createUser(role);
+
+        // Post update page.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/role/update")
+                .with(user(userTestTools.getUserAuthenticationDetails(currentUser)))
+                .with(csrf())
+                .param("id", String.valueOf(role.getId()))
+                .param("name", "Modified Role Name - Shouldnt update")
+                .param("permissions", Permissions.ROLE_CREATE.name())
+                .param("permissions", Permissions.ROLE_DELETE.name())
+                .param("permissions", Permissions.ROLE_MODIFY.name())
+            )
+            //.andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("You may not remove the permissions Role:Update and/or Role:Read from your current")))
+            .andReturn();
+
+        // Lookup role
+        final Optional<Role> updatedRole = roleRepository.findById(role.getId());
+        assertTrue("Should have role", updatedRole.isPresent());
+        assertEquals("Name should be unchanged", roleName, updatedRole.get().getName());
+
+        // Lookup and validate permissions for role
+        final Collection<RolePermission> rolePermissions = rolePermissionRepository.findAllByRoleId(role.getId());
+        assertEquals("Should still have original 4 roles", 4, rolePermissions.size());
+        for (final RolePermission rolePermission : rolePermissions) {
+            assertTrue(expectedPermissions.contains(rolePermission.getPermission()));
+        }
+    }
+
+    /**
+     * Test removing the Role::UPDATE permission from the current user's role.  It should be blocked.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_cannotRemoveRoleUpdateFromYourOwnUsersRole() throws Exception {
+        final String roleName = "My Original Role Name" + System.currentTimeMillis();
+
+        final List<Permissions> originalPermissions = new ArrayList<>();
+        originalPermissions.add(Permissions.ROLE_CREATE);
+        originalPermissions.add(Permissions.ROLE_DELETE);
+        originalPermissions.add(Permissions.ROLE_MODIFY);
+        originalPermissions.add(Permissions.ROLE_READ);
+
+        final List<String> expectedPermissions = new ArrayList<>();
+        expectedPermissions.add(Permissions.ROLE_CREATE.name());
+        expectedPermissions.add(Permissions.ROLE_DELETE.name());
+        expectedPermissions.add(Permissions.ROLE_MODIFY.name());
+        expectedPermissions.add(Permissions.ROLE_READ.name());
+
+        // Create role w/ permissions.
+        final Role role = roleTestTools.createRole(roleName, originalPermissions);
+
+        // Create a user using this specific role.
+        final User currentUser = userTestTools.createUser(role);
+
+        // Post update page.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/role/update")
+                .with(user(userTestTools.getUserAuthenticationDetails(currentUser)))
+                .with(csrf())
+                .param("id", String.valueOf(role.getId()))
+                .param("name", "Modified Role Name - Shouldnt update")
+                .param("permissions", Permissions.ROLE_CREATE.name())
+                .param("permissions", Permissions.ROLE_DELETE.name())
+                .param("permissions", Permissions.ROLE_READ.name())
+            )
+            //.andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("You may not remove the permissions Role:Update and/or Role:Read from your current")))
+            .andReturn();
+
+        // Lookup role
+        final Optional<Role> updatedRole = roleRepository.findById(role.getId());
+        assertTrue("Should have role", updatedRole.isPresent());
+        assertEquals("Name should be unchanged", roleName, updatedRole.get().getName());
+
+        // Lookup and validate permissions for role
+        final Collection<RolePermission> rolePermissions = rolePermissionRepository.findAllByRoleId(role.getId());
+        assertEquals("Should still have original 4 roles", 4, rolePermissions.size());
+        for (final RolePermission rolePermission : rolePermissions) {
+            assertTrue(expectedPermissions.contains(rolePermission.getPermission()));
+        }
+    }
+
+    /**
+     * Test removing the Role::UPDATE permission from a different user's role. It should be OK.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_canRemoveRoleUpdateAndReadFromOtherUsersRoles() throws Exception {
+        final String roleName = "My Original Role Name" + System.currentTimeMillis();
+
+        final List<Permissions> originalPermissions = new ArrayList<>();
+        originalPermissions.add(Permissions.ROLE_CREATE);
+        originalPermissions.add(Permissions.ROLE_DELETE);
+        originalPermissions.add(Permissions.ROLE_MODIFY);
+        originalPermissions.add(Permissions.ROLE_READ);
+
+        final List<String> expectedPermissions = new ArrayList<>();
+        expectedPermissions.add(Permissions.ROLE_CREATE.name());
+        expectedPermissions.add(Permissions.ROLE_DELETE.name());
+
+        // Create role w/ permissions.
+        final Role role = roleTestTools.createRole(roleName, originalPermissions);
+
+        // Create a user using this specific role.
+        final User currentUser = userTestTools.createUser(role);
+
+        // Post update page.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/role/update")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", String.valueOf(role.getId()))
+                .param("name", roleName)
+                .param("permissions", Permissions.ROLE_CREATE.name())
+                .param("permissions", Permissions.ROLE_DELETE.name())
+            )
+            //.andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/role"))
+            .andReturn();
+
+        // Get the flash message.
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        assertNotNull("Should have a flash message defined", flashMessage);
+        assertEquals("success", flashMessage.getType());
+        assertEquals("Updated role " + roleName + "!", flashMessage.getMessage());
+
+        // Lookup role
+        final Optional<Role> updatedRole = roleRepository.findById(role.getId());
+        assertTrue("Should have role", updatedRole.isPresent());
+        assertEquals("Name should be unchanged", roleName, updatedRole.get().getName());
+
+        // Lookup and validate permissions for role
+        final Collection<RolePermission> rolePermissions = rolePermissionRepository.findAllByRoleId(role.getId());
+        assertEquals("Should still have original 2 roles", 2, rolePermissions.size());
+        for (final RolePermission rolePermission : rolePermissions) {
+            assertTrue(expectedPermissions.contains(rolePermission.getPermission()));
+        }
     }
 }

@@ -24,11 +24,14 @@
 
 package org.sourcelab.kafka.webview.ui.tools;
 
+import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.UserBuilder;
+import org.sourcelab.kafka.webview.ui.model.Role;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 /**
@@ -42,6 +45,9 @@ public class UserTestTools {
     public UserTestTools(final UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
 
     /**
      * Creates a new admin user.
@@ -59,6 +65,14 @@ public class UserTestTools {
         return createNewUser(UserRole.ROLE_USER);
     }
 
+    public User createUser(final Role role) {
+        return createNewUser(role.getId());
+    }
+
+    public UserDetails getUserAuthenticationDetails(final User user) {
+        return customUserDetailsService.loadUserByUsername(user.getEmail());
+    }
+
     /**
      * Easy access to userRepository.
      * @param user User to persist.
@@ -74,6 +88,19 @@ public class UserTestTools {
             .withIsActive(true)
             .withPassword("RandomPassword")
             .withRole(userRole)
+            .build();
+
+        save(user);
+        return user;
+    }
+
+    private User createNewUser(final long roleId) {
+        final User user = new UserBuilder()
+            .withDisplayName("Test User")
+            .withEmail("test" + System.currentTimeMillis() + "@example.com")
+            .withIsActive(true)
+            .withPassword("RandomPassword")
+            .withRoleId(roleId)
             .build();
 
         save(user);

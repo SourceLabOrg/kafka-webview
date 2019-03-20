@@ -44,6 +44,7 @@
                                     Permissions
                                 </label>
                                 <div class="col-md-9">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('permissions')}" th:errors="*{permissions}" style="display: block;"/>
                                     <div class="row">
                                         <div class="col-sm-3" th:each="permissionGroup : ${permissionGroups}">
                                             <div class="card">
@@ -58,6 +59,7 @@
                                                                 name="permissions"
                                                                 th:checked="${roleForm.getPermissions().contains(permission)}"
                                                                 th:value="${permission.name()}"
+                                                                th:errorclass="is-invalid"
                                                             >
                                                             <span th:text="${permission.getDisplayName()}"></span>
                                                         </label>

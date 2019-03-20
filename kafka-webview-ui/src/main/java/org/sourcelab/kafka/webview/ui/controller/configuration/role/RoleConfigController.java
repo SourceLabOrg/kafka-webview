@@ -50,6 +50,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -193,6 +194,24 @@ public class RoleConfigController extends BaseController {
                 null,
                 "Name is already used")
             );
+        }
+
+        // If the role already exists AND we're editing the role of the current user
+        if (roleForm.exists() && roleForm.getId().equals(getLoggedInUser().getUserModel().getRoleId()) ) {
+            final Collection<Permissions> setPermissions = roleForm.getPermissions();
+            // We don't want to allow them to remove the ROLE_MODIFY and ROLE_READ permissions
+            if (!setPermissions.contains(Permissions.ROLE_MODIFY) || !setPermissions.contains(Permissions.ROLE_READ)) {
+                // Block them from revoking privileges to modify roles
+                bindingResult.addError(new FieldError(
+                    "userRole",
+                    "permissions",
+                    Permissions.ROLE_MODIFY,
+                    true,
+                    null,
+                    null,
+                    "You may not remove the permissions Role:Update and/or Role:Read from your current user's role.")
+                );
+            }
         }
 
         // If we have errors

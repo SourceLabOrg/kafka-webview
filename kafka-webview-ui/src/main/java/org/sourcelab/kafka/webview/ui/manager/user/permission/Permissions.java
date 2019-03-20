@@ -55,7 +55,13 @@ public enum Permissions {
     USER_READ("Read"),
     USER_CREATE("Create"),
     USER_MODIFY("Update"),
-    USER_DELETE("Delete");
+    USER_DELETE("Delete"),
+
+    // Roles
+    ROLE_READ("Read"),
+    ROLE_CREATE("Create"),
+    ROLE_MODIFY("Update"),
+    ROLE_DELETE("Delete");
 
     private final String displayName;
 
