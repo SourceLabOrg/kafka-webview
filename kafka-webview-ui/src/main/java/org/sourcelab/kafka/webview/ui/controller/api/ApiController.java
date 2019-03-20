@@ -30,6 +30,7 @@ import org.sourcelab.kafka.webview.ui.controller.api.exceptions.NotFoundApiExcep
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.DeleteTopicRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
@@ -70,6 +71,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -225,13 +227,22 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
-    public List<TopicListing> getTopics(@PathVariable final Long id) {
+    public List<TopicListing> getTopics(@PathVariable final Long id, @RequestParam(required = false) final String search) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
-            final TopicList topics = operations.getAvailableTopics();
+            // Get all topics available on cluster.
+            TopicList topics = operations.getAvailableTopics();
+
+            // If search value supplied
+            if (search != null && !search.trim().isEmpty()) {
+                // filter
+                topics = topics.filterByTopicName(search);
+            }
+
+            // return matched topics.
             return topics.getTopics();
         } catch (final Exception e) {
             throw new ApiException("Topics", e);
@@ -349,7 +360,7 @@ public class ApiController extends BaseController {
             final boolean result = operations.createTopic(createTopic);
 
             // Quick n dirty json response
-            return new ResultResponse("CreateTopic", result, "");
+            return new ResultResponse("CreateTopic", result, "Created topic '" + createTopicRequest.getName() + "'");
         } catch (final Exception e) {
             throw new ApiException("CreateTopic", e);
         }
@@ -383,6 +394,34 @@ public class ApiController extends BaseController {
             return operations.alterTopicConfig(name, configEntries).getConfigEntries();
         } catch (final Exception e) {
             throw new ApiException("ModifyTopic", e);
+        }
+    }
+
+    /**
+     * POST Delete existing topic on cluster.
+     * This should require ADMIN role.
+     *
+     * @TODO explicitly disabled until custom user roles. https://github.com/SourceLabOrg/kafka-webview/issues/157
+     */
+//    @ResponseBody
+//    @RequestMapping(path = "/cluster/{id}/delete/topic", method = RequestMethod.POST, produces = "application/json")
+    public ResultResponse deleteTopic(@PathVariable final Long id, @RequestBody final DeleteTopicRequest deleteTopicRequest) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        final String name = deleteTopicRequest.getName();
+        if (name == null || name.trim().isEmpty()) {
+            throw new ApiException("DeleteTopic", "Invalid topic name");
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            final boolean result = operations.removeTopic(deleteTopicRequest.getName());
+
+            // Quick n dirty json response
+            return new ResultResponse("DeleteTopic", result, "Removed topic '" + deleteTopicRequest.getName() + "'");
+        } catch (final Exception e) {
+            throw new ApiException("DeleteTopic", e);
         }
     }
 

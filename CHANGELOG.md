@@ -2,12 +2,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.1.5 (UNRELEASED)
+## 2.2.0 (UNRELEASED)
 
 #### Bug fixes
 - [ISSUE-143](https://github.com/SourceLabOrg/kafka-webview/issues/143) Fix URLs for stream connections when running Kafka-Webview behind a reverse proxy with a URL Prefix.
 
-#### New features
+#### New Features
+- Ability to search various datatables within the Cluster section of the application.
 
 ## 2.1.4 (02/19/2019)
 

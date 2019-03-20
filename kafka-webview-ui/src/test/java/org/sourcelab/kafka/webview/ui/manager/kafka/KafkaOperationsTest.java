@@ -346,6 +346,31 @@ public class KafkaOperationsTest {
     }
 
     /**
+     * Test creating a new topic.
+     */
+    @Test
+    public void testRemoveTopic() {
+        final String newTopic = "TestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(newTopic, 1, (short) 1);
+
+        // Validate topic exists now.
+        TopicList topicsList = kafkaOperations.getAvailableTopics();
+        assertTrue("Should contain our topic now", topicsList.getTopicNames().contains(newTopic));
+
+        // Attempt to remove the topic
+        final boolean result = kafkaOperations.removeTopic(newTopic);
+        assertTrue("Should have returned true", result);
+
+        // Validate our topic doesn't exist
+        topicsList = kafkaOperations.getAvailableTopics();
+        assertFalse("Should not contain our topic anymore", topicsList.getTopicNames().contains(newTopic));
+    }
+
+    /**
      * Test listing consumer group ids.
      */
     @Test
