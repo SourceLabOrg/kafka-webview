@@ -55,8 +55,9 @@
                                                             <input
                                                                 class="form-check-input"
                                                                 type="checkbox"
-                                                                value="1"
-                                                                th:name="${permission.name()}"
+                                                                name="permissions"
+                                                                th:checked="${roleForm.getPermissions().contains(permission)}"
+                                                                th:value="${permission.name()}"
                                                             >
                                                             <span th:text="${permission.getDisplayName()}"></span>
                                                         </label>

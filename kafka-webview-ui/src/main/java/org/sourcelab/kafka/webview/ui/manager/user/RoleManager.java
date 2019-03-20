@@ -27,6 +27,8 @@ package org.sourcelab.kafka.webview.ui.manager.user;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.PermissionGroup;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Role;
+import org.sourcelab.kafka.webview.ui.model.RolePermission;
+import org.sourcelab.kafka.webview.ui.repository.RolePermissionRepository;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -100,10 +102,12 @@ public class RoleManager {
     }
 
     private final RoleRepository roleRepository;
+    private final RolePermissionRepository rolePermissionRepository;
 
     @Autowired
-    public RoleManager(final RoleRepository roleRepository) {
+    public RoleManager(final RoleRepository roleRepository, final RolePermissionRepository rolePermissionRepository) {
         this.roleRepository = roleRepository;
+        this.rolePermissionRepository = rolePermissionRepository;
     }
 
     /**
@@ -117,6 +121,75 @@ public class RoleManager {
         roleRepository.save(role);
 
         return role;
+    }
+
+    /**
+     * Given a Role, update it's set of permissions.  Any permissions not included will be removed from the role.
+     * @param roleId id of role to update.
+     * @param permissions Collection of permissions to set on that role.
+     */
+    public void updatePermissions(final long roleId, final Collection<Permissions> permissions) {
+        // Retrieve all permissions for the role.
+        final Iterable<RolePermission> currentPermissions = rolePermissionRepository.findAllByRoleId(roleId);
+
+        final List<RolePermission> rolePermissionsToRemove = new ArrayList<>();
+        final List<RolePermission> rolePermissionsToAdd = new ArrayList<>();
+
+        // Loop over permissions, n*n but I'm lazy, and this a short list.
+        for (final Permissions permission : permissions) {
+            boolean found = false;
+            for (final RolePermission currentPermission : currentPermissions) {
+                if (currentPermission.getPermission().equals(permission.name())) {
+                    found = true;
+                    break;
+                }
+            }
+            // If we didn't find the permission, we need to add it.
+            if (!found) {
+                final RolePermission newRolePermission = new RolePermission();
+                newRolePermission.setRoleId(roleId);
+                newRolePermission.setPermission(permission.name());
+                rolePermissionsToAdd.add(newRolePermission);
+            }
+        }
+
+        // Loop the reverse way
+        for (final RolePermission currentPermission : currentPermissions) {
+            boolean found = false;
+            for (final Permissions permission : permissions) {
+                if (currentPermission.getPermission().equals(permission.name())) {
+                    found = true;
+                    break;
+                }
+            }
+            // If we don't find a match
+            if (!found) {
+                // We need to remove it.
+                rolePermissionsToRemove.add(currentPermission);
+            }
+        }
+
+        // Batch persist.
+        rolePermissionRepository.saveAll(rolePermissionsToAdd);
+        rolePermissionRepository.deleteAll(rolePermissionsToRemove);
+    }
+
+    /**
+     * Given a roleId, get the permissions enum values associated with that role.
+     * @param roleId Id of role to retrieve permissions for.
+     * @return Collection of permissions.
+     */
+    public Collection<Permissions> getPermissionsForRole(final long roleId) {
+        // Find existing role permissions
+        final Iterable<RolePermission> rolePermissionEntities = rolePermissionRepository.findAllByRoleId(roleId);
+
+        final List<Permissions> permissions = new ArrayList<>();
+        rolePermissionEntities
+            .forEach((rolePermissionEntity) -> {
+                permissions.add(Permissions.valueOf(rolePermissionEntity.getPermission()));
+            });
+
+        return Collections.unmodifiableCollection(permissions);
     }
 
     public Collection<PermissionGroup> getDefaultPermissionGroups() {

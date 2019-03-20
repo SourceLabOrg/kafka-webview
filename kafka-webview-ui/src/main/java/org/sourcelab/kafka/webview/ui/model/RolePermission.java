@@ -22,64 +22,59 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.configuration.role.forms;
+package org.sourcelab.kafka.webview.ui.model;
 
-import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 /**
- * Represents the Role create/update form.
+ * Join table between Role and Permission tables.
  */
-public class RoleForm {
-    private Long id = null;
+@Entity(name = "role_permission")
+public class RolePermission {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
 
-    @NotNull(message = "Please enter a name")
-    @Size(min = 1, max = 64)
-    private String name;
+    @Column(nullable = false, name = "role_id")
+    private Long roleId;
 
-    private Collection<Permissions> permissions = new ArrayList<>();
+    @Column(nullable = false, name = "permission")
+    private String permission;
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(final Long id) {
+    public void setId(final long id) {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Long getRoleId() {
+        return roleId;
     }
 
-    public void setName(final String name) {
-        this.name = name;
+    public void setRoleId(final Long roleId) {
+        this.roleId = roleId;
     }
 
-    public Collection<Permissions> getPermissions() {
-        return permissions;
+    public String getPermission() {
+        return permission;
     }
 
-    public void setPermissions(final Collection<Permissions> permissions) {
-        this.permissions = permissions;
-    }
-
-    /**
-     * Does the User represented on the form already exist in the database.
-     */
-    public boolean exists() {
-        return getId() != null;
+    public void setPermission(final String permission) {
+        this.permission = permission;
     }
 
     @Override
     public String toString() {
-        return "RoleForm{"
+        return "RolePermission{"
             + "id=" + id
-            + ", name='" + name + '\''
+            + ", roleId=" + roleId
+            + ", permission='" + permission + '\''
             + '}';
     }
 }

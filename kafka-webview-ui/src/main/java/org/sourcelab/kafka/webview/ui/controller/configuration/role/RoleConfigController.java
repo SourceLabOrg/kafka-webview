@@ -29,12 +29,15 @@ import org.sourcelab.kafka.webview.ui.controller.configuration.role.forms.RoleFo
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.user.RoleManager;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Role;
-import org.sourcelab.kafka.webview.ui.model.User;
+import org.sourcelab.kafka.webview.ui.model.RolePermission;
+import org.sourcelab.kafka.webview.ui.repository.RolePermissionRepository;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -44,6 +47,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,20 +61,26 @@ import java.util.Optional;
 public class RoleConfigController extends BaseController {
 
     private final RoleRepository roleRepository;
+    private final RolePermissionRepository rolePermissionRepository;
     private final UserRepository userRepository;
     private final RoleManager roleManager;
 
     /**
      * Constructor.
      * @param roleRepository Repository for roles.
+     * @param rolePermissionRepository Repository for RolePermissions.
      * @param userRepository Repository for users.
      * @param roleManager Manager for interacting with Roles.
      */
     @Autowired
     public RoleConfigController(
         final RoleRepository roleRepository,
-        final UserRepository userRepository, final RoleManager roleManager) {
+        final RolePermissionRepository rolePermissionRepository,
+        final UserRepository userRepository,
+        final RoleManager roleManager) {
+
         this.roleRepository = roleRepository;
+        this.rolePermissionRepository = rolePermissionRepository;
         this.userRepository = userRepository;
         this.roleManager = roleManager;
     }
@@ -151,6 +161,7 @@ public class RoleConfigController extends BaseController {
         // Build form
         roleForm.setId(role.getId());
         roleForm.setName(role.getName());
+        roleForm.setPermissions(roleManager.getPermissionsForRole(role.getId()));
 
         // Display template
         return "configuration/role/create";
@@ -160,6 +171,7 @@ public class RoleConfigController extends BaseController {
      * POST updates a role.
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
+    @Transactional
     public String update(
         @Valid final RoleForm roleForm,
         final BindingResult bindingResult,
@@ -186,11 +198,14 @@ public class RoleConfigController extends BaseController {
             return createRole(roleForm, model, redirectAttributes);
         }
 
+        // The underlying role entity.
+        Role roleEntity = null;
+
         if (!roleForm.exists()) {
             // Create the role
-            final Role newRole = roleManager.createNewRole(roleForm.getName());
+            roleEntity = roleManager.createNewRole(roleForm.getName());
 
-            if (newRole == null) {
+            if (roleEntity == null) {
                 // Add error flash msg
                 redirectAttributes.addFlashAttribute(
                     "FlashMessage",
@@ -199,7 +214,7 @@ public class RoleConfigController extends BaseController {
                 // Add success flash msg
                 redirectAttributes.addFlashAttribute(
                     "FlashMessage",
-                    FlashMessage.newSuccess("Created new role " + newRole.getName() + "!"));
+                    FlashMessage.newSuccess("Created new role " + roleEntity.getName() + "!"));
             }
         } else {
             // Update existing role
@@ -210,19 +225,25 @@ public class RoleConfigController extends BaseController {
                 // Add error flash msg
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Error creating new role!"));
             } else {
-                final Role role = roleOptional.get();
+                roleEntity = roleOptional.get();
 
                 // Update role
-                role.setName(roleForm.getName());
+                roleEntity.setName(roleForm.getName());
 
                 // Update
-                roleRepository.save(role);
+                roleRepository.save(roleEntity);
 
                 // Add success flash msg
                 redirectAttributes.addFlashAttribute(
                     "FlashMessage",
-                    FlashMessage.newSuccess("Updated role " + role.getName() + "!"));
+                    FlashMessage.newSuccess("Updated role " + roleEntity.getName() + "!"));
             }
+        }
+
+        // If we didn't have an error
+        if (roleEntity != null) {
+            // Update permissions on that role.
+            roleManager.updatePermissions(roleEntity.getId(), roleForm.getPermissions());
         }
 
         return "redirect:/configuration/role";
