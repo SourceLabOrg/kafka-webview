@@ -119,7 +119,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .content(payload)
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Validate submit button seems to show up.
@@ -177,7 +177,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .content(payload)
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             .andReturn();
 
@@ -214,7 +214,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Validate submit button seems to show up.
@@ -247,7 +247,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .content(payload)
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Validate submit button seems to show up.
@@ -295,7 +295,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .content(payload)
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is4xxClientError());
 
         // Verify consumer still exists
@@ -336,7 +336,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Should have content similar to:
@@ -373,7 +373,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Should have content similar to:
@@ -410,7 +410,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Should have content similar to:
@@ -445,7 +445,7 @@ public class ApiControllerTest extends AbstractMvcTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
 
             // Should have content similar to:

@@ -87,7 +87,7 @@ public class ClusterControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/cluster/")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
@@ -108,7 +108,7 @@ public class ClusterControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/cluster/")
                 .with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate no clusters exists text
             .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
@@ -134,7 +134,7 @@ public class ClusterControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/cluster/")
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString("Kafka Clusters")))
@@ -161,7 +161,7 @@ public class ClusterControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/cluster/" + cluster.getId())
                 .with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate 'create topic' link exists
             .andExpect(content().string(containsString(CREATE_TOPIC_LINK_TEXT)));
@@ -180,7 +180,7 @@ public class ClusterControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(get("/cluster/" + cluster.getId())
                 .with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate 'create topic' link exists
             .andExpect(content().string(not(containsString(CREATE_TOPIC_LINK_TEXT))));

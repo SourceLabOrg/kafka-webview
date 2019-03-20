@@ -28,6 +28,7 @@ import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.role.forms.RoleForm;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.DuplicateRoleException;
 import org.sourcelab.kafka.webview.ui.manager.user.RoleManager;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Role;
@@ -203,18 +204,18 @@ public class RoleConfigController extends BaseController {
 
         if (!roleForm.exists()) {
             // Create the role
-            roleEntity = roleManager.createNewRole(roleForm.getName());
+            try {
+                roleEntity = roleManager.createNewRole(roleForm.getName());
 
-            if (roleEntity == null) {
-                // Add error flash msg
-                redirectAttributes.addFlashAttribute(
-                    "FlashMessage",
-                    FlashMessage.newWarning("Error creating new role!"));
-            } else {
                 // Add success flash msg
                 redirectAttributes.addFlashAttribute(
                     "FlashMessage",
                     FlashMessage.newSuccess("Created new role " + roleEntity.getName() + "!"));
+            } catch (final DuplicateRoleException duplicateRoleException) {
+                // Add error flash msg
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newWarning("Error creating new role! " + duplicateRoleException.getMessage()));
             }
         } else {
             // Update existing role

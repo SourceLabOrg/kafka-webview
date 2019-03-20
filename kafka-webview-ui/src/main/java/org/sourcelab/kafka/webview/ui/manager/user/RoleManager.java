@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Logic for creating/updating roles.
+ * Logic for creating/updating and in general interacting with roles and permissions for roles.
  */
 @Component
 public class RoleManager {
@@ -104,6 +104,11 @@ public class RoleManager {
     private final RoleRepository roleRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
+    /**
+     * Constructor.
+     * @param roleRepository role repository instance.
+     * @param rolePermissionRepository role permission repository instance.
+     */
     @Autowired
     public RoleManager(final RoleRepository roleRepository, final RolePermissionRepository rolePermissionRepository) {
         this.roleRepository = roleRepository;
@@ -114,11 +119,17 @@ public class RoleManager {
      * Create a new role with required entities.
      * @param name Name of the role.
      * @return Role instance.
+     * @throws DuplicateRoleException if attempted to create a role with a duplicate name.
      */
     public Role createNewRole(final String name) {
         final Role role = new Role();
         role.setName(name);
-        roleRepository.save(role);
+
+        try {
+            roleRepository.save(role);
+        } catch (final Exception exception) {
+            throw new DuplicateRoleException("Role with name '" + name + "' already exists!", exception);
+        }
 
         return role;
     }
@@ -192,6 +203,10 @@ public class RoleManager {
         return Collections.unmodifiableCollection(permissions);
     }
 
+    /**
+     * Get the default available permission set available to be used.
+     * @return Immutable collection of available permissions.
+     */
     public Collection<PermissionGroup> getDefaultPermissionGroups() {
         return DEFAULT_PERMISSION_GROUPS;
     }
