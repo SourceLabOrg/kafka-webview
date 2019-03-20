@@ -24,8 +24,19 @@
                 // Cached copy of consumers for client side searching
                 cachedConsumers: [],
 
+                // Cached copy of brokers for lcient side searching
+                cachedBrokers: [],
+
                 // Handle cluster node results ajax result
                 handleClusterNodeResults: function(results) {
+                    ClusterInfo.cachedBrokers = results;
+                    ClusterInfo.displayClusterNodes();
+                },
+                displayClusterNodes: function() {
+                    // Get our search text
+                    var searchStr = jQuery("#brokerSearch").val();
+                    var matchedEntries = 0;
+
                     // Clear nodes table
                     var table = jQuery('#nodes-tbody');
                     jQuery(table).empty();
@@ -34,7 +45,14 @@
                     var source   = jQuery('#nodes-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery.each(results, function(index, result) {
+                    jQuery.each(ClusterInfo.cachedBrokers, function(index, result) {
+                        // Filter
+                        if (!SearchTools.doesMatchText(searchStr, result.host + ":" + result.port)) {
+                            // Skip
+                            return;
+                        }
+                        matchedEntries++;
+
                         // Generate html from template
                         var properties = {
                             clusterId: ClusterInfo.clusterId,
@@ -52,7 +70,7 @@
                     // Hide loader
                     jQuery('#nodes-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#nodes-no-results').toggle(true);
                         jQuery('#nodes-table').toggle(false);
                     } else {
@@ -294,6 +312,16 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Brokers
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="brokerSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="ClusterInfo.displayClusterNodes();">
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -347,7 +375,7 @@
                                 style="padding: 0px;"
                                 onkeyup="ClusterInfo.displayTopics();">
                             <a
-                                class="btn" href="#" style="padding-bottom: 0;"
+                                class="btn btn-sm" href="#" style="padding-bottom: 0;"
                                 data-toggle="modal" data-target="#createTopicModal"
                                 sec:authorize="hasRole('ROLE_ADMIN')">
                                 <i class="icon-settings"></i>
