@@ -17,7 +17,12 @@
             // Maintains state of our consumer
             var ClusterInfo = {
                 clusterId: '[[${cluster.id}]]',
+
+                // Cached copy of topics for client side searching
                 cachedTopics: [],
+
+                // Cached copy of consumers for client side searching
+                cachedConsumers: [],
 
                 // Handle cluster node results ajax result
                 handleClusterNodeResults: function(results) {
@@ -77,10 +82,9 @@
 
                     jQuery.each(ClusterInfo.cachedTopics, function(index, result) {
                         // Filter
-                        if (searchStr != null && searchStr.length > 0) {
-                            if (result.name.toLowerCase().indexOf(searchStr.toLowerCase()) === -1) {
-                                return;
-                            }
+                        if (!SearchTools.doesMatchText(searchStr, result.name)) {
+                            // Skip
+                            return;
                         }
                         matchedEntries++;
 
@@ -112,8 +116,17 @@
                 },
 
                 // Handle all consumers results ajax result
-                handleConsumers: function(results) {
-                    // Clear topics table
+                handleAllConsumers: function(results) {
+                    ClusterInfo.cachedConsumers = results;
+                    ClusterInfo.displayConsumers();
+                },
+
+                displayConsumers: function() {
+                    // Get our search text
+                    var searchStr = jQuery("#consumerSearch").val();
+                    var matchedEntries = 0;
+
+                    // Clear consumers table
                     var table = jQuery('#consumers-tbody');
                     jQuery(table).empty();
 
@@ -121,7 +134,14 @@
                     var source   = jQuery('#consumers-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery.each(results, function(index, result) {
+                    jQuery.each(ClusterInfo.cachedConsumers, function(index, result) {
+                        // Filter
+                        if (!SearchTools.doesMatchText(searchStr, result.consumerId)) {
+                            // Skip
+                            return;
+                        }
+                        matchedEntries++;
+
                         // Collect unique topics
                         var topics = [];
                         jQuery.each(result.members, function(index, member) {
@@ -153,7 +173,7 @@
                     // Hide loader
                     jQuery('#consumers-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#consumers-no-results').toggle(true);
                         jQuery('#consumers-table').toggle(false);
                     } else {
@@ -173,7 +193,7 @@
                     // Fire off request to get consumer details
                     ApiClient.getAllConsumersWithDetails(ClusterInfo.clusterId, function(results) {
                         // Handle results
-                        ClusterInfo.handleConsumers(results);
+                        ClusterInfo.handleAllConsumers(results);
                     });
                 },
                 removeConsumer: function(consumerId) {
@@ -378,6 +398,16 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Consumer Groups
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="consumerSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="ClusterInfo.displayConsumers();">
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->

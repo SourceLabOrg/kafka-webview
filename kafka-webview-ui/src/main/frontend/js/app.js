@@ -471,3 +471,23 @@ var DateTools = {
         return timezone_standard;
     }
 };
+
+/**
+ * Common Search Tooling.
+ */
+var SearchTools = {
+    doesMatchText : function(searchStr, content) {
+        // If empty search String, assume match all.
+        if (searchStr === null || searchStr.length === 0) {
+            return true;
+        }
+
+        // Otherwise check to see if it matches
+        if (content.toLowerCase().indexOf(searchStr.toLowerCase()) === -1) {
+            // Doesn't match
+            return false;
+        }
+        // Matches
+        return true;
+    }
+};
