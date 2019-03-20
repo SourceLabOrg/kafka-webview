@@ -24,9 +24,9 @@
 
 package org.sourcelab.kafka.webview.ui.manager.user.permission;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Defines a group of related permissions.
@@ -49,7 +49,9 @@ public class PermissionGroup {
     ) {
         this.name = name;
         this.description = description;
-        this.permissions = Collections.unmodifiableCollection(new ArrayList<>(permissions));
+
+        // Use set to ensure unique values.
+        this.permissions = Collections.unmodifiableSet(new HashSet<>(permissions));
     }
 
     public String getName() {
