@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.2.0 (UNRELEASED)
 
 #### New Features
-- Ability to search topics within a cluster.
+- Ability to search various datatables within the Cluster section of the application.
 
 ## 2.1.4 (02/19/2019)
 - [ISSUE-136](https://github.com/SourceLabOrg/kafka-webview/issues/136) Fix URLs when running Kafka-Webview behind a reverse proxy with a URL prefix.  You can configure Kafka WebView by setting the following configuration option in your config.yml file:
