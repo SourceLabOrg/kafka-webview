@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.model.User;
+import org.sourcelab.kafka.webview.ui.tools.RoleTestTools;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -47,6 +48,9 @@ public abstract class AbstractMvcTest {
 
     @Autowired
     protected UserTestTools userTestTools;
+
+    @Autowired
+    protected RoleTestTools roleTestTools;
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;

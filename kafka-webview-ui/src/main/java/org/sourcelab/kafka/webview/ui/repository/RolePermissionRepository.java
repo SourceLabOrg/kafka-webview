@@ -28,6 +28,8 @@ import org.sourcelab.kafka.webview.ui.model.RolePermission;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+
 /**
  * For interacting w/ the RolePermission database table.
  */
@@ -39,5 +41,5 @@ public interface RolePermissionRepository extends CrudRepository<RolePermission,
      * @param roleId id of the role to find permissions for.
      * @return Collection of RolePermissions.
      */
-    Iterable<RolePermission> findAllByRoleId(long roleId);
+    Collection<RolePermission> findAllByRoleId(long roleId);
 }
