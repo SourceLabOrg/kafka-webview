@@ -30,6 +30,7 @@ import org.sourcelab.kafka.webview.ui.model.Role;
 import org.sourcelab.kafka.webview.ui.model.RolePermission;
 import org.sourcelab.kafka.webview.ui.repository.RolePermissionRepository;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
+import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -103,16 +104,22 @@ public class RoleManager {
 
     private final RoleRepository roleRepository;
     private final RolePermissionRepository rolePermissionRepository;
+    private final UserRepository userRepository;
 
     /**
      * Constructor.
      * @param roleRepository role repository instance.
      * @param rolePermissionRepository role permission repository instance.
+     * @param userRepository user repository instance.
      */
     @Autowired
-    public RoleManager(final RoleRepository roleRepository, final RolePermissionRepository rolePermissionRepository) {
+    public RoleManager(
+        final RoleRepository roleRepository,
+        final RolePermissionRepository rolePermissionRepository,
+        final UserRepository userRepository) {
         this.roleRepository = roleRepository;
         this.rolePermissionRepository = rolePermissionRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -209,5 +216,58 @@ public class RoleManager {
      */
     public Collection<PermissionGroup> getDefaultPermissionGroups() {
         return DEFAULT_PERMISSION_GROUPS;
+    }
+
+    /**
+     * Utility to copy a role.
+     * @param sourceRole The role you want to copy.
+     * @param name The new name of the role.
+     * @return New role instance.
+     */
+    public Role copyRole(final Role sourceRole, final String name) {
+
+        Role copiedRole = null;
+
+        // Attempt to avoid duplicate errors
+        for (int attempt = 0; attempt <= 10; attempt++) {
+            String nameAttempt = name;
+            if (attempt > 0) {
+                nameAttempt = nameAttempt + " (" + attempt + ")";
+            }
+
+            // Look for role
+            final Role existingRole = roleRepository.findByName(nameAttempt);
+            if (existingRole != null) {
+                continue;
+            }
+
+            // If doesn't exist, create it.
+            copiedRole = createNewRole(nameAttempt);
+            break;
+        }
+
+        updatePermissions(copiedRole.getId(), getPermissionsForRole(sourceRole.getId()));
+
+        return copiedRole;
+    }
+
+    /**
+     * Delete a role.
+     * @param roleId the id of the role to remove.
+     * @return False if unable to remove, true if successfully deleted.
+     */
+    public boolean deleteRole(final long roleId) {
+        // See if this role is in use by any users
+        if (userRepository.existsByRoleId(roleId)) {
+            return false;
+        }
+
+        // Delete any permissions associated.
+        rolePermissionRepository.deleteByRoleId(roleId);
+
+        // Delete role
+        roleRepository.deleteById(roleId);
+
+        return true;
     }
 }

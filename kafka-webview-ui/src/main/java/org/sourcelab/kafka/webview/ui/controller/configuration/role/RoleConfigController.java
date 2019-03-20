@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.role;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.role.forms.RoleForm;
+import org.sourcelab.kafka.webview.ui.manager.model.view.ViewCopyManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.user.DuplicateRoleException;
@@ -247,6 +248,59 @@ public class RoleConfigController extends BaseController {
             roleManager.updatePermissions(roleEntity.getId(), roleForm.getPermissions());
         }
 
+        return "redirect:/configuration/role";
+    }
+
+    /**
+     * POST copies the selected role.
+     */
+    @RequestMapping(path = "/copy/{id}", method = RequestMethod.POST)
+    @Transactional
+    public String copyRole(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
+        // Retrieve it
+        if (!roleRepository.existsById(id)) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find role!"));
+        } else {
+            // Retrieve view
+            roleRepository.findById(id).ifPresent((role) -> {
+                // Create Copy manager
+                try {
+                    roleManager.copyRole(role, "Copy of " + role.getName());
+                    redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Copied role!"));
+                } catch (final DuplicateRoleException duplicateRoleException) {
+                    // Add error flash msg
+                    redirectAttributes.addFlashAttribute(
+                        "FlashMessage",
+                        FlashMessage.newWarning("Error creating new role! " + duplicateRoleException.getMessage()));
+                }
+            });
+        }
+
+        // redirect to role index
+        return "redirect:/configuration/role";
+    }
+
+    /**
+     * POST deletes the selected role.
+     */
+    @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
+    @Transactional
+    public String deleteRole(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
+        // Retrieve it
+        if (!roleRepository.existsById(id)) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find role!"));
+        } else {
+            // Delete it
+            if (roleManager.deleteRole(id)) {
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted role!"));
+            } else {
+                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Role in use! Unable to delete!"));
+            }
+        }
+
+        // redirect to role index
         return "redirect:/configuration/role";
     }
 

@@ -41,5 +41,11 @@ public interface RolePermissionRepository extends CrudRepository<RolePermission,
      * @param roleId id of the role to find permissions for.
      * @return Collection of RolePermissions.
      */
-    Collection<RolePermission> findAllByRoleId(long roleId);
+    Collection<RolePermission> findAllByRoleId(final long roleId);
+
+    /**
+     * Delete permissions for a given role Id.
+     * @param roleId the roleId to remove permissions for.
+     */
+    void deleteByRoleId(final long roleId);
 }

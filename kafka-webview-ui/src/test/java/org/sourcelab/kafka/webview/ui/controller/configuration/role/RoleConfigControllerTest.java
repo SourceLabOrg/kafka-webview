@@ -50,6 +50,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -251,7 +252,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
                 .param("permissions", Permissions.USER_CREATE.name())
                 .param("permissions", Permissions.USER_DELETE.name())
             )
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/role"))
             .andReturn();
@@ -276,5 +277,147 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         for (final RolePermission rolePermission : rolePermissions) {
             assertTrue(expectedPermissions.contains(rolePermission.getPermission()));
         }
+    }
+
+    /**
+     * Test copying an existing role.
+     */
+    @Test
+    @Transactional
+    public void testPostCopy_copyExistingRole() throws Exception {
+        final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
+        final String expectedRoleName = "Copy of " + originalRoleName;
+
+        final List<Permissions> originalPermissions = new ArrayList<>();
+        originalPermissions.add(Permissions.TOPIC_CREATE);
+        originalPermissions.add(Permissions.CLUSTER_CREATE);
+        originalPermissions.add(Permissions.CLUSTER_DELETE);
+
+        final List<String> expectedPermissions = new ArrayList<>();
+        expectedPermissions.add(Permissions.TOPIC_CREATE.name());
+        expectedPermissions.add(Permissions.CLUSTER_CREATE.name());
+        expectedPermissions.add(Permissions.CLUSTER_DELETE.name());
+
+        // Create role w/ permissions.
+        final Role role = roleTestTools.createRole(originalRoleName, originalPermissions);
+
+        // Post copy page.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/role/copy/" + role.getId())
+                .with(user(adminUserDetails))
+                .with(csrf())
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/role"))
+            .andReturn();
+
+        // Get the flash message.
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        assertNotNull("Should have a flash message defined", flashMessage);
+        assertEquals("success", flashMessage.getType());
+        assertEquals("Copied role!", flashMessage.getMessage());
+
+        // Lookup role
+        final Optional<Role> updatedRole = roleRepository.findById(role.getId() + 1);
+        assertTrue("Should have role", updatedRole.isPresent());
+        assertEquals(expectedRoleName, updatedRole.get().getName());
+
+        // Lookup and validate permissions for role
+        final Collection<RolePermission> rolePermissions = rolePermissionRepository.findAllByRoleId(role.getId());
+        assertEquals("Should have 3 roles", 3, rolePermissions.size());
+        for (final RolePermission rolePermission : rolePermissions) {
+            assertTrue(expectedPermissions.contains(rolePermission.getPermission()));
+        }
+    }
+
+    /**
+     * Test deleting an existing role that's not in use by any user.
+     */
+    @Test
+    @Transactional
+    public void testPostDelete_deleteExistingRole_notInUse() throws Exception {
+        final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
+
+        final List<Permissions> originalPermissions = new ArrayList<>();
+        originalPermissions.add(Permissions.TOPIC_CREATE);
+        originalPermissions.add(Permissions.CLUSTER_CREATE);
+        originalPermissions.add(Permissions.CLUSTER_DELETE);
+
+        // Create role w/ permissions.
+        final Role role = roleTestTools.createRole(originalRoleName, originalPermissions);
+
+        // Post delete page.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/role/delete/" + role.getId())
+                .with(user(adminUserDetails))
+                .with(csrf())
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/role"))
+            .andReturn();
+
+        // Get the flash message.
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        assertNotNull("Should have a flash message defined", flashMessage);
+        assertEquals("success", flashMessage.getType());
+        assertEquals("Deleted role!", flashMessage.getMessage());
+
+        // Lookup role
+        final boolean doesExist = roleRepository.existsById(role.getId());
+        assertFalse("Should not have role", doesExist);
+    }
+
+    /**
+     * Test deleting an existing role that IS in use by other users.
+     */
+    @Test
+    @Transactional
+    public void testPostDelete_deleteExistingRole_innUse() throws Exception {
+        final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
+
+        final List<Permissions> originalPermissions = new ArrayList<>();
+        originalPermissions.add(Permissions.TOPIC_CREATE);
+        originalPermissions.add(Permissions.CLUSTER_CREATE);
+        originalPermissions.add(Permissions.CLUSTER_DELETE);
+
+        // Create role w/ permissions.
+        final Role role = roleTestTools.createRole(originalRoleName, originalPermissions);
+
+        // Create user
+        final User user = userTestTools.createUser();
+        user.setRoleId(role.getId());
+        userTestTools.save(user);
+
+        // Post delete page.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/role/delete/" + role.getId())
+                .with(user(adminUserDetails))
+                .with(csrf())
+            )
+            .andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/role"))
+            .andReturn();
+
+        // Get the flash message.
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        assertNotNull("Should have a flash message defined", flashMessage);
+        assertEquals("warning", flashMessage.getType());
+        assertEquals("Role in use! Unable to delete!", flashMessage.getMessage());
+
+        // Lookup role
+        final boolean doesExist = roleRepository.existsById(role.getId());
+        assertTrue("Should have role still", doesExist);
     }
 }
