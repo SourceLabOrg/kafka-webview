@@ -198,8 +198,9 @@ public class ApiControllerTest extends AbstractMvcTest {
 
     /**
      * Test the delete topic end point.
+     * @TODO explicitly disabled until custom user roles. https://github.com/SourceLabOrg/kafka-webview/issues/157
      */
-    @Test
+    //@Test
     @Transactional
     public void test_deleteTopic() throws Exception {
         // Define our new topic name

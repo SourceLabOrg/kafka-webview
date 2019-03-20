@@ -5,7 +5,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.2.0 (UNRELEASED)
 
 #### New Features
-- Ability to remove topics from a cluster.
 - Ability to search topics within a cluster.
 
 ## 2.1.4 (02/19/2019)

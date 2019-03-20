@@ -360,7 +360,7 @@
                                 <th>Topic</th>
                                 <th>Partitions</th>
                                 <th>Status</th>
-                                <th sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">Action</th>
+                                <!--<th sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">Action</th>-->
                             </tr>
                             </thead>
                             <tbody id="topics-tbody">
@@ -452,7 +452,7 @@
                         <span class="badge badge-info">Internal topic</span>
                     {{/if}}
                 </td>
-                <td class="text-right" sec:authorize="hasRole('ROLE_ADMIN')">
+                <td class="text-right" th:if="${false}" sec:authorize="hasRole('ROLE_ADMIN')">
                     <div class="dropdown">
                         <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-gear"></i>
