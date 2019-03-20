@@ -326,6 +326,23 @@ var ApiClient = {
             }
         });
     },
+    removeTopic: function(clusterId, name, callback) {
+        var payload = JSON.stringify({
+            name: name
+        });
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/cluster/' + clusterId + '/delete/topic',
+            data: payload,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
     modifyTopicConfig: function(clusterId, topic, configName, configValue, callback) {
         var payloadJson = {
             topic: topic,
@@ -452,5 +469,30 @@ var DateTools = {
         }
 
         return timezone_standard;
+    }
+};
+
+/**
+ * Common Search Tooling.
+ */
+var SearchTools = {
+    doesMatchText : function(searchStr, content) {
+        // If empty search String, assume match all.
+        if (searchStr === null || searchStr.length === 0) {
+            return true;
+        }
+
+        // If content is null, cannot match.
+        if (content === null) {
+            return false;
+        }
+
+        // Otherwise check to see if it matches
+        if (content.toLowerCase().indexOf(searchStr.toLowerCase()) === -1) {
+            // Doesn't match
+            return false;
+        }
+        // Matches
+        return true;
     }
 };

@@ -64,6 +64,28 @@ public class TopicList {
         return Collections.unmodifiableList(topicNames);
     }
 
+    /**
+     * Given a search value for topic names, return all entries that match search.
+     * @param search search string.
+     * @return filtered TopicList.
+     */
+    public TopicList filterByTopicName(final String search) {
+        // Null means match nothing.
+        if (search == null) {
+            return new TopicList(Collections.emptyList());
+        }
+        final String normalizedSearch = search.toLowerCase();
+
+        final List<TopicListing> topicListings = new ArrayList<>();
+        for (final TopicListing topicListing : getTopics()) {
+            if (topicListing.getName().toLowerCase().contains(normalizedSearch)) {
+                topicListings.add(topicListing);
+            }
+        }
+
+        return new TopicList(topicListings);
+    }
+
     @Override
     public String toString() {
         return "TopicList{"

@@ -291,8 +291,8 @@ Steps for performing a release:
     - `docker build -t kafka-webview .`
     - `docker tag kafka-webview sourcelaborg/kafka-webview:latest`
     - `docker push sourcelaborg/kafka-webview:latest`
-    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.1.VERSIONHERE`
-    - `docker push sourcelaborg/kafka-webview:2.1.VERSIONHERE`
+    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.2.VERSIONHERE`
+    - `docker push sourcelaborg/kafka-webview:2.2.VERSIONHERE`
     - Commit updated docker files.
 7. Create release on Github project.
 
