@@ -19,6 +19,9 @@
                 clusterId: '[[${cluster.id}]]',
                 topic: '[[${topic}]]',
 
+                // Cached topic config for client side filtering
+                cachedTopicConfig: [],
+
                 handleTopicDetails: function(results) {
                     // Clear topic table
                     var table = jQuery('#topic-tbody');
@@ -73,7 +76,17 @@
                         jQuery('#topic-table').toggle(true);
                     }
                 },
+
                 handleConfigResults: function(results) {
+                    TopicInfo.cachedTopicConfig = results;
+                    TopicInfo.displayConfigResults();
+                },
+
+                displayConfigResults: function() {
+                    // Get our search text
+                    var searchStr = jQuery("#configSearch").val();
+                    var matchedEntries = 0;
+
                     // Clear topic table
                     var table = jQuery('#config-tbody');
                     jQuery(table).empty();
@@ -82,7 +95,17 @@
                     var source   = jQuery('#config-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery(results).each(function(index, config) {
+                    jQuery(TopicInfo.cachedTopicConfig).each(function(index, config) {
+                        // Filter
+                        if (
+                            !SearchTools.doesMatchText(searchStr, config.name) &&
+                            !SearchTools.doesMatchText(searchStr, config.value)
+                        ) {
+                            // Skip
+                            return;
+                        }
+                        matchedEntries++;
+
                         var properties = {
                             name: config.name,
                             value: config.value,
@@ -98,8 +121,9 @@
                     // Hide loader
                     jQuery('#config-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#config-no-results').toggle(true);
+                        jQuery('#config-table').toggle(false);
                     } else {
                         jQuery('#config-no-results').toggle(false);
                         jQuery('#config-table').toggle(true);
@@ -201,6 +225,16 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Topic <strong th:text="${topic}"></strong> Configuration on Cluster <strong th:text="${cluster.name}"></strong>
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="configSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="TopicInfo.displayConfigResults();">
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->

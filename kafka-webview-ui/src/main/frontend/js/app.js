@@ -482,6 +482,11 @@ var SearchTools = {
             return true;
         }
 
+        // If content is null, cannot match.
+        if (content === null) {
+            return false;
+        }
+
         // Otherwise check to see if it matches
         if (content.toLowerCase().indexOf(searchStr.toLowerCase()) === -1) {
             // Doesn't match
