@@ -32,6 +32,8 @@ import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -64,17 +66,30 @@ public class RoleTestTools {
      * @param permissions Permissions to add.
      * @return Role instance.
      */
+    public Role createRole(final String name, Permissions[] permissions) {
+        return createRole(name, Arrays.asList(permissions));
+    }
+
+    /**
+     * Create a new role with set of permissions.
+     * @param name Name of the role.
+     * @param permissions Permissions to add.
+     * @return Role instance.
+     */
     public Role createRole(final String name, Collection<Permissions> permissions) {
         final Role role = new Role();
         role.setName(name);
         roleRepository.save(role);
 
+        final Collection<RolePermission> toSave = new ArrayList<>();
+
         permissions.forEach((permission) -> {
             final RolePermission rolePermission = new RolePermission();
             rolePermission.setRoleId(role.getId());
             rolePermission.setPermission(permission.name());
-            rolePermissionRepository.save(rolePermission);
+            toSave.add(rolePermission);
         });
+        rolePermissionRepository.saveAll(toSave);
 
         return role;
     }

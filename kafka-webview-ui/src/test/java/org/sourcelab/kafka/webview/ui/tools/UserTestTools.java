@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.tools;
 
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.UserBuilder;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Role;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
@@ -34,16 +35,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Helpful tools for Users.
  */
 @Component
 public class UserTestTools {
     private final UserRepository userRepository;
+    private final RoleTestTools roleTestTools;
 
     @Autowired
-    public UserTestTools(final UserRepository userRepository) {
+    public UserTestTools(final UserRepository userRepository, final RoleTestTools roleTestTools) {
         this.userRepository = userRepository;
+        this.roleTestTools = roleTestTools;
     }
 
     @Autowired
@@ -54,7 +61,8 @@ public class UserTestTools {
      * @return Persisted admin user.
      */
     public User createAdminUser() {
-        return createNewUser(UserRole.ROLE_ADMIN);
+        // Create a user with all permissions.
+        return createUserWithPermissions(Permissions.values());
     }
 
     /**
@@ -62,11 +70,29 @@ public class UserTestTools {
      * @return Persisted user.
      */
     public User createUser() {
-        return createNewUser(UserRole.ROLE_USER);
+        // Create user with "standard user" permissions.
+        return createUserWithPermissions(
+            Permissions.VIEW_READ,
+            Permissions.CLUSTER_READ,
+            Permissions.TOPIC_READ,
+            Permissions.CONSUMER_READ,
+            Permissions.USER_READ
+        );
     }
 
-    public User createUser(final Role role) {
+    public User createUserWithRole(final Role role) {
         return createNewUser(role.getId());
+    }
+
+    public User createUserWithPermissions(final Permissions ... permissions) {
+        // Create role
+        final Role role = roleTestTools.createRole(
+            "Test Standard User Role " + System.currentTimeMillis(),
+            permissions
+        );
+
+        // Create user
+        return createUserWithRole(role);
     }
 
     public UserDetails getUserAuthenticationDetails(final User user) {
@@ -79,19 +105,6 @@ public class UserTestTools {
      */
     public void save(final User user) {
         userRepository.save(user);
-    }
-
-    private User createNewUser(final UserRole userRole) {
-        final User user = new UserBuilder()
-            .withDisplayName("Test User")
-            .withEmail("test" + System.currentTimeMillis() + "@example.com")
-            .withIsActive(true)
-            .withPassword("RandomPassword")
-            .withRole(userRole)
-            .build();
-
-        save(user);
-        return user;
     }
 
     private User createNewUser(final long roleId) {

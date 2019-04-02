@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.user;
 
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.model.RolePermission;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.springframework.security.core.GrantedAuthority;
@@ -52,8 +54,9 @@ public class CustomUserDetails implements UserDetails {
     /**
      * Constructor when authenticating from local user as defined in database.
      * @param userModel User entity model to authenticate as.
+     * @param permissions Collection of permissions associated with this user.
      */
-    public CustomUserDetails(final User userModel) {
+    public CustomUserDetails(final User userModel, final Collection<Permissions> permissions) {
         // set model
         this.userModel = userModel;
 
@@ -63,10 +66,8 @@ public class CustomUserDetails implements UserDetails {
         // Everyone gets user
         roles.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-        // Add Admin
-        if (UserRole.ROLE_ADMIN.equals(userModel.getRole())) {
-            roles.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        }
+        // Loop over permissions
+        permissions.forEach((permission) -> roles.add(new SimpleGrantedAuthority("ROLE_" + permission.name())));
 
         // Save to immutable collection.
         authorities = Collections.unmodifiableList(roles);

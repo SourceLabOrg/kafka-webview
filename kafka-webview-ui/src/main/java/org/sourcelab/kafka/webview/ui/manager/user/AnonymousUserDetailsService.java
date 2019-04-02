@@ -24,11 +24,15 @@
 
 package org.sourcelab.kafka.webview.ui.manager.user;
 
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Simple implementation that should only be used when real user authentication has been disabled.
@@ -45,7 +49,11 @@ public class AnonymousUserDetailsService implements UserDetailsService {
         anonymousUser.setRole(UserRole.ROLE_ADMIN);
         anonymousUser.setActive(true);
 
-        defaultUserDetails = new CustomUserDetails(anonymousUser);
+        // Anonymous User gets ALL permissions.
+        defaultUserDetails = new CustomUserDetails(
+            anonymousUser,
+            Arrays.asList(Permissions.values())
+        );
     }
 
     @Override

@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.controller;
 
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
@@ -136,5 +137,14 @@ public abstract class BaseController {
             }
         }
         return false;
+    }
+
+    protected void requirePermission(final Permissions ... requiredPermissions) {
+        for (final Permissions requiredPermission : requiredPermissions) {
+            if (!hasRole(requiredPermission.name())) {
+                // Throw security exception?
+                throw new RuntimeException("Unahdnled");
+            }
+        }
     }
 }

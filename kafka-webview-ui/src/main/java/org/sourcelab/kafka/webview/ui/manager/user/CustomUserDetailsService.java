@@ -24,22 +24,35 @@
 
 package org.sourcelab.kafka.webview.ui.manager.user;
 
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.model.RolePermission;
 import org.sourcelab.kafka.webview.ui.model.User;
+import org.sourcelab.kafka.webview.ui.repository.RolePermissionRepository;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+
 /**
  * Custom User Details Service.  Create Custom User Details implementation.
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
-    private final UserRepository userRepository;
 
-    public CustomUserDetailsService(final UserRepository userRepository) {
+    private final UserRepository userRepository;
+    private final RoleManager roleManager;
+
+    /**
+     * Constructor.
+     * @param userRepository user repository instance.
+     * @param roleManager role manager instance.
+     */
+    public CustomUserDetailsService(final UserRepository userRepository, final RoleManager roleManager) {
         this.userRepository = userRepository;
+        this.roleManager = roleManager;
     }
 
     @Override
@@ -48,6 +61,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("User not found.");
         }
-        return new CustomUserDetails(user);
+
+        // Load permissions for this user based on their assigned role.
+        final Collection<Permissions> permissions = roleManager.getPermissionsForRole(user.getRoleId());
+
+        // Create new CustomUserDetails
+        return new CustomUserDetails(user, permissions);
     }
 }

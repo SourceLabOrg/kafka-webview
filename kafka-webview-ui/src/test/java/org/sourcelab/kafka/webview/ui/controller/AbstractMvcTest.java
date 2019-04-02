@@ -26,7 +26,10 @@ package org.sourcelab.kafka.webview.ui.controller;
 
 import org.junit.Before;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
+import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.model.Role;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.tools.RoleTestTools;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
@@ -34,6 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -130,5 +136,49 @@ public abstract class AbstractMvcTest {
             //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    /**
+     * Utility method to test URLs require user authentication to be accessed.
+     * @param url Url to hit
+     * @param isPost If its a POST true, false if GET
+     * @throws Exception on error.
+     */
+    protected void testUrlRequiresPermission(
+        final String url,
+        final boolean isPost,
+        final Permissions ... requiredPermissions
+    ) throws Exception {
+
+        // First verify you can hit the URL with the required permission.
+        // Create a user with these permissions.
+        final User userWithPermission = userTestTools.createUserWithPermissions(requiredPermissions);
+
+        // Create custom user details instance
+        final CustomUserDetails userWithPermissionsDetails = new CustomUserDetails(userWithPermission, Arrays.asList(requiredPermissions));
+
+        final MockHttpServletRequestBuilder action;
+        if (isPost) {
+            action = post(url)
+                .with(csrf());
+        } else {
+            action = get(url);
+        }
+
+        mockMvc
+            .perform(action.with(user(userWithPermissionsDetails)))
+            //.andDo(print())
+            .andExpect(status().isOk());
+
+        // Then verify you cannot hit the URL w/o the required permission.
+        final CustomUserDetails userWithOutPermissionsDetails = new CustomUserDetails(userWithPermission, Collections.emptyList());
+        mockMvc
+            .perform(action.with(user(userWithPermissionsDetails)))
+            //.andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrlPattern("**/securityError"));
+
+
+
     }
 }

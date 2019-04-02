@@ -27,11 +27,13 @@ package org.sourcelab.kafka.webview.ui.controller.view;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,6 +66,9 @@ public class ViewController extends BaseController {
         final Model model,
         @RequestParam(name = "clusterId", required = false) final Long clusterId
     ) {
+        // Require view READ permission.
+        requirePermission(Permissions.VIEW_READ);
+
         // Setup breadcrumbs
         final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
 
@@ -115,6 +120,9 @@ public class ViewController extends BaseController {
         @PathVariable final Long id,
         final RedirectAttributes redirectAttributes,
         final Model model) {
+
+        // Require view READ permission.
+        requirePermission(Permissions.VIEW_READ);
 
         // Retrieve the view
         final Optional<View> viewOptional = viewRepository.findById(id);

@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller.view;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
@@ -68,6 +69,21 @@ public class ViewControllerTest extends AbstractMvcTest {
 
         // View "browse" page.
         testUrlRequiresAuthentication("/view/" + view.getId(), false);
+    }
+
+    /**
+     * Ensure VIEW_READ permission is required
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+//        final View view = viewTestTools.createView("TestView");
+//
+//        // View index page.
+//        testUrlRequiresPermission("/view", false, Permissions.VIEW_READ);
+//
+//        // View "browse" page.
+//        testUrlRequiresPermission("/view/" + view.getId(), false, Permissions.VIEW_READ);
     }
 
     /**

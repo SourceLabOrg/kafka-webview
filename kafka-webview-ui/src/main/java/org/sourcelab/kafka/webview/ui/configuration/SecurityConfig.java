@@ -30,6 +30,7 @@ import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.LdapUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.RoleManager;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -58,6 +59,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private AppProperties appProperties;
+
+    @Autowired
+    private RoleManager roleManager;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -167,7 +171,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // Fall through to use local user management.
         auth
             // Define our custom user details service.
-            .userDetailsService(new CustomUserDetailsService(userRepository))
+            .userDetailsService(new CustomUserDetailsService(userRepository, roleManager))
             .passwordEncoder(getPasswordEncoder());
     }
 
@@ -185,24 +189,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // Users can edit their own profile
             .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
                 .fullyAuthenticated()
+
+            // TODO replace these with proper annotations
             // Define admin only paths
-            .antMatchers(
-                // Configuration
-                "/configuration/**",
-
-                // Create topic
-                "/api/cluster/*/create/**",
-
-                // Modify topic
-                "/api/cluster/*/modify/**",
-
-                // Delete topic
-                "/api/cluster/*/delete/**",
-
-                // Remove consumer group
-                "/api/cluster/*/consumer/remove"
-
-            ).hasRole("ADMIN")
+//            .antMatchers(
+//                // Configuration
+//                "/configuration/**",
+//
+//                // Create topic
+//                "/api/cluster/*/create/**",
+//
+//                // Modify topic
+//                "/api/cluster/*/modify/**",
+//
+//                // Delete topic
+//                "/api/cluster/*/delete/**",
+//
+//                // Remove consumer group
+//                "/api/cluster/*/consumer/remove"
+//
+//            ).hasRole("ADMIN")
 
             // All other requests must be authenticated
             .anyRequest()

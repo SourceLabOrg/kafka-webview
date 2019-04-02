@@ -445,7 +445,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         final Role role = roleTestTools.createRole(roleName, originalPermissions);
 
         // Create a user using this specific role.
-        final User currentUser = userTestTools.createUser(role);
+        final User currentUser = userTestTools.createUserWithRole(role);
 
         // Post update page.
         final MvcResult result = mockMvc
@@ -500,7 +500,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         final Role role = roleTestTools.createRole(roleName, originalPermissions);
 
         // Create a user using this specific role.
-        final User currentUser = userTestTools.createUser(role);
+        final User currentUser = userTestTools.createUserWithRole(role);
 
         // Post update page.
         final MvcResult result = mockMvc
@@ -553,7 +553,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         final Role role = roleTestTools.createRole(roleName, originalPermissions);
 
         // Create a user using this specific role.
-        final User currentUser = userTestTools.createUser(role);
+        final User currentUser = userTestTools.createUserWithRole(role);
 
         // Post update page.
         final MvcResult result = mockMvc

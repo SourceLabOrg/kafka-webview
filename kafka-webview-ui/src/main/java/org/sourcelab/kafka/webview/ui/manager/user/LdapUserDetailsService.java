@@ -121,7 +121,8 @@ public class LdapUserDetailsService implements UserDetailsContextMapper {
         ldapUser.setActive(true);
 
         // Return our user details instance.
-        return new CustomUserDetails(ldapUser);
+        // TODO Refactor!
+        return new CustomUserDetails(ldapUser, Collections.EMPTY_LIST);
     }
 
     /**
