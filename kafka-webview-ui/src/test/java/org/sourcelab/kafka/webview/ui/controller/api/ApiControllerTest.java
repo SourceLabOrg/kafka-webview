@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.controller.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
@@ -36,26 +37,50 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
+import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -75,6 +100,32 @@ public class ApiControllerTest extends AbstractMvcTest {
     @Autowired
     private ClusterTestTools clusterTestTools;
 
+    @Autowired
+    private ViewTestTools viewTestTools;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    /**
+     * Ensure authentication is required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthentication() throws Exception {
+        // Consume end point.
+        testUrlRequiresAuthentication("/api/consumer/view/1", true);
+    }
+
+    /**
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        // View index page.
+        testUrlRequiresPermission("/api/consumer/view/1" , true, Permissions.VIEW_READ);
+    }
+
     /**
      * Test cannot load pages that require an admin role.
      */
@@ -85,6 +136,146 @@ public class ApiControllerTest extends AbstractMvcTest {
         testUrlWithOutAdminRole("/api/cluster/1/modify/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/delete/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/consumer/remove", true);
+    }
+
+    /**
+     * Attempts to consume a view.
+     *
+     * Verifies that HEAD, NEXT, and PREV works as expected.
+     */
+    @Test
+    @Transactional
+    public void test_consumeView() throws Exception {
+        // Create user with VIEW_READ permission
+        final Permissions[] permissions = {
+            Permissions.VIEW_READ
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final String topicName = "MyNewTopic-" + System.currentTimeMillis();
+
+        // Create a topic in cluster with 2 partitions.
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 2, (short) 1);
+
+        // Publish data into both partitions.
+        for (int partitionId = 0; partitionId < 2; partitionId++) {
+            // Generate data to publish into partition
+            // Use a LinkedHashMap to keep ordering.
+            final Map<byte[], byte[]> dataToPublish = new LinkedHashMap<>();
+            for (int entry = 0; entry < 100; entry++) {
+                dataToPublish.put(
+                    ("Key Partition:" + partitionId + " Entry:" + entry).getBytes(Charset.forName("utf-8")),
+                    ("Data Partition:" + partitionId + " Entry:" + entry).getBytes(Charset.forName("utf-8"))
+                );
+            }
+
+            // Produce em.
+            sharedKafkaTestResource
+                .getKafkaTestUtils()
+                .produceRecords(dataToPublish, topicName, partitionId);
+        }
+
+        // Create cluster
+        final Cluster cluster = clusterTestTools.createCluster("MyTestCluster", sharedKafkaTestResource.getKafkaConnectString());
+
+        // Create View
+        final View view = viewTestTools.createViewWithCluster("MyTestView", cluster);
+        view.setTopic(topicName);
+        viewTestTools.save(view);
+
+        final int resultsPerPartition = 10;
+
+        // Construct payload with starting at head.
+        final ConsumeRequest consumeRequest = new ConsumeRequest();
+        consumeRequest.setAction("head");
+        consumeRequest.setPartitions("");
+        consumeRequest.setResultsPerPartition(resultsPerPartition);
+        String payload = objectMapper.writeValueAsString(consumeRequest);
+
+        // Make request to API to consume from head.
+        ResultActions resultActions = mockMvc
+            .perform(post("/api/consumer/view/" + view.getId())
+                .with(withAuthentication(user))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        // Verify we found each key and value for first 10 entries on each partition.
+        for (int partitionId = 0; partitionId < 2; partitionId++) {
+            for (int entry = 0; entry < resultsPerPartition; entry++) {
+                final String expectedEntryHeader = "\"partition\":" + partitionId + ",\"offset\":" + entry + ",";
+                final String expectedEntryKey = "\"key\":\"Key Partition:" + partitionId + " Entry:" + entry + "\"";
+                final String expectedEntryData = "\"value\":\"Data Partition:" + partitionId + " Entry:" + entry;
+
+                resultActions
+                    .andExpect(content().string(containsString(expectedEntryHeader)))
+                    .andExpect(content().string(containsString(expectedEntryKey)))
+                    .andExpect(content().string(containsString(expectedEntryData)));
+            }
+        }
+
+        // Now request "next"
+        consumeRequest.setAction("next");
+        payload = objectMapper.writeValueAsString(consumeRequest);
+
+        resultActions = mockMvc
+            .perform(post("/api/consumer/view/" + view.getId())
+                .with(withAuthentication(user))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isOk());
+
+        // Validate we get the next entries
+
+        // Verify we found each key and value for 2nd 10 entries on each partition.
+        for (int partitionId = 0; partitionId < 2; partitionId++) {
+            for (int entry = resultsPerPartition; entry < (resultsPerPartition * 2); entry++) {
+                final String expectedEntryHeader = "\"partition\":" + partitionId + ",\"offset\":" + entry + ",";
+                final String expectedEntryKey = "\"key\":\"Key Partition:" + partitionId + " Entry:" + entry + "\"";
+                final String expectedEntryData = "\"value\":\"Data Partition:" + partitionId + " Entry:" + entry;
+
+                resultActions
+                    .andExpect(content().string(containsString(expectedEntryHeader)))
+                    .andExpect(content().string(containsString(expectedEntryKey)))
+                    .andExpect(content().string(containsString(expectedEntryData)));
+            }
+        }
+
+        // Now request "prev"
+        consumeRequest.setAction("previous");
+        payload = objectMapper.writeValueAsString(consumeRequest);
+
+        resultActions = mockMvc
+            .perform(post("/api/consumer/view/" + view.getId())
+                .with(withAuthentication(user))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andExpect(status().isOk());
+
+        // Validate we get the previous 10 entries
+
+        // Verify we found each key and value for first 10 entries on each partition.
+        for (int partitionId = 0; partitionId < 2; partitionId++) {
+            for (int entry = 0; entry < resultsPerPartition; entry++) {
+                final String expectedEntryHeader = "\"partition\":" + partitionId + ",\"offset\":" + entry + ",";
+                final String expectedEntryKey = "\"key\":\"Key Partition:" + partitionId + " Entry:" + entry + "\"";
+                final String expectedEntryData = "\"value\":\"Data Partition:" + partitionId + " Entry:" + entry;
+
+                resultActions
+                    .andExpect(content().string(containsString(expectedEntryHeader)))
+                    .andExpect(content().string(containsString(expectedEntryKey)))
+                    .andExpect(content().string(containsString(expectedEntryData)));
+            }
+        }
     }
 
     /**
@@ -643,5 +834,19 @@ public class ApiControllerTest extends AbstractMvcTest {
         }
 
         return consumerId;
+    }
+
+    private RequestPostProcessor withAuthentication(final UserDetails userDetails) {
+        final UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+            userDetails,
+            userDetails.getPassword(),
+            userDetails.getAuthorities()
+        );
+
+        final WebAuthenticationDetails details = mock(WebAuthenticationDetails.class);
+        when(details.getSessionId()).thenReturn("SessionId1");
+        token.setDetails(details);
+
+        return authentication(token);
     }
 }

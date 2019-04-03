@@ -25,7 +25,6 @@
 package org.sourcelab.kafka.webview.ui.controller;
 
 import org.junit.Before;
-import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
@@ -34,19 +33,21 @@ import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.tools.RoleTestTools;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.Assert.assertNotEquals;
+import static org.mockito.AdditionalMatchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -161,9 +162,12 @@ public abstract class AbstractMvcTest {
         final MockHttpServletRequestBuilder action = buildEndpoint(url, isPost);
 
         // First verify you can hit the URL with the required permission.
-        mockMvc
-            .perform(action.with(user(userWithPermissionsDetails)))
-            .andExpect(status().isOk());
+        // Since we may not be passing a valid request, just make sure its not forbidden response code.
+        // Then verify you cannot hit the URL w/o the required permission(s).
+        final MvcResult result = mockMvc
+            .perform(action.with(user(userWithOutPermissionsDetails)))
+            .andReturn();
+        assertNotEquals(HttpStatus.FORBIDDEN, result.getResponse().getStatus());
 
         // Then verify you cannot hit the URL w/o the required permission(s).
         mockMvc

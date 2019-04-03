@@ -55,6 +55,8 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.View;
@@ -120,13 +122,20 @@ public class ApiController extends BaseController {
     }
 
     /**
-     * POST kafka results.
+     * POST consumer read.
      */
     @ResponseBody
     @RequestMapping(path = "/consumer/view/{id}", method = RequestMethod.POST, produces = "application/json")
+    @RequirePermission(Permissions.VIEW_READ)
     public KafkaResults consume(
         @PathVariable final Long id,
-        @RequestBody final ConsumeRequest consumeRequest) {
+        @RequestBody(required = false) final ConsumeRequest consumeRequest
+    ) {
+
+        // Handle null gracefully-ish.
+        if (consumeRequest == null) {
+            throw new ApiException("Consume", "Missing Consumer Request Payload.");
+        }
 
         // Action describes what to consume 'next', 'prev', 'head', 'tail'
         final String action = consumeRequest.getAction();
