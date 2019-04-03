@@ -59,6 +59,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final RoleManager roleManager;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Constructor.
+     * @param userRepository repository instance.
+     * @param appProperties app properties instance.
+     * @param roleManager roleManager instance.
+     */
     @Autowired
     public SecurityConfig(final UserRepository userRepository, final AppProperties appProperties, final RoleManager roleManager) {
         this.userRepository = userRepository;

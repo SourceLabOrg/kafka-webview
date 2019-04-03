@@ -90,20 +90,34 @@ import java.util.Set;
 @Controller
 @RequestMapping("/api")
 public class ApiController extends BaseController {
-    @Autowired
-    private ViewRepository viewRepository;
+    private final ViewRepository viewRepository;
+    private final ClusterRepository clusterRepository;
+    private final FilterRepository filterRepository;
+    private final WebKafkaConsumerFactory webKafkaConsumerFactory;
+    private final KafkaOperationsFactory kafkaOperationsFactory;
 
+    /**
+     * Constructor.
+     * @param viewRepository repository instance.
+     * @param clusterRepository repository instance.
+     * @param filterRepository repository instance.
+     * @param webKafkaConsumerFactory factory instance.
+     * @param kafkaOperationsFactory factory instance.
+     */
     @Autowired
-    private ClusterRepository clusterRepository;
-
-    @Autowired
-    private FilterRepository filterRepository;
-
-    @Autowired
-    private WebKafkaConsumerFactory webKafkaConsumerFactory;
-
-    @Autowired
-    private KafkaOperationsFactory kafkaOperationsFactory;
+    public ApiController(
+        final ViewRepository viewRepository,
+        final ClusterRepository clusterRepository,
+        final FilterRepository filterRepository,
+        final WebKafkaConsumerFactory webKafkaConsumerFactory,
+        final KafkaOperationsFactory kafkaOperationsFactory
+    ) {
+        this.viewRepository = viewRepository;
+        this.clusterRepository = clusterRepository;
+        this.filterRepository = filterRepository;
+        this.webKafkaConsumerFactory = webKafkaConsumerFactory;
+        this.kafkaOperationsFactory = kafkaOperationsFactory;
+    }
 
     /**
      * POST kafka results.
