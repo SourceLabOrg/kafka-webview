@@ -25,11 +25,11 @@
 package org.sourcelab.kafka.webview.ui.controller;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
-import org.sourcelab.kafka.webview.ui.model.Role;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.tools.RoleTestTools;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +46,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,10 +69,14 @@ public abstract class AbstractMvcTest {
     /**
      * Authentication details.
      */
+    @Deprecated
     protected User adminUser;
+    @Deprecated
     protected UserDetails adminUserDetails;
 
+    @Deprecated
     protected User nonAdminUser;
+    @Deprecated
     protected UserDetails nonAdminUserDetails;
 
     /**
@@ -123,17 +129,10 @@ public abstract class AbstractMvcTest {
      * @throws Exception on error.
      */
     protected void testUrlRequiresAuthentication(final String url, final boolean isPost) throws Exception {
-        final MockHttpServletRequestBuilder action;
-        if (isPost) {
-            action = post(url)
-                .with(csrf());
-        } else {
-            action = get(url);
-        }
+        final MockHttpServletRequestBuilder action = buildEndpoint(url, isPost);
 
         mockMvc
             .perform(action)
-            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrlPattern("**/login"));
     }
@@ -150,13 +149,48 @@ public abstract class AbstractMvcTest {
         final Permissions ... requiredPermissions
     ) throws Exception {
 
-        // First verify you can hit the URL with the required permission.
-        // Create a user with these permissions.
+        // Create a user with the required permissions.
         final User userWithPermission = userTestTools.createUserWithPermissions(requiredPermissions);
-
-        // Create custom user details instance
         final CustomUserDetails userWithPermissionsDetails = new CustomUserDetails(userWithPermission, Arrays.asList(requiredPermissions));
 
+        // Create a user WITHOUT the required permissions.
+        final User userWithOutPermission = userTestTools.createUserWithPermissions();
+        final CustomUserDetails userWithOutPermissionsDetails = new CustomUserDetails(userWithOutPermission, Collections.emptyList());
+
+        // Define end point we want to hit
+        final MockHttpServletRequestBuilder action = buildEndpoint(url, isPost);
+
+        // First verify you can hit the URL with the required permission.
+        mockMvc
+            .perform(action.with(user(userWithPermissionsDetails)))
+            .andExpect(status().isOk());
+
+        // Then verify you cannot hit the URL w/o the required permission(s).
+        mockMvc
+            .perform(action.with(user(userWithOutPermissionsDetails)))
+            .andExpect(status().isForbidden());
+
+        // If we have multiple required permissions, ensure they all have to be AND'd together.
+        if (requiredPermissions.length > 1) {
+            for (final Permissions requiredPermission : requiredPermissions) {
+                // Create a user using only ONE of the required permissions
+                final User userWithSinglePermission = userTestTools.createUserWithPermissions(requiredPermission);
+                final CustomUserDetails userDetailsWithSinglePermission = new CustomUserDetails(
+                    userWithSinglePermission,
+                    Collections.singleton(requiredPermission)
+                );
+
+                // Attempt to hit the end point, verify it is restricted.
+                mockMvc
+                    .perform(action.with(user(userDetailsWithSinglePermission)))
+                    .andExpect(status().isForbidden());
+
+            }
+        }
+    }
+
+    private MockHttpServletRequestBuilder buildEndpoint(final String url, final boolean isPost) {
+        // Define end point we want to hit
         final MockHttpServletRequestBuilder action;
         if (isPost) {
             action = post(url)
@@ -165,20 +199,6 @@ public abstract class AbstractMvcTest {
             action = get(url);
         }
 
-        mockMvc
-            .perform(action.with(user(userWithPermissionsDetails)))
-            //.andDo(print())
-            .andExpect(status().isOk());
-
-        // Then verify you cannot hit the URL w/o the required permission.
-        final CustomUserDetails userWithOutPermissionsDetails = new CustomUserDetails(userWithPermission, Collections.emptyList());
-        mockMvc
-            .perform(action.with(user(userWithPermissionsDetails)))
-            //.andDo(print())
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrlPattern("**/securityError"));
-
-
-
+        return action;
     }
 }

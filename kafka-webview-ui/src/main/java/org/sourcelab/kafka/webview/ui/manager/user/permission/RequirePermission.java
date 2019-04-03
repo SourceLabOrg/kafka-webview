@@ -24,56 +24,25 @@
 
 package org.sourcelab.kafka.webview.ui.manager.user.permission;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+
 /**
- * Represents permissions in the application based on functional area.
+ * Meta annotation for marking a class or method as requiring a specific Permission as defined in the
+ * {@link Permissions} enum.
+ *
+ * Works identically to the @Secured annotation, but allows for type safe enums to be used instead of strings.
  */
-public enum Permissions {
-    // Cluster
-    CLUSTER_READ("Read"),
-    CLUSTER_CREATE("Create"),
-    CLUSTER_MODIFY("Update"),
-    CLUSTER_DELETE("Delete"),
-
-    // View
-    VIEW_READ("Read"),
-    VIEW_CREATE("Create"),
-    VIEW_MODIFY("Update"),
-    VIEW_DELETE("Delete"),
-
-    // Topic
-    TOPIC_READ("Read"), // TODO remove this?
-    TOPIC_CREATE("Create"),
-    TOPIC_MODIFY("Update"),
-    TOPIC_DELETE("Delete"),
-
-    // Consumers
-    CONSUMER_READ("Read"),
-    CONSUMER_MODIFY("Update"),
-    CONSUMER_DELETE("Delete"),
-
-    // Users
-    USER_READ("Read"),
-    USER_CREATE("Create"),
-    USER_MODIFY("Update"),
-    USER_DELETE("Delete"),
-
-    // Roles
-    ROLE_READ("Read"),
-    ROLE_CREATE("Create"),
-    ROLE_MODIFY("Update"),
-    ROLE_DELETE("Delete");
-
-    private final String displayName;
-
-    Permissions(final String displayName) {
-        this.displayName = displayName;
-    }
-
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RequirePermission {
     /**
-     * Return the user friendly display name for the permission.
-     * @return user friendly display name for the permission.
+     * Returns the list of security configuration attributes (e.g. Permissions.VIEW_READ, Permissions.VIEW_CREATE).
+     *
+     * @return Permissions[] The secure method attributes
      */
-    public String getDisplayName() {
-        return displayName;
-    }
+    Permissions[] value();
 }

@@ -54,16 +54,17 @@ import java.util.ArrayList;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private AppProperties appProperties;
-
-    @Autowired
-    private RoleManager roleManager;
-
+    private final UserRepository userRepository;
+    private final AppProperties appProperties;
+    private final RoleManager roleManager;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    @Autowired
+    public SecurityConfig(final UserRepository userRepository, final AppProperties appProperties, final RoleManager roleManager) {
+        this.userRepository = userRepository;
+        this.appProperties = appProperties;
+        this.roleManager = roleManager;
+    }
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
@@ -186,11 +187,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // Paths to static resources are available to anyone
             .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
                 .permitAll()
-            // Users can edit their own profile
-            .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
-                .fullyAuthenticated()
 
-            // TODO replace these with proper annotations
+            // TODO These are to be replaced with proper annotations on controller methods.
+            // Users can edit their own profile
+//            .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
+//                .fullyAuthenticated()
+
             // Define admin only paths
 //            .antMatchers(
 //                // Configuration

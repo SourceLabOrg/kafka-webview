@@ -66,7 +66,8 @@ public class UserTestTools {
     }
 
     /**
-     * Creates a new non-admin user.
+     * Creates a new non-admin user with standard permissions.
+     * For backwards compatibility.
      * @return Persisted user.
      */
     public User createUser() {
@@ -80,10 +81,20 @@ public class UserTestTools {
         );
     }
 
+    /**
+     * Create a new user with the given role.
+     * @param role role to apply to user.
+     * @return user instance.
+     */
     public User createUserWithRole(final Role role) {
         return createNewUser(role.getId());
     }
 
+    /**
+     * Create a new user with the given permissions.
+     * @param permissions permissions to apply to user.
+     * @return user instance.
+     */
     public User createUserWithPermissions(final Permissions ... permissions) {
         // Create role
         final Role role = roleTestTools.createRole(
@@ -95,6 +106,31 @@ public class UserTestTools {
         return createUserWithRole(role);
     }
 
+    /**
+     * Create a new user with the given role. Return SpringSecurity user authentication details for the user.
+     * @param role role to create user with.
+     * @return SpringSecurity user authentication details instance.
+     */
+    public UserDetails createUserDetailsWithRole(final Role role) {
+        return getUserAuthenticationDetails(createUserWithRole(role));
+    }
+
+    /**
+     * Create a new user with the given permission(s). Return SpringSecurity user authentication details for the user.
+     * @param permissions permissions to give to user.
+     * @return SpringSecurity user authentication details instance.
+     */
+    public UserDetails createUserDetailsWithPermissions(final Permissions ... permissions) {
+        return getUserAuthenticationDetails(
+            createUserWithPermissions(permissions)
+        );
+    }
+
+    /**
+     * Return SpringSecurity user authentication details for the user.
+     * @param user use to generate user authentication details for.
+     * @return SpringSecurity user authentication details instance.
+     */
     public UserDetails getUserAuthenticationDetails(final User user) {
         return customUserDetailsService.loadUserByUsername(user.getEmail());
     }

@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
@@ -139,12 +140,21 @@ public abstract class BaseController {
         return false;
     }
 
-    protected void requirePermission(final Permissions ... requiredPermissions) {
-        for (final Permissions requiredPermission : requiredPermissions) {
-            if (!hasRole(requiredPermission.name())) {
-                // Throw security exception?
-                throw new RuntimeException("Unahdnled");
+    /**
+     * Determine if the current user has the permission associated with them.
+     * @param permission Permission to check for.
+     * @return True if so, false if not.
+     */
+    protected boolean hasPermission(final Permissions permission) {
+        final String realRole = "PERM_" + permission.name();
+        final Collection<? extends GrantedAuthority> authorities = getLoggedInUser().getAuthorities();
+
+        // Find
+        for (final GrantedAuthority authority : authorities) {
+            if (authority.getAuthority().equals(realRole)) {
+                return true;
             }
         }
+        return false;
     }
 }

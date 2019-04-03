@@ -40,11 +40,19 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class HomeController extends BaseController {
 
-    @Autowired
-    private ClusterRepository clusterRepository;
+    private final ClusterRepository clusterRepository;
+    private final ViewRepository viewRepository;
 
+    /**
+     * Constructor.
+     * @param clusterRepository cluster repository instance.
+     * @param viewRepository view repository instance.
+     */
     @Autowired
-    private ViewRepository viewRepository;
+    public HomeController(final ClusterRepository clusterRepository, final ViewRepository viewRepository) {
+        this.clusterRepository = clusterRepository;
+        this.viewRepository = viewRepository;
+    }
 
     /**
      * Once things are setup, we'll redirect the home page to view/index.

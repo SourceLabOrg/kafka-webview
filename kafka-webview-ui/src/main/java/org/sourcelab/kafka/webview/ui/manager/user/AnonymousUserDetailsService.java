@@ -44,9 +44,9 @@ public class AnonymousUserDetailsService implements UserDetailsService {
         // Setup a mock user.
         final User anonymousUser = new User();
         anonymousUser.setId(0);
+        anonymousUser.setRoleId(0);
         anonymousUser.setDisplayName("Anonymous User");
         anonymousUser.setEmail("Anonymous User");
-        anonymousUser.setRole(UserRole.ROLE_ADMIN);
         anonymousUser.setActive(true);
 
         // Anonymous User gets ALL permissions.

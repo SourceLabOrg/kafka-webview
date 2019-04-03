@@ -63,11 +63,11 @@ public class CustomUserDetails implements UserDetails {
         // Generate authorities/roles
         final List<GrantedAuthority> roles = new ArrayList<>();
 
-        // Everyone gets user
+        // Everyone gets user role
         roles.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-        // Loop over permissions
-        permissions.forEach((permission) -> roles.add(new SimpleGrantedAuthority("ROLE_" + permission.name())));
+        // Loop over permissions and add them as granted authorities for the user.
+        permissions.forEach((permission) -> roles.add(new SimpleGrantedAuthority("PERM_" + permission.name())));
 
         // Save to immutable collection.
         authorities = Collections.unmodifiableList(roles);

@@ -27,6 +27,8 @@ package org.sourcelab.kafka.webview.ui.controller.cluster;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
@@ -49,16 +51,27 @@ import java.util.Optional;
 @RequestMapping("/cluster")
 public class ClusterController extends BaseController {
 
-    @Autowired
-    private ClusterRepository clusterRepository;
+    private final ClusterRepository clusterRepository;
+    private final ViewRepository viewRepository;
 
+    /**
+     * Constructor.
+     * @param clusterRepository cluster repository instance.
+     * @param viewRepository view repository instance.
+     */
     @Autowired
-    private ViewRepository viewRepository;
+    public ClusterController(final ClusterRepository clusterRepository, final ViewRepository viewRepository) {
+        this.clusterRepository = clusterRepository;
+        this.viewRepository = viewRepository;
+    }
 
     /**
      * GET Displays cluster list.
+     *
+     * Requires CLUSTER_READ permission.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CLUSTER_READ)
     public String clusterIndex(final Model model, final RedirectAttributes redirectAttributes) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model);
@@ -82,9 +95,13 @@ public class ClusterController extends BaseController {
     }
 
     /**
-     * GET Displays edit cluster form.
+     * GET Displays READ cluster.
+     *
+     * Minimum requirement to load page is CLUSTER_READ.
+     * Optional permissions are: TOPIC_READ, TOPIC_DELETE, CONSUMER_READ, CONSUMER_DELETE
      */
     @RequestMapping(path = "/{clusterId}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CLUSTER_READ)
     public String readCluster(
         @PathVariable final Long clusterId,
         final Model model,
@@ -100,6 +117,15 @@ public class ClusterController extends BaseController {
         // Set view attribute
         model.addAttribute("cluster", cluster);
 
+        // Topic permissions.
+        model.addAttribute("canReadTopics", hasPermission(Permissions.TOPIC_READ));
+        model.addAttribute("canCreateTopics", hasPermission(Permissions.TOPIC_CREATE));
+        model.addAttribute("canRemoveTopics", hasPermission(Permissions.TOPIC_DELETE));
+
+        // Consumer permissions.
+        model.addAttribute("canReadConsumers", hasPermission(Permissions.CONSUMER_READ));
+        model.addAttribute("canRemoveConsumers", hasPermission(Permissions.CONSUMER_DELETE));
+
         // Setup breadcrumbs
         setupBreadCrumbs(model)
             .addCrumb(cluster.getName(), null);
@@ -112,6 +138,7 @@ public class ClusterController extends BaseController {
      * GET Displays info about a specific broker in a cluster.
      */
     @RequestMapping(path = "/{clusterId}/broker/{brokerId}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CLUSTER_READ)
     public String readBroker(
         @PathVariable final Long clusterId,
         @PathVariable final Integer brokerId,
@@ -140,6 +167,7 @@ public class ClusterController extends BaseController {
      * GET Displays info about a specific topic in a cluster.
      */
     @RequestMapping(path = "/{clusterId}/topic/{topic:.+}", method = RequestMethod.GET)
+    @RequirePermission({Permissions.CLUSTER_READ, Permissions.TOPIC_READ})
     public String readTopic(
         @PathVariable final Long clusterId,
         @PathVariable final String topic,
@@ -169,6 +197,7 @@ public class ClusterController extends BaseController {
      * GET Displays info about a specific consumers group in a cluster.
      */
     @RequestMapping(path = "/{clusterId}/consumer/{consumerId:.+}", method = RequestMethod.GET)
+    @RequirePermission({Permissions.CLUSTER_READ, Permissions.CONSUMER_READ})
     public String readConsumer(
         @PathVariable final Long clusterId,
         @PathVariable final String consumerId,
