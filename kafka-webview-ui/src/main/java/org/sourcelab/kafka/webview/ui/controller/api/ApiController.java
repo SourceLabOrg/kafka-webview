@@ -132,9 +132,9 @@ public class ApiController extends BaseController {
         @RequestBody(required = false) final ConsumeRequest consumeRequest
     ) {
 
-        // Handle null gracefully-ish.
+        // Handle null request body gracefully-ish.
         if (consumeRequest == null) {
-            throw new ApiException("Consume", "Missing Consumer Request Payload.");
+            throw new ApiException("Consume", "Missing consumer request payload.");
         }
 
         // Action describes what to consume 'next', 'prev', 'head', 'tail'
@@ -173,15 +173,17 @@ public class ApiController extends BaseController {
      * POST manually set a consumer's offsets.
      */
     @ResponseBody
-    @RequestMapping(
-        path = "/consumer/view/{id}/offsets",
-        method = RequestMethod.POST,
-        produces = "application/json"
-    )
+    @RequestMapping(path = "/consumer/view/{id}/offsets", method = RequestMethod.POST, produces = "application/json")
+    @RequirePermission(Permissions.VIEW_READ)
     public ConsumerState setConsumerOffsets(
         @PathVariable final Long id,
-        @RequestBody final Map<Integer, Long> partitionOffsetMap
+        @RequestBody(required = false) final Map<Integer, Long> partitionOffsetMap
     ) {
+        // Handle null request body gracefully-ish.
+        if (partitionOffsetMap == null) {
+            throw new ApiException("Offsets", "Missing partition offset map request payload.");
+        }
+
         // Retrieve View
         final View view = retrieveViewById(id);
 
@@ -197,11 +199,8 @@ public class ApiController extends BaseController {
      * POST manually set a consumer's offsets using a timestamp.
      */
     @ResponseBody
-    @RequestMapping(
-        path = "/consumer/view/{id}/timestamp/{timestamp}",
-        method = RequestMethod.POST,
-        produces = "application/json"
-    )
+    @RequestMapping(path = "/consumer/view/{id}/timestamp/{timestamp}", method = RequestMethod.POST, produces = "application/json")
+    @RequirePermission(Permissions.VIEW_READ)
     public ConsumerState setConsumerOffsetsByTimestamp(
         @PathVariable final Long id,
         @PathVariable final Long timestamp
@@ -222,6 +221,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/view/{id}/partitions", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission(Permissions.VIEW_READ)
     public Collection<Integer> getPartitionsForView(@PathVariable final Long id) {
         // Retrieve View
         final View view = retrieveViewById(id);
@@ -250,6 +250,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.TOPIC_READ, Permissions.CLUSTER_READ})
     public List<TopicListing> getTopics(@PathVariable final Long id, @RequestParam(required = false) final String search) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
@@ -277,6 +278,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/details", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.TOPIC_READ, Permissions.CLUSTER_READ})
     public TopicDetails getTopicDetails(@PathVariable final Long id, @PathVariable final String topic) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
@@ -294,6 +296,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topic/{topic}/config", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.TOPIC_READ, Permissions.CLUSTER_READ})
     public List<ConfigItem> getTopicConfig(@PathVariable final Long id, @PathVariable final String topic) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
@@ -311,6 +314,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/broker/{brokerId}/config", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission(Permissions.CLUSTER_READ)
     public List<ConfigItem> getBrokerConfig(@PathVariable final Long id, @PathVariable final String brokerId) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
@@ -328,6 +332,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topics/details", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.TOPIC_READ, Permissions.CLUSTER_READ})
     public Collection<TopicDetails> getAllTopicsDetails(@PathVariable final Long id) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
@@ -353,11 +358,20 @@ public class ApiController extends BaseController {
 
     /**
      * POST Create new topic on cluster.
-     * This should require ADMIN role.
+     * This should require TOPIC_CREATE permission.
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/create/topic", method = RequestMethod.POST, produces = "application/json")
-    public ResultResponse createTopic(@PathVariable final Long id, @RequestBody final CreateTopicRequest createTopicRequest) {
+    @RequirePermission(Permissions.TOPIC_CREATE)
+    public ResultResponse createTopic(
+        @PathVariable final Long id,
+        @RequestBody(required = false) final CreateTopicRequest createTopicRequest
+    ) {
+        // Handle null request body gracefully-ish.
+        if (createTopicRequest == null) {
+            throw new ApiException("CreateTopic", "Missing create topic request payload.");
+        }
+
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
@@ -391,14 +405,20 @@ public class ApiController extends BaseController {
 
     /**
      * POST Modify a topic's configuration on cluster.
-     * This should require ADMIN role.
+     * This should require TOPIC_UPDATE permission.
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/modify/topic", method = RequestMethod.POST, produces = "application/json")
+    @RequirePermission(Permissions.TOPIC_MODIFY)
     public List<ConfigItem> modifyTopicConfig(
         @PathVariable final Long id,
-        @RequestBody final ModifyTopicConfigRequest modifyTopicConfigRequest
+        @RequestBody(required = false) final ModifyTopicConfigRequest modifyTopicConfigRequest
     ) {
+        // Handle null request body gracefully-ish.
+        if (modifyTopicConfigRequest == null) {
+            throw new ApiException("ModifyTopic", "Missing modify topic request payload.");
+        }
+
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
@@ -422,13 +442,20 @@ public class ApiController extends BaseController {
 
     /**
      * POST Delete existing topic on cluster.
-     * This should require ADMIN role.
-     *
-     * TODO explicitly disabled until custom user roles. https://github.com/SourceLabOrg/kafka-webview/issues/157
+     * This should require TOPIC_DELETE permission.
      */
-//    @ResponseBody
-//    @RequestMapping(path = "/cluster/{id}/delete/topic", method = RequestMethod.POST, produces = "application/json")
-    public ResultResponse deleteTopic(@PathVariable final Long id, @RequestBody final DeleteTopicRequest deleteTopicRequest) {
+    @ResponseBody
+    @RequestMapping(path = "/cluster/{id}/delete/topic", method = RequestMethod.POST, produces = "application/json")
+    @RequirePermission(Permissions.TOPIC_DELETE)
+    public ResultResponse deleteTopic(
+        @PathVariable final Long id,
+        @RequestBody(required = false) final DeleteTopicRequest deleteTopicRequest
+    ) {
+        // Handle null request body gracefully-ish.
+        if (deleteTopicRequest == null) {
+            throw new ApiException("DeleteTopic", "Missing delete topic request payload.");
+        }
+
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
@@ -453,6 +480,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/nodes", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission(Permissions.CLUSTER_READ)
     public List<NodeDetails> getClusterNodes(@PathVariable final Long id) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
@@ -470,6 +498,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/filter/{id}/options", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission(Permissions.VIEW_READ)
     public String[] getFilterOptions(@PathVariable final Long id) {
         // Retrieve Filter
         final Filter filter = retrieveFilterById(id);
@@ -483,6 +512,7 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/consumers", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.CONSUMER_READ, Permissions.CLUSTER_READ})
     public List<ConsumerGroupIdentifier> listConsumers(@PathVariable final Long id) {
 
         // Retrieve cluster
@@ -499,11 +529,8 @@ public class ApiController extends BaseController {
      * GET list all consumer groups for a specific cluster with details about each one.
      */
     @ResponseBody
-    @RequestMapping(
-        path = "/cluster/{id}/consumersAndDetails",
-        method = RequestMethod.GET,
-        produces = "application/json"
-    )
+    @RequestMapping(path = "/cluster/{id}/consumersAndDetails", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.CONSUMER_READ, Permissions.CLUSTER_READ})
     public List<ConsumerGroupDetails> listConsumersAndDetails(@PathVariable final Long id) {
 
         // Retrieve cluster
@@ -532,11 +559,8 @@ public class ApiController extends BaseController {
      * GET Retrieve details about a single specific consumer.
      */
     @ResponseBody
-    @RequestMapping(
-        path = "/cluster/{id}/consumer/{consumerGroupId}/details",
-        method = RequestMethod.GET,
-        produces = "application/json"
-    )
+    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/details", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.CONSUMER_READ, Permissions.CLUSTER_READ})
     public ConsumerGroupDetails getConsumerDetails(
         @PathVariable final Long id,
         @PathVariable final String consumerGroupId
@@ -564,11 +588,8 @@ public class ApiController extends BaseController {
      * GET Retrieve offsets for a specific consumer group id.
      */
     @ResponseBody
-    @RequestMapping(
-        path = "/cluster/{id}/consumer/{consumerGroupId}/offsets",
-        method = RequestMethod.GET,
-        produces = "application/json"
-    )
+    @RequestMapping(path = "/cluster/{id}/consumer/{consumerGroupId}/offsets", method = RequestMethod.GET, produces = "application/json")
+    @RequirePermission({Permissions.CONSUMER_READ, Permissions.CLUSTER_READ})
     public ConsumerGroupOffsets getConsumerOffsets(
         @PathVariable final Long id,
         @PathVariable final String consumerGroupId
@@ -589,8 +610,9 @@ public class ApiController extends BaseController {
     @ResponseBody
     @RequestMapping(
         path = "/cluster/{id}/consumer/{consumerGroupId}/offsetsAndTailPositions",
-        method = RequestMethod.GET, produces = "application/json"
-    )
+        method = RequestMethod.GET,
+        produces = "application/json")
+    @RequirePermission({Permissions.CONSUMER_READ, Permissions.CLUSTER_READ})
     public ConsumerGroupOffsetsWithTailPositions getConsumerOffsetsWithTailPositions(
         @PathVariable final Long id,
         @PathVariable final String consumerGroupId
@@ -611,9 +633,15 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/consumer/remove", method = RequestMethod.POST, produces = "application/json")
+    @RequirePermission(Permissions.CONSUMER_DELETE)
     public boolean removeConsumer(
         @PathVariable final Long id,
-        @RequestBody final ConsumerRemoveRequest consumerRemoveRequest) {
+        @RequestBody(required = false) final ConsumerRemoveRequest consumerRemoveRequest
+    ) {
+        // Handle null request body gracefully-ish.
+        if (consumerRemoveRequest == null) {
+            throw new ApiException("DeleteTopic", "Missing consumer remove request payload.");
+        }
 
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(consumerRemoveRequest.getClusterId());
