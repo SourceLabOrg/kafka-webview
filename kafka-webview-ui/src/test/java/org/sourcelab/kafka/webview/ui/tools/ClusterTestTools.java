@@ -67,6 +67,7 @@ public class ClusterTestTools {
         cluster.setName(name);
         cluster.setBrokerHosts(brokerHosts);
         cluster.setSslEnabled(false);
+        cluster.setSaslEnabled(false);
         cluster.setValid(true);
         save(cluster);
 

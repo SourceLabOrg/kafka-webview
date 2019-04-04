@@ -63,7 +63,7 @@
                     </div>
                     <form
                         enctype="multipart/form-data" method="post" class="form-horizontal"
-                        th:action="@{/configuration/cluster/update}" th:object="${clusterForm}">
+                        th:action="${clusterForm.exists()} ? @{/configuration/cluster/update} : @{/configuration/cluster/create}" th:object="${clusterForm}">
                         <div class="card-body">
                             <!-- Name -->
                             <div class="form-group row">

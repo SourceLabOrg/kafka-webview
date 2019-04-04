@@ -37,9 +37,12 @@ import org.sourcelab.kafka.webview.ui.manager.sasl.SaslProperties;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -49,6 +52,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Optional;
@@ -61,25 +65,40 @@ import java.util.Optional;
 public class ClusterConfigController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(ClusterConfigController.class);
 
-    @Autowired
-    private ClusterRepository clusterRepository;
+    private final ClusterRepository clusterRepository;
+    private final UploadManager uploadManager;
+    private final SecretManager secretManager;
+    private final KafkaOperationsFactory kafkaOperationsFactory;
+    private final SaslUtility saslUtility;
 
+    /**
+     * Constructor.
+     * @param clusterRepository repository instance.
+     * @param uploadManager upload manager.
+     * @param secretManager secrets manager.
+     * @param kafkaOperationsFactory Operations Factory.
+     * @param saslUtility saslUtility.
+     */
     @Autowired
-    private UploadManager uploadManager;
-
-    @Autowired
-    private SecretManager secretManager;
-
-    @Autowired
-    private KafkaOperationsFactory kafkaOperationsFactory;
-
-    @Autowired
-    private SaslUtility saslUtility;
+    public ClusterConfigController(
+        final ClusterRepository clusterRepository,
+        final UploadManager uploadManager,
+        final SecretManager secretManager,
+        final KafkaOperationsFactory kafkaOperationsFactory,
+        final SaslUtility saslUtility
+    ) {
+        this.clusterRepository = clusterRepository;
+        this.uploadManager = uploadManager;
+        this.secretManager = secretManager;
+        this.kafkaOperationsFactory = kafkaOperationsFactory;
+        this.saslUtility = saslUtility;
+    }
 
     /**
      * GET Displays main configuration index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CLUSTER_READ)
     public String index(final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
@@ -95,6 +114,7 @@ public class ClusterConfigController extends BaseController {
      * GET Displays create cluster form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CLUSTER_CREATE)
     public String createClusterForm(final ClusterForm clusterForm, final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", "/configuration/cluster/create");
@@ -106,6 +126,7 @@ public class ClusterConfigController extends BaseController {
      * GET Displays edit cluster form.
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CLUSTER_MODIFY)
     public String editClusterForm(
         @PathVariable final Long id,
         final ClusterForm clusterForm,
@@ -143,7 +164,10 @@ public class ClusterConfigController extends BaseController {
         clusterForm.setSasl(cluster.isSaslEnabled());
 
         clusterForm.setSaslMechanism(cluster.getSaslMechanism());
-        if (!cluster.getSaslMechanism().equals("PLAIN") && !cluster.getSaslMechanism().equals("GSSAPI")) {
+        if (cluster.getSaslMechanism() == null || cluster.getSaslMechanism().trim().isEmpty()) {
+            // Default form to PLAIN if nothing set.
+            clusterForm.setSaslMechanism("PLAIN");
+        } else if (!cluster.getSaslMechanism().equals("PLAIN") && !cluster.getSaslMechanism().equals("GSSAPI")) {
             clusterForm.setSaslMechanism("custom");
         }
         clusterForm.setSaslCustomMechanism(cluster.getSaslMechanism());
@@ -156,14 +180,62 @@ public class ClusterConfigController extends BaseController {
     }
 
     /**
-     * Handles both Update and Creating clusters.
+     * Handles Creating new clusters.
+     */
+    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequirePermission(Permissions.CLUSTER_CREATE)
+    public String clusterCreate(
+        @Valid final ClusterForm clusterForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes,
+        HttpServletResponse response) throws IOException {
+
+        final boolean updateExisting = clusterForm.exists();
+        if (updateExisting) {
+            // This means they hit this end point with a cluster Id, which would be interpreted as an
+            // update existing cluster.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+        return handleUpdateCluster(clusterForm, bindingResult, redirectAttributes);
+    }
+
+    /**
+     * Handles Updating existing clusters.
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
+    @RequirePermission(Permissions.CLUSTER_MODIFY)
     public String clusterUpdate(
         @Valid final ClusterForm clusterForm,
         final BindingResult bindingResult,
-        final RedirectAttributes redirectAttributes) {
+        final RedirectAttributes redirectAttributes,
+        HttpServletResponse response) throws IOException {
 
+        final boolean updateExisting = clusterForm.exists();
+        if (!updateExisting) {
+            // This means they hit this end point without a cluster Id, which would be interpreted as a
+            // create new cluster.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+
+        return handleUpdateCluster(clusterForm, bindingResult, redirectAttributes);
+    }
+
+    /**
+     * Internal method to handle Cluster create/update requests.
+     * Any permission validation should be done prior to calling this method.
+     *
+     * @param clusterForm The cluster form submitted.
+     * @param bindingResult Errors bound to result.
+     * @param redirectAttributes Redirect Attributes.
+     * @return How the controller should respond.
+     */
+    private String handleUpdateCluster(
+        final ClusterForm clusterForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes
+    ) {
         final boolean updateExisting = clusterForm.exists();
 
         // Ensure that cluster name is not already used.
@@ -366,6 +438,7 @@ public class ClusterConfigController extends BaseController {
      * POST deletes the selected cluster.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
+    @RequirePermission(Permissions.CLUSTER_DELETE)
     public String deleteCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
@@ -396,6 +469,7 @@ public class ClusterConfigController extends BaseController {
      * GET for testing if a cluster is configured correctly.
      */
     @RequestMapping(path = "/test/{id}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CLUSTER_READ)
     public String testCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
