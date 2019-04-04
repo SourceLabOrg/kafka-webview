@@ -71,6 +71,15 @@ public class RoleManager {
         )));
 
         permissionGroups.add(new PermissionGroup(
+            "Filter",
+            "Management of Filter configuration within Kafka WebView.",
+            Arrays.asList(
+                Permissions.FILTER_CREATE,
+                Permissions.FILTER_MODIFY,
+                Permissions.FILTER_DELETE
+            )));
+
+        permissionGroups.add(new PermissionGroup(
             "User",
             "Management of User configuration within Kafka WebView.",
             Arrays.asList(

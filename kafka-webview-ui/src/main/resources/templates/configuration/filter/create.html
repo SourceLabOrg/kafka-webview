@@ -19,7 +19,7 @@
                         <span th:text="${filterForm.exists()} ? ${filterForm.name} : 'New Filter'"></span>
                     </div>
                     <form
-                        th:action="@{/configuration/filter/update}"
+                        th:action="${filterForm.exists()} ? @{/configuration/filter/update} : @{/configuration/filter/create}"
                         th:object="${filterForm}"
                         id="filter-form" method="post" class="form-horizontal" enctype="multipart/form-data">
                         <div class="card-body">

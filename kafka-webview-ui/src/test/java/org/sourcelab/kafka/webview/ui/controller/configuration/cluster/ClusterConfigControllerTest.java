@@ -98,7 +98,22 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testUrlsRequireAuthentication() throws Exception {
+        // Cluster index page.
         testUrlRequiresAuthentication("/configuration/cluster", false);
+
+        // Cluster create page.
+        testUrlRequiresAuthentication("/configuration/cluster/create", false);
+        testUrlRequiresAuthentication("/configuration/cluster/create", true);
+
+        // Cluster edit page.
+        testUrlRequiresAuthentication("/configuration/cluster/edit/1", false);
+        testUrlRequiresAuthentication("/configuration/cluster/update", true);
+
+        // Cluster delete page.
+        testUrlRequiresAuthentication("/configuration/cluster/delete/1", true);
+
+        // Cluster test page.
+        testUrlRequiresAuthentication("/configuration/cluster/test/1", false);
     }
 
     /**
@@ -112,8 +127,6 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Cluster index page.
         testUrlRequiresPermission("/configuration/cluster", false, Permissions.CLUSTER_READ);
-
-        // XXX
 
         // Cluster create page.
         testUrlRequiresPermission("/configuration/cluster/create", false, Permissions.CLUSTER_CREATE);
@@ -135,7 +148,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testIndex() throws Exception {
+    public void testGetIndex() throws Exception {
         final Permissions[] permissions = {
             Permissions.CLUSTER_READ,
         };
@@ -203,7 +216,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
             // Should submit to the update end point.
             .andExpect(content().string(containsString("action=\"/configuration/cluster/update\"")))
             .andExpect(content().string(containsString(
-                "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + cluster.getId() + "\"></input>"
+                "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + cluster.getId() + "\">"
             )))
             .andExpect(content().string(containsString("Submit")));
     }

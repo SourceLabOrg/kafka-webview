@@ -40,8 +40,13 @@ public enum Permissions {
     VIEW_MODIFY("Update"),
     VIEW_DELETE("Delete"),
 
+    // Filters, has no READ permission, uses VIEW_READ
+    FILTER_CREATE("Create"),
+    FILTER_MODIFY("Update"),
+    FILTER_DELETE("Delete"),
+
     // Topic
-    TOPIC_READ("Read"), // TODO remove this?
+    TOPIC_READ("Read"), // TODO remove this and just use CLUSTER_READ?
     TOPIC_CREATE("Create"),
     TOPIC_MODIFY("Update"),
     TOPIC_DELETE("Delete"),

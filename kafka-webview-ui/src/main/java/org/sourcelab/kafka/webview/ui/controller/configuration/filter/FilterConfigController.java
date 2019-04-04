@@ -31,6 +31,8 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.ViewToFilterEnforced;
 import org.sourcelab.kafka.webview.ui.model.ViewToFilterOptional;
@@ -39,6 +41,7 @@ import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewToFilterEnforcedRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewToFilterOptionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -49,6 +52,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
@@ -66,25 +70,40 @@ import java.util.stream.Collectors;
 @RequestMapping("/configuration/filter")
 public class FilterConfigController extends BaseController {
 
-    @Autowired
-    private UploadManager uploadManager;
+    private final UploadManager uploadManager;
+    private final PluginFactory<RecordFilter> recordFilterPluginFactory;
+    private final FilterRepository filterRepository;
+    private final ViewToFilterEnforcedRepository viewToFilterEnforcedRepository;
+    private final ViewToFilterOptionalRepository viewToFilterOptionalRepository;
 
+    /**
+     * Constructor.
+     * @param uploadManager Upload manager instance.
+     * @param recordFilterPluginFactory Factory instance.
+     * @param filterRepository repository instance.
+     * @param viewToFilterEnforcedRepository repository instance.
+     * @param viewToFilterOptionalRepository repository instance.
+     */
     @Autowired
-    private PluginFactory<RecordFilter> recordFilterPluginFactory;
-
-    @Autowired
-    private FilterRepository filterRepository;
-
-    @Autowired
-    private ViewToFilterEnforcedRepository viewToFilterEnforcedRepository;
-
-    @Autowired
-    private ViewToFilterOptionalRepository viewToFilterOptionalRepository;
+    public FilterConfigController(
+        final UploadManager uploadManager,
+        final PluginFactory<RecordFilter> recordFilterPluginFactory,
+        final FilterRepository filterRepository,
+        final ViewToFilterEnforcedRepository viewToFilterEnforcedRepository,
+        final ViewToFilterOptionalRepository viewToFilterOptionalRepository
+    ) {
+        this.uploadManager = uploadManager;
+        this.recordFilterPluginFactory = recordFilterPluginFactory;
+        this.filterRepository = filterRepository;
+        this.viewToFilterEnforcedRepository = viewToFilterEnforcedRepository;
+        this.viewToFilterOptionalRepository = viewToFilterOptionalRepository;
+    }
 
     /**
      * GET Displays main filters index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.VIEW_READ)
     public String index(final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
@@ -100,6 +119,7 @@ public class FilterConfigController extends BaseController {
      * GET Displays create filter form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequirePermission(Permissions.FILTER_CREATE)
     public String createFilter(final FilterForm filterForm, final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", null);
@@ -111,6 +131,7 @@ public class FilterConfigController extends BaseController {
      * GET Displays edit filter form.
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.FILTER_MODIFY)
     public String editFilter(
         @PathVariable final Long id,
         final FilterForm filterForm,
@@ -137,13 +158,62 @@ public class FilterConfigController extends BaseController {
     }
 
     /**
-     * POST Create or Update a filter.
+     * Handles Creating new filters.
+     */
+    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequirePermission(Permissions.FILTER_CREATE)
+    public String filterCreate(
+        @Valid final FilterForm filterForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes,
+        HttpServletResponse response) throws IOException {
+
+        final boolean updateExisting = filterForm.exists();
+        if (updateExisting) {
+            // This means they hit this end point with a filter Id, which would be interpreted as an
+            // update existing filter.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+        return handleUpdateFilter(filterForm, bindingResult, redirectAttributes);
+    }
+
+    /**
+     * POST Updating an existing filter.
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
+    @RequirePermission(Permissions.FILTER_MODIFY)
     public String update(
         @Valid final FilterForm filterForm,
         final BindingResult bindingResult,
-        final RedirectAttributes redirectAttributes) {
+        final RedirectAttributes redirectAttributes,
+        HttpServletResponse response) throws IOException {
+
+        final boolean updateExisting = filterForm.exists();
+        if (!updateExisting) {
+            // This means they hit this end point without a filter Id, which would be interpreted as a
+            // create new filter.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+
+        return handleUpdateFilter(filterForm, bindingResult, redirectAttributes);
+    }
+
+    /**
+     * Internal method to handle Filter create/update requests.
+     * Any permission validation should be done prior to calling this method.
+     *
+     * @param filterForm The filter form submitted.
+     * @param bindingResult Errors bound to result.
+     * @param redirectAttributes Redirect Attributes.
+     * @return How the controller should respond.
+     */
+    private String handleUpdateFilter(
+        @Valid final FilterForm filterForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes
+    ) {
 
         // If we have errors just display the form again.
         if (bindingResult.hasErrors()) {
