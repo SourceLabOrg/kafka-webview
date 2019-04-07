@@ -73,7 +73,7 @@ public class ModelsTest {
         messageFormat.setName("My MessageFormat " + token);
         messageFormat.setClasspath("com.example.random.class");
         messageFormat.setJar("MyJar.jar");
-        messageFormat.setDefaultFormat(false);
+        messageFormat.setMessageFormatType(MessageFormatType.CUSTOM);
         messageFormatRepository.save(messageFormat);
 
         // Create an "Optional" filter

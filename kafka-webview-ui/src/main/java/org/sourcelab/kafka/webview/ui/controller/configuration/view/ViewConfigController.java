@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 
 /**
  * Controller for CRUD over View entities.
@@ -123,8 +124,10 @@ public class ViewConfigController extends BaseController {
         model.addAttribute("clusters", clusterRepository.findAllByOrderByNameAsc());
 
         // Retrieve all message formats
-        model.addAttribute("defaultMessageFormats", messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(true));
-        model.addAttribute("customMessageFormats", messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(false));
+        model.addAttribute("defaultMessageFormats",
+            messageFormatRepository.findByMessageFormatTypeOrderByNameAsc(MessageFormatType.DEFAULT));
+        model.addAttribute("customMessageFormats",
+            messageFormatRepository.findByMessageFormatTypeIsInOrderByNameAsc(MessageFormatType.CUSTOM, MessageFormatType.AUTOCONF));
 
         // If we have a cluster Id
         model.addAttribute("topics", new ArrayList<>());

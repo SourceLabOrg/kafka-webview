@@ -50,8 +50,8 @@
                             <tr th:unless="${customMessageFormats.isEmpty()}" th:each="messageFormat : ${customMessageFormats}">
                                 <td th:text="${messageFormat.name}"></td>
                                 <td th:text="${messageFormat.classpath}"></td>
-                                <td th:text="${messageFormat.isDefaultFormat()} ? 'Default' : 'Custom'"></td>
-                                <td class="text-right">
+                                <td th:text="${messageFormat.getMessageFormatType() == T(org.sourcelab.kafka.webview.ui.model.MessageFormatType).CUSTOM} ? 'Custom' : 'Autoconf'"></td>
+                                <td th:if="${messageFormat.getMessageFormatType() == T(org.sourcelab.kafka.webview.ui.model.MessageFormatType).CUSTOM}" class="text-right">
                                     <div class="dropdown">
                                         <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Actions
@@ -70,6 +70,7 @@
                                         </div>
                                     </div>
                                 </td>
+                                <td th:unless="${messageFormat.getMessageFormatType() == T(org.sourcelab.kafka.webview.ui.model.MessageFormatType).CUSTOM}" class="text-center">-</td>
                             </tr>
                             </tbody>
                         </table>
@@ -100,7 +101,7 @@
                             <tr th:each="messageFormat : ${defaultMessageFormats}">
                                 <td th:text="${messageFormat.name}"></td>
                                 <td th:text="${messageFormat.classpath}"></td>
-                                <td th:text="${messageFormat.isDefaultFormat()} ? 'Default' : 'Custom'"></td>
+                                <td>Default</td>
                             </tr>
                             </tbody>
                         </table>
