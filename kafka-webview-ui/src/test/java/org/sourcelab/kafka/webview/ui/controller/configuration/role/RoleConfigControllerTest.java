@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +53,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.AdditionalMatchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -77,11 +80,67 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     private RolePermissionRepository rolePermissionRepository;
 
     /**
+     * Ensure authentication is required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthentication() throws Exception {
+        // Role index page.
+        testUrlRequiresAuthentication("/configuration/filter", false);
+
+        // Role create page.
+        testUrlRequiresAuthentication("/configuration/filter/create", false);
+        testUrlRequiresAuthentication("/configuration/filter/create", true);
+
+        // Role edit page.
+        testUrlRequiresAuthentication("/configuration/filter/edit/1", false);
+        testUrlRequiresAuthentication("/configuration/filter/update", true);
+
+        // Role copy page.
+        testUrlRequiresAuthentication("/configuration/role/copy/1", true);
+
+        // Role delete page.
+        testUrlRequiresAuthentication("/configuration/filter/delete/1", true);
+    }
+
+    /**
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        // Create at least one Role.
+        final Role role = roleTestTools.createRole("Test Role " + System.currentTimeMillis());
+
+        // Role index page.
+        testUrlRequiresPermission("/configuration/role", false, Permissions.ROLE_READ);
+
+        // Role create page.
+        testUrlRequiresPermission("/configuration/role/create", false, Permissions.ROLE_CREATE);
+        testUrlRequiresPermission("/configuration/role/create", true, Permissions.ROLE_CREATE);
+
+        // Role edit page.
+        testUrlRequiresPermission("/configuration/role/edit/" + role.getId(), false, Permissions.ROLE_MODIFY);
+        testUrlRequiresPermission("/configuration/role/update", true, Permissions.ROLE_MODIFY);
+
+        // Role copy page.
+        testUrlRequiresPermission("/configuration/role/copy/1", true, Permissions.ROLE_CREATE);
+
+        // Role delete page.
+        testUrlRequiresPermission("/configuration/role/delete/1", true, Permissions.ROLE_DELETE);
+    }
+
+    /**
      * Smoke test the role Index page.
      */
     @Test
     @Transactional
     public void testIndex() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String roleName1 = "Role name 1" + System.currentTimeMillis();
         final String roleName2 = "Role name 2" + System.currentTimeMillis();
         final String roleName3 = "Role name 3" + System.currentTimeMillis();
@@ -107,8 +166,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
 
         // Hit index.
         mockMvc
-            .perform(get("/configuration/role").with(user(adminUserDetails)))
-            //.andDo(print())
+            .perform(get("/configuration/role").with(user(user)))
             .andExpect(status().isOk())
             // Validate role1
             .andExpect(content().string(containsString(roleName1)))
@@ -129,13 +187,86 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testLoadCreatePage() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_CREATE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit role create page.
         mockMvc
-            .perform(get("/configuration/role/create").with(user(adminUserDetails)))
-            //.andDo(print())
+            .perform(get("/configuration/role/create").with(user(user)))
             .andExpect(status().isOk())
-            // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("type=\"submit\"")));
+            .andExpect(content().string(containsString("New User Role")))
+            // Should submit to the create end point
+            .andExpect(content().string(containsString("action=\"/configuration/role/create\"")))
+            .andExpect(content().string(containsString("Submit")));
+    }
+
+    /**
+     * Test that you cannot update a role by submitting a request to the create end point
+     * with an id parameter.
+     */
+    @Test
+    @Transactional
+    public void testPostCreate_withId_shouldResultIn400Error() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_MODIFY,
+            Permissions.ROLE_CREATE,
+            Permissions.ROLE_READ,
+            Permissions.ROLE_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a role.
+        final String expectedName = "My New Role Name " + System.currentTimeMillis();
+        final Role role = roleTestTools.createRole(expectedName);
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/role/create")
+                .with(user(user))
+                .with(csrf())
+                // Post the ID parameter to attempt to update existing filter via create end point.
+                .param("id", String.valueOf(role.getId()))
+                .param("name", "Updated Name"))
+            .andExpect(status().is4xxClientError());
+
+        // Lookup Role
+        final Role updated = roleRepository.findById(role.getId()).get();
+        assertNotNull("Should have role", updated);
+        assertEquals("Has original name -- was not updated", expectedName, role.getName());
+    }
+
+    /**
+     * Test that you cannot create a role by submitting a request to the update end point
+     * without an id parameter.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_withOutId_shouldResultIn400Error() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_MODIFY,
+            Permissions.ROLE_CREATE,
+            Permissions.ROLE_READ,
+            Permissions.ROLE_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // New role name
+        final String expectedName = "My New Role Name " + System.currentTimeMillis();
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/role/update")
+                .with(user(user))
+                .with(csrf())
+                // Don't include the Id Parameter in this request
+                .param("name", expectedName))
+            .andExpect(status().is4xxClientError());
+
+        // Lookup Role
+        final Role createdRole = roleRepository.findByName(expectedName);
+        assertNull("Should not have role", createdRole);
     }
 
     /**
@@ -143,7 +274,12 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newRole() throws Exception {
+    public void testPostCreate_newRole() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_CREATE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedRoleName = "My New Role Name" + System.currentTimeMillis();
 
         final List<String> expectedPermissions = new ArrayList<>();
@@ -153,8 +289,8 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         final MvcResult result = mockMvc
-            .perform(post("/configuration/role/update")
-                .with(user(adminUserDetails))
+            .perform(post("/configuration/role/create")
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedRoleName)
                 .param("permissions", Permissions.TOPIC_CREATE.name())
@@ -194,6 +330,11 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testGetEdit_loadEditPageForExistingRole() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_MODIFY,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
 
         final List<Permissions> originalPermissions = new ArrayList<>();
@@ -207,14 +348,19 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         // Load edit page.
         mockMvc
             .perform(get("/configuration/role/edit/" + role.getId())
-                .with(user(adminUserDetails))
+                .with(user(user))
             )
-            //.andDo(print())
             .andExpect(status().isOk())
             .andExpect(content().string(containsString("value=\"" + originalRoleName + "\"")))
-            .andExpect(content().string(containsString("value=\"CLUSTER_DELETE\" checked=\"checked\"")))
-            .andExpect(content().string(containsString("value=\"TOPIC_CREATE\" checked=\"checked\"")))
-            .andExpect(content().string(containsString("value=\"CLUSTER_DELETE\" checked=\"checked\"")));
+            .andExpect(content().string(containsString("name=\"permissions\" value=\"CLUSTER_DELETE\" checked=\"checked\"")))
+            .andExpect(content().string(containsString("name=\"permissions\" value=\"TOPIC_CREATE\" checked=\"checked\"")))
+            .andExpect(content().string(containsString("name=\"permissions\" value=\"CLUSTER_DELETE\" checked=\"checked\"")))
+            // Should submit to the update end point.
+            .andExpect(content().string(containsString("action=\"/configuration/role/update\"")))
+            .andExpect(content().string(containsString(
+                "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + role.getId() + "\">"
+            )))
+            .andExpect(content().string(containsString("Submit")));
     }
 
     /**
@@ -223,6 +369,11 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_updateExistingRole() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_MODIFY,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
         final String expectedRoleName = "My Updated Role Name" + System.currentTimeMillis();
 
@@ -243,7 +394,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         // Post update page.
         final MvcResult result = mockMvc
             .perform(post("/configuration/role/update")
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(role.getId()))
                 .param("name", expectedRoleName)
@@ -285,6 +436,11 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostCopy_copyExistingRole() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_CREATE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
         final String expectedRoleName = "Copy of " + originalRoleName;
 
@@ -304,7 +460,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         // Post copy page.
         final MvcResult result = mockMvc
             .perform(post("/configuration/role/copy/" + role.getId())
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
             )
             .andDo(print())
@@ -340,6 +496,11 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostDelete_deleteExistingRole_notInUse() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
 
         final List<Permissions> originalPermissions = new ArrayList<>();
@@ -353,7 +514,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         // Post delete page.
         final MvcResult result = mockMvc
             .perform(post("/configuration/role/delete/" + role.getId())
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
             )
             .andDo(print())
@@ -381,6 +542,11 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostDelete_deleteExistingRole_innUse() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String originalRoleName = "My Original Role Name" + System.currentTimeMillis();
 
         final List<Permissions> originalPermissions = new ArrayList<>();
@@ -392,14 +558,14 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         final Role role = roleTestTools.createRole(originalRoleName, originalPermissions);
 
         // Create user
-        final User user = userTestTools.createUser();
-        user.setRoleId(role.getId());
-        userTestTools.save(user);
+        final User existingUser = userTestTools.createUser();
+        existingUser.setRoleId(role.getId());
+        userTestTools.save(existingUser);
 
         // Post delete page.
         final MvcResult result = mockMvc
             .perform(post("/configuration/role/delete/" + role.getId())
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
             )
             //.andDo(print())
@@ -448,7 +614,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         final User currentUser = userTestTools.createUserWithRole(role);
 
         // Post update page.
-        final MvcResult result = mockMvc
+        mockMvc
             .perform(post("/configuration/role/update")
                 .with(user(userTestTools.getUserAuthenticationDetails(currentUser)))
                 .with(csrf())
@@ -503,7 +669,7 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         final User currentUser = userTestTools.createUserWithRole(role);
 
         // Post update page.
-        final MvcResult result = mockMvc
+        mockMvc
             .perform(post("/configuration/role/update")
                 .with(user(userTestTools.getUserAuthenticationDetails(currentUser)))
                 .with(csrf())
@@ -537,6 +703,11 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_canRemoveRoleUpdateAndReadFromOtherUsersRoles() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.ROLE_MODIFY,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String roleName = "My Original Role Name" + System.currentTimeMillis();
 
         final List<Permissions> originalPermissions = new ArrayList<>();
@@ -552,13 +723,10 @@ public class RoleConfigControllerTest extends AbstractMvcTest {
         // Create role w/ permissions.
         final Role role = roleTestTools.createRole(roleName, originalPermissions);
 
-        // Create a user using this specific role.
-        final User currentUser = userTestTools.createUserWithRole(role);
-
         // Post update page.
         final MvcResult result = mockMvc
             .perform(post("/configuration/role/update")
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(role.getId()))
                 .param("name", roleName)

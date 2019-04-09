@@ -18,7 +18,7 @@
                         <span th:text="${roleForm.exists()} ? ${roleForm.name} : 'New User Role'"></span>
                     </div>
                     <form
-                        th:action="@{/configuration/role/update}"
+                        th:action="${roleForm.exists()} ? @{/configuration/role/update} : @{/configuration/role/create}"
                         th:object="${roleForm}"
                         method="post" class="form-horizontal" autocomplete="off">
 
@@ -54,13 +54,10 @@
                                                     <div class="form-check" th:each="permission : ${permissionGroup.getPermissions()}">
                                                         <label class="form-check-label">
                                                             <input
+                                                                th:errorclass="is-invalid"
                                                                 class="form-check-input"
                                                                 type="checkbox"
-                                                                name="permissions"
-                                                                th:checked="${roleForm.getPermissions().contains(permission)}"
-                                                                th:value="${permission.name()}"
-                                                                th:errorclass="is-invalid"
-                                                            >
+                                                                name="permissions" th:checked="${roleForm.getPermissions().contains(permission)}" th:value="${permission.name()}">
                                                             <span th:text="${permission.getDisplayName()}"></span>
                                                         </label>
                                                     </div>

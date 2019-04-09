@@ -25,19 +25,19 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.role;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
+import org.sourcelab.kafka.webview.ui.controller.configuration.filter.forms.FilterForm;
 import org.sourcelab.kafka.webview.ui.controller.configuration.role.forms.RoleForm;
-import org.sourcelab.kafka.webview.ui.manager.model.view.ViewCopyManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.user.DuplicateRoleException;
 import org.sourcelab.kafka.webview.ui.manager.user.RoleManager;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Role;
-import org.sourcelab.kafka.webview.ui.model.RolePermission;
-import org.sourcelab.kafka.webview.ui.repository.RolePermissionRepository;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -48,8 +48,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,26 +65,22 @@ import java.util.Optional;
 public class RoleConfigController extends BaseController {
 
     private final RoleRepository roleRepository;
-    private final RolePermissionRepository rolePermissionRepository;
     private final UserRepository userRepository;
     private final RoleManager roleManager;
 
     /**
      * Constructor.
      * @param roleRepository Repository for roles.
-     * @param rolePermissionRepository Repository for RolePermissions.
      * @param userRepository Repository for users.
      * @param roleManager Manager for interacting with Roles.
      */
     @Autowired
     public RoleConfigController(
         final RoleRepository roleRepository,
-        final RolePermissionRepository rolePermissionRepository,
         final UserRepository userRepository,
         final RoleManager roleManager) {
 
         this.roleRepository = roleRepository;
-        this.rolePermissionRepository = rolePermissionRepository;
         this.userRepository = userRepository;
         this.roleManager = roleManager;
     }
@@ -92,6 +89,7 @@ public class RoleConfigController extends BaseController {
      * GET Displays main user index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.ROLE_READ)
     public String index(final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
@@ -124,6 +122,7 @@ public class RoleConfigController extends BaseController {
      * GET Displays create role form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequirePermission(Permissions.ROLE_CREATE)
     public String createRole(final RoleForm roleForm, final Model model, final RedirectAttributes redirectAttributes) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", "/configuration/role/create");
@@ -136,6 +135,7 @@ public class RoleConfigController extends BaseController {
      * GET Displays edit role form.
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.ROLE_MODIFY)
     public String editRoleForm(
         @PathVariable final Long id,
         final RoleForm roleForm,
@@ -171,11 +171,55 @@ public class RoleConfigController extends BaseController {
     }
 
     /**
-     * POST updates a role.
+     * Handles Creating new roles.
+     */
+    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequirePermission(Permissions.ROLE_CREATE)
+    @Transactional
+    public String filterCreate(
+        @Valid final RoleForm roleForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes,
+        final Model model,
+        HttpServletResponse response) throws IOException {
+
+        final boolean updateExisting = roleForm.exists();
+        if (updateExisting) {
+            // This means they hit this end point with a role Id, which would be interpreted as an
+            // update existing role.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+        return handleUpdateRole(roleForm, bindingResult, redirectAttributes, model);
+    }
+
+    /**
+     * Handles updating existing roles.
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
+    @RequirePermission(Permissions.ROLE_MODIFY)
     @Transactional
-    public String update(
+    public String filterUpdate(
+        @Valid final RoleForm roleForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes,
+        final Model model,
+        HttpServletResponse response) throws IOException {
+
+        final boolean updateExisting = roleForm.exists();
+        if (!updateExisting) {
+            // This means they hit this end point without a role Id, which would be interpreted as
+            // creating a new role.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+        return handleUpdateRole(roleForm, bindingResult, redirectAttributes, model);
+    }
+
+    /**
+     * POST updates a role.
+     */
+    private String handleUpdateRole(
         @Valid final RoleForm roleForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
@@ -275,6 +319,7 @@ public class RoleConfigController extends BaseController {
      */
     @RequestMapping(path = "/copy/{id}", method = RequestMethod.POST)
     @Transactional
+    @RequirePermission(Permissions.ROLE_CREATE)
     public String copyRole(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         if (!roleRepository.existsById(id)) {
@@ -305,6 +350,7 @@ public class RoleConfigController extends BaseController {
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     @Transactional
+    @RequirePermission(Permissions.ROLE_DELETE)
     public String deleteRole(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         if (!roleRepository.existsById(id)) {
