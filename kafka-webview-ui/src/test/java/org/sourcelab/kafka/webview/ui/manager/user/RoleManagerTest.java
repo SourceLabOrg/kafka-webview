@@ -28,7 +28,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Role;
+import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
+import org.sourcelab.kafka.webview.ui.tools.RoleTestTools;
+import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -57,6 +60,15 @@ public class RoleManagerTest {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private RoleTestTools roleTestTools;
+
+    @Autowired
+    private UserTestTools userTestTools;
+
+    @Autowired
+    private UserManager userManager;
 
     /**
      * Super high level sanity check that this method returns non-empty collection.
@@ -176,6 +188,70 @@ public class RoleManagerTest {
     }
 
     /**
+     * Test deleting a role that's not used by any users.
+     */
+    @Test
+    @Transactional
+    public void testDeleteRole() {
+        // Create a role that isn't used anywhere.
+        final String roleName = "My Test Role " + System.currentTimeMillis();
+        final Role role = roleTestTools.createRole(roleName);
+
+        // Call method under test.
+        final boolean result = roleManager.deleteRole(role.getId());
+
+        // Validate result
+        assertTrue("Return value should be true", result);
+        assertFalse("Should no longer exist", roleRepository.findById(role.getId()).isPresent());
+    }
+
+    /**
+     * Test deleting a role that IS used by any users.
+     */
+    @Test
+    @Transactional
+    public void testDeleteRole_inUse() {
+        // Create a role that isn't used anywhere.
+        final String roleName = "My Test Role " + System.currentTimeMillis();
+        final Role role = roleTestTools.createRole(roleName);
+
+        // Create a user with our role.
+        userTestTools.createUserWithRole(role);
+
+        // Call method under test.
+        final boolean result = roleManager.deleteRole(role.getId());
+
+        // Validate result
+        assertFalse("Return value should be false", result);
+        assertTrue("Should still exist", roleRepository.findById(role.getId()).isPresent());
+    }
+
+    /**
+     * Test deleting a role that WAS used by a user that was deleted.
+     */
+    @Test
+    @Transactional
+    public void testDeleteRole_inUseByDeletedUser() {
+        // Create a role that isn't used anywhere.
+        final String roleName = "My Test Role " + System.currentTimeMillis();
+        final Role role = roleTestTools.createRole(roleName);
+
+        // Create a user with our role.
+        final User user = userTestTools.createUserWithRole(role);
+
+        // Now delete our user
+        final boolean userDeleteResult = userManager.deleteUser(user);
+        assertTrue("Should have a result of true", userDeleteResult);
+
+        // Now delete the role,
+        final boolean result = roleManager.deleteRole(role.getId());
+
+        // Validate result
+        assertTrue("Return value should be true", result);
+        assertFalse("Should not still exist", roleRepository.findById(role.getId()).isPresent());
+    }
+
+    /**
      * Helper method.
      * @param expectedPermissions Permissions we expect to have.
      * @param actualPermissions Actual permission set.
@@ -195,6 +271,5 @@ public class RoleManagerTest {
             .filter(expectedPermissions::contains)
             .collect(Collectors.toList());
         assertFalse("Should have no extra entries", extraValues.isEmpty());
-
     }
 }

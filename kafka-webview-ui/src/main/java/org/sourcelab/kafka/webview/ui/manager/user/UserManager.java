@@ -51,6 +51,7 @@ public class UserManager {
      * @param password Password of new user.
      * @return The new user.
      */
+    @Deprecated
     public User createNewUser(final String email, final String displayName, final String password, final UserRole userRole) {
         final UserBuilder userBuilder = new UserBuilder();
         userBuilder
@@ -64,8 +65,44 @@ public class UserManager {
         return persistNewUser(userBuilder);
     }
 
+    /**
+     * Create a new user as registered from website.
+     * @param email Email of new user.
+     * @param displayName Display name of new user.
+     * @param password Password of new user.
+     * @return The new user.
+     */
+    public User createNewUser(final String email, final String displayName, final String password, final long roleId) {
+        final UserBuilder userBuilder = new UserBuilder();
+        userBuilder
+            .withEmail(email)
+            .withDisplayName(displayName)
+            .withPassword(password)
+            .withRoleId(roleId)
+            .withIsActive(true);
+
+        // Create them!
+        return persistNewUser(userBuilder);
+    }
+
+    /**
+     * Given a plaintext string, encode it using the password encoder.
+     * @param plaintext plaintext to encode
+     * @return encoded/hashed value.
+     */
     public String encodePassword(final String plaintext) {
         return passwordEncoder.encode(plaintext);
+    }
+
+    /**
+     * Handle deleting a user.
+     * @param user to remove.
+     * @return boolean if successful.
+     */
+    public boolean deleteUser(final User user) {
+        // Hard delete user?  Lets do that for now.
+        userRepository.delete(user);
+        return true;
     }
 
     private User persistNewUser(final UserBuilder userBuilder) {

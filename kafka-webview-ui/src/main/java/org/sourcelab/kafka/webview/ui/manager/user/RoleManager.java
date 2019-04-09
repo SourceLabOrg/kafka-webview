@@ -38,7 +38,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Logic for creating/updating and in general interacting with roles and permissions for roles.
@@ -288,5 +290,21 @@ public class RoleManager {
         roleRepository.deleteById(roleId);
 
         return true;
+    }
+
+    /**
+     * Given a collection of RoleIds, return a map of RoleId to Role instance.
+     * @param roleIds collection of roleIds to retrieve.
+     * @return Map of RoleId to Role instane.
+     */
+    public Map<Long, Role> getRolesById(final Collection<Long> roleIds) {
+        final Map<Long, Role> roleMap = new HashMap<>();
+
+        final Iterable<Role> roles = roleRepository.findAllById(roleIds);
+        for (final Role role : roles) {
+            roleMap.put(role.getId(), role);
+        }
+
+        return Collections.unmodifiableMap(roleMap);
     }
 }

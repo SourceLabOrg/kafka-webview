@@ -90,6 +90,7 @@ public final class UserBuilder {
     /**
      * Set User's Role.
      */
+    @Deprecated
     public UserBuilder withRole(final UserRole role) {
         this.role = role;
         return this;

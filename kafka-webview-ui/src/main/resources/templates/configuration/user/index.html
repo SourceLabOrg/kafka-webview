@@ -18,7 +18,11 @@
                         <i class="fa fa-align-justify"></i>
                         Users
                         <div class="btn-group float-right" role="group" aria-label="Button group">
-                            <a class="btn" th:href="@{/configuration/user/create}" style="padding-bottom: 0;">
+                            <a
+                                th:if="${canCreateUsers}"
+                                class="btn"
+                                th:href="@{/configuration/user/create}"
+                                style="padding-bottom: 0;">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
                             </a>
@@ -36,20 +40,26 @@
                             </thead>
                             <tbody>
                             <tr th:each="user : ${users}">
-                                <td th:text="${user.email}"></td>
-                                <td th:text="${user.displayName}"></td>
-                                <td th:text="${user.role}"></td>
+                                <td th:text="${user.getEmail()}"></td>
+                                <td th:text="${user.getDisplayName()}"></td>
+                                <td th:text="${roleMap.get(user.getRoleId()).getName()}"></td>
                                 <td class="text-right">
                                     <div class="dropdown">
                                         <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Actions
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${user.id})}">
+                                            <a
+                                                th:if="${canEditUsers}"
+                                                class="dropdown-item"
+                                                th:href="@{/configuration/user/edit/{id}(id=${user.getId()})}">
                                                 <i class="fa fa-edit"></i>
                                                 Edit
                                             </a>
-                                            <form th:action="@{/configuration/user/delete/{id}(id=${user.id})}" method="post">
+                                            <form
+                                                th:if="${canDeleteUsers}"
+                                                th:action="@{/configuration/user/delete/{id}(id=${user.getId()})}"
+                                                method="post">
                                                 <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
                                                     <i class="fa fa-remove"></i>
                                                     Delete
