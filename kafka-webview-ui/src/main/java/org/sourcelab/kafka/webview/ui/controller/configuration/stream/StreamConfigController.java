@@ -29,6 +29,8 @@ import org.sourcelab.kafka.webview.ui.manager.socket.StreamConsumerDetails;
 import org.sourcelab.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.View;
@@ -57,22 +59,36 @@ import java.util.stream.Collectors;
 @RequestMapping("/configuration/stream")
 public class StreamConfigController extends BaseController {
 
-    @Autowired
-    private ClusterRepository clusterRepository;
+    private final ClusterRepository clusterRepository;
+    private final ViewRepository viewRepository;
+    private final UserRepository userRepository;
+    private final WebSocketConsumersManager webSocketConsumersManager;
 
+    /**
+     * Constructor.
+     * @param clusterRepository repository instance.
+     * @param viewRepository repository instance.
+     * @param userRepository repository instance.
+     * @param webSocketConsumersManager instance.
+     */
     @Autowired
-    private ViewRepository viewRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private WebSocketConsumersManager webSocketConsumersManager;
+    public StreamConfigController(
+        final ClusterRepository clusterRepository,
+        final ViewRepository viewRepository,
+        final UserRepository userRepository,
+        final WebSocketConsumersManager webSocketConsumersManager
+    ) {
+        this.clusterRepository = clusterRepository;
+        this.viewRepository = viewRepository;
+        this.userRepository = userRepository;
+        this.webSocketConsumersManager = webSocketConsumersManager;
+    }
 
     /**
      * GET Displays currently active socket consumers.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.CONSUMER_READ)
     public String index(final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
@@ -119,6 +135,7 @@ public class StreamConfigController extends BaseController {
      * POST deletes the selected cluster.
      */
     @RequestMapping(path = "/close/{hash}", method = RequestMethod.POST)
+    @RequirePermission(Permissions.CONSUMER_DELETE)
     public String closeConsumer(@PathVariable final String hash, final RedirectAttributes redirectAttributes) {
         // Close by hash
         if (webSocketConsumersManager.removeConsumersForSessionHash(hash)) {
