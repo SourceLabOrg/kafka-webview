@@ -45,6 +45,12 @@ public enum Permissions {
     FILTER_MODIFY("Update"),
     FILTER_DELETE("Delete"),
 
+    // Message Formats
+    MESSAGE_FORMAT_READ("Read"),
+    MESSAGE_FORMAT_CREATE("Create"),
+    MESSAGE_FORMAT_MODIFY("Update"),
+    MESSAGE_FORMAT_DELETE("Delete"),
+
     // Topic
     TOPIC_READ("Read"), // TODO remove this and just use CLUSTER_READ?
     TOPIC_CREATE("Create"),

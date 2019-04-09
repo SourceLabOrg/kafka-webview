@@ -108,6 +108,7 @@ public abstract class AbstractMvcTest {
      * @param isPost If its a POST true, false if GET
      * @throws Exception on error.
      */
+    @Deprecated
     protected void testUrlWithOutAdminRole(final String url, final boolean isPost) throws Exception {
         final MockHttpServletRequestBuilder action;
         if (isPost) {

@@ -34,11 +34,14 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -46,10 +49,10 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -68,22 +71,36 @@ import java.util.Optional;
 @RequestMapping("/configuration/messageFormat")
 public class MessageFormatController extends BaseController {
 
-    @Autowired
-    private UploadManager uploadManager;
+    private final UploadManager uploadManager;
+    private final PluginFactory<Deserializer> deserializerLoader;
+    private final MessageFormatRepository messageFormatRepository;
+    private final ViewRepository viewRepository;
 
+    /**
+     * Constructor.
+     * @param uploadManager Upload manager instance.
+     * @param deserializerLoader Deserializer loader instance.
+     * @param messageFormatRepository repository instance.
+     * @param viewRepository repository instance.
+     */
     @Autowired
-    private PluginFactory<Deserializer> deserializerLoader;
-
-    @Autowired
-    private MessageFormatRepository messageFormatRepository;
-
-    @Autowired
-    private ViewRepository viewRepository;
+    public MessageFormatController(
+        final UploadManager uploadManager,
+        final PluginFactory<Deserializer> deserializerLoader,
+        final MessageFormatRepository messageFormatRepository,
+        final ViewRepository viewRepository
+    ) {
+        this.uploadManager = uploadManager;
+        this.deserializerLoader = deserializerLoader;
+        this.messageFormatRepository = messageFormatRepository;
+        this.viewRepository = viewRepository;
+    }
 
     /**
      * GET Displays main message format index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.MESSAGE_FORMAT_READ)
     public String index(final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
@@ -105,6 +122,7 @@ public class MessageFormatController extends BaseController {
      * GET Displays create message format form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
+    @RequirePermission(Permissions.MESSAGE_FORMAT_CREATE)
     public String createMessageFormat(final MessageFormatForm messageFormatForm, final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", null);
@@ -116,6 +134,7 @@ public class MessageFormatController extends BaseController {
      * GET Displays edit message format form.
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.MESSAGE_FORMAT_MODIFY)
     public String editMessageFormat(
         @PathVariable final Long id,
         final MessageFormatForm messageFormatForm,
@@ -158,6 +177,27 @@ public class MessageFormatController extends BaseController {
     }
 
     /**
+     * Handles Creating new message formats.
+     */
+    @RequestMapping(path = "/create", method = RequestMethod.POST)
+    @RequirePermission(Permissions.MESSAGE_FORMAT_CREATE)
+    public String messageFormatCreate(
+        @Valid final MessageFormatForm messageFormatForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes,
+        final HttpServletResponse response) throws IOException {
+
+        final boolean updateExisting = messageFormatForm.exists();
+        if (updateExisting) {
+            // This means they hit this end point with a messageFormat Id, which would be interpreted as an
+            // update existing message format.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+        return handleUpdateMessageFormat(messageFormatForm, bindingResult, redirectAttributes);
+    }
+
+    /**
      * POST create or edit existing MessageFormat.
      *
      * If the message format does NOT yet exist:
@@ -171,11 +211,40 @@ public class MessageFormatController extends BaseController {
      *
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
+    @RequirePermission(Permissions.MESSAGE_FORMAT_MODIFY)
     public String create(
         @Valid final MessageFormatForm messageFormatForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
-        @RequestParam final Map<String, String> allRequestParams) {
+        final HttpServletResponse response) throws IOException {
+
+        final boolean updateExisting = messageFormatForm.exists();
+        if (!updateExisting) {
+            // This means they hit this end point without a message format Id, which would be interpreted as a
+            // create new message format.  This end point shouldn't handle those requests.
+            response.sendError(HttpStatus.BAD_REQUEST.value());
+            return null;
+        }
+        return handleUpdateMessageFormat(messageFormatForm, bindingResult, redirectAttributes);
+    }
+
+    /**
+     * POST create or edit existing MessageFormat.
+     *
+     * If the message format does NOT yet exist:
+     *   - Require a valid JAR + Classpath to be uploaded
+     *
+     * If the message format DOES exist
+     *   - If no jar is uploaded, only allow updating the name + options
+     *   - If jar is uploaded, validate JAR + Classpath
+     *     - If valid, replace existing Jar
+     *     - If not valid, keep existing Jar.
+     *
+     */
+    private String handleUpdateMessageFormat(
+        @Valid final MessageFormatForm messageFormatForm,
+        final BindingResult bindingResult,
+        final RedirectAttributes redirectAttributes) {
 
         // If we have errors just display the form again.
         if (bindingResult.hasErrors()) {
@@ -300,6 +369,7 @@ public class MessageFormatController extends BaseController {
      * POST deletes the selected message format.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
+    @RequirePermission(Permissions.MESSAGE_FORMAT_DELETE)
     public String deleteMessageFormat(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Where to redirect.
         final String redirectUrl = "redirect:/configuration/messageFormat";
