@@ -57,6 +57,7 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -268,9 +269,6 @@ public class FilterConfigController extends BaseController {
             }
         }
 
-        // Set properties.
-        filter.setName(filterForm.getName());
-
         // If they uploaded a file.
         if (!file.isEmpty()) {
             // Make sure ends with .jar
@@ -308,6 +306,17 @@ public class FilterConfigController extends BaseController {
                     return "configuration/filter/create";
                 }
 
+                // If successful, remove previous jar if it exists.
+                if (filter.getJar() != null) {
+                    try {
+                        Files.deleteIfExists(
+                            recordFilterPluginFactory.getPathForJar(filter.getJar())
+                        );
+                    } catch (final NoSuchFileException exception) {
+                        // swallow.
+                    }
+                }
+
                 // If successful overwrite original jar
                 final Path tmpJarPath = new File(tmpJarLocation).toPath();
                 final Path finalJarPath = new File(finalJarLocation).toPath();
@@ -328,6 +337,9 @@ public class FilterConfigController extends BaseController {
             }
         }
 
+        // Set properties.
+        filter.setName(filterForm.getName());
+
         // Save entity
         filterRepository.save(filter);
 
@@ -339,6 +351,7 @@ public class FilterConfigController extends BaseController {
      * POST deletes the selected filter.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
+    @RequirePermission(Permissions.FILTER_DELETE)
     public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         final Optional<Filter> filterOptional = filterRepository.findById(id);

@@ -24,29 +24,48 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.filter;
 
+import com.google.common.base.Charsets;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
+import org.sourcelab.kafka.webview.ui.tools.FileTestTools;
 import org.sourcelab.kafka.webview.ui.tools.FilterTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -59,6 +78,16 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
 
     @Autowired
     private FilterRepository filterRepository;
+
+    /**
+     * Where deserializer files are uploaded to.
+     */
+    private String filterUploadPath;
+
+    @Before
+    public void setupUploadPath() {
+        filterUploadPath = uploadPath + "/filters/";
+    }
 
     /**
      * Ensure authentication is required.
@@ -76,6 +105,9 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
         // Filter edit page.
         testUrlRequiresAuthentication("/configuration/filter/edit/1", false);
         testUrlRequiresAuthentication("/configuration/filter/update", true);
+
+        // Filter delete page.
+        testUrlRequiresAuthentication("/configuration/filter/delete/1", true);
     }
 
     /**
@@ -97,6 +129,9 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
         // Filter edit page.
         testUrlRequiresPermission("/configuration/filter/edit/" + filter.getId(), false, Permissions.FILTER_MODIFY);
         testUrlRequiresPermission("/configuration/filter/update", true, Permissions.FILTER_MODIFY);
+
+        // Filter delete page.
+        testUrlRequiresPermission("/configuration/filter/delete/1", true, Permissions.FILTER_DELETE);
     }
 
     /**
@@ -243,5 +278,360 @@ public class FilterConfigControllerTest extends AbstractMvcTest {
         assertNull("Should not have filter", createdFilter);
     }
 
-    // TODO write test over create/update/delete end points.
+    /**
+     * Test creating new filter.
+     */
+    @Test
+    @Transactional
+    public void testPostCreate_newFilter() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+
+
+        final String expectedName = "My New Filter Name " + System.currentTimeMillis();
+        final String expectedClassPath = "examples.filter.StringSearchFilter";
+
+        // Hit Update end point.
+        mockMvc
+            .perform(multipart("/configuration/filter/create")
+                .file(jarUpload)
+                .with(user(user))
+                .with(csrf())
+                .param("name", expectedName)
+                .param("classpath", expectedClassPath))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/filter"));
+
+        // Lookup Filter
+        final Filter filter = filterRepository.findByName(expectedName);
+        assertNotNull("Should have new filter", filter);
+        assertEquals("Has correct name", expectedName, filter.getName());
+        assertEquals("Has correct classpath", expectedClassPath, filter.getClasspath());
+
+        final boolean doesJarExist = Files.exists(Paths.get(filterUploadPath, filter.getJar()));
+        assertTrue("Filter file should have been uploaded", doesJarExist);
+
+        // Cleanup
+        Files.deleteIfExists(Paths.get(filterUploadPath, filter.getJar()));
+    }
+
+    /**
+     * Test attempting to create a new filter, but don't upload a jar.
+     * This should be kicked back.
+     */
+    @Test
+    @Transactional
+    public void testPostCreate_createFilterMissingFile() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final String expectedName = "My New Filter Name " + System.currentTimeMillis();
+        final String expectedClassPath = "examples.filter.StringSearchFilter";
+
+        final InputStream fileInputStream = null;
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+
+        // Hit page.
+        mockMvc
+            .perform(multipart("/configuration/filter/create")
+                .file(jarUpload)
+                .with(user(user))
+                .with(csrf())
+                .param("name", expectedName)
+                .param("classpath", expectedClassPath))
+            .andExpect(model().hasErrors())
+            .andExpect(model().attributeHasFieldErrors("filterForm", "file"))
+            .andExpect(status().isOk());
+
+        // Lookup Filter
+        final Filter filter = filterRepository.findByName(expectedName);
+        assertNull("Should NOT have filter", filter);
+    }
+
+    /**
+     * Test attempting to create a new filter, but fail to load the filter class from the jar.
+     */
+    @Test
+    @Transactional
+    public void testPostCreate_createNewFilterInvalidJar() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final String expectedName = "My New Filter Name " + System.currentTimeMillis();
+        final String expectedClassPath = "examples.filter.StringSearchFilter";
+
+        // This isn't a real jar, will fail validation.
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "contents".getBytes(Charsets.UTF_8));
+
+        // Hit page.
+        mockMvc
+            .perform(multipart("/configuration/filter/create")
+                .file(jarUpload)
+                .with(user(user))
+                .with(csrf())
+                .param("name", expectedName)
+                .param("classpath", expectedClassPath))
+            .andExpect(model().hasErrors())
+            .andExpect(model().attributeHasFieldErrors("filterForm", "file"))
+            .andExpect(status().isOk());
+
+        // Lookup Filter
+        final Filter filter = filterRepository.findByName(expectedName);
+        assertNull("Should NOT have filter", filter);
+    }
+
+    /**
+     * Test attempting to update an existing filter, but send over a bad Id.
+     * This should be kicked back as an error.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingButWithBadMessageFormatId() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final String expectedName = "My New Filter Name " + System.currentTimeMillis();
+        final String expectedClassPath = "examples.filter.StringSearchFilter";
+
+        final MockMultipartFile jarUpload =
+            new MockMultipartFile("file", "testPlugins.jar", null, "MyContent".getBytes(Charsets.UTF_8));
+
+        // Hit page.
+        final MvcResult result = mockMvc
+            .perform(multipart("/configuration/filter/update")
+                .file(jarUpload)
+                .with(user(user))
+                .with(csrf())
+                .param("id", "-1000")
+                .param("name", expectedName)
+                .param("classpath", expectedClassPath))
+            .andExpect(flash().attributeExists("FlashMessage"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/filter"))
+            .andReturn();
+
+        // Grab the flash message
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        assertNotNull("Has flash message", flashMessage);
+        assertTrue("Has error message", flashMessage.isWarning());
+    }
+
+    /**
+     * Test attempting to update an existing message format, but upload a bad jar.
+     * We'd expect it to be kicked back as an error, and keep the existing classpath and jar.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingButWithInvalidJar() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final Filter filter = filterTestTools.createFilter("My Filter" + System.currentTimeMillis());
+        final String expectedName = filter.getName();
+        final String expectedClasspath = filter.getClasspath();
+        final String expectedJarName = filter.getJar();
+        final String expectedJarContents = "OriginalContents";
+        final Path expectedJarPath = Paths.get(filterUploadPath, filter.getJar());
+
+        // Create a dummy jar
+        FileTestTools.createDummyFile(filterUploadPath + filter.getJar(), expectedJarContents);
+
+        // This is an invalid jar.
+        final MockMultipartFile jarUpload =
+            new MockMultipartFile("file", "testPlugins.jar", null, "MyContent".getBytes(Charsets.UTF_8));
+
+        // Hit page.
+        mockMvc
+            .perform(multipart("/configuration/filter/update")
+                .file(jarUpload)
+                .with(user(user))
+                .with(csrf())
+                .param("id", String.valueOf(filter.getId()))
+                .param("name", "Updated Name")
+                .param("classpath", "made.up.classpath"))
+            .andExpect(model().hasErrors())
+            .andExpect(model().attributeHasFieldErrors("filterForm", "file"))
+            .andExpect(status().isOk());
+
+        // Validate filter was not updated.
+        final Filter updatedFilter = filterRepository.findById(filter.getId()).get();
+        assertNotNull("Has filter", updatedFilter);
+        assertEquals("Name not updated", expectedName, updatedFilter.getName());
+        assertEquals("classpath not updated", expectedClasspath, updatedFilter.getClasspath());
+        assertEquals("Jar name not updated", expectedJarName, updatedFilter.getJar());
+
+        // Validate previous jar not overwritten.
+        assertTrue("File should exist", Files.exists(expectedJarPath));
+        final String jarContents = FileTestTools.readFile(expectedJarPath.toString());
+        assertEquals("Jar contents should not have changed", expectedJarContents, jarContents);
+
+        // Cleanup
+        Files.deleteIfExists(expectedJarPath);
+    }
+
+    /**
+     * Test attempting to update an existing filter, but not providing a jar.
+     * We should change the name, but not touch the jar/classpath at all.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingNoJarUploaded() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final Filter filter = filterTestTools.createFilter("My Filter" + System.currentTimeMillis());
+        final String expectedName = filter.getName();
+        final String expectedClasspath = filter.getClasspath();
+        final String expectedJarName = filter.getJar();
+        final String expectedJarContents = "OriginalContents";
+        final Path expectedJarPath = Paths.get(filterUploadPath, filter.getJar());
+
+        // Create a dummy jar
+        FileTestTools.createDummyFile(filterUploadPath + filter.getJar(), expectedJarContents);
+
+        // This is the same as not uploading a jar.
+        final InputStream emptyFile = null;
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, emptyFile);
+
+        final String newName = "MyUpdatedName" + System.currentTimeMillis();
+        final String newClasspath = "my new class path";
+
+        // Hit page.
+        mockMvc
+            .perform(multipart("/configuration/filter/update")
+                .file(jarUpload)
+                .with(user(user))
+                .with(csrf())
+                .param("id", String.valueOf(filter.getId()))
+                .param("name", newName)
+                .param("classpath", newClasspath))
+            .andExpect(model().hasNoErrors())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/filter"));
+
+        // Validate filter was updated.
+        final Filter updatedFilter = filterRepository.findById(filter.getId()).get();
+        assertNotNull("Has filter", updatedFilter);
+        assertEquals("Name updated", newName, updatedFilter.getName());
+        assertEquals("classpath was NOT updated", expectedClasspath, filter.getClasspath());
+        assertNotEquals("classpath was NOT updated", newClasspath, filter.getClasspath());
+        assertEquals("Jar name not updated", expectedJarName, updatedFilter.getJar());
+
+        // Validate jar should still exist
+        assertTrue("File should exist", Files.exists(expectedJarPath));
+
+        // Jar contents should be unchanged
+        final String jarContents = FileTestTools.readFile(expectedJarPath.toString());
+        assertEquals("Jar contents should not have changed", expectedJarContents, jarContents);
+
+        // Cleanup
+        Files.deleteIfExists(expectedJarPath);
+    }
+
+    /**
+     * Test attempting to update an existing filter, uploading a valid jar.
+     * We change the name.  We expect the old file to be removed, and the new one added.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingWithValidJarSameName() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final Filter filter = filterTestTools.createFilter("My Filter" + System.currentTimeMillis());
+        final String expectedName = filter.getName();
+        final String expectedClasspath = filter.getClasspath();
+        final String originalJarName = filter.getJar();
+        final String originalJarContents = "OriginalContents";
+        final Path originalJarPath = Paths.get(filterUploadPath, filter.getJar());
+
+        // Create a dummy jar
+        FileTestTools.createDummyFile(filterUploadPath + filter.getJar(), originalJarContents);
+
+        // This is a valid jar
+        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+
+        final String newName = "MyUpdatedName" + System.currentTimeMillis();
+        final String newClasspath = "examples.filter.StringSearchFilter";
+
+        // Hit page.
+        mockMvc
+            .perform(multipart("/configuration/filter/update")
+                .file(jarUpload)
+                .with(user(user))
+                .with(csrf())
+                .param("id", String.valueOf(filter.getId()))
+                .param("name", newName)
+                .param("classpath", newClasspath))
+            .andExpect(model().hasNoErrors())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/filter"));
+
+        // Validate filter was updated.
+        final Filter updatedFilter = filterRepository.findById(filter.getId()).get();
+        assertNotNull("Has message format", updatedFilter);
+        assertEquals("Name updated", newName, updatedFilter.getName());
+        assertEquals("classpath updated", newClasspath, updatedFilter.getClasspath());
+        assertNotEquals("Jar name not updated", originalJarName, updatedFilter.getJar());
+
+        // Validate previous jar is gone/deleted.
+        assertFalse("File should NOT exist", Files.exists(originalJarPath));
+
+        // Validate new jar is created.
+        final Path newJarPath = Paths.get(filterUploadPath, updatedFilter.getJar());
+        assertTrue("New jar should exist", Files.exists(newJarPath));
+
+        // Cleanup
+        Files.deleteIfExists(newJarPath);
+    }
+
+    /**
+     * Test deleting filter.
+     */
+    @Test
+    @Transactional
+    public void testPostDelete() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.FILTER_DELETE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a Filter.
+        final String expectedFilterName = "My New Filter Name " + System.currentTimeMillis();
+        final Filter filter = filterTestTools.createFilter(expectedFilterName);
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/filter/delete/" + filter.getId())
+                .with(user(user))
+                .with(csrf())
+            )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/filter"));
+
+        // Lookup Cluster
+        final Optional<Filter> filterOptional = filterRepository.findById(filter.getId());
+        assertFalse("Should no longer have filter", filterOptional.isPresent());
+    }
 }

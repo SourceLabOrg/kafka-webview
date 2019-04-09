@@ -300,7 +300,7 @@ public class MessageFormatController extends BaseController {
      * POST deletes the selected message format.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
-    public String deleteCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
+    public String deleteMessageFormat(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Where to redirect.
         final String redirectUrl = "redirect:/configuration/messageFormat";
 

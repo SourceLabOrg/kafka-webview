@@ -301,7 +301,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         };
         final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
 
-        final String expectedClusterName = "My New Cluster Name";
+        final String expectedClusterName = "My New Cluster Name " + System.currentTimeMillis();
         final String expectedBrokerHosts = "localhost:9092";
 
         // Hit Update end point.
