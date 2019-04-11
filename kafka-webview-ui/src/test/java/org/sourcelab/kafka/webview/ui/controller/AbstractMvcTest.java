@@ -26,14 +26,24 @@ package org.sourcelab.kafka.webview.ui.controller;
 
 import org.junit.Before;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
+import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.User;
+import org.sourcelab.kafka.webview.ui.tools.RoleTestTools;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -49,6 +59,9 @@ public abstract class AbstractMvcTest {
     protected UserTestTools userTestTools;
 
     @Autowired
+    protected RoleTestTools roleTestTools;
+
+    @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
     @Autowired
@@ -57,11 +70,10 @@ public abstract class AbstractMvcTest {
     /**
      * Authentication details.
      */
+    @Deprecated
     protected User adminUser;
+    @Deprecated
     protected UserDetails adminUserDetails;
-
-    protected User nonAdminUser;
-    protected UserDetails nonAdminUserDetails;
 
     /**
      * Where JKS files are uploaded to.
@@ -77,10 +89,6 @@ public abstract class AbstractMvcTest {
         adminUser = userTestTools.createAdminUser();
         adminUserDetails = customUserDetailsService.loadUserByUsername(adminUser.getEmail());
 
-        // Create non-admin user
-        nonAdminUser = userTestTools.createUser();
-        nonAdminUserDetails = customUserDetailsService.loadUserByUsername(nonAdminUser.getEmail());
-
         // Define upload path
         uploadPath = appProperties.getUploadPath();
     }
@@ -91,19 +99,9 @@ public abstract class AbstractMvcTest {
      * @param isPost If its a POST true, false if GET
      * @throws Exception on error.
      */
+    @Deprecated
     protected void testUrlWithOutAdminRole(final String url, final boolean isPost) throws Exception {
-        final MockHttpServletRequestBuilder action;
-        if (isPost) {
-            action = post(url)
-                .with(csrf());
-        } else {
-            action = get(url);
-        }
-
-        mockMvc
-            .perform(action.with(user(nonAdminUserDetails)))
-            //.andDo(print())
-            .andExpect(status().isForbidden());
+        assertFalse("Needs to be refactored/removed", true);
     }
 
     /**
@@ -113,6 +111,71 @@ public abstract class AbstractMvcTest {
      * @throws Exception on error.
      */
     protected void testUrlRequiresAuthentication(final String url, final boolean isPost) throws Exception {
+        final MockHttpServletRequestBuilder action = buildEndpoint(url, isPost);
+
+        mockMvc
+            .perform(action)
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    /**
+     * Utility method to test URLs require user authentication to be accessed.
+     * @param url Url to hit
+     * @param isPost If its a POST true, false if GET
+     * @throws Exception on error.
+     */
+    protected void testUrlRequiresPermission(
+        final String url,
+        final boolean isPost,
+        final Permissions ... requiredPermissions
+    ) throws Exception {
+
+        // Create a user with the required permissions.
+        final User userWithPermission = userTestTools.createUserWithPermissions(requiredPermissions);
+        final CustomUserDetails userWithPermissionsDetails = new CustomUserDetails(userWithPermission, Arrays.asList(requiredPermissions));
+
+        // Create a user WITHOUT the required permissions.
+        final User userWithOutPermission = userTestTools.createUserWithPermissions();
+        final CustomUserDetails userWithOutPermissionsDetails = new CustomUserDetails(userWithOutPermission, Collections.emptyList());
+
+        // Define end point we want to hit
+        final MockHttpServletRequestBuilder action = buildEndpoint(url, isPost);
+
+        // First verify you can hit the URL with the required permission.
+        // Since we may not be passing a valid request, just make sure its not forbidden response code.
+        // Then verify you cannot hit the URL w/o the required permission(s).
+        final MvcResult result = mockMvc
+            .perform(action.with(user(userWithOutPermissionsDetails)))
+            .andReturn();
+        assertNotEquals(HttpStatus.FORBIDDEN, result.getResponse().getStatus());
+
+        // Then verify you cannot hit the URL w/o the required permission(s).
+        mockMvc
+            .perform(action.with(user(userWithOutPermissionsDetails)))
+            .andExpect(status().isForbidden());
+
+        // If we have multiple required permissions, ensure they all have to be AND'd together.
+        if (requiredPermissions.length > 1) {
+            for (final Permissions requiredPermission : requiredPermissions) {
+                // Create a user using only ONE of the required permissions
+                final User userWithSinglePermission = userTestTools.createUserWithPermissions(requiredPermission);
+                final CustomUserDetails userDetailsWithSinglePermission = new CustomUserDetails(
+                    userWithSinglePermission,
+                    Collections.singleton(requiredPermission)
+                );
+
+                // Attempt to hit the end point, verify it is restricted.
+                mockMvc
+                    .perform(action.with(user(userDetailsWithSinglePermission)))
+                    .andExpect(status().isForbidden());
+
+            }
+        }
+    }
+
+    private MockHttpServletRequestBuilder buildEndpoint(final String url, final boolean isPost) {
+        // Define end point we want to hit
         final MockHttpServletRequestBuilder action;
         if (isPost) {
             action = post(url)
@@ -121,10 +184,6 @@ public abstract class AbstractMvcTest {
             action = get(url);
         }
 
-        mockMvc
-            .perform(action)
-            //.andDo(print())
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrlPattern("**/login"));
+        return action;
     }
 }

@@ -25,7 +25,9 @@
     <logger name="org.apache.zookeeper.ClientCnxn" level="WARN"/>
 
     <!-- Logging for internal Kafka/Zookeeper -->
+    <logger name="org.apache.zookeeper" level="WARN"/>
     <logger name="org.apache.zookeeper.server" level="WARN"/>
+    <logger name="kafka.utils" level="WARN"/>
     <logger name="kafka.controller" level="WARN"/>
     <logger name="kafka.coordinator" level="WARN"/>
     <logger name="kafka.cluster" level="WARN"/>
@@ -34,6 +36,11 @@
     <logger name="kafka.log" level="WARN"/>
     <logger name="kafka.zk" level="WARN"/>
     <logger name="kafka.zookeeper" level="WARN"/>
-    <logger name="org.apache.kafka.common.utils.AppInfoParser" level="WARN"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.apache.kafka.common" level="WARN"/>
+
+    <!-- Kafka WebView Noise -->
+    <logger name="org.sourcelab.kafka.webview.ui.manager.socket.WebSocketConsumersManager" level="WARN"/>
+    <logger name="com.salesforce.kafka.test" level="WARN"/>
 
 </configuration>

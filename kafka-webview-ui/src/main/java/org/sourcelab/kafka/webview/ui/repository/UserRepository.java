@@ -25,8 +25,11 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.User;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * For interacting w/ the User database table.
@@ -46,5 +49,16 @@ public interface UserRepository extends CrudRepository<User, Long> {
      * @param email Email to lookup user by
      * @return User or null if none found.
      */
-    User findByEmail(String email);
+    User findByEmail(final String email);
+
+    @Query(value = "SELECT roleId as roleId, count(id) as usages FROM user GROUP BY roleId")
+    List<Object[]> getRoleCounts();
+
+    /**
+     * Determine if any users are using the roleId.
+     * @param roleId the roleId to look for.
+     * @return True if any user is using this role id, false if not.
+     */
+    boolean existsByRoleId(final long roleId);
+
 }

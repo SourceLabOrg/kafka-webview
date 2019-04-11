@@ -32,7 +32,9 @@ import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.manager.socket.StreamConsumerDetails;
 import org.sourcelab.kafka.webview.ui.manager.socket.WebSocketConsumersManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
@@ -42,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,13 +86,29 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
     private ClusterTestTools clusterTestTools;
 
     /**
-     * Test cannot load pages w/o admin role.
+     * Ensure authentication is required.
      */
     @Test
     @Transactional
-    public void test_withoutAdminRole() throws Exception {
-        testUrlWithOutAdminRole("/configuration/stream", false);
-        testUrlWithOutAdminRole("/configuration/stream/close/SomeHashHere", true);
+    public void testUrlsRequireAuthentication() throws Exception {
+        // Stream Consumer index page.
+        testUrlRequiresAuthentication("/configuration/stream", false);
+
+        // Stream Consumer delete page.
+        testUrlRequiresAuthentication("/configuration/stream/close/SomeHashHere", true);
+    }
+
+    /**
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        // Stream Consumer index page.
+        testUrlRequiresPermission("/configuration/stream", false, Permissions.CONSUMER_READ);
+
+        // Stream Consumer delete page.
+        testUrlRequiresPermission("/configuration/stream/close/SomeHashHere", true, Permissions.CONSUMER_DELETE);
     }
 
     /**
@@ -98,6 +117,11 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void test_index() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CONSUMER_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String viewName1 = "My first view";
         final String viewName2 = "My second view";
 
@@ -158,8 +182,7 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
 
         // Hit index.
         mockMvc
-            .perform(get("/configuration/stream").with(user(adminUserDetails)))
-            //.andDo(print())
+            .perform(get("/configuration/stream").with(user(user)))
             .andExpect(status().isOk())
             // Validate consumer 1
             .andExpect(content().string(containsString(userName1)))
@@ -196,6 +219,11 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void test_closeValidHash() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CONSUMER_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String sessionHash = "SessionHash1";
 
         // When our mock is asked for the consumers, return the above values.
@@ -205,9 +233,8 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
         // Hit index.
         final MvcResult result = mockMvc
             .perform(post("/configuration/stream/close/" + sessionHash)
-                .with(user(adminUserDetails))
-                .with(csrf())
-            )//.andDo(print())
+                .with(user(user))
+                .with(csrf()))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/stream"))
             .andExpect(flash().attributeExists("FlashMessage"))
@@ -231,6 +258,11 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void test_closeInvalidHash() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CONSUMER_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String sessionHash = "SessionHash1";
 
         // When our mock is asked for the consumers, return the above values.
@@ -240,9 +272,8 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
         // Hit index.
         final MvcResult result = mockMvc
             .perform(post("/configuration/stream/close/" + sessionHash)
-                .with(user(adminUserDetails))
-                .with(csrf())
-            )//.andDo(print())
+                .with(user(user))
+                .with(csrf()))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/stream"))
             .andExpect(flash().attributeExists("FlashMessage"))

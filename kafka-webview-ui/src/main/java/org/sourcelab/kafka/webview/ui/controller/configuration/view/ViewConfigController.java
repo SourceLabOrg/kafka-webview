@@ -45,7 +45,6 @@ import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
-import org.sourcelab.kafka.webview.ui.repository.ViewToFilterOptionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,23 +75,34 @@ import java.util.stream.Collectors;
 @RequestMapping("/configuration/view")
 public class ViewConfigController extends BaseController {
 
-    @Autowired
-    private ClusterRepository clusterRepository;
+    private final ClusterRepository clusterRepository;
+    private final MessageFormatRepository messageFormatRepository;
+    private final ViewRepository viewRepository;
+    private final FilterRepository filterRepository;
+    private final KafkaOperationsFactory kafkaOperationsFactory;
 
+    /**
+     * Constructor.
+     * @param clusterRepository repository instance.
+     * @param messageFormatRepository repository instance.
+     * @param viewRepository repository instance.
+     * @param filterRepository repository instance.
+     * @param kafkaOperationsFactory OperationFactory.
+     */
     @Autowired
-    private MessageFormatRepository messageFormatRepository;
-
-    @Autowired
-    private ViewRepository viewRepository;
-
-    @Autowired
-    private ViewToFilterOptionalRepository viewToFilterOptionalRepository;
-
-    @Autowired
-    private FilterRepository filterRepository;
-
-    @Autowired
-    private KafkaOperationsFactory kafkaOperationsFactory;
+    public ViewConfigController(
+        final ClusterRepository clusterRepository,
+        final MessageFormatRepository messageFormatRepository,
+        final ViewRepository viewRepository,
+        final FilterRepository filterRepository,
+        final KafkaOperationsFactory kafkaOperationsFactory
+    ) {
+        this.clusterRepository = clusterRepository;
+        this.messageFormatRepository = messageFormatRepository;
+        this.viewRepository = viewRepository;
+        this.filterRepository = filterRepository;
+        this.kafkaOperationsFactory = kafkaOperationsFactory;
+    }
 
     /**
      * GET Displays main configuration index.
@@ -322,7 +332,7 @@ public class ViewConfigController extends BaseController {
         long sortOrder = 0;
         for (final Long filterId : submittedFilterIds) {
             // Skip invalids
-            if (filterId == null || filterId.equals(0)) {
+            if (filterId == null || filterId.equals(0L)) {
                 continue;
             }
 
@@ -384,7 +394,7 @@ public class ViewConfigController extends BaseController {
         long sortOrder = 0;
         for (final Long filterId : submittedFilterIds) {
             // Skip invalids
-            if (filterId == null || filterId.equals(0)) {
+            if (filterId == null || filterId.equals(0L)) {
                 continue;
             }
 

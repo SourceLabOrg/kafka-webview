@@ -27,6 +27,8 @@ package org.sourcelab.kafka.webview.ui.controller.view;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
@@ -50,16 +52,26 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/view")
 public class ViewController extends BaseController {
-    @Autowired
-    private ViewRepository viewRepository;
 
+    private final ViewRepository viewRepository;
+    private final ClusterRepository clusterRepository;
+
+    /**
+     * Constructor.
+     * @param viewRepository view repository instance.
+     * @param clusterRepository cluster repository instance.
+     */
     @Autowired
-    private ClusterRepository clusterRepository;
+    public ViewController(final ViewRepository viewRepository, final ClusterRepository clusterRepository) {
+        this.viewRepository = viewRepository;
+        this.clusterRepository = clusterRepository;
+    }
 
     /**
      * GET views index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.VIEW_READ)
     public String index(
         final Model model,
         @RequestParam(name = "clusterId", required = false) final Long clusterId
@@ -85,6 +97,7 @@ public class ViewController extends BaseController {
         // Set model Attributes
         model.addAttribute("viewList", views);
         model.addAttribute("clustersById", clustersById);
+        model.addAttribute("canCreateViews", this.hasPermission(Permissions.VIEW_CREATE));
 
         final String clusterName;
         if (clusterId != null && clustersById.containsKey(clusterId)) {
@@ -111,6 +124,7 @@ public class ViewController extends BaseController {
      * GET Displays view for specified view.
      */
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.VIEW_READ)
     public String index(
         @PathVariable final Long id,
         final RedirectAttributes redirectAttributes,

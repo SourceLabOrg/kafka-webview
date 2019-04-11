@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,16 +94,48 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test cannot load pages w/o admin role.
+     * Ensure authentication is required.
      */
     @Test
     @Transactional
-    public void test_withoutAdminRole() throws Exception {
-        testUrlWithOutAdminRole("/configuration/messageFormat", false);
-        testUrlWithOutAdminRole("/configuration/messageFormat/create", false);
-        testUrlWithOutAdminRole("/configuration/messageFormat/edit/1", false);
-        testUrlWithOutAdminRole("/configuration/messageFormat/create", true);
-        testUrlWithOutAdminRole("/configuration/messageFormat/delete/1", true);
+    public void testUrlsRequireAuthentication() throws Exception {
+        // Format index page.
+        testUrlRequiresAuthentication("/configuration/messageFormat", false);
+
+        // Format create page.
+        testUrlRequiresAuthentication("/configuration/messageFormat/create", false);
+        testUrlRequiresAuthentication("/configuration/messageFormat/create", true);
+
+        // Format edit page.
+        testUrlRequiresAuthentication("/configuration/messageFormat/edit/1", false);
+        testUrlRequiresAuthentication("/configuration/messageFormat/update", true);
+
+        // Format delete page.
+        testUrlRequiresAuthentication("/configuration/messageFormat/delete/1", true);
+    }
+
+    /**
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        // Create at least one format.
+        final MessageFormat format = messageFormatTestTools.createMessageFormat("Test Format " + System.currentTimeMillis());
+
+        // Format index page.
+        testUrlRequiresPermission("/configuration/messageFormat", false, Permissions.MESSAGE_FORMAT_READ);
+
+        // Format create page.
+        testUrlRequiresPermission("/configuration/messageFormat/create", false, Permissions.MESSAGE_FORMAT_CREATE);
+        testUrlRequiresPermission("/configuration/messageFormat/create", true, Permissions.MESSAGE_FORMAT_CREATE);
+
+        // Format edit page.
+        testUrlRequiresPermission("/configuration/messageFormat/edit/" + format.getId(), false, Permissions.MESSAGE_FORMAT_MODIFY);
+        testUrlRequiresPermission("/configuration/messageFormat/update", true, Permissions.MESSAGE_FORMAT_MODIFY);
+
+        // Format delete page.
+        testUrlRequiresPermission("/configuration/messageFormat/delete/1", true, Permissions.MESSAGE_FORMAT_DELETE);
     }
 
     /**
@@ -110,14 +144,18 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testIndex() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_READ
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create some dummy formats
         final MessageFormat format1 = messageFormatTestTools.createMessageFormat("Format 1");
         final MessageFormat format2 = messageFormatTestTools.createMessageFormat("Format 2");
 
         // Hit index.
         mockMvc
-            .perform(get("/configuration/messageFormat").with(user(adminUserDetails)))
-            //.andDo(print())
+            .perform(get("/configuration/messageFormat").with(user(user)))
             .andExpect(status().isOk())
             // Validate cluster 1
             .andExpect(content().string(containsString(format1.getName())))
@@ -134,11 +172,54 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testGetCreate() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit index.
         mockMvc
-            .perform(get("/configuration/messageFormat/create").with(user(adminUserDetails)))
-            //.andDo(print())
-            .andExpect(status().isOk());
+            .perform(get("/configuration/messageFormat/create").with(user(user)))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("New Message Format")))
+            // Should submit to the create end point
+            .andExpect(content().string(containsString("action=\"/configuration/messageFormat/create\"")))
+            .andExpect(content().string(containsString("Submit")));
+    }
+
+    /**
+     * Test that you cannot update a message format by submitting a request to the create end point
+     * with an id parameter.
+     */
+    @Test
+    @Transactional
+    public void testPostCreate_withId_shouldResultIn400Error() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_READ,
+            Permissions.MESSAGE_FORMAT_CREATE,
+            Permissions.MESSAGE_FORMAT_MODIFY,
+            Permissions.MESSAGE_FORMAT_DELETE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a format
+        final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
+        final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat(expectedName);
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/messageFormat/create")
+                .with(user(user))
+                .with(csrf())
+                // Post the ID parameter to attempt to update existing filter via create end point.
+                .param("id", String.valueOf(messageFormat.getId()))
+                .param("name", "Updated Name"))
+            .andExpect(status().is4xxClientError());
+
+        // Lookup Filter
+        final MessageFormat updatedFormat = messageFormatRepository.findById(messageFormat.getId()).get();
+        assertNotNull("Should have filter", updatedFormat);
+        assertEquals("Has original name -- was not updated", expectedName, updatedFormat.getName());
     }
 
     /**
@@ -146,7 +227,12 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newMessageFormat() throws Exception {
+    public void testPostCreate_newMessageFormat() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
         final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
 
@@ -158,9 +244,9 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit index.
         mockMvc
-            .perform(multipart("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/create")
                 .file(jarUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedName)
                 .param("classpath", expectedClassPath)
@@ -168,7 +254,6 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
                 .param("customOptionNames", "option2")
                 .param("customOptionValues", "value1")
                 .param("customOptionValues", "value2"))
-            //.andDo(print())
             .andExpect(model().hasNoErrors())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
@@ -197,7 +282,12 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_createNewMessageFormatMissingFile() throws Exception {
+    public void testPostCreate_createNewMessageFormatMissingFile() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
         final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
 
@@ -206,13 +296,12 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         mockMvc
-            .perform(multipart("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/create")
                 .file(jarUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedName)
                 .param("classpath", expectedClassPath))
-            //.andDo(print())
             .andExpect(model().hasErrors())
             .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
             .andExpect(status().isOk());
@@ -227,7 +316,12 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_createNewMessageFormatInvalidJar() throws Exception {
+    public void testPostCreate_createNewMessageFormatInvalidJar() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
         final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
 
@@ -236,13 +330,12 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Hit page.
         mockMvc
-            .perform(multipart("/configuration/messageFormat/update")
+            .perform(multipart("/configuration/messageFormat/create")
                 .file(jarUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedName)
                 .param("classpath", expectedClassPath))
-            //.andDo(print())
             .andExpect(model().hasErrors())
             .andExpect(model().attributeHasFieldErrors("messageFormatForm", "file"))
             .andExpect(status().isOk());
@@ -253,12 +346,49 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     }
 
     /**
+     * Test that you cannot create a message format by submitting a request to the update end point
+     * without an id parameter.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_withOutId_shouldResultIn400Error() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_DELETE,
+            Permissions.MESSAGE_FORMAT_CREATE,
+            Permissions.MESSAGE_FORMAT_READ,
+            Permissions.MESSAGE_FORMAT_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a Filter.
+        final String expectedName = "My New Name " + System.currentTimeMillis();
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/messageFormat/update")
+                .with(user(user))
+                .with(csrf())
+                // Don't include the Id Parameter in this request
+                .param("name", expectedName))
+            .andExpect(status().is4xxClientError());
+
+        // Lookup Filter
+        final MessageFormat createdFormat = messageFormatRepository.findByName(expectedName);
+        assertNull("Should not have message format", createdFormat);
+    }
+
+    /**
      * Test attempting to update an existing message format, but send over a bad Id.
      * This should be kicked back as an error.
      */
     @Test
     @Transactional
     public void testPostUpdate_updatingExistingButWithBadMessageFormatId() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
         final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
 
@@ -269,7 +399,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         final MvcResult result = mockMvc
             .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", "-1000")
                 .param("name", expectedName)
@@ -296,6 +426,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_updatingExistingButWithInvalidJar() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
         final String expectedName = messageFormat.getName();
         final String expectedClasspath = messageFormat.getClasspath();
@@ -315,7 +450,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(messageFormat.getId()))
                 .param("name", "Updated Name")
@@ -354,6 +489,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_updatingExistingNoJarUploaded() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
         final String originalClasspath = messageFormat.getClasspath();
         final String originalJarName = messageFormat.getJar();
@@ -374,7 +514,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(messageFormat.getId()))
                 .param("name", newName)
@@ -419,6 +559,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_updatingExistingWithValidJarSameName() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
         final String originalJarName = messageFormat.getJar();
         final String originalJarContents = "OriginalContents";
@@ -438,7 +583,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(multipart("/configuration/messageFormat/update")
                 .file(jarUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(messageFormat.getId()))
                 .param("name", newName)
@@ -476,6 +621,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testGetEdit_existingMessageFormat() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_MODIFY,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final MessageFormat format = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
         format.setOptionParameters("{\"myOption1\":\"myValue1\",\"myOption2\":\"myValue2\"}");
         messageFormatRepository.save(format);
@@ -483,7 +633,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         // Hit edit page.
         mockMvc
             .perform(get("/configuration/messageFormat/edit/" + format.getId())
-                .with(user(adminUserDetails)))
+                .with(user(user)))
             //.andDo(print())
             .andExpect(status().isOk())
             .andExpect(content().string(containsString(format.getName())))
@@ -496,7 +646,14 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
             .andExpect(content().string(containsString("myValue1")))
             .andExpect(content().string(containsString("myValue2")))
             .andExpect(content().string(containsString("myOption1")))
-            .andExpect(content().string(containsString("myOption2")));
+            .andExpect(content().string(containsString("myOption2")))
+
+            // Should submit to the update end point.
+            .andExpect(content().string(containsString("action=\"/configuration/messageFormat/update\"")))
+            .andExpect(content().string(containsString(
+                "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + format.getId() + "\">"
+            )))
+            .andExpect(content().string(containsString("Submit")));
     }
 
     /**
@@ -505,6 +662,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostDelete_notUsed() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_DELETE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create some dummy formats
         final MessageFormat format = messageFormatTestTools.createMessageFormat("Format 1");
         final long formatId = format.getId();
@@ -517,9 +679,8 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(post("/configuration/messageFormat/delete/" + formatId)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf()))
-            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 
@@ -537,6 +698,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostDelete_inUse() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.MESSAGE_FORMAT_DELETE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create some dummy formats
         final MessageFormat format = messageFormatTestTools.createMessageFormat("Format 1");
         final long formatId = format.getId();
@@ -552,9 +718,8 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(post("/configuration/messageFormat/delete/" + formatId)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf()))
-            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/messageFormat"));
 

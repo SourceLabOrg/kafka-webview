@@ -27,11 +27,11 @@
                             It looks like you have no Views configured yet!<br/>
                         </p>
                         <p class="mb-0">
-                            <span sec:authorize="hasRole('ROLE_ADMIN')">
+                            <span th:if="${canCreateViews}">
                                 Let's head over and set one up now!
                                 <a th:href="@{/configuration/view/create}">Setup new View</a>
                             </span>
-                            <span sec:authorize="!hasRole('ROLE_ADMIN')">
+                            <span th:if="${!canCreateViews}">
                                 Ask an Administrator to configure a view.
                             </span>
                         </p>

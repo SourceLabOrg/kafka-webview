@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller.stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,22 @@ public class StreamControllerTest extends AbstractMvcTest {
         final View view = viewTestTools.createView("TestView");
 
         // View "stream" page.
+        testUrlRequiresAuthentication("/stream", false);
         testUrlRequiresAuthentication("/stream/" + view.getId(), false);
+    }
+
+    /**
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        final View view = viewTestTools.createView("TestView");
+
+        // Stream index page just redirects to /view, which is covered in a separate test.
+
+        // View "stream" page.
+        testUrlRequiresPermission("/stream/" + view.getId(), false, Permissions.VIEW_READ);
     }
 
     /**
@@ -67,14 +83,13 @@ public class StreamControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void smokeTestStream() throws Exception {
+    public void smokeTestStreamRead() throws Exception {
         final View view = viewTestTools.createView("TestView");
 
         // Hit the stream page for specified view.
         mockMvc
             .perform(get("/stream/" + view.getId())
-                .with(user(adminUserDetails)))
-            //.andDo(print())
+                .with(user(userTestTools.createUserDetailsWithPermissions(Permissions.VIEW_READ))))
             .andExpect(status().isOk())
             // Contains some basic text
             .andExpect(content().string(containsString(view.getName())))

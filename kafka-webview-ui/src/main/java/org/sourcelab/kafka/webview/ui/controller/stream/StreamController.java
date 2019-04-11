@@ -36,6 +36,8 @@ import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,19 +62,33 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/stream")
 public class StreamController extends BaseController {
-    @Autowired
-    private AppProperties appProperties;
 
-    @Autowired
-    private ViewRepository viewRepository;
+    private final AppProperties appProperties;
+    private final ViewRepository viewRepository;
+    private final WebSocketConsumersManager webSocketConsumersManager;
 
+    /**
+     * Constructor.
+     * @param appProperties application properties instance.
+     * @param viewRepository view repository instance.
+     * @param webSocketConsumersManager webSocketConsumersManager instance.
+     */
     @Autowired
-    private WebSocketConsumersManager webSocketConsumersManager;
+    public StreamController(
+        final AppProperties appProperties,
+        final ViewRepository viewRepository,
+        final WebSocketConsumersManager webSocketConsumersManager
+    ) {
+        this.appProperties = appProperties;
+        this.viewRepository = viewRepository;
+        this.webSocketConsumersManager = webSocketConsumersManager;
+    }
 
     /**
      * Just redirects to view index for now.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
+    @RequirePermission(Permissions.VIEW_READ)
     public String index(final Model model) {
         // Setup breadcrumbs
         new BreadCrumbManager(model)
@@ -85,6 +101,7 @@ public class StreamController extends BaseController {
      * Serves standard http requested page with client JS code.
      */
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
+    @RequirePermission(Permissions.VIEW_READ)
     public String stream(
         @PathVariable final Long id,
         final Model model,
@@ -119,6 +136,7 @@ public class StreamController extends BaseController {
      */
     @MessageMapping("/consume/{viewId}")
     @Transactional
+    @RequirePermission(Permissions.VIEW_READ)
     public String newConsumer(
         @DestinationVariable final Long viewId,
         final ConsumeRequest consumeRequest,
@@ -153,6 +171,7 @@ public class StreamController extends BaseController {
      */
     @MessageMapping("/pause/{viewId}")
     @Transactional
+    @RequirePermission(Permissions.VIEW_READ)
     public String pauseConsumer(
         @DestinationVariable final Long viewId,
         final SimpMessageHeaderAccessor headerAccessor) {
@@ -169,6 +188,7 @@ public class StreamController extends BaseController {
      */
     @MessageMapping("/resume/{viewId}")
     @Transactional
+    @RequirePermission(Permissions.VIEW_READ)
     public String resumeConsumer(
         @DestinationVariable final Long viewId,
         final SimpMessageHeaderAccessor headerAccessor) {

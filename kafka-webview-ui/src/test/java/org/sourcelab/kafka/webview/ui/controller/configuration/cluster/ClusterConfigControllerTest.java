@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslProperties;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
@@ -39,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +50,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -90,16 +93,54 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test cannot load pages w/o admin role.
+     * Ensure authentication is required.
      */
     @Test
     @Transactional
-    public void test_withoutAdminRole() throws Exception {
-        testUrlWithOutAdminRole("/configuration/cluster", false);
-        testUrlWithOutAdminRole("/configuration/filter/create", false);
-        testUrlWithOutAdminRole("/configuration/filter/edit/1", false);
-        testUrlWithOutAdminRole("/configuration/filter/update", true);
-        testUrlWithOutAdminRole("/configuration/filter/delete/1", true);
+    public void testUrlsRequireAuthentication() throws Exception {
+        // Cluster index page.
+        testUrlRequiresAuthentication("/configuration/cluster", false);
+
+        // Cluster create page.
+        testUrlRequiresAuthentication("/configuration/cluster/create", false);
+        testUrlRequiresAuthentication("/configuration/cluster/create", true);
+
+        // Cluster edit page.
+        testUrlRequiresAuthentication("/configuration/cluster/edit/1", false);
+        testUrlRequiresAuthentication("/configuration/cluster/update", true);
+
+        // Cluster delete page.
+        testUrlRequiresAuthentication("/configuration/cluster/delete/1", true);
+
+        // Cluster test page.
+        testUrlRequiresAuthentication("/configuration/cluster/test/1", false);
+    }
+
+    /**
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        // Create at least one cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster " + System.currentTimeMillis());
+
+        // Cluster index page.
+        testUrlRequiresPermission("/configuration/cluster", false, Permissions.CLUSTER_READ);
+
+        // Cluster create page.
+        testUrlRequiresPermission("/configuration/cluster/create", false, Permissions.CLUSTER_CREATE);
+        testUrlRequiresPermission("/configuration/cluster/create", true, Permissions.CLUSTER_CREATE);
+
+        // Cluster edit page.
+        testUrlRequiresPermission("/configuration/cluster/edit/" + cluster.getId(), false, Permissions.CLUSTER_MODIFY);
+        testUrlRequiresPermission("/configuration/cluster/update", true, Permissions.CLUSTER_MODIFY);
+
+        // Cluster delete page.
+        testUrlRequiresPermission("/configuration/cluster/delete/" + cluster.getId(), true, Permissions.CLUSTER_DELETE);
+
+        // Cluster test page.
+        testUrlRequiresPermission("/configuration/cluster/test/" + cluster.getId(), false, Permissions.CLUSTER_READ);
     }
 
     /**
@@ -107,15 +148,19 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testIndex() throws Exception {
+    public void testGetIndex() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create some dummy clusters
         final Cluster cluster1 = clusterTestTools.createCluster("My Test Cluster 1 2 3");
         final Cluster cluster2 = clusterTestTools.createCluster("Some other Cluster");
 
         // Hit index.
         mockMvc
-            .perform(get("/configuration/cluster").with(user(adminUserDetails)))
-            //.andDo(print())
+            .perform(get("/configuration/cluster").with(user(user)))
             .andExpect(status().isOk())
             // Validate cluster 1
             .andExpect(content().string(containsString(cluster1.getName())))
@@ -132,13 +177,117 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testGetCreate() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit index.
         mockMvc
             .perform(get("/configuration/cluster/create")
-                .with(user(adminUserDetails)))
-            //.andDo(print())
-            .andExpect(status().isOk());
+                .with(user(user)))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("New Cluster")))
+            // Should submit to the create end point
+            .andExpect(content().string(containsString("action=\"/configuration/cluster/create\"")))
+            .andExpect(content().string(containsString("Submit")));
+    }
 
+    /**
+     * Smoke test the Cluster edit page.
+     */
+    @Test
+    @Transactional
+    public void testGetEdit() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster " + System.currentTimeMillis());
+
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_MODIFY,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Hit index.
+        mockMvc
+            .perform(get("/configuration/cluster/edit/" + cluster.getId())
+                .with(user(user)))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString(cluster.getName())))
+            // Should submit to the update end point.
+            .andExpect(content().string(containsString("action=\"/configuration/cluster/update\"")))
+            .andExpect(content().string(containsString(
+                "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + cluster.getId() + "\">"
+            )))
+            .andExpect(content().string(containsString("Submit")));
+    }
+
+    /**
+     * Test that you cannot update a cluster by submitting a request to the create end point
+     * with a cluster id parameter.
+     */
+    @Test
+    @Transactional
+    public void testPostCreate_withId_shouldResultIn400Error() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+            Permissions.CLUSTER_MODIFY,
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final String expectedClusterName = "My New Cluster Name" + System.currentTimeMillis();
+        final String expectedBrokerHosts = "localhost:9092";
+
+        // Create existing cluster
+        final Cluster cluster = clusterTestTools.createCluster(expectedClusterName);
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/cluster/create")
+                .with(user(user))
+                .with(csrf())
+                // Post the ID parameter to attempt to update existing cluster via create end point.
+                .param("id", String.valueOf(cluster.getId()))
+                .param("name", "Updated Name")
+                .param("brokerHosts", expectedBrokerHosts))
+            .andExpect(status().is4xxClientError());
+
+        // Lookup Cluster
+        final Cluster updatedCluster = clusterRepository.findById(cluster.getId()).get();
+        assertNotNull("Should have cluster", cluster);
+        assertEquals("Has original name -- was not updated", expectedClusterName, cluster.getName());
+    }
+
+    /**
+     * Test that you cannot create a cluster by submitting a request to the update end point
+     * without a cluster id parameter.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_withOutId_shouldResultIn400Error() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+            Permissions.CLUSTER_MODIFY,
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final String expectedClusterName = "My New Cluster Name" + System.currentTimeMillis();
+        final String expectedBrokerHosts = "localhost:9092";
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/cluster/update")
+                .with(user(user))
+                .with(csrf())
+                // Don't include the Id Parameter in this request
+                .param("name", expectedClusterName)
+                .param("brokerHosts", expectedBrokerHosts))
+            .andExpect(status().is4xxClientError());
+
+        // Lookup Cluster
+        final Cluster createdCluster = clusterRepository.findByName(expectedClusterName);
+        assertNull("Should not have cluster", createdCluster);
     }
 
     /**
@@ -146,18 +295,22 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newCluster() throws Exception {
-        final String expectedClusterName = "My New Cluster Name";
+    public void testPostCreate_newCluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        final String expectedClusterName = "My New Cluster Name " + System.currentTimeMillis();
         final String expectedBrokerHosts = "localhost:9092";
 
         // Hit Update end point.
         mockMvc
-            .perform(post("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+            .perform(post("/configuration/cluster/create")
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts))
-            //.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/cluster"));
 
@@ -177,6 +330,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_existingNonSslCluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create an existing cluster
         final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster");
         originalCluster.setValid(true);
@@ -188,7 +346,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Hit Update end point.
         mockMvc
             .perform(post("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
@@ -212,7 +370,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newSslCluster() throws Exception {
+    public void testPostCreate_newSslCluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedClusterName = "My New Cluster Name" + System.currentTimeMillis();
         final String expectedBrokerHosts = "localhost:9092";
         final String expectedKeystorePassword = "KeyStorePassword";
@@ -223,10 +386,10 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         mockMvc
-            .perform(multipart("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/create")
                 .file(trustStoreUpload)
                 .file(keyStoreUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts)
@@ -271,7 +434,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newSslCluster_missingKeyStore_failsValidation() throws Exception {
+    public void testPostCreate_newSslCluster_missingKeyStore_failsValidation() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedClusterName = "My New Cluster Name" + System.currentTimeMillis();
         final String expectedBrokerHosts = "localhost:9092";
         final String expectedKeystorePassword = "KeyStorePassword";
@@ -281,9 +449,9 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit create page.
         final MvcResult result = mockMvc
-            .perform(multipart("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/create")
                 .file(trustStoreUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts)
@@ -322,6 +490,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_existingSslCluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create an existing cluster
         final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster");
         originalCluster.setValid(true);
@@ -343,7 +516,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Hit create page.
         mockMvc
             .perform(multipart("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
@@ -390,6 +563,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_existingSslClusterUpdateTrustStore() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create an existing cluster
         final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster");
         originalCluster.setValid(true);
@@ -414,7 +592,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(multipart("/configuration/cluster/update")
                 .file(trustStoreUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
@@ -464,6 +642,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_existingSslClusterUpdateKeyStore() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create an existing cluster
         final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster");
         originalCluster.setValid(true);
@@ -488,7 +671,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         mockMvc
             .perform(multipart("/configuration/cluster/update")
                 .file(keyStoreUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
@@ -537,6 +720,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_existingSslClusterUpdateToNonSsl() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create an existing cluster
         final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster");
         originalCluster.setValid(true);
@@ -561,7 +749,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Hit create page.
         mockMvc
             .perform(multipart("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
@@ -598,7 +786,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newSaslPlain_Cluster() throws Exception {
+    public void testPostCreate_newSaslPlain_Cluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedClusterName = "My New Cluster Name";
         final String expectedBrokerHosts = "localhost:9092";
         final String expectedSaslMechanism = "PLAIN";
@@ -607,8 +800,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit Update end point.
         mockMvc
-            .perform(post("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+            .perform(post("/configuration/cluster/create")
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts)
@@ -654,7 +847,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newSaslGSSAPI_Cluster() throws Exception {
+    public void testPostCreate_newSaslGSSAPI_Cluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedClusterName = "My New Cluster Name";
         final String expectedBrokerHosts = "localhost:9092";
         final String expectedSaslMechanism = "GSSAPI";
@@ -664,8 +862,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit Update end point.
         mockMvc
-            .perform(post("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+            .perform(post("/configuration/cluster/create")
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts)
@@ -704,7 +902,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newSaslCustom_Cluster() throws Exception {
+    public void testPostCreate_newSaslCustom_Cluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedClusterName = "My New Cluster Name";
         final String expectedBrokerHosts = "localhost:9092";
         final String expectedSaslMechanism = "CustomThing";
@@ -714,8 +917,8 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit Update end point.
         mockMvc
-            .perform(post("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+            .perform(post("/configuration/cluster/create")
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts)
@@ -756,6 +959,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_existingSaslCluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final SaslProperties saslProperties = SaslProperties.newBuilder()
             .withJaas("Custom Jaas")
             .withMechanism("PLAIN")
@@ -779,7 +987,7 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
         // Hit Update end point.
         mockMvc
             .perform(post("/configuration/cluster/update")
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("id", String.valueOf(originalCluster.getId()))
                 .param("name", expectedClusterName)
@@ -805,7 +1013,12 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newSaslSSL_Cluster() throws Exception {
+    public void testPostCreate_newSaslSSL_Cluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         final String expectedClusterName = "My New Cluster Name using SASL+SSL" + System.currentTimeMillis();
         final String expectedBrokerHosts = "localhost:9092";
         final String expectedSaslMechanism = "PLAIN";
@@ -817,9 +1030,9 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Hit Update end point.
         mockMvc
-            .perform(multipart("/configuration/cluster/update")
+            .perform(multipart("/configuration/cluster/create")
                 .file(trustStoreUpload)
-                .with(user(adminUserDetails))
+                .with(user(user))
                 .with(csrf())
                 .param("name", expectedClusterName)
                 .param("brokerHosts", expectedBrokerHosts)
@@ -875,6 +1088,86 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
 
         // Cleanup
         Files.deleteIfExists(Paths.get(keyStoreUploadPath, cluster.getTrustStoreFile()));
+    }
+
+    /**
+     * Test deleting an existing ssl cluster, ensuring files get removed from disk.
+     */
+    @Test
+    @Transactional
+    public void testPostDelete_existingSslCluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_DELETE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create an existing cluster
+        final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster" + System.currentTimeMillis());
+        originalCluster.setValid(true);
+        originalCluster.setSslEnabled(true);
+        originalCluster.setKeyStorePassword("DummyKeyStorePassword");
+        originalCluster.setKeyStoreFile("Cluster.KeyStore.jks");
+        originalCluster.setTrustStorePassword("DummyTrustStorePassword");
+        originalCluster.setTrustStoreFile("Cluster.TrustStore.jks");
+        clusterRepository.save(originalCluster);
+
+        // Create dummy JKS files
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getKeyStoreFile(), "KeyStoreFile");
+        FileTestTools.createDummyFile(keyStoreUploadPath + originalCluster.getTrustStoreFile(), "TrustStoreFile");
+
+        final Path keyStoreFilePath = Paths.get(keyStoreUploadPath + originalCluster.getKeyStoreFile());
+        final Path trustStoreFilePath = Paths.get(keyStoreUploadPath + originalCluster.getTrustStoreFile());
+
+        // Hit delete page.
+        mockMvc
+            .perform(post("/configuration/cluster/delete/" + originalCluster.getId())
+                .with(user(user))
+                .with(csrf())
+            )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(originalCluster.getId());
+        assertFalse("Should no longer have cluster", clusterOptional.isPresent());
+
+        // trust store file should not exist
+        final boolean doesTruststoreFileExist = Files.exists(trustStoreFilePath);
+        assertFalse("TrustStore file should have been removed", doesTruststoreFileExist);
+
+        // KeyStore file should not exist
+        final boolean doesKeyStoreFileExist = Files.exists(keyStoreFilePath);
+        assertFalse("keyStore file should have been removed", doesKeyStoreFileExist);
+    }
+
+    /**
+     * Test deleting non-ssl cluster.
+     */
+    @Test
+    @Transactional
+    public void testPostDelete_existingNonSslCluster() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_DELETE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create an existing cluster
+        final Cluster originalCluster = clusterTestTools.createCluster("My New Cluster" + System.currentTimeMillis());
+        originalCluster.setValid(true);
+        clusterRepository.save(originalCluster);
+
+        // Hit Update end point.
+        mockMvc
+            .perform(post("/configuration/cluster/delete/" + originalCluster.getId())
+                .with(user(user))
+                .with(csrf())
+            )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(originalCluster.getId());
+        assertFalse("Should no longer have cluster", clusterOptional.isPresent());
     }
 
     /**

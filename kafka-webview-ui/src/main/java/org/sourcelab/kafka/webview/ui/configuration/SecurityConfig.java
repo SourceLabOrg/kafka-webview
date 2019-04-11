@@ -30,6 +30,7 @@ import org.sourcelab.kafka.webview.ui.manager.user.AnonymousUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.manager.user.LdapUserDetailsService;
+import org.sourcelab.kafka.webview.ui.manager.user.RoleManager;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -53,13 +54,23 @@ import java.util.ArrayList;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private AppProperties appProperties;
-
+    private final UserRepository userRepository;
+    private final AppProperties appProperties;
+    private final RoleManager roleManager;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    /**
+     * Constructor.
+     * @param userRepository repository instance.
+     * @param appProperties app properties instance.
+     * @param roleManager roleManager instance.
+     */
+    @Autowired
+    public SecurityConfig(final UserRepository userRepository, final AppProperties appProperties, final RoleManager roleManager) {
+        this.userRepository = userRepository;
+        this.appProperties = appProperties;
+        this.roleManager = roleManager;
+    }
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
@@ -167,7 +178,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // Fall through to use local user management.
         auth
             // Define our custom user details service.
-            .userDetailsService(new CustomUserDetailsService(userRepository))
+            .userDetailsService(new CustomUserDetailsService(userRepository, roleManager))
             .passwordEncoder(getPasswordEncoder());
     }
 
@@ -182,27 +193,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // Paths to static resources are available to anyone
             .antMatchers("/register/**", "/login/**", "/vendors/**", "/css/**", "/js/**", "/img/**")
                 .permitAll()
+
+            // TODO These are to be replaced with proper annotations on controller methods.
             // Users can edit their own profile
-            .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
-                .fullyAuthenticated()
+//            .antMatchers("/configuration/user/edit/**", "/configuration/user/update")
+//                .fullyAuthenticated()
+
             // Define admin only paths
-            .antMatchers(
-                // Configuration
-                "/configuration/**",
-
-                // Create topic
-                "/api/cluster/*/create/**",
-
-                // Modify topic
-                "/api/cluster/*/modify/**",
-
-                // Delete topic
-                "/api/cluster/*/delete/**",
-
-                // Remove consumer group
-                "/api/cluster/*/consumer/remove"
-
-            ).hasRole("ADMIN")
+//            .antMatchers(
+//                // Configuration
+//                "/configuration/**",
+//
+//                // Create topic
+//                "/api/cluster/*/create/**",
+//
+//                // Modify topic
+//                "/api/cluster/*/modify/**",
+//
+//                // Delete topic
+//                "/api/cluster/*/delete/**",
+//
+//                // Remove consumer group
+//                "/api/cluster/*/consumer/remove"
+//
+//            ).hasRole("ADMIN")
 
             // All other requests must be authenticated
             .anyRequest()

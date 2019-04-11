@@ -189,7 +189,6 @@ public class LoginController extends BaseController {
         final User user = userDetails.getUserModel();
 
         logger.info("User: {}", user);
-        logger.info("User Role: {}", user.getRole().name());
         logger.info("Authorities: {}", auth.getAuthorities());
         return "redirect:/";
     }

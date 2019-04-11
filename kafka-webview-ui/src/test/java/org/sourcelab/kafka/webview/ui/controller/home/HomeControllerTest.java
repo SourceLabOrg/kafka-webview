@@ -31,6 +31,7 @@ import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,10 +70,13 @@ public class HomeControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void smokeTestIndexPageWithNothingSetupYet() throws Exception {
+        // No required permissions other than being logged in.
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions();
+
         // Hit the index page.
         mockMvc
             .perform(get("/")
-                .with(user(adminUserDetails)))
+                .with(user(user)))
             //.andDo(print())
             .andExpect(status().isOk())
             // Basic text validations
@@ -88,6 +92,9 @@ public class HomeControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void smokeTestIndexPageWithViewCreated() throws Exception {
+        // No required permissions other than being logged in.
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions();
+
         // Create a view
         final String view1Name = "My View Name";
         viewTestTools.createView(view1Name);
@@ -95,8 +102,7 @@ public class HomeControllerTest extends AbstractMvcTest {
         // Hit the index page.
         mockMvc
             .perform(get("/")
-                .with(user(adminUserDetails)))
-            //.andDo(print())
+                .with(user(user)))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrlPattern("/view*"));
     }
@@ -107,11 +113,13 @@ public class HomeControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void smokeTestHelpPage() throws Exception {
+        // No required permissions other than being logged in.
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions();
+
         // Hit the help page.
         mockMvc
             .perform(get("/help")
-                .with(user(adminUserDetails)))
-            //.andDo(print())
+                .with(user(user)))
             .andExpect(status().isOk())
             // Basic text validations
             .andExpect(content().string(containsString("Documentation and Help")))

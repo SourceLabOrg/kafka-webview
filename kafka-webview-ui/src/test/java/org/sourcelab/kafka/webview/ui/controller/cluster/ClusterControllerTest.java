@@ -28,11 +28,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +55,26 @@ public class ClusterControllerTest extends AbstractMvcTest {
      * The text on the create new topic link.
      */
     private static final String CREATE_TOPIC_LINK_TEXT = "&nbsp;Create new";
+
+    /**
+     * Content associated with the ability to view topics.
+     */
+    private static final String CONSUMERS_CONTENT_CLASS = "consumers-content";
+
+    /**
+     * Content associated with the ability to remove consumers.
+     */
+    private static final String CONSUMERS_REMOVE_CONTENT_CLASS = "remove-consumer-content";
+
+    /**
+     * Content associated with the ability to view topics.
+     */
+    private static final String TOPICS_CONTENT_CLASS = "topics-content";
+
+    /**
+     * Content associated with the ability to remove topics.
+     */
+    private static final String TOPICS_REMOVE_CONTENT_CLASS = "remove-topics-content";
 
     @Autowired
     private ClusterTestTools clusterTestTools;
@@ -77,17 +99,58 @@ public class ClusterControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test loading index page with no clusters created, as an admin, you should see a message
-     * telling you no clusters exist, and a link to create one.
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        // Create at least one cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster " + System.currentTimeMillis());
+
+        // Cluster index page.
+        testUrlRequiresPermission("/cluster", false, Permissions.CLUSTER_READ);
+
+        // Cluster read page.
+        testUrlRequiresPermission("/cluster/" + cluster.getId(), false, Permissions.CLUSTER_READ);
+
+        // Cluster broker read page.
+        testUrlRequiresPermission("/cluster/" + cluster.getId() + "/broker/0", false, Permissions.CLUSTER_READ);
+
+        // Topic Read requires both CLUSTER_READ, and TOPIC_READ perms.
+        testUrlRequiresPermission(
+            "/cluster/" + cluster.getId() + "/topic/test",
+            false,
+            Permissions.TOPIC_READ, Permissions.CLUSTER_READ
+        );
+
+        // Consumer Read requires both CLUSTER_READ and CONSUMER_READ perms.
+        testUrlRequiresPermission(
+            "/cluster/" + cluster.getId() + "/consumer/test",
+            false,
+            Permissions.CONSUMER_READ, Permissions.CLUSTER_READ
+        );
+    }
+
+    /**
+     * Test loading index page where:
+     * - no clusters created,
+     * - has CLUSTER_CREATE permission.
+     *
+     * Result is that you should see a message telling you no clusters exist, and a link to create one.
      */
     @Test
     @Transactional
     public void test_indexAsAdminWithNoClustersShowsCreateClusterLink() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_CREATE,
+            Permissions.CLUSTER_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit the index page.
         mockMvc
             .perform(get("/cluster/")
-                .with(user(adminUserDetails)))
-            .andDo(print())
+                .with(user(user)))
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
@@ -98,17 +161,26 @@ public class ClusterControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test loading index page with no clusters created, as normal user, you should see a message
-     * telling you no clusters exist, and text telling you to get an admin to create one.
+     * Test loading index page where:
+     * - no clusters created,
+     * - has CLUSTER_CREATE permission.
+     *
+     * Result is that you should see a message telling you no clusters exist, and text telling you to
+     * get an admin to create one.
      */
     @Test
     @Transactional
     public void test_indexAsNonAdminWithNoClustersShowsCreateText() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit the index page.
         mockMvc
             .perform(get("/cluster/")
-                .with(user(nonAdminUserDetails)))
-            .andDo(print())
+                .with(user(user)))
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate no clusters exists text
             .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
@@ -124,6 +196,11 @@ public class ClusterControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void test_indexWithClusterShowsData() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create a cluster
         final String cluster1Name = "My Test Cluster";
         final String cluster2Name = "My Other Test Cluster";
@@ -133,8 +210,7 @@ public class ClusterControllerTest extends AbstractMvcTest {
         // Hit the index page.
         mockMvc
             .perform(get("/cluster/")
-                .with(user(adminUserDetails)))
-            .andDo(print())
+                .with(user(user)))
             .andExpect(status().isOk())
             // Should contain this text
             .andExpect(content().string(containsString("Kafka Clusters")))
@@ -149,40 +225,191 @@ public class ClusterControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test loading read page as admin shows 'create topic' link.
+     * Test loading read page with all permissions and you see everything.
      */
     @Test
     @Transactional
-    public void test_readIndexShowsCreateTopicLink_withAdminRole() throws Exception {
+    public void test_readCluster_withAllPermissions() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+            Permissions.TOPIC_READ,
+            Permissions.TOPIC_CREATE,
+            Permissions.TOPIC_DELETE,
+            Permissions.CONSUMER_READ,
+            Permissions.CONSUMER_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create a cluster.
         final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
 
         // Hit the read page.
         mockMvc
             .perform(get("/cluster/" + cluster.getId())
-                .with(user(adminUserDetails)))
-            .andDo(print())
+                .with(user(user)))
             .andExpect(status().isOk())
-            // Validate 'create topic' link exists
-            .andExpect(content().string(containsString(CREATE_TOPIC_LINK_TEXT)));
+            // Validate topics are displayed
+            .andExpect(content().string(containsString(TOPICS_CONTENT_CLASS)))
+            .andExpect(content().string(containsString(CREATE_TOPIC_LINK_TEXT)))
+            .andExpect(content().string(containsString(TOPICS_REMOVE_CONTENT_CLASS)))
+            // Validate consumers are displayed
+            .andExpect(content().string(containsString(CONSUMERS_CONTENT_CLASS)))
+            .andExpect(content().string(containsString(CONSUMERS_REMOVE_CONTENT_CLASS)));
     }
 
     /**
-     * Test loading read page as non-admin will not show the 'create topic' link.
+     * Test loading read page WITHOUT TOPIC_READ permission and no topic content is displayed.
      */
     @Test
     @Transactional
-    public void test_readIndexShowsCreateTopicLink_withoutAdminRole() throws Exception {
+    public void test_readCluster_withOutTopicReadPermission() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Create a cluster.
         final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
 
         // Hit the read page.
         mockMvc
             .perform(get("/cluster/" + cluster.getId())
-                .with(user(nonAdminUserDetails)))
-            .andDo(print())
+                .with(user(user)))
             .andExpect(status().isOk())
+            // Validate topics are NOT displayed
+            .andExpect(content().string(not(containsString(TOPICS_CONTENT_CLASS))))
+            .andExpect(content().string(not(containsString(CREATE_TOPIC_LINK_TEXT))))
+            .andExpect(content().string(not(containsString(TOPICS_REMOVE_CONTENT_CLASS))));
+    }
+
+    /**
+     * Test loading read page with TOPIC_CREATE permission shows 'create topic' link.
+     */
+    @Test
+    @Transactional
+    public void test_readClusterShowsCreateTopicLink_withPermission() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+            Permissions.TOPIC_CREATE,
+            Permissions.TOPIC_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
+
+        // Hit the read page.
+        mockMvc
+            .perform(get("/cluster/" + cluster.getId())
+                .with(user(user)))
+            .andExpect(status().isOk())
+            // Validate topics are displayed
+            .andExpect(content().string(containsString(TOPICS_CONTENT_CLASS)))
             // Validate 'create topic' link exists
-            .andExpect(content().string(not(containsString(CREATE_TOPIC_LINK_TEXT))));
+            .andExpect(content().string(containsString(CREATE_TOPIC_LINK_TEXT)))
+            // But not remove topic.
+            .andExpect(content().string(not(containsString(TOPICS_REMOVE_CONTENT_CLASS))));
+    }
+
+    /**
+     * Test loading read page WITHOUT TOPIC_CREATE permission will NOT show 'create topic' link.
+     */
+    @Test
+    @Transactional
+    public void test_readClusterShowsCreateTopicLink_withoutPermission() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+            Permissions.TOPIC_READ
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
+
+        // Hit the read page.
+        mockMvc
+            .perform(get("/cluster/" + cluster.getId())
+                .with(user(user)))
+            .andExpect(status().isOk())
+            // Validate topics are displayed
+            .andExpect(content().string(containsString(TOPICS_CONTENT_CLASS)))
+            // Validate 'create topic' link does NOT exist
+            .andExpect(content().string(not(containsString(CREATE_TOPIC_LINK_TEXT))))
+            // Validate no remove topic content.
+            .andExpect(content().string(not(containsString(TOPICS_REMOVE_CONTENT_CLASS))));
+    }
+
+    /**
+     * Test loading read page WITHOUT CONSUMER_READ permission and no consumer content is displayed.
+     */
+    @Test
+    @Transactional
+    public void test_readCluster_withOutConsumerReadPermission() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+            Permissions.TOPIC_READ
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
+
+        // Hit the read page.
+        mockMvc
+            .perform(get("/cluster/" + cluster.getId())
+                .with(user(user)))
+            .andExpect(status().isOk())
+            // Validate topics are displayed
+            .andExpect(content().string(containsString(TOPICS_CONTENT_CLASS)))
+            // Validate no consumer details are displayed
+            .andExpect(content().string(not(containsString(CONSUMERS_CONTENT_CLASS))))
+            .andExpect(content().string(not(containsString(CONSUMERS_REMOVE_CONTENT_CLASS))));
+    }
+
+    /**
+     * Test loading read page with CONSUMER_DELETE permission shows 'remove consumer' link.
+     */
+    @Test
+    @Transactional
+    public void test_readClusterShowsRemoveConsumer_withPermission() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+            Permissions.CONSUMER_DELETE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
+
+        // Hit the read page.
+        mockMvc
+            .perform(get("/cluster/" + cluster.getId())
+                .with(user(user)))
+            .andExpect(status().isOk())
+            // Validate 'remove consumers' content does exist on the page.
+            .andExpect(content().string(containsString(CONSUMERS_REMOVE_CONTENT_CLASS)));
+    }
+
+    /**
+     * Test loading read page with CONSUMER_DELETE permission shows 'remove consumer' link.
+     */
+    @Test
+    @Transactional
+    public void test_readClusterShowsRemoveConsumer_withOutPermission() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster("Test Cluster");
+
+        // Hit the read page.
+        mockMvc
+            .perform(get("/cluster/" + cluster.getId())
+                .with(user(user)))
+            .andExpect(status().isOk())
+            // Validate 'remove consumers' content does NOT exist on the page.
+            .andExpect(content().string(not(containsString(CONSUMERS_REMOVE_CONTENT_CLASS))));
     }
 }

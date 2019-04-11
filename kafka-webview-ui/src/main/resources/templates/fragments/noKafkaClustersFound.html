@@ -15,11 +15,11 @@
                     It looks like you have no Kafka Clusters configured yet!<br/>
                 </p>
                 <p class="mb-0">
-                    <span sec:authorize="hasRole('ROLE_ADMIN')">
+                    <span sec:authorize="hasAuthority('PERM_CLUSTER_CREATE')">
                         Let's head over and set one up now!
                         <a th:href="@{/configuration/cluster/create}">Setup new Cluster</a>
                     </span>
-                    <span sec:authorize="!hasRole('ROLE_ADMIN')">
+                    <span sec:authorize="!hasAuthority('PERM_CLUSTER_CREATE')">
                         Ask an Administrator to configure a cluster.
                     </span>
                 </p>

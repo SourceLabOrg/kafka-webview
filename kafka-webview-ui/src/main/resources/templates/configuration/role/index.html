@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Role Configuration</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        User Roles
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a class="btn" th:href="@{/configuration/role/create}" style="padding-bottom: 0;">
+                                <i class="icon-settings"></i>
+                                &nbsp;Create new
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Users Associated</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="role : ${roles}">
+                                <td th:text="${role.name}"></td>
+                                <td th:text="${roleUsageMap.get(role.id)}"></td>
+                                <td class="text-right">
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <a class="dropdown-item" th:href="@{/configuration/role/edit/{id}(id=${role.id})}">
+                                                <i class="fa fa-edit"></i>
+                                                Edit
+                                            </a>
+                                            <form th:action="@{/configuration/role/copy/{id}(id=${role.id})}" method="post">
+                                                <button class="dropdown-item" type="submit" style="border-bottom: 1px solid #c2cfd6;">
+                                                    <i class="fa fa-copy"></i>
+                                                    Copy
+                                                </button>
+                                            </form>
+                                            <form th:action="@{/configuration/role/delete/{id}(id=${role.id})}" method="post">
+                                                <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
+                                                    <i class="fa fa-remove"></i>
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--/.col-->
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller.view;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
@@ -34,6 +35,7 @@ import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,16 +73,42 @@ public class ViewControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test loading index page with no clusters created, as an admin, you should see a message
-     * telling you no clusters exist, and a link to create one.
+     * Ensure correct permissions are required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthorization() throws Exception {
+        final View view = viewTestTools.createView("TestView");
+
+        // View index page.
+        testUrlRequiresPermission("/view", false, Permissions.VIEW_READ);
+
+        // View "browse" page.
+        testUrlRequiresPermission("/view/" + view.getId(), false, Permissions.VIEW_READ);
+    }
+
+    /**
+     * Test loading index page where:
+     *  - No clusters have been created yet.
+     *  - No views have been created yet.
+     *  - User DOES have the CLUSTER_CREATE permission.
+     *
+     * Result show show that no clusters exist, and prompt with a link to create a cluster.
      */
     @Test
     @Transactional
     public void test_indexAsAdminWithNoClustersShowsCreateClusterLink() throws Exception {
+        // Users permissions
+        final Permissions[] permissions = {
+            Permissions.VIEW_READ,
+            Permissions.CLUSTER_CREATE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit the index page.
         mockMvc
             .perform(get("/view/")
-                .with(user(adminUserDetails)))
+                .with(user(user)))
             //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
@@ -92,16 +120,26 @@ public class ViewControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test loading index page with no clusters created, as normal user, you should see a message
-     * telling you no clusters exist, and text telling you to get an admin to create one.
+     * Test loading index page where:
+     *  - No clusters have been created yet.
+     *  - No views have been created yet.
+     *  - User does NOT have the CLUSTER_CREATE permission.
+     *
+     * Result show show that no clusters exist, and prompt with asking the user to ask someone else to create a cluster.
      */
     @Test
     @Transactional
     public void test_indexAsNonAdminWithNoClustersShowsCreateText() throws Exception {
+        // Users permissions
+        final Permissions[] permissions = {
+            Permissions.VIEW_READ,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit the index page.
         mockMvc
             .perform(get("/view/")
-                .with(user(nonAdminUserDetails)))
+                .with(user(user)))
             //.andDo(print())
             .andExpect(status().isOk())
             // Validate no clusters exists text
@@ -113,8 +151,12 @@ public class ViewControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test loading index page with a cluster created, but no views created, as an admin, you should see a message
-     * telling you no views exist, and a link to create one.
+     * Test loading index page where:
+     *  - At least one cluster exists.
+     *  - No views have been created yet.
+     *  - User has the VIEW_CREATE permission.
+     *
+     * Result show show that no views exist, and prompt with a link to create a view.
      */
     @Test
     @Transactional
@@ -122,10 +164,17 @@ public class ViewControllerTest extends AbstractMvcTest {
         // Create a cluster
         clusterTestTools.createCluster("My Cluster");
 
+        // Users permissions
+        final Permissions[] permissions = {
+            Permissions.VIEW_READ,
+            Permissions.VIEW_CREATE,
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit the index page.
         mockMvc
             .perform(get("/view/")
-                .with(user(adminUserDetails)))
+                .with(user(user)))
             //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
@@ -138,8 +187,12 @@ public class ViewControllerTest extends AbstractMvcTest {
     }
 
     /**
-     * Test loading index page with a cluster created, but no views created, as a normal user, you should see a message
-     * telling you no views exist, and a link to create one.
+     * Test loading index page where:
+     *  - A cluster has been created.
+     *  - No views have been created yet.
+     *  - User does NOT have the VIEW_CREATE permission.
+     *
+     * Result show show that no views exist, and prompt to ask them to ask someone to create a view.
      */
     @Test
     @Transactional
@@ -147,10 +200,16 @@ public class ViewControllerTest extends AbstractMvcTest {
         // Create a cluster
         clusterTestTools.createCluster("My Cluster");
 
+        // Users permissions
+        final Permissions[] permissions = {
+            Permissions.VIEW_READ
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit the index page.
         mockMvc
             .perform(get("/view/")
-                .with(user(nonAdminUserDetails)))
+                .with(user(user)))
             //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
@@ -191,10 +250,16 @@ public class ViewControllerTest extends AbstractMvcTest {
         view2.setTopic(view2Topic);
         viewTestTools.save(view2);
 
+        // Users permissions
+        final Permissions[] permissions = {
+            Permissions.VIEW_READ
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
         // Hit the index page.
         mockMvc
             .perform(get("/view/")
-                .with(user(adminUserDetails)))
+                .with(user(user)))
             //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text

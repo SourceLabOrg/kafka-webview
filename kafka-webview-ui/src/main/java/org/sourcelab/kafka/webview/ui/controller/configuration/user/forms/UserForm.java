@@ -24,8 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.user.forms;
 
-import org.sourcelab.kafka.webview.ui.model.UserRole;
-
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -48,7 +46,7 @@ public class UserForm {
     private String password2;
 
     @NotNull(message = "Select a user role")
-    private UserRole userRole = UserRole.ROLE_USER;
+    private Long roleId = 0L;
 
     public Long getId() {
         return id;
@@ -90,12 +88,12 @@ public class UserForm {
         this.password2 = password2;
     }
 
-    public UserRole getUserRole() {
-        return userRole;
+    public Long getRoleId() {
+        return roleId;
     }
 
-    public void setUserRole(final UserRole userRole) {
-        this.userRole = userRole;
+    public void setRoleId(final Long roleId) {
+        this.roleId = roleId;
     }
 
     /**
@@ -113,7 +111,7 @@ public class UserForm {
             + ", displayName='" + displayName + '\''
             + ", password='XXXXX'"
             + ", password2='XXXXX'"
-            + ", userRole=" + userRole
+            + ", roleId=" + roleId
             + '}';
     }
 }

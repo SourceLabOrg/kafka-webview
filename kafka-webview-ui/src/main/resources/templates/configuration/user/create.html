@@ -18,7 +18,7 @@
                         <span th:text="${userForm.exists()} ? ${userForm.displayName} : 'New User'"></span>
                     </div>
                     <form
-                        th:action="@{/configuration/user/update}"
+                        th:action="${userForm.exists()} ? @{/configuration/user/update} : @{/configuration/user/create}"
                         th:object="${userForm}"
                         method="post" class="form-horizontal" autocomplete="off">
                         <div class="card-body">
@@ -83,21 +83,21 @@
                                 </div>
                             </div>
 
-                            <!-- User role -->
-                            <div class="form-group row" th:if="${isAdmin}">
-                                <label class="col-md-3 form-control-label" for="userRole">
+                            <div class="form-group row" th:if="${hasUserModifyPermission}">
+                                <!-- User role -->
+                                <label class="col-md-3 form-control-label" for="roleId">
                                     User Role
                                 </label>
                                 <div class="col-md-9">
                                     <select
-                                        id="userRole" name="userRole" class="form-control"
+                                        id="roleId" name="roleId" class="form-control"
                                         th:errorclass="is-invalid"
-                                        th:field="*{userRole}">
+                                        th:field="*{roleId}">
                                     <option value="">Please select a user role</option>
                                     <option th:each="userRole : ${userRoles}"
-                                            th:value="${userRole}" th:text="${userRole}">Role Name</option>
+                                            th:value="${userRole.getId()}" th:text="${userRole.getName()}">Role Name</option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('userRole')}" th:errors="*{userRole}"/>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}"/>
                                 </div>
                             </div>
                         </div>
@@ -107,7 +107,7 @@
                                 <i class="fa fa-dot-circle-o"></i>
                                 Submit
                             </button>
-                            <a class="btn btn-sm btn-danger" th:href="@{${isAdmin} ? '/configuration/user' : '/'}" role="button">
+                            <a class="btn btn-sm btn-danger" th:href="@{${hasUserModifyPermission} ? '/configuration/user' : '/'}" role="button">
                                 <i class="fa fa-ban"></i>
                                 Cancel
                             </a>

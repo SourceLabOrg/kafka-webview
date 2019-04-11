@@ -19,7 +19,7 @@
                         <span th:text="${messageFormatForm.exists()} ? ${messageFormatForm.name} : 'New Message Format'"></span>
                     </div>
                     <form
-                        th:action="@{/configuration/messageFormat/update}"
+                        th:action="${messageFormatForm.exists()} ? @{/configuration/messageFormat/update} : @{/configuration/messageFormat/create}"
                         th:object="${messageFormatForm}"
                         method="post" class="form-horizontal" enctype="multipart/form-data">
                         <div class="card-body">
