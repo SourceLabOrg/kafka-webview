@@ -24,8 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.user.forms;
 
-import org.sourcelab.kafka.webview.ui.model.UserRole;
-
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 

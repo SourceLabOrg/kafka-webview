@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
-import org.sourcelab.kafka.webview.ui.controller.configuration.cluster.forms.ClusterForm;
 import org.sourcelab.kafka.webview.ui.controller.configuration.user.forms.UserForm;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
@@ -38,7 +37,6 @@ import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.RequirePermission;
 import org.sourcelab.kafka.webview.ui.model.Role;
 import org.sourcelab.kafka.webview.ui.model.User;
-import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +55,6 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -148,7 +145,7 @@ public class UserController extends BaseController {
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
     @RequirePermission(Permissions.USER_CREATE)
-    public String createUser(final UserForm userForm, final Model model, final RedirectAttributes redirectAttributes) {
+    public String createUserForm(final UserForm userForm, final Model model, final RedirectAttributes redirectAttributes) {
         // Check for LDAP auth method and restrict access.
         if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
             return "redirect:/";
@@ -380,7 +377,7 @@ public class UserController extends BaseController {
 
         // If we have errors
         if (bindingResult.hasErrors()) {
-            return createUser(userForm, model, redirectAttributes);
+            return createUserForm(userForm, model, redirectAttributes);
         }
 
         if (!userForm.exists()) {

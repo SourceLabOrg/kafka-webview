@@ -25,7 +25,6 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.role;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
-import org.sourcelab.kafka.webview.ui.controller.configuration.filter.forms.FilterForm;
 import org.sourcelab.kafka.webview.ui.controller.configuration.role.forms.RoleForm;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;

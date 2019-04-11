@@ -42,8 +42,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.mockito.AdditionalMatchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -75,11 +75,6 @@ public abstract class AbstractMvcTest {
     @Deprecated
     protected UserDetails adminUserDetails;
 
-    @Deprecated
-    protected User nonAdminUser;
-    @Deprecated
-    protected UserDetails nonAdminUserDetails;
-
     /**
      * Where JKS files are uploaded to.
      */
@@ -94,10 +89,6 @@ public abstract class AbstractMvcTest {
         adminUser = userTestTools.createAdminUser();
         adminUserDetails = customUserDetailsService.loadUserByUsername(adminUser.getEmail());
 
-        // Create non-admin user
-        nonAdminUser = userTestTools.createUser();
-        nonAdminUserDetails = customUserDetailsService.loadUserByUsername(nonAdminUser.getEmail());
-
         // Define upload path
         uploadPath = appProperties.getUploadPath();
     }
@@ -110,18 +101,7 @@ public abstract class AbstractMvcTest {
      */
     @Deprecated
     protected void testUrlWithOutAdminRole(final String url, final boolean isPost) throws Exception {
-        final MockHttpServletRequestBuilder action;
-        if (isPost) {
-            action = post(url)
-                .with(csrf());
-        } else {
-            action = get(url);
-        }
-
-        mockMvc
-            .perform(action.with(user(nonAdminUserDetails)))
-            //.andDo(print())
-            .andExpect(status().isForbidden());
+        assertFalse("Needs to be refactored/removed", true);
     }
 
     /**

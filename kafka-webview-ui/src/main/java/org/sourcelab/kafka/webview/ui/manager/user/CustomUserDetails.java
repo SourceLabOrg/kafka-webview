@@ -25,9 +25,7 @@
 package org.sourcelab.kafka.webview.ui.manager.user;
 
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
-import org.sourcelab.kafka.webview.ui.model.RolePermission;
 import org.sourcelab.kafka.webview.ui.model.User;
-import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

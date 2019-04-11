@@ -32,7 +32,6 @@ import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
 import org.sourcelab.kafka.webview.ui.manager.user.permission.Permissions;
-import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.Role;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.repository.RoleRepository;
@@ -40,27 +39,21 @@ import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -122,7 +115,6 @@ public class UserControllerTest extends AbstractMvcTest {
         testUrlRequiresPermission("/configuration/user/create", true, Permissions.USER_CREATE);
 
         // User edit page.
-        // TODO sort this out.
 //        testUrlRequiresPermission("/configuration/user/edit/" + user.getId(), false, Permissions.USER_MODIFY);
 //        testUrlRequiresPermission("/configuration/user/update", true, Permissions.USER_MODIFY);
 
@@ -481,7 +473,7 @@ public class UserControllerTest extends AbstractMvcTest {
 
         // Hit Update end point.
         final MvcResult result = mockMvc
-            .perform(multipart("/configuration/user/create")
+            .perform(post("/configuration/user/create")
                 .with(user(user))
                 .with(csrf())
                 .param("email", expectedEmail)
@@ -529,7 +521,7 @@ public class UserControllerTest extends AbstractMvcTest {
 
         // Hit Update end point.
         mockMvc
-            .perform(multipart("/configuration/user/create")
+            .perform(post("/configuration/user/create")
                 .with(user(user))
                 .with(csrf())
                 .param("email", expectedEmail)
@@ -565,7 +557,7 @@ public class UserControllerTest extends AbstractMvcTest {
 
         // Hit Update end point.
         mockMvc
-            .perform(multipart("/configuration/user/create")
+            .perform(post("/configuration/user/create")
                 .with(user(user))
                 .with(csrf())
                 .param("email", expectedEmail)
@@ -583,7 +575,148 @@ public class UserControllerTest extends AbstractMvcTest {
         assertNull("Should not have new user", newUser);
     }
 
-    // TODO write test cases for edit user, delete user
-    // TODO write test case editing own user and attempting to change the role does not work.
-    // TODO test cases w/ invalid roleId too.
+    /**
+     * Test updating an existing user.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updateExistingUser() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.USER_MODIFY
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create user to be updated
+        final User originalUser = userTestTools.createUser();
+
+        // Create new role to assign.
+        final Role role = roleTestTools.createRole("My Test Role " + System.currentTimeMillis());
+
+        final String expectedName = "My New User Name " + System.currentTimeMillis();
+        final String expectedEmail = "user" + System.currentTimeMillis() + "@example.com";
+        final long expectedRoleId = role.getId();
+
+        // Hit Update end point.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/user/update")
+                .with(user(user))
+                .with(csrf())
+                .param("id", Long.toString(originalUser.getId()))
+                .param("email", expectedEmail)
+                .param("displayName", expectedName)
+                .param("password", "not-a-real-password")
+                .param("password2", "not-a-real-password")
+                .param("roleId", String.valueOf(expectedRoleId)))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/user"))
+            .andReturn();
+
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        Assert.assertNotNull(flashMessage);
+        Assert.assertEquals("success", flashMessage.getType());
+
+        // Lookup user
+        final User newUser = userRepository.findById(originalUser.getId()).get();
+        assertNotNull("Should have new user", newUser);
+        assertEquals("Has correct name", expectedName, newUser.getDisplayName());
+        assertEquals("Has correct email", expectedEmail, newUser.getEmail());
+        assertEquals("Has correct role", (Long) expectedRoleId, newUser.getRoleId());
+        assertNotNull("Has a password", newUser.getPassword());
+
+        // Cleanup, lets remove the user.
+        userManager.deleteUser(newUser);
+    }
+
+    /**
+     * Test updating your own user, when you do not have the user_modify perm.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updateYourOwnUserWithoutUserModifyPerm() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.CLUSTER_READ
+        };
+        final User originalUser = userTestTools.createUserWithPermissions(permissions);
+        final UserDetails user = userTestTools.getUserAuthenticationDetails(originalUser);
+
+        // Create new role to that we'll try to assign.
+        final Role role = roleTestTools.createRole("My Test Role " + System.currentTimeMillis());
+
+        final String expectedName = "My New User Name " + System.currentTimeMillis();
+        final String expectedEmail = "user" + System.currentTimeMillis() + "@example.com";
+        final long attmptedRoleId = role.getId();
+        final long originalRoleId = originalUser.getRoleId();
+
+        // Hit Update end point.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/user/update")
+                .with(user(user))
+                .with(csrf())
+                .param("id", Long.toString(originalUser.getId()))
+                .param("email", expectedEmail)
+                .param("displayName", expectedName)
+                .param("password", "not-a-real-password")
+                .param("password2", "not-a-real-password")
+                // This should be silently dropped basically.
+                .param("roleId", String.valueOf(attmptedRoleId)))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/"))
+            .andReturn();
+
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        Assert.assertNotNull(flashMessage);
+        Assert.assertEquals("success", flashMessage.getType());
+
+        // Lookup user
+        final User newUser = userRepository.findById(originalUser.getId()).get();
+        assertNotNull("Should have new user", newUser);
+        assertEquals("Has correct name", expectedName, newUser.getDisplayName());
+        assertEquals("Has correct email", expectedEmail, newUser.getEmail());
+        assertEquals("Has OLD (correct) role", (Long) originalRoleId, newUser.getRoleId());
+        assertNotNull("Has a password", newUser.getPassword());
+
+        // Cleanup, lets remove the user.
+        userManager.deleteUser(newUser);
+    }
+
+    /**
+     * Test deleting a user.
+     */
+    @Test
+    @Transactional
+    public void testPostDelete_deleteOtherUser() throws Exception {
+        final Permissions[] permissions = {
+            Permissions.USER_DELETE
+        };
+        final UserDetails user = userTestTools.createUserDetailsWithPermissions(permissions);
+
+        // Create a user to delete
+        final User toDeleteUser = userTestTools.createUser();
+
+        // Hit Update end point.
+        final MvcResult result = mockMvc
+            .perform(post("/configuration/user/delete/" + toDeleteUser.getId())
+                .with(user(user))
+                .with(csrf()))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/user"))
+            .andReturn();
+
+        final FlashMessage flashMessage = (FlashMessage) result
+            .getFlashMap()
+            .get("FlashMessage");
+
+        Assert.assertNotNull(flashMessage);
+        Assert.assertEquals("success", flashMessage.getType());
+
+        // Lookup user
+        final Optional<User> deletedUser = userRepository.findById(toDeleteUser.getId());
+        assertFalse("Should not have user anymore", deletedUser.isPresent());
+    }
 }
