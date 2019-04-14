@@ -226,7 +226,7 @@ public class MessageFormatController extends BaseController {
 
                 // Attempt to load jar?
                 try {
-                    deserializerLoader.getPlugin(tempFilename, messageFormatForm.getClasspath());
+                    deserializerLoader.checkPlugin(tempFilename, messageFormatForm.getClasspath());
                 } catch (final LoaderException exception) {
                     // If we had issues, remove the temp location
                     Files.delete(Paths.get(jarPath));
