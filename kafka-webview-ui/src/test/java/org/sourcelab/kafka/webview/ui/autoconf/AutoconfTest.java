@@ -54,11 +54,13 @@ import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {
     "app.deserializerPath=target/test-classes/testDeserializer"
 })
+@Transactional
 public class AutoconfTest {
     final static String messageFromatName = "FooDeserializer";
     
@@ -115,29 +117,22 @@ public class AutoconfTest {
             sharedKafkaTestResource.getKafkaConnectString());
         final View view = createDefaultView(topic, cluster);
         
-        try {
-            // Create the WebKafkaConsumer
-            final SessionIdentifier sessionId = SessionIdentifier.newWebIdentifier(12L, "MySession");
-            WebKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.createWebClient(view, new ArrayList<>(), sessionId);
+        // Create the WebKafkaConsumer
+        final SessionIdentifier sessionId = SessionIdentifier.newWebIdentifier(12L, "MySession");
+        WebKafkaConsumer webKafkaConsumer = webKafkaConsumerFactory.createWebClient(view, new ArrayList<>(), sessionId);
 
-            // Consume from WebKafkaConsumer
-            webKafkaConsumer.toHead();
-            KafkaResults kafkaResults = webKafkaConsumer.consumePerPartition();
-            List<KafkaResult> results = kafkaResults.getResults();
+        // Consume from WebKafkaConsumer
+        webKafkaConsumer.toHead();
+        KafkaResults kafkaResults = webKafkaConsumer.consumePerPartition();
+        List<KafkaResult> results = kafkaResults.getResults();
 
-            // Check !
-            assertEquals(1, results.size());
-            KafkaResult kafkaResult = results.get(0);
-            Object foo = kafkaResult.getValue();
-            Method foo_getValue = foo.getClass().getMethod("getValue", new Class[]{});
-            assertEquals(fooKey, kafkaResult.getKey());
-            assertEquals(fooValue, foo_getValue.invoke(foo, new Object[]{}));
-        } finally {
-            // need to clean up otherwise ViewControllerTest tests will failed.
-            viewRepository.deleteAll();
-            clusterTestTools.deleteAllClusters();
-            messageFormatRepository.deleteAll();
-        }
+        // Check !
+        assertEquals(1, results.size());
+        KafkaResult kafkaResult = results.get(0);
+        Object foo = kafkaResult.getValue();
+        Method foo_getValue = foo.getClass().getMethod("getValue", new Class[]{});
+        assertEquals(fooKey, kafkaResult.getKey());
+        assertEquals(fooValue, foo_getValue.invoke(foo, new Object[]{}));
     }
     
     private View createDefaultView(final String topic, Cluster cluster) {
