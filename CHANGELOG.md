@@ -3,10 +3,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.2.21 (06/14/2019)
-### New Fe
 
 #### New Features
 - [ISSUE-166](https://github.com/SourceLabOrg/kafka-webview/issues/166) Add groupSearchFilter property to specify the filter used to list LDAP group membership.
+
+## 2.2.0 (03/20/2019)
+
+#### Bug fixes
+- [ISSUE-143](https://github.com/SourceLabOrg/kafka-webview/issues/143) Fix URLs for stream connections when running Kafka-Webview behind a reverse proxy with a URL Prefix.
+
+#### New Features
+- [ISSUE-142](https://github.com/SourceLabOrg/kafka-webview/issues/142) Ability to search various datatables within the Cluster Explorer section of the application.
 
 #### Bug fixes
 - [ISSUE-143](https://github.com/SourceLabOrg/kafka-webview/issues/143) Fix URLs for stream connections when running Kafka-Webview behind a reverse proxy with a URL Prefix.
