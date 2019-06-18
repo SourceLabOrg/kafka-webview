@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -48,8 +49,15 @@ public interface MessageFormatRepository extends CrudRepository<MessageFormat, L
 
     /**
      * Find all message formats by type, ordered by name.
-     * @param isDefaultFormat Only return items that match the default_format field being true or false.
+     * @param messageFormatType Only return items that match the default_format.
      * @return all message formats ordered by name.
      */
-    Iterable<MessageFormat> findByIsDefaultFormatOrderByNameAsc(final boolean isDefaultFormat);
+    Iterable<MessageFormat> findByMessageFormatTypeOrderByNameAsc(final MessageFormatType messageFormatType);
+    
+    /**
+     * Find all message formats by type, ordered by name.
+     * @param messageFormatType Only return items that match the default_format fields.
+     * @return all message formats ordered by name.
+     */
+    Iterable<MessageFormat> findByMessageFormatTypeIsInOrderByNameAsc(final MessageFormatType... messageFormatType);
 }
