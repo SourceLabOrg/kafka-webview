@@ -23,6 +23,9 @@ app:
 
 If you run into issues, you can disable the new implementation and revert to the previous behavior by setting the `multiThreadedConsumer` property to `false`.
 
+#### Internal Dependency Updates
+- Upgrade from Spring Boot 2.0.8 to 2.0.9
+
 ## 2.2.0 (03/20/2019)
 
 #### Bug fixes
