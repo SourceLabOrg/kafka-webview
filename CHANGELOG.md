@@ -39,11 +39,6 @@ If you run into issues, you can disable the new implementation and revert to the
 #### New Features
 - [ISSUE-142](https://github.com/SourceLabOrg/kafka-webview/issues/142) Ability to search various datatables within the Cluster Explorer section of the application.
 
-#### Bug fixes
-- [ISSUE-143](https://github.com/SourceLabOrg/kafka-webview/issues/143) Fix URLs for stream connections when running Kafka-Webview behind a reverse proxy with a URL Prefix.
-
-#### New Features
-- [ISSUE-142](https://github.com/SourceLabOrg/kafka-webview/issues/142) Ability to search various datatables within the Cluster Explorer section of the application.
 
 ## 2.1.4 (02/19/2019)
 
