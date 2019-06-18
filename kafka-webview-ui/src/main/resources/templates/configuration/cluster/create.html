@@ -50,6 +50,13 @@
                     jQuery('#sasl-custom-jaas').toggle(true);
                 }
             });
+
+            jQuery('#consumerIdOverrideEnabled').click(function() {
+                var isChecked = jQuery('#consumerIdOverrideEnabled').is(':checked');
+
+                // Toggle Option on/off
+                jQuery('#optional-setting-consumer-id').toggle(isChecked);
+            });
         });
     </script>
 
@@ -279,6 +286,46 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <h6>Optional Settings</h6>
+                            <hr>
+
+                            <!-- Override consumer Id option -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="consumerIdOverrideEnabled">
+                                    Override Consumer Id?
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="consumerIdOverrideEnabled" name="consumerIdOverrideEnabled" class="" type="checkbox"
+                                        th:errorclass="is-invalid"
+                                        th:field="*{consumerIdOverrideEnabled}">
+
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('consumerIdOverrideEnabled')}" th:errors="*{consumerIdOverrideEnabled}"/>
+                                    <small class="form-text text-muted">
+                                        <i class="ui-icon-help"/> If set, all views using this cluster will use the defined Consumer Id.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Override consumer Id option -->
+                            <div id="optional-setting-consumer-id" th:styleappend="${clusterForm.getConsumerIdOverrideEnabled()} ? 'display: block;' : 'display: none;'">
+                                <!-- Enter custom override Config -->
+                                <div class="form-group row">
+                                    <label class="col-md-3 form-control-label" for="consumerIdOverride">
+                                        Consumer Id Override
+                                    </label>
+                                    <div class="col-md-9">
+                                        <input
+                                            id="consumerIdOverride" name="consumerIdOverride" class="form-control" type="text"
+                                            placeholder=""
+                                            th:errorclass="is-invalid"
+                                            th:value="*{consumerIdOverride}">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('consumerIdOverride')}" th:errors="*{consumerIdOverride}"/>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <div class="card-footer">

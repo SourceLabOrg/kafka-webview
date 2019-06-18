@@ -80,9 +80,9 @@ public class Cluster {
     private String saslConfig;
 
     /**
-     * Allow defining a default consumerGroupId for any views created using this cluster.
+     * Allow defining a default consumerId for any views created using this cluster.
      */
-    private String defaultConsumerGroupId;
+    private String defaultConsumerId;
 
     @Column(nullable = false)
     private boolean isValid;
@@ -183,12 +183,12 @@ public class Cluster {
         this.saslConfig = saslConfig;
     }
 
-    public String getDefaultConsumerGroupId() {
-        return defaultConsumerGroupId;
+    public String getDefaultConsumerId() {
+        return defaultConsumerId;
     }
 
-    public void setDefaultConsumerGroupId(final String defaultConsumerGroupId) {
-        this.defaultConsumerGroupId = defaultConsumerGroupId;
+    public void setDefaultConsumerId(final String defaultConsumerId) {
+        this.defaultConsumerId = defaultConsumerId;
     }
 
     @Override
@@ -202,7 +202,7 @@ public class Cluster {
             + ", keyStoreFile='" + keyStoreFile + '\''
             + ", isSaslEnabled=" + isSaslEnabled
             + ", saslMechanism='" + saslMechanism + '\''
-            + ", defaultConsumerGroupId='" + defaultConsumerGroupId + '\''
+            + ", defaultConsumerId='" + defaultConsumerId + '\''
             + ", isValid=" + isValid
             + '}';
     }

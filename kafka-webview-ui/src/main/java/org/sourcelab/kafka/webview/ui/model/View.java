@@ -74,9 +74,9 @@ public class View {
     private Integer resultsPerPartition = 10;
 
     /**
-     * Allow defining a specific consumerGroupId for any subscribers using this view.
+     * Allow defining a specific consumerId for any subscribers using this view.
      */
-    private String consumerGroupId;
+    private String consumerId;
 
 
     @OneToMany(
@@ -165,8 +165,12 @@ public class View {
         this.resultsPerPartition = resultsPerPartition;
     }
 
-    public String getConsumerGroupId() {
-        return consumerGroupId;
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(final String consumerId) {
+        this.consumerId = consumerId;
     }
 
     /**
