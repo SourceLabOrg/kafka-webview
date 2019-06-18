@@ -26,6 +26,10 @@ If you run into issues, you can disable the new implementation and revert to the
 #### Bug fixes
 - [ISSUE-159](https://github.com/SourceLabOrg/kafka-webview/issues/159) Fix for file uploads in Windows environment.  Thanks for the contribution @[quentingodeau](https://github.com/quentingodeau)!
 
+
+#### Internal Dependency Updates
+- Upgrade from Spring Boot 2.0.8 to 2.0.9
+
 ## 2.2.0 (03/20/2019)
 
 #### Bug fixes
