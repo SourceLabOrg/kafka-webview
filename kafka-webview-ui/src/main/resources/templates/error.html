@@ -7,8 +7,8 @@
  -->
 <!DOCTYPE html>
 <html
-        lang="en"
-        xmlns:th="http://www.thymeleaf.org">
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="utf-8">
@@ -19,39 +19,40 @@
     <meta name="keyword" content="Kafka WebView">
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <link rel="shortcut icon" href="/img/favicon.png">
+    <meta name="_url_base" th:content="@{/}"/>
+    <link rel="shortcut icon" th:href="@{/img/favicon.png}">
     <title>Error!</title>
 
     <!-- Icons -->
-    <link href="/vendors/css/font-awesome.min.css" rel="stylesheet">
-    <link href="/vendors/css/simple-line-icons.min.css" rel="stylesheet">
+    <link th:href="@{/vendors/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/css/simple-line-icons.min.css}" rel="stylesheet">
 
     <!-- Main styles for this application -->
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/jquery-ui.min.css" rel="stylesheet">
-    <link href="/css/jquery-ui-timepicker-addon.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/jquery-ui.min.css}" rel="stylesheet">
+    <link th:href="@{/css/jquery-ui-timepicker-addon.min.css}" rel="stylesheet">
 
     <!-- Bootstrap and necessary plugins -->
-    <script src="/vendors/js/jquery.min.js"></script>
-    <script src="/vendors/js/popper.min.js"></script>
-    <script src="/vendors/js/bootstrap.min.js"></script>
-    <script src="/vendors/js/pace.min.js"></script>
+    <script th:src="@{/vendors/js/jquery.min.js}"></script>
+    <script th:src="@{/vendors/js/popper.min.js}"></script>
+    <script th:src="@{/vendors/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/js/pace.min.js}"></script>
 
     <!-- Plugins and scripts required by all views -->
-    <script src="/vendors/js/Chart.min.js"></script>
+    <script th:src="@{/vendors/js/Chart.min.js}"></script>
 
     <!-- Handlebars -->
-    <script src="/vendors/js/handlebars.min.js"></script>
+    <script th:src="@{/vendors/js/handlebars.min.js}"></script>
 
     <!-- Fancy Multi-select -->
-    <script src="/js/multiselect.min.js"></script>
+    <script th:src="@{/js/multiselect.min.js}"></script>
 
     <!-- Fancy DateTime -->
-    <script src="/js/jquery-ui.min.js"></script>
-    <script src="/js/jquery-ui-timepicker-addon.min.js"></script>
+    <script th:src="@{/js/jquery-ui.min.js}"></script>
+    <script th:src="@{/js/jquery-ui-timepicker-addon.min.js}"></script>
 
     <!-- GenesisUI main scripts -->
-    <script src="/js/app.js"></script>
+    <script th:src="@{/js/app.js}"></script>
 </head>
 
 <body class="app flex-row align-items-center">

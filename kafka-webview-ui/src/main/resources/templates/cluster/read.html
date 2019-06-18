@@ -18,8 +18,25 @@
             var ClusterInfo = {
                 clusterId: '[[${cluster.id}]]',
 
+                // Cached copy of topics for client side searching
+                cachedTopics: [],
+
+                // Cached copy of consumers for client side searching
+                cachedConsumers: [],
+
+                // Cached copy of brokers for lcient side searching
+                cachedBrokers: [],
+
                 // Handle cluster node results ajax result
                 handleClusterNodeResults: function(results) {
+                    ClusterInfo.cachedBrokers = results;
+                    ClusterInfo.displayClusterNodes();
+                },
+                displayClusterNodes: function() {
+                    // Get our search text
+                    var searchStr = jQuery("#brokerSearch").val();
+                    var matchedEntries = 0;
+
                     // Clear nodes table
                     var table = jQuery('#nodes-tbody');
                     jQuery(table).empty();
@@ -28,7 +45,14 @@
                     var source   = jQuery('#nodes-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery.each(results, function(index, result) {
+                    jQuery.each(ClusterInfo.cachedBrokers, function(index, result) {
+                        // Filter
+                        if (!SearchTools.doesMatchText(searchStr, result.host + ":" + result.port)) {
+                            // Skip
+                            return;
+                        }
+                        matchedEntries++;
+
                         // Generate html from template
                         var properties = {
                             clusterId: ClusterInfo.clusterId,
@@ -46,7 +70,7 @@
                     // Hide loader
                     jQuery('#nodes-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#nodes-no-results').toggle(true);
                         jQuery('#nodes-table').toggle(false);
                     } else {
@@ -57,6 +81,15 @@
 
                 // Handle all topics details results ajax result
                 handleAllTopicsDetails: function(results) {
+                    ClusterInfo.cachedTopics = results;
+                    ClusterInfo.displayTopics();
+                },
+
+                displayTopics : function() {
+                    // Get our search text
+                    var searchStr = jQuery("#topicSearch").val();
+                    var matchedEntries = 0;
+
                     // Clear topics table
                     var table = jQuery('#topics-tbody');
                     jQuery(table).empty();
@@ -65,7 +98,14 @@
                     var source   = jQuery('#topics-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery.each(results, function(index, result) {
+                    jQuery.each(ClusterInfo.cachedTopics, function(index, result) {
+                        // Filter
+                        if (!SearchTools.doesMatchText(searchStr, result.name)) {
+                            // Skip
+                            return;
+                        }
+                        matchedEntries++;
+
                         // Generate html from template
                         var properties = {
                             topic: result.name,
@@ -84,7 +124,7 @@
                     // Hide loader
                     jQuery('#topics-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#topics-no-results').toggle(true);
                         jQuery('#topics-table').toggle(false);
                     } else {
@@ -94,8 +134,17 @@
                 },
 
                 // Handle all consumers results ajax result
-                handleConsumers: function(results) {
-                    // Clear topics table
+                handleAllConsumers: function(results) {
+                    ClusterInfo.cachedConsumers = results;
+                    ClusterInfo.displayConsumers();
+                },
+
+                displayConsumers: function() {
+                    // Get our search text
+                    var searchStr = jQuery("#consumerSearch").val();
+                    var matchedEntries = 0;
+
+                    // Clear consumers table
                     var table = jQuery('#consumers-tbody');
                     jQuery(table).empty();
 
@@ -103,7 +152,14 @@
                     var source   = jQuery('#consumers-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery.each(results, function(index, result) {
+                    jQuery.each(ClusterInfo.cachedConsumers, function(index, result) {
+                        // Filter
+                        if (!SearchTools.doesMatchText(searchStr, result.consumerId)) {
+                            // Skip
+                            return;
+                        }
+                        matchedEntries++;
+
                         // Collect unique topics
                         var topics = [];
                         jQuery.each(result.members, function(index, member) {
@@ -135,7 +191,7 @@
                     // Hide loader
                     jQuery('#consumers-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#consumers-no-results').toggle(true);
                         jQuery('#consumers-table').toggle(false);
                     } else {
@@ -155,7 +211,7 @@
                     // Fire off request to get consumer details
                     ApiClient.getAllConsumersWithDetails(ClusterInfo.clusterId, function(results) {
                         // Handle results
-                        ClusterInfo.handleConsumers(results);
+                        ClusterInfo.handleAllConsumers(results);
                     });
                 },
                 removeConsumer: function(consumerId) {
@@ -196,6 +252,39 @@
                             ClusterInfo.loadTopics();
                         }
                     )
+                },
+                removeTopic : function(topicName) {
+                    // Show modal
+                    jQuery("#removeTopicConfirm").text(topicName);
+                    jQuery('#deleteTopicModal').modal('show');
+                },
+                confirmedRemoveTopic : function() {
+                    // Validate form.
+                    var expectedTopic = jQuery("#removeTopicConfirm").text();
+                    var confirmedTopic = jQuery("#removeTopicConfirmed").val();
+
+                    console.log(expectedTopic + " === " + confirmedTopic);
+
+                    if (expectedTopic !== confirmedTopic) {
+                        alert("Enter the topic you want to remove.")
+                        return false;
+                    }
+
+                    // Hide modal
+                    jQuery('#deleteTopicModal').modal('hide');
+
+                    // Reset form
+                    jQuery('#removeTopicConfirmed').val("");
+                    jQuery("#removeTopicConfirm").text("");
+
+                    ApiClient.removeTopic(
+                        ClusterInfo.clusterId,
+                        expectedTopic,
+                        function(resultMsg) {
+                            UITools.showSuccess('Successfully removed topic.');
+                            ClusterInfo.loadTopics();
+                        }
+                    );
                 }
             };
 
@@ -223,6 +312,16 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Brokers
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="brokerSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="ClusterInfo.displayClusterNodes();">
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -267,8 +366,18 @@
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Topics
 
-                        <div class="btn-group float-right" role="group" aria-label="Button group" sec:authorize="hasRole('ROLE_ADMIN')">
-                            <a class="btn" href="#" style="padding-bottom: 0;" data-toggle="modal" data-target="#createTopicModal">
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="topicSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="ClusterInfo.displayTopics();">
+                            <a
+                                class="btn btn-sm" href="#" style="padding-bottom: 0;"
+                                data-toggle="modal" data-target="#createTopicModal"
+                                sec:authorize="hasRole('ROLE_ADMIN')">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
                             </a>
@@ -299,6 +408,7 @@
                                 <th>Topic</th>
                                 <th>Partitions</th>
                                 <th>Status</th>
+                                <!--<th sec:authorize="hasRole('ROLE_ADMIN')" class="text-right">Action</th>-->
                             </tr>
                             </thead>
                             <tbody id="topics-tbody">
@@ -316,6 +426,16 @@
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         Cluster <strong th:text="${cluster.name}"></strong> Consumer Groups
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="consumerSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="ClusterInfo.displayConsumers();">
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -358,7 +478,7 @@
         <script id="nodes-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/broker/{{id}}">{{id}}</a>
+                    <a th:href="@{/cluster/{{clusterId}}/broker/{{id}}}">{{id}}</a>
                 </td>
                 <td>{{host}}:{{port}}</td>
                 <td>
@@ -375,7 +495,7 @@
         <script id="topics-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/topic/{{encodedTopic}}">
+                    <a th:href="@{/cluster/{{clusterId}}/topic/{{encodedTopic}}}">
                         {{topic}}
                     </a>
                 </td>
@@ -390,6 +510,19 @@
                         <span class="badge badge-info">Internal topic</span>
                     {{/if}}
                 </td>
+                <td class="text-right" th:if="${false}" sec:authorize="hasRole('ROLE_ADMIN')">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-gear"></i>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" onclick="return ClusterInfo.removeTopic('{{topic}}');">
+                                <i class="fa fa-remove"></i>
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                </td>
             </tr>
         </script>
 
@@ -397,7 +530,7 @@
         <script id="consumers-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/consumer/{{encodedId}}">
+                    <a th:href="@{/cluster/{{clusterId}}/consumer/{{encodedId}}}">
                         {{id}}
                     </a>
                 </td>
@@ -485,6 +618,49 @@
                     <div class="modal-footer">
                         <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
                         <button class="btn btn-primary" type="button" onclick="ClusterInfo.createNewTopic();">Create topic</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete topic modal -->
+        <div class="modal fade show" id="deleteTopicModal" tabindex="-1" role="dialog" aria-labelledby="myDeleteModalLabel" style="display: none;" sec:authorize="hasRole('ROLE_ADMIN')">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Confirm topic removal</h4>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="warning">
+                            Deleting a topic is destructive and cannot be un-done!  <br/>
+                            <br/>
+                            To confirm permanently deleting topic <b id="removeTopicConfirm"></b> from cluster <b>[[${cluster.name}]]</b>, type the topic's name
+                            in the form below and click <i>Remove topic</i>.<br/>
+                            <br/>
+                        </div>
+
+                        <form method="post" class="form-horizontal">
+
+                            <!-- Name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="topicName">
+                                    Confirm topic
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                        id="removeTopicConfirmed" name="name" class="form-control" type="text">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
+                        <button class="btn btn-warning" type="button" onclick="ClusterInfo.confirmedRemoveTopic();">Remove topic</button>
                     </div>
                 </div>
             </div>

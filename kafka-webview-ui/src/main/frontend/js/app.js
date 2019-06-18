@@ -152,6 +152,16 @@ var ApiClient = {
     getCsrfToken: function() {
         return jQuery("meta[name='_csrf']").attr("content");
     },
+    baseUrl: null,
+    getBaseUrl: function() {
+        if (ApiClient.baseUrl == null) {
+            ApiClient.baseUrl = jQuery("meta[name='_url_base']").attr("content");
+        }
+        return ApiClient.baseUrl;
+    },
+    buildUrl: function(url) {
+        return ApiClient.getBaseUrl() + url;
+    },
     // Returns the CSRF Header name
     getCsrfHeader: function() {
         var headerName = jQuery("meta[name='_csrf_header']").attr("content");
@@ -164,7 +174,7 @@ var ApiClient = {
     consume: function(viewId, params, successCallback) {
         jQuery.ajax({
             type: 'POST',
-            url: '/api/consumer/view/' + viewId,
+            url: ApiClient.buildUrl('api/consumer/view/' + viewId),
             dataType: 'json',
             contentType: 'application/json',
             data: JSON.stringify(params),
@@ -191,7 +201,7 @@ var ApiClient = {
     seekTimestamp: function(viewId, unixTimestamp, callback) {
         jQuery.ajax({
             type: 'POST',
-            url: '/api/consumer/view/' + viewId + '/timestamp/' + unixTimestamp,
+            url: ApiClient.buildUrl('api/consumer/view/' + viewId + '/timestamp/' + unixTimestamp),
             dataType: 'json',
             headers: ApiClient.getCsrfHeader(),
             success: callback,
@@ -201,7 +211,7 @@ var ApiClient = {
     setConsumerState: function(viewId, partitionOffsetJson, callback) {
         jQuery.ajax({
             type: 'POST',
-            url: '/api/consumer/view/' + viewId + '/offsets',
+            url: ApiClient.buildUrl('api/consumer/view/' + viewId + '/offsets'),
             data: partitionOffsetJson,
             dataType: 'json',
             headers: ApiClient.getCsrfHeader(),
@@ -219,64 +229,64 @@ var ApiClient = {
      */
     getPartitionsForView: function(viewId, callback) {
         jQuery
-            .getJSON('/api/view/' + viewId + '/partitions', '', callback)
+            .getJSON(ApiClient.buildUrl('api/view/' + viewId + '/partitions'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
 
     // Retrieve cluster node info
     getClusterNodes: function(clusterId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/nodes', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/nodes'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getTopicDetails: function(clusterId, topic, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/details', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/topic/' + topic + '/details'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getAllTopicsDetails: function(clusterId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/topics/details', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/topics/details'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getTopics: function(clusterId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/topics/list', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/topics/list'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getTopicConfig: function(clusterId, topic, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/topic/' + topic + '/config', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/topic/' + topic + '/config'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getBrokerConfig: function(clusterId, brokerId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/broker/' + brokerId + '/config', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/broker/' + brokerId + '/config'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getAllConsumers: function(clusterId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/consumers', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/consumers'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getAllConsumersWithDetails: function(clusterId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/consumersAndDetails', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/consumersAndDetails'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getConsumerDetails: function(clusterId, consumerGroupId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/details', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/details'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getConsumerOffsets: function(clusterId, consumerGroupId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/offsets', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/offsets'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     getConsumerOffsetsWithTailPositions: function(clusterId, consumerGroupId, callback) {
         jQuery
-            .getJSON('/api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/offsetsAndTailPositions', '', callback)
+            .getJSON(ApiClient.buildUrl('api/cluster/' + clusterId + '/consumer/' + consumerGroupId + '/offsetsAndTailPositions'), '', callback)
             .fail(ApiClient.defaultErrorHandler);
     },
     removeConsumer: function(clusterId, consumerId, callback) {
@@ -286,7 +296,7 @@ var ApiClient = {
         });
         jQuery.ajax({
             type: 'POST',
-            url: '/api/cluster/' + clusterId + '/consumer/remove',
+            url: ApiClient.buildUrl('api/cluster/' + clusterId + '/consumer/remove'),
             data: payload,
             dataType: 'json',
             headers: ApiClient.getCsrfHeader(),
@@ -305,7 +315,24 @@ var ApiClient = {
         });
         jQuery.ajax({
             type: 'POST',
-            url: '/api/cluster/' + clusterId + '/create/topic',
+            url: ApiClient.buildUrl('api/cluster/' + clusterId + '/create/topic'),
+            data: payload,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
+    removeTopic: function(clusterId, name, callback) {
+        var payload = JSON.stringify({
+            name: name
+        });
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/cluster/' + clusterId + '/delete/topic',
             data: payload,
             dataType: 'json',
             headers: ApiClient.getCsrfHeader(),
@@ -326,7 +353,7 @@ var ApiClient = {
         var payload = JSON.stringify(payloadJson);
         jQuery.ajax({
             type: 'POST',
-            url: '/api/cluster/' + clusterId + '/modify/topic',
+            url: ApiClient.buildUrl('api/cluster/' + clusterId + '/modify/topic'),
             data: payload,
             dataType: 'json',
             headers: ApiClient.getCsrfHeader(),
@@ -442,5 +469,30 @@ var DateTools = {
         }
 
         return timezone_standard;
+    }
+};
+
+/**
+ * Common Search Tooling.
+ */
+var SearchTools = {
+    doesMatchText : function(searchStr, content) {
+        // If empty search String, assume match all.
+        if (searchStr === null || searchStr.length === 0) {
+            return true;
+        }
+
+        // If content is null, cannot match.
+        if (content === null) {
+            return false;
+        }
+
+        // Otherwise check to see if it matches
+        if (content.toLowerCase().indexOf(searchStr.toLowerCase()) === -1) {
+            // Doesn't match
+            return false;
+        }
+        // Matches
+        return true;
     }
 };

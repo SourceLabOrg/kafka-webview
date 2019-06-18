@@ -107,7 +107,7 @@
                                 <i class="fa fa-dot-circle-o"></i>
                                 Submit
                             </button>
-                            <a class="btn btn-sm btn-danger" th:href="${isAdmin} ? '/configuration/user' : '/'" role="button">
+                            <a class="btn btn-sm btn-danger" th:href="@{${isAdmin} ? '/configuration/user' : '/'}" role="button">
                                 <i class="fa fa-ban"></i>
                                 Cancel
                             </a>

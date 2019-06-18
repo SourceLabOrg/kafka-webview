@@ -197,6 +197,24 @@ app:
     enabled: false
 ```
 
+#### Reverse proxy setup
+
+Kafka WebView can be configured to run behind a reverse proxy. The example configuration settings listed in this paragraph can be used to configure Apache HTTPd as a reverse proxy but the required settings also apply to other reverse proxy products (like NGINX).
+To allow non Apache HTTPd users to read the configuration easily we don't use any RewriteEngine in this configuration example.
+
+The example below uses a context-path for the Kafka Web-view. When using a context path, both your reverse proxy and Kafka Web-view should use the same context path! Context path in this example is 'kafka-webview-context-path'. 
+    
+```
+ProxyPass         /kafka-webview-context-path/websocket/info http://localhost:8080/kafka-webview-context-path/info
+ProxyPassReverse  /kafka-webview-context-path/websocket/info http://localhost:8080/kafka-webview-context-path/websocket/info
+ProxyPass         /kafka-webview-context-path/websocket/ ws://localhost:8080/kafka-webview-context-path/websocket/
+ProxyPassReverse  /kafka-webview-context-path/websocket/ ws://localhost:8080/kafka-webview-context-path/websocket/
+ProxyPass         /kafka-webview-context-path/  http://localhost:8080/kafka-webview-context-path/ nocanon
+ProxyPassReverse  /kafka-webview-context-path/  http://localhost:8080/kafka-webview-context-path/
+```
+
+**NOTE** Validate that you have the correct reverse proxy modules loaded in your reverse proxy product (modules: reverse proxy, http reverse proxy and the websocket reverse proxy module)!
+
 ## Logging in for the first time
 
 **NOTE** If you've **disabled user authentication** in your configuration, no login will be required. Skip directly to **Step 2**.
@@ -291,8 +309,8 @@ Steps for performing a release:
     - `docker build -t kafka-webview .`
     - `docker tag kafka-webview sourcelaborg/kafka-webview:latest`
     - `docker push sourcelaborg/kafka-webview:latest`
-    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.1.VERSIONHERE`
-    - `docker push sourcelaborg/kafka-webview:2.1.VERSIONHERE`
+    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.2.VERSIONHERE`
+    - `docker push sourcelaborg/kafka-webview:2.2.VERSIONHERE`
     - Commit updated docker files.
 7. Create release on Github project.
 

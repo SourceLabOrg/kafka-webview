@@ -20,7 +20,7 @@
 
                         <!-- Link to Browse -->
                         <div class="btn-group float-right" role="group" aria-label="Button group">
-                            <a class="btn" th:href="'/view/' + ${view.id}" style="padding-bottom: 0;">
+                            <a class="btn" th:href="@{/view/{id}(id=${view.id})}" style="padding-bottom: 0;">
                                 <i class="icon-eye"></i>
                                 &nbsp;Switch to View
                             </a>
@@ -104,7 +104,7 @@
             stompDebug:  null,
 
             // End point to connect
-            socketUrl: "/websocket",
+            socketUrl: "[[@{/websocket}]]",
 
             // End point to consume a view
             consumerBaseUrl: "/user/topic/view",
@@ -118,15 +118,15 @@
             },
 
             getSubscribeUrl: function() {
-                return SocketDetails.socketUrl + '/consume/' + SocketDetails.viewId;
+                return '/websocket/consume/' + SocketDetails.viewId;
             },
 
             getPauseUrl: function() {
-                return SocketDetails.socketUrl + '/pause/' + SocketDetails.viewId;
+                return '/websocket/pause/' + SocketDetails.viewId;
             },
 
             getResumeUrl: function() {
-                return SocketDetails.socketUrl + '/resume/' + SocketDetails.viewId;
+                return '/websocket/resume/' + SocketDetails.viewId;
             },
 
             // Connect to web socket

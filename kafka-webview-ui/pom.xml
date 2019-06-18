@@ -5,11 +5,11 @@
     <parent>
         <artifactId>kafka-webview</artifactId>
         <groupId>org.sourcelab</groupId>
-        <version>2.1.3</version>
+        <version>2.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kafka-webview-ui</artifactId>
-    <version>2.1.3</version>
+    <version>2.2.0</version>
 
     <!-- Module Description and Ownership -->
     <name>Kafka WebView UI</name>
@@ -33,7 +33,7 @@
 
         <avro.version>1.8.2</avro.version>
         <bootstrap.version>4.0.0-beta</bootstrap.version>
-        <kafka.version>2.0.0</kafka.version>
+        <kafka.version>2.0.1</kafka.version>
         <protobuf.version>3.6.1</protobuf.version>
         <thymeleaf.version>3.0.11.RELEASE</thymeleaf.version>
     </properties>
