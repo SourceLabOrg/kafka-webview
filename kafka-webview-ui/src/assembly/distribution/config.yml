@@ -16,6 +16,15 @@ app:
   ## Defines a prefix prepended to the Id of all consumers.
   consumerIdPrefix: "KafkaWebViewConsumer"
 
+  ## Enable multi-threaded consumer support
+  ## Currently in Beta, so disabled by default.  If you have issues with slow consuming
+  ## it's recommended you try turning this feature on.
+  multiThreadedConsumer: false
+
+  ## Sets upper limit on the number of concurrent consumers (non-websocket) supported.
+  ## Only relevant when the 'multiThreadedConsumer' option is enabled.
+  maxConcurrentWebConsumers: 32
+
   ## Sets upper limit on the number of concurrent web socket consumers supported.
   maxConcurrentWebSocketConsumers: 64
 

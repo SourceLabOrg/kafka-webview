@@ -25,8 +25,11 @@
 package org.sourcelab.kafka.webview.ui.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
@@ -42,11 +45,15 @@ import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilde
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Application Configuration for Plugin beans.
  */
 @Component
 public class PluginConfig {
+    private static final Logger logger = LoggerFactory.getLogger(PluginConfig.class);
 
     /**
      * Upload manager, for handling uploads of Plugins and Keystores.
@@ -97,11 +104,30 @@ public class PluginConfig {
      */
     @Bean
     public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties, final KafkaClientConfigUtil configUtil) {
+        final ExecutorService executorService;
+
+        // If we have multi-threaded consumer option enabled
+        if (appProperties.isEnableMultiThreadedConsumer()) {
+            logger.info("Enabled multi-threaded webconsumer with {} threads.", appProperties.getMaxConcurrentWebConsumers());
+
+            // Create fixed thread pool
+            executorService = Executors.newFixedThreadPool(
+                appProperties.getMaxConcurrentWebConsumers(),
+                new ThreadFactoryBuilder()
+                    .setNameFormat("kafka-web-consumer-pool-%d")
+                   .build()
+            );
+        } else {
+            // Null reference.
+            executorService = null;
+        }
+
         return new WebKafkaConsumerFactory(
             getDeserializerPluginFactory(appProperties),
             getRecordFilterPluginFactory(appProperties),
             getSecretManager(appProperties),
-            getKafkaConsumerFactory(configUtil)
+            getKafkaConsumerFactory(configUtil),
+            executorService
         );
     }
 
