@@ -89,7 +89,6 @@ public class PluginFactory<T> {
             final Path absolutePath = getPathForJar(jarName);
             final URL jarUrl = absolutePath.toUri().toURL();
             final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader());
-            //final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl);
             return getPluginClass(pluginClassLoader, classpath);
         } catch (MalformedURLException exception) {
             throw new LoaderException("Unable to load jar " + jarName, exception);
@@ -146,9 +145,10 @@ public class PluginFactory<T> {
      * Check if instance of the class given at the classpath can be load from the given Jar.
      * @param jarName Jar to load the class from
      * @param classpath Classpath to class.
+     * @return boolean true on success.
      * @throws LoaderException LoaderException When we run into issues.
      */
-    public void checkPlugin(final String jarName, final String classpath) throws LoaderException {
+    public boolean checkPlugin(final String jarName, final String classpath) throws LoaderException {
         try {
             final Path absolutePath = getPathForJar(jarName);
             final URL jarUrl = absolutePath.toUri().toURL();
@@ -159,10 +159,10 @@ public class PluginFactory<T> {
             try (URLClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader())) {
                 Class<? extends T> pluginClass = getPluginClass(pluginClassLoader, classpath);
                 pluginClass.getDeclaredConstructor().newInstance();
+
+                return true;
             }
-        } catch (MalformedURLException exception) {
-            throw new LoaderException("Unable to load jar " + jarName, exception);
-        } catch (IOException exception) {
+        } catch (final IOException exception) {
             throw new LoaderException("Unable to load jar " + jarName, exception);
         } catch (final NoClassDefFoundError e) {
             // Typically this happens if the uploaded JAR references some dependency that was
