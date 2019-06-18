@@ -5,11 +5,11 @@
     <parent>
         <artifactId>kafka-webview</artifactId>
         <groupId>org.sourcelab</groupId>
-        <version>2.2.1</version>
+        <version>2.3.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kafka-webview-ui</artifactId>
-    <version>2.2.1</version>
+    <version>2.3.0</version>
 
     <!-- Module Description and Ownership -->
     <name>Kafka WebView UI</name>
@@ -172,7 +172,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>27.0.1-jre</version>
+            <version>28.0-jre</version>
         </dependency>
         <!-- Explicitly include updated protocol buffer version -->
         <dependency>
@@ -217,7 +217,7 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit4</artifactId>
-            <version>3.1.0</version>
+            <version>3.1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

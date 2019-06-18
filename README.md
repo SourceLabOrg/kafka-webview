@@ -67,6 +67,14 @@ app:
 
   ## Defines a prefix prepended to the Id of all consumers.
   consumerIdPrefix: "KafkaWebViewConsumer"
+  
+  ## Enable multi-threaded consumer support
+  ## The previous single-threaded implementation is still available by setting this property to false.
+  ## The previous implementation along with this property will be removed in future release.
+  multiThreadedConsumer: true
+  
+  ## Sets upper limit on the number of concurrent consumers (non-websocket) supported.
+  maxConcurrentWebConsumers: 32
 
   ## Sets upper limit on the number of concurrent web socket consumers supported.
   maxConcurrentWebSocketConsumers: 64
@@ -198,6 +206,24 @@ app:
     enabled: false
 ```
 
+#### Reverse proxy setup
+
+Kafka WebView can be configured to run behind a reverse proxy. The example configuration settings listed in this paragraph can be used to configure Apache HTTPd as a reverse proxy but the required settings also apply to other reverse proxy products (like NGINX).
+To allow non Apache HTTPd users to read the configuration easily we don't use any RewriteEngine in this configuration example.
+
+The example below uses a context-path for the Kafka Web-view. When using a context path, both your reverse proxy and Kafka Web-view should use the same context path! Context path in this example is 'kafka-webview-context-path'. 
+    
+```
+ProxyPass         /kafka-webview-context-path/websocket/info http://localhost:8080/kafka-webview-context-path/info
+ProxyPassReverse  /kafka-webview-context-path/websocket/info http://localhost:8080/kafka-webview-context-path/websocket/info
+ProxyPass         /kafka-webview-context-path/websocket/ ws://localhost:8080/kafka-webview-context-path/websocket/
+ProxyPassReverse  /kafka-webview-context-path/websocket/ ws://localhost:8080/kafka-webview-context-path/websocket/
+ProxyPass         /kafka-webview-context-path/  http://localhost:8080/kafka-webview-context-path/ nocanon
+ProxyPassReverse  /kafka-webview-context-path/  http://localhost:8080/kafka-webview-context-path/
+```
+
+**NOTE** Validate that you have the correct reverse proxy modules loaded in your reverse proxy product (modules: reverse proxy, http reverse proxy and the websocket reverse proxy module)!
+
 ## Logging in for the first time
 
 **NOTE** If you've **disabled user authentication** in your configuration, no login will be required. Skip directly to **Step 2**.
@@ -282,8 +308,8 @@ implementations.
 # Releasing
 Steps for performing a release:
 
-1. Update release version: mvn versions:set -DnewVersion=X.Y.Z
-2. Validate and then commit version: mvn versions:commit
+1. Update release version: `mvn versions:set -DnewVersion=X.Y.Z`
+2. Validate and then commit version: `mvn versions:commit`
 3. Update CHANGELOG and README files.
 4. Merge to master.
 5. Deploy to Maven Central: mvn clean deploy -P release-kafka-webview

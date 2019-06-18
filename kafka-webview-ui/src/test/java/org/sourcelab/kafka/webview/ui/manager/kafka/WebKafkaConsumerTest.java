@@ -84,7 +84,7 @@ public class WebKafkaConsumerTest {
         final KafkaConsumer kafkaConsumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
 
         // Create consumer
-        final WebKafkaConsumer webKafkaConsumer = new WebKafkaConsumer(kafkaConsumer, clientConfig);
+        final WebKafkaConsumer webKafkaConsumer = new DefaultWebKafkaConsumer(kafkaConsumer, clientConfig);
 
         // Poll
         final KafkaResults results = webKafkaConsumer.consumePerPartition();

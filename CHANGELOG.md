@@ -2,10 +2,34 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.2.1 (06/14/2019)
-
+## 2.3.0 (UNRELEASED)
 #### New Features
 - [ISSUE-166](https://github.com/SourceLabOrg/kafka-webview/issues/166) Add groupSearchFilter property to specify the filter used to list LDAP group membership.
+- [MultiThreaded Consumer](https://github.com/SourceLabOrg/kafka-webview/pull/170) Add multi-threaded kafka consumer.  
+
+Previously a single consumer instance was used when paging through messages from a topic.  Each partition was consumed sequentially in order to provide consistent results on each page.  For topics with a large number of partitions this could take considerable time.
+
+The underlying consumer implementation has been replaced with a multi-threaded version which will attempt to read each partition in parallel.  The following configuration properties have been added to control this behavior:
+
+```yml
+app:
+  ## Enable multi-threaded consumer support
+  ## The previous single-threaded implementation is still available by setting this property to false.
+  ## The previous implementation along with this property will be removed in future release.
+  multiThreadedConsumer: true
+
+  ## Sets upper limit on the number of concurrent consumers (non-websocket) supported.
+  maxConcurrentWebConsumers: 32
+```
+
+If you run into issues, you can disable the new implementation and revert to the previous behavior by setting the `multiThreadedConsumer` property to `false`.
+
+#### Bug fixes
+- [ISSUE-159](https://github.com/SourceLabOrg/kafka-webview/issues/159) Fix for file uploads in Windows environment.  Thanks for the contribution @[quentingodeau](https://github.com/quentingodeau)!
+
+
+#### Internal Dependency Updates
+- Upgrade from Spring Boot 2.0.8 to 2.0.9
 
 ## 2.2.0 (03/20/2019)
 
