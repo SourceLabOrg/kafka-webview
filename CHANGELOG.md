@@ -23,6 +23,9 @@ app:
 
 If you run into issues, you can disable the new implementation and revert to the previous behavior by setting the `multiThreadedConsumer` property to `false`.
 
+#### Bug fixes
+- [ISSUE-159](https://github.com/SourceLabOrg/kafka-webview/issues/159) Fix for file uploads in Windows environment.  Thanks for the contribution @[quentingodeau](https://github.com/quentingodeau)!
+
 ## 2.2.0 (03/20/2019)
 
 #### Bug fixes
