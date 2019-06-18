@@ -48,7 +48,7 @@ app:
   name: Kafka Web View
   uploadPath: "./data/uploads"
   key: "SuperSecretKey"
-  multiThreadedConsumer: false
+  multiThreadedConsumer: true
   maxConcurrentWebConsumers: 32
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"

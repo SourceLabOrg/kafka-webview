@@ -17,12 +17,11 @@ app:
   consumerIdPrefix: "KafkaWebViewConsumer"
 
   ## Enable multi-threaded consumer support
-  ## Currently in Beta, so disabled by default.  If you have issues with slow consuming
-  ## it's recommended you try turning this feature on.
-  multiThreadedConsumer: false
+  ## The previous single-threaded implementation is still available by setting this property to false.
+  ## The previous implementation along with this property will be removed in future release.
+  multiThreadedConsumer: true
 
   ## Sets upper limit on the number of concurrent consumers (non-websocket) supported.
-  ## Only relevant when the 'multiThreadedConsumer' option is enabled.
   maxConcurrentWebConsumers: 32
 
   ## Sets upper limit on the number of concurrent web socket consumers supported.

@@ -43,7 +43,7 @@ public class AppProperties {
     @Value("${app.key}")
     private String appKey;
 
-    @Value("${app.multiThreadedConsumer:false}")
+    @Value("${app.multiThreadedConsumer:true}")
     private boolean enableMultiThreadedConsumer;
 
     @Value("${app.maxConcurrentWebConsumers:32}")

@@ -16,7 +16,6 @@ spring:
 
 app:
   requireSsl: false
-  multiThreadedConsumer: true
   user:
     enabled: true
     ## Development server Ldap auth settings
