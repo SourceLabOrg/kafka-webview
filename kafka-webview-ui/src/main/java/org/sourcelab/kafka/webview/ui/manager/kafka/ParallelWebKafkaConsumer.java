@@ -88,34 +88,37 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public KafkaResults consumePerPartition() {
-        final List<TopicPartition> allTopicPartitions;
         try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
-            allTopicPartitions = getAllPartitions(kafkaConsumer);
-        }
+            final List<TopicPartition> allTopicPartitions = getAllPartitions(kafkaConsumer);
 
-        // To preserve order
-        final Map<Integer, CompletableFuture<List<KafkaResult>>> completableFuturesByPartition = new TreeMap<>();
+            // To preserve order
+            final Map<Integer, CompletableFuture<List<KafkaResult>>> completableFuturesByPartition = new TreeMap<>();
 
-        for (final TopicPartition topicPartition : allTopicPartitions) {
-            final CompletableFuture<List<KafkaResult>> future = CompletableFuture.supplyAsync(() -> {
-                try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
-                    // Subscribe to just that topic partition
-                    kafkaConsumer.assign(Collections.singleton(topicPartition));
+            // Loop over each topic partition
+            for (final TopicPartition topicPartition : allTopicPartitions) {
 
-                    // consume
-                    return consume(kafkaConsumer);
-                }
-            }, executorService);
-            completableFuturesByPartition.put(topicPartition.partition(), future);
-        }
+                // Create a new async task
+                final CompletableFuture<List<KafkaResult>> future = CompletableFuture.supplyAsync(() -> {
+                    // Create a new consumer for each task
+                    try (final KafkaConsumer perTopicConsumer = createNewConsumer()) {
+                        // Subscribe to just the single topic partition
+                        perTopicConsumer.assign(Collections.singleton(topicPartition));
 
-        // Merge results.
-        final List<KafkaResult> allResults = new ArrayList<>();
-        completableFuturesByPartition.forEach((partition, future) -> {
-            allResults.addAll(future.join());
-        });
+                        // consume messages from that partition
+                        return consume(perTopicConsumer);
+                    }
+                }, executorService);
 
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+                // Keep references to our ASync Tasks
+                completableFuturesByPartition.put(topicPartition.partition(), future);
+            }
+
+            // Merge results.
+            final List<KafkaResult> allResults = new ArrayList<>();
+            completableFuturesByPartition.forEach((partition, future) -> {
+                allResults.addAll(future.join());
+            });
+
             // Create return object
             return new KafkaResults(
                 allResults,
