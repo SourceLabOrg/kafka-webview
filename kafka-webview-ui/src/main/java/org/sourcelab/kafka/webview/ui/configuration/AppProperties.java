@@ -43,7 +43,13 @@ public class AppProperties {
     @Value("${app.key}")
     private String appKey;
 
-    @Value("${app.maxConcurrentWebSocketConsumers}")
+    @Value("${app.multiThreadedConsumer:true}")
+    private boolean enableMultiThreadedConsumer;
+
+    @Value("${app.maxConcurrentWebConsumers:32}")
+    private Integer maxConcurrentWebConsumers = 32;
+
+    @Value("${app.maxConcurrentWebSocketConsumers:100}")
     private Integer maxConcurrentWebSocketConsumers = 100;
 
     @Value("${app.consumerIdPrefix}")
@@ -102,6 +108,14 @@ public class AppProperties {
 
     public boolean isAvroIncludeSchema() {
         return avroIncludeSchema;
+    }
+
+    public boolean isEnableMultiThreadedConsumer() {
+        return enableMultiThreadedConsumer;
+    }
+
+    public Integer getMaxConcurrentWebConsumers() {
+        return maxConcurrentWebConsumers;
     }
 
     @Override
