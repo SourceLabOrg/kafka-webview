@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.3.0 (UNRELEASED)
 #### New Features
+- [ISSUE-166](https://github.com/SourceLabOrg/kafka-webview/issues/166) Add groupSearchFilter property to specify the filter used to list LDAP group membership.
 - [MultiThreaded Consumer](https://github.com/SourceLabOrg/kafka-webview/pull/170) Add multi-threaded kafka consumer.  
 
 Previously a single consumer instance was used when paging through messages from a topic.  Each partition was consumed sequentially in order to provide consistent results on each page.  For topics with a large number of partitions this could take considerable time.
@@ -31,6 +32,12 @@ If you run into issues, you can disable the new implementation and revert to the
 - Upgrade from Spring Boot 2.0.8 to 2.0.9
 
 ## 2.2.0 (03/20/2019)
+
+#### Bug fixes
+- [ISSUE-143](https://github.com/SourceLabOrg/kafka-webview/issues/143) Fix URLs for stream connections when running Kafka-Webview behind a reverse proxy with a URL Prefix.
+
+#### New Features
+- [ISSUE-142](https://github.com/SourceLabOrg/kafka-webview/issues/142) Ability to search various datatables within the Cluster Explorer section of the application.
 
 #### Bug fixes
 - [ISSUE-143](https://github.com/SourceLabOrg/kafka-webview/issues/143) Fix URLs for stream connections when running Kafka-Webview behind a reverse proxy with a URL Prefix.

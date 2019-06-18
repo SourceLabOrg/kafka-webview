@@ -147,6 +147,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .userDnPatterns(ldapAppProperties.getUserDnPattern())
             .groupRoleAttribute(ldapAppProperties.getGroupRoleAttribute())
             .groupSearchBase(ldapAppProperties.getGroupSearchBase())
+            .groupSearchFilter(ldapAppProperties.getGroupSearchFilter())
             .contextSource()
             .url(ldapAppProperties.getUrl())
             .managerDn(managerDn)

@@ -166,6 +166,7 @@ app:
       ## Where to find user group membership
       groupSearchBase: "ou=groups"
       groupRoleAttribute: "cn"
+      groupSearchfilter = "(uniqueMember={0})"
 
       ## How passwords are validated, must implement PasswordEncoder interface
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
