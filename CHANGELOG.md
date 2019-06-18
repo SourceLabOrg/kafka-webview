@@ -4,7 +4,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.3.0 (UNRELEASED)
 #### New Features
-- [ISSUE-166](https://github.com/SourceLabOrg/kafka-webview/issues/166) Add groupSearchFilter property to specify the filter used to list LDAP group membership.
+- [ISSUE-166](https://github.com/SourceLabOrg/kafka-webview/issues/166) Add groupSearchFilter property to specify the filter used to list LDAP group membership. Thanks for the contribution @[BlueIcarus](https://github.com/BlueIcarus)!
 - [MultiThreaded Consumer](https://github.com/SourceLabOrg/kafka-webview/pull/170) Add multi-threaded kafka consumer.  
 
 Previously a single consumer instance was used when paging through messages from a topic.  Each partition was consumed sequentially in order to provide consistent results on each page.  For topics with a large number of partitions this could take considerable time.
