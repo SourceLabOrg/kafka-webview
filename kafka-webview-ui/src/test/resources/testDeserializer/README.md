@@ -1,0 +1,1 @@
+testPlugins.jar is built from the [kafka-webview-examples project](https://github.com/SourceLabOrg/kafka-webview-examples/).

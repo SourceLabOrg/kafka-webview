@@ -47,7 +47,7 @@ public class PluginClassLoaderTest {
     public void testLoadingFilterPlugin() throws ClassNotFoundException, IllegalAccessException,
         InstantiationException, NoSuchMethodException, InvocationTargetException {
         // Get URL to our jar
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/testPlugins.jar");
+        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/testPlugins.jar");
         final String classPath = "examples.filter.LowOffsetFilter";
 
         // Create class loader

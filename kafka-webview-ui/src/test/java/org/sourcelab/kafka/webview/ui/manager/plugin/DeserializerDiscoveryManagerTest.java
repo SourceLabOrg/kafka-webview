@@ -24,8 +24,33 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
+import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
 import static org.junit.Assert.*;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class DeserializerDiscoveryManagerTest {
+
+    @Autowired
+    private AppProperties appProperties;
+
+    @Autowired
+    private ObjectMapper mapper;
+
+    @Autowired
+    private MessageFormatRepository messageFormatRepository;
+
+    @Test
+    public void smokeTest() {
+        new DeserializerDiscoveryManager(appProperties, mapper, messageFormatRepository);
+    }
 
 }

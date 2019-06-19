@@ -151,7 +151,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
         final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
 
-        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
+        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/1.0.0/testPlugins.jar");
         final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
 
         // Define our expected json string
@@ -429,7 +429,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         FileTestTools.createDummyFile(deserializerUploadPath + messageFormat.getJar(), originalJarContents);
 
         // This is a valid jar
-        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
+        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/1.0.0/testPlugins.jar");
         final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
 
         final String newName = "MyUpdatedName" + System.currentTimeMillis();

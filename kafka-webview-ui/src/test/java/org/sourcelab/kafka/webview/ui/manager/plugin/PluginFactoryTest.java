@@ -50,7 +50,7 @@ public class PluginFactoryTest {
         final String classPath = "examples.filter.LowOffsetFilter";
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
+        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
@@ -86,7 +86,7 @@ public class PluginFactoryTest {
         final String classPath = "examples.filter.LowOffsetFilter";
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
+        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
@@ -118,7 +118,7 @@ public class PluginFactoryTest {
         final String classPath = "examples.deserializer.ExampleDeserializer";
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
+        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
@@ -155,7 +155,7 @@ public class PluginFactoryTest {
         final String classPath = "examples.deserializer.ExampleDeserializer";
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
+        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
