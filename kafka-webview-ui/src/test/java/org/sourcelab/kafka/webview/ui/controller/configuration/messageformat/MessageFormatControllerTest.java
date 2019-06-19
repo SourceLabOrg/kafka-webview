@@ -56,6 +56,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -179,7 +180,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Has correct name", expectedName, messageFormat.getName());
         assertEquals("Has correct classpath", expectedClassPath, messageFormat.getClasspath());
         assertNotNull("Has jar path", messageFormat.getJar());
-        assertFalse("Should not be a default format", messageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, messageFormat.getMessageFormatType());
 
         // Validate that our options got set
         assertEquals("Got options", expectedOptionsJson, messageFormat.getOptionParameters());
@@ -335,7 +336,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Name not updated", expectedName, updatedMessageFormat.getName());
         assertEquals("classpath not updated", expectedClasspath, updatedMessageFormat.getClasspath());
         assertEquals("Jar name not updated", expectedJarName, updatedMessageFormat.getJar());
-        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, updatedMessageFormat.getMessageFormatType());
         assertEquals("Parameters not updated", expectedParametersJson, updatedMessageFormat.getOptionParameters());
 
         // Validate previous jar not overwritten.
@@ -395,7 +396,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("classpath was NOT updated", originalClasspath, updatedMessageFormat.getClasspath());
         assertNotEquals("classpath was NOT updated", newClasspath, updatedMessageFormat.getClasspath());
         assertEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
-        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, updatedMessageFormat.getMessageFormatType());
 
         // Define our expected json string
         final String expectedOptionsJson = "{\"option1\":\"value1\",\"option2\":\"value2\"}";
@@ -454,7 +455,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Name updated", newName, updatedMessageFormat.getName());
         assertEquals("classpath updated", newClasspath, updatedMessageFormat.getClasspath());
         assertNotEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
-        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, updatedMessageFormat.getMessageFormatType());
 
         // No parameters were posted, so we should have an empty json parameters
         assertEquals("No parameters should be empty", "{}", updatedMessageFormat.getOptionParameters());

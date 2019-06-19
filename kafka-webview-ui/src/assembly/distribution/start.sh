@@ -17,7 +17,4 @@ fi
 export SPRING_CONFIG_LOCATION=classpath:/config/base.yml,config.yml
 
 ## launch webapp
-java -jar kafka-webview-ui-*.jar $HEAP_OPTS $LOG_OPTS
-
-## Change back to previous directory
-cd $CWD
+exec java -jar kafka-webview-ui-*.jar $HEAP_OPTS $LOG_OPTS

@@ -39,6 +39,9 @@ public class AppProperties {
 
     @Value("${app.uploadPath}")
     private String uploadPath;
+    
+    @Value("${app.deserializerPath}")
+    private String deserializerPath;
 
     @Value("${app.key}")
     private String appKey;
@@ -80,6 +83,10 @@ public class AppProperties {
 
     public String getUploadPath() {
         return uploadPath;
+    }
+
+    public String getDeserializerPath() {
+        return deserializerPath;
     }
 
     public String getAppKey() {

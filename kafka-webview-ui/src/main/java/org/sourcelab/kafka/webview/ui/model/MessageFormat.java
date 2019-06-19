@@ -26,6 +26,8 @@ package org.sourcelab.kafka.webview.ui.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -48,8 +50,9 @@ public class MessageFormat {
     @Column(nullable = false, unique = true)
     private String jar;
 
+    @Enumerated(EnumType.ORDINAL)
     @Column(nullable = false)
-    private boolean isDefaultFormat = false;
+    private MessageFormatType messageFormatType = MessageFormatType.CUSTOM;
 
     @Column(nullable = false)
     private String optionParameters = "{}";
@@ -86,12 +89,12 @@ public class MessageFormat {
         this.jar = jar;
     }
 
-    public boolean isDefaultFormat() {
-        return isDefaultFormat;
+    public MessageFormatType getMessageFormatType() {
+        return messageFormatType;
     }
 
-    public void setDefaultFormat(final boolean defaultFormat) {
-        isDefaultFormat = defaultFormat;
+    public void setMessageFormatType(final MessageFormatType format) {
+        messageFormatType = format;
     }
 
     public String getOptionParameters() {
@@ -109,7 +112,7 @@ public class MessageFormat {
             + ", name='" + name + '\''
             + ", classpath='" + classpath + '\''
             + ", jar='" + jar + '\''
-            + ", isDefaultFormat=" + isDefaultFormat
+            + ", messageFormatType=" + messageFormatType
             + ", optionParameters='" + optionParameters + '\''
             + '}';
     }

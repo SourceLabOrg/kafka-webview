@@ -60,6 +60,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 
 /**
  * Controller for MessageFormat CRUD operations.
@@ -89,10 +90,12 @@ public class MessageFormatController extends BaseController {
         setupBreadCrumbs(model, null, null);
 
         // Retrieve all default formats
-        final Iterable<MessageFormat> defaultMessageFormats = messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(true);
+        final Iterable<MessageFormat> defaultMessageFormats =
+            messageFormatRepository.findByMessageFormatTypeOrderByNameAsc(MessageFormatType.DEFAULT);
 
         // Retrieve all custom formats
-        final Iterable<MessageFormat> customMessageFormats = messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(false);
+        final Iterable<MessageFormat> customMessageFormats =
+            messageFormatRepository.findByMessageFormatTypeIsInOrderByNameAsc(MessageFormatType.CUSTOM, MessageFormatType.AUTOCONF);
 
         // Set view attributes
         model.addAttribute("defaultMessageFormats", defaultMessageFormats);
@@ -125,10 +128,24 @@ public class MessageFormatController extends BaseController {
         final Optional<MessageFormat> messageFormatOptional = messageFormatRepository.findById(id);
         if (!messageFormatOptional.isPresent()) {
             // Set flash message & redirect
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find message format!"));
+            redirectAttributes.addFlashAttribute("FlashMessage",
+                FlashMessage.newWarning("Unable to find message format!"));
             return "redirect:/configuration/messageFormat";
         }
+
         final MessageFormat messageFormat = messageFormatOptional.get();
+        if (messageFormat.getMessageFormatType() == MessageFormatType.DEFAULT) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage",
+                FlashMessage.newWarning("Default message format can not be edited!"));
+            return "redirect:/configuration/messageFormat";
+        }
+        if (messageFormat.getMessageFormatType() == MessageFormatType.AUTOCONF) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage",
+                FlashMessage.newWarning("Automatique configured message format can not be edited!"));
+            return "redirect:/configuration/messageFormat";
+        }
 
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Edit " + messageFormat.getName(), null);
@@ -267,7 +284,7 @@ public class MessageFormatController extends BaseController {
 
         // If we made it here, write MessageFormat entity.
         messageFormat.setName(messageFormatForm.getName());
-        messageFormat.setDefaultFormat(false);
+        messageFormat.setMessageFormatType(MessageFormatType.CUSTOM);
         messageFormat.setOptionParameters(jsonStr);
         messageFormatRepository.save(messageFormat);
 
@@ -306,7 +323,7 @@ public class MessageFormatController extends BaseController {
 
         // Retrieve it
         final Optional<MessageFormat> messageFormatOptional = messageFormatRepository.findById(id);
-        if (!messageFormatOptional.isPresent() || messageFormatOptional.get().isDefaultFormat()) {
+        if (!messageFormatOptional.isPresent() || !MessageFormatType.CUSTOM.equals(messageFormatOptional.get().getMessageFormatType())) {
             // Set flash message & redirect
             redirectAttributes.addFlashAttribute(
                 "FlashMessage",
