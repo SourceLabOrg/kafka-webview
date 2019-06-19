@@ -47,6 +47,7 @@ spring:
 app:
   name: Kafka Web View
   uploadPath: "./data/uploads"
+  deserializerPath: "./data/deserializer"
   key: "SuperSecretKey"
   multiThreadedConsumer: true
   maxConcurrentWebConsumers: 32

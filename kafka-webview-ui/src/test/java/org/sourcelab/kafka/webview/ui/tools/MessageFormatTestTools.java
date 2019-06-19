@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.tools;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -52,7 +53,7 @@ public class MessageFormatTestTools {
         format.setName(name);
         format.setClasspath("com.example." + name);
         format.setJar(name + ".jar");
-        format.setDefaultFormat(false);
+        format.setMessageFormatType(MessageFormatType.CUSTOM);
         format.setOptionParameters("{\"key\": \"value\"}");
         messageFormatRepository.save(format);
 
@@ -68,7 +69,7 @@ public class MessageFormatTestTools {
         final MessageFormat format = new MessageFormat();
         format.setName(name);
         format.setClasspath(StringDeserializer.class.getName());
-        format.setDefaultFormat(true);
+        format.setMessageFormatType(MessageFormatType.DEFAULT);
         format.setJar("");
         format.setOptionParameters("{}");
         messageFormatRepository.save(format);

@@ -90,7 +90,8 @@ public class FilterTestTools {
         final Path outputPath = recordFilterPluginFactory.getPathForJar(jarFileName);
 
         // Copy plugin file over
-        try (final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar")) {
+        final TestPluginJars.TestJar testJar = TestPluginJars.getTestDeserializerForVersion1_1_0();
+        try (final InputStream fileInputStream = testJar.getInputStream()) {
             Files.createDirectories(outputPath.getParent().toAbsolutePath());
             Files.copy(fileInputStream, outputPath);
         }

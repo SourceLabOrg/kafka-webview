@@ -75,6 +75,11 @@ public class PluginConfig {
         final String jarDirectory = appProperties.getUploadPath() + "/deserializers";
         return new PluginFactory<>(jarDirectory, Deserializer.class);
     }
+    
+    private PluginFactory<Deserializer> getAutoconfDeserializerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getDeserializerPath();
+        return new PluginFactory<>(jarDirectory, Deserializer.class);
+    }
 
     /**
      * PluginFactory for creating instances of Record Filters.
@@ -124,6 +129,7 @@ public class PluginConfig {
 
         return new WebKafkaConsumerFactory(
             getDeserializerPluginFactory(appProperties),
+            getAutoconfDeserializerPluginFactory(appProperties),
             getRecordFilterPluginFactory(appProperties),
             getSecretManager(appProperties),
             getKafkaConsumerFactory(configUtil),

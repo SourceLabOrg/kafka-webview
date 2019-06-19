@@ -57,6 +57,7 @@ import java.util.concurrent.Executors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 
 @RunWith(JUnitParamsRunner.class)
 public class WebKafkaConsumerFactoryTest {
@@ -230,6 +231,7 @@ public class WebKafkaConsumerFactoryTest {
 
     private WebKafkaConsumerFactory createDefaultFactory() {
         final PluginFactory<Deserializer> deserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
+        final PluginFactory<Deserializer> autoconfDeserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
         final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory = new PluginFactory<>("not/used", RecordFilter.class);
         final SecretManager secretManager = new SecretManager("Passphrase");
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
@@ -238,6 +240,7 @@ public class WebKafkaConsumerFactoryTest {
 
         return new WebKafkaConsumerFactory(
             deserializerPluginFactory,
+            autoconfDeserializerPluginFactory,
             filterPluginFactoryPluginFactory,
             secretManager,
             kafkaConsumerFactory,
@@ -247,6 +250,7 @@ public class WebKafkaConsumerFactoryTest {
 
     private WebKafkaConsumerFactory createMultiThreadedFactory() {
         final PluginFactory<Deserializer> deserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
+        final PluginFactory<Deserializer> autoconfDeserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
         final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory = new PluginFactory<>("not/used", RecordFilter.class);
         final SecretManager secretManager = new SecretManager("Passphrase");
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
@@ -255,6 +259,7 @@ public class WebKafkaConsumerFactoryTest {
 
         return new WebKafkaConsumerFactory(
             deserializerPluginFactory,
+            autoconfDeserializerPluginFactory,
             filterPluginFactoryPluginFactory,
             secretManager,
             kafkaConsumerFactory,
@@ -272,7 +277,7 @@ public class WebKafkaConsumerFactoryTest {
         // Create MessageFormat for strings
         final MessageFormat stringFormat = new MessageFormat();
         stringFormat.setName("Key message format");
-        stringFormat.setDefaultFormat(true);
+        stringFormat.setMessageFormatType(MessageFormatType.DEFAULT);
         stringFormat.setClasspath(StringDeserializer.class.getCanonicalName());
 
         // No filters by default

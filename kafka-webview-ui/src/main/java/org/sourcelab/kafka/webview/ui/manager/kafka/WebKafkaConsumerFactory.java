@@ -67,6 +67,7 @@ public class WebKafkaConsumerFactory {
     private static final String consumerIdPrefix = "UserId";
 
     private final PluginFactory<Deserializer> deserializerPluginFactory;
+    private final PluginFactory<Deserializer> autoconfDeserializerPluginFactory;
     private final PluginFactory<RecordFilter> recordFilterPluginFactory;
     private final SecretManager secretManager;
     private final KafkaConsumerFactory kafkaConsumerFactory;
@@ -82,11 +83,13 @@ public class WebKafkaConsumerFactory {
      */
     public WebKafkaConsumerFactory(
         final PluginFactory<Deserializer> deserializerPluginFactory,
+        final PluginFactory<Deserializer> autoconfDeserializerPluginFactory,
         final PluginFactory<RecordFilter> recordFilterPluginFactory,
         final SecretManager secretManager,
         final KafkaConsumerFactory kafkaConsumerFactory,
         final ExecutorService multiThreadedConsumerThreadPool) {
         this.deserializerPluginFactory = deserializerPluginFactory;
+        this.autoconfDeserializerPluginFactory = autoconfDeserializerPluginFactory;
         this.recordFilterPluginFactory = recordFilterPluginFactory;
         this.secretManager = secretManager;
         this.kafkaConsumerFactory = kafkaConsumerFactory;
@@ -275,10 +278,16 @@ public class WebKafkaConsumerFactory {
 
     private Class<? extends Deserializer> getDeserializerClass(final MessageFormat messageFormat) {
         try {
-            if (messageFormat.isDefaultFormat()) {
-                return deserializerPluginFactory.getPluginClass(messageFormat.getClasspath());
-            } else {
-                return deserializerPluginFactory.getPluginClass(messageFormat.getJar(), messageFormat.getClasspath());
+            switch (messageFormat.getMessageFormatType()) {
+                case DEFAULT:
+                    return deserializerPluginFactory.getPluginClass(messageFormat.getClasspath());
+
+                case AUTOCONF:
+                    return autoconfDeserializerPluginFactory.getPluginClass(messageFormat.getJar(), messageFormat.getClasspath());
+
+                case CUSTOM:
+                default:
+                    return deserializerPluginFactory.getPluginClass(messageFormat.getJar(), messageFormat.getClasspath());
             }
         } catch (final LoaderException exception) {
             throw new RuntimeException(exception.getMessage(), exception);

@@ -25,6 +25,7 @@
 package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat;
 
 import com.google.common.base.Charsets;
+import junitparams.Parameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +36,7 @@ import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.tools.FileTestTools;
 import org.sourcelab.kafka.webview.ui.tools.MessageFormatTestTools;
+import org.sourcelab.kafka.webview.ui.tools.TestPluginJars;
 import org.sourcelab.kafka.webview.ui.tools.ViewTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -44,10 +46,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -56,6 +62,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -143,15 +150,36 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
     /**
      * Smoke test creating new message format.
+     *
+     * Tests a deserializer built against 1.0.0 kafka-webview-plugin for backwards compatibility.
      */
     @Test
     @Transactional
-    public void testPostUpdate_newMessageFormat() throws Exception {
-        final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
-        final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
+    public void testPostUpdate_newMessageFormat_against1_0_0() throws Exception {
+        run_testPostUpdate_newMessageFormat(TestPluginJars.getTestDeserializerForVersion1_0_0());
+    }
 
-        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
-        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+    /**
+     * Smoke test creating new message format.
+     *
+     * Tests a deserializer built against 1.1.0 kafka-webview-plugin for backwards compatibility.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_newMessageFormat_against1_1_0() throws Exception {
+        run_testPostUpdate_newMessageFormat(TestPluginJars.getTestDeserializerForVersion1_1_0());
+    }
+
+    /**
+     * Actual smoke test for creating a new message format.
+     * @param testJar which jar to upload.
+     */
+    private void run_testPostUpdate_newMessageFormat(final TestPluginJars.TestJar testJar) throws Exception {
+        final String expectedName = "MyMessageFormat" + System.currentTimeMillis();
+        final String expectedClassPath = testJar.getClazz();
+
+        final InputStream fileInputStream = testJar.getInputStream();
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "notARealFile.jar", null, fileInputStream);
 
         // Define our expected json string
         final String expectedOptionsJson = "{\"option1\":\"value1\",\"option2\":\"value2\"}";
@@ -179,7 +207,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Has correct name", expectedName, messageFormat.getName());
         assertEquals("Has correct classpath", expectedClassPath, messageFormat.getClasspath());
         assertNotNull("Has jar path", messageFormat.getJar());
-        assertFalse("Should not be a default format", messageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, messageFormat.getMessageFormatType());
 
         // Validate that our options got set
         assertEquals("Got options", expectedOptionsJson, messageFormat.getOptionParameters());
@@ -189,6 +217,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Cleanup
         Files.deleteIfExists(Paths.get(deserializerUploadPath, messageFormat.getJar()));
+        fileInputStream.close();
     }
 
     /**
@@ -202,7 +231,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
 
         final InputStream fileInputStream = null;
-        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "notARealFile.jar", null, fileInputStream);
 
         // Hit page.
         mockMvc
@@ -263,7 +292,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         final String expectedClassPath = "examples.deserializer.ExampleDeserializer";
 
         final MockMultipartFile jarUpload =
-            new MockMultipartFile("file", "testPlugins.jar", null, "MyContent".getBytes(Charsets.UTF_8));
+            new MockMultipartFile("file", "notARealFile.jar", null, "MyContent".getBytes(Charsets.UTF_8));
 
         // Hit page.
         final MvcResult result = mockMvc
@@ -309,7 +338,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // This is an invalid jar.
         final MockMultipartFile jarUpload =
-            new MockMultipartFile("file", "testPlugins.jar", null, "MyContent".getBytes(Charsets.UTF_8));
+            new MockMultipartFile("file", "notARealFile.jar", null, "MyContent".getBytes(Charsets.UTF_8));
 
         // Hit page.
         mockMvc
@@ -335,7 +364,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Name not updated", expectedName, updatedMessageFormat.getName());
         assertEquals("classpath not updated", expectedClasspath, updatedMessageFormat.getClasspath());
         assertEquals("Jar name not updated", expectedJarName, updatedMessageFormat.getJar());
-        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, updatedMessageFormat.getMessageFormatType());
         assertEquals("Parameters not updated", expectedParametersJson, updatedMessageFormat.getOptionParameters());
 
         // Validate previous jar not overwritten.
@@ -365,7 +394,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // This is the same as not uploading a jar.
         final InputStream emptyFile = null;
-        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, emptyFile);
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "notARealFile.jar", null, emptyFile);
 
         final String newName = "MyUpdatedName" + System.currentTimeMillis();
         final String newClasspath = "my new class path";
@@ -395,7 +424,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("classpath was NOT updated", originalClasspath, updatedMessageFormat.getClasspath());
         assertNotEquals("classpath was NOT updated", newClasspath, updatedMessageFormat.getClasspath());
         assertEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
-        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, updatedMessageFormat.getMessageFormatType());
 
         // Define our expected json string
         final String expectedOptionsJson = "{\"option1\":\"value1\",\"option2\":\"value2\"}";
@@ -415,10 +444,32 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
     /**
      * Test attempting to update an existing message format, uploading a valid jar.
      * We change the name.  We expect the old file to be removed, and the new one added.
+     *
+     * Use plugin built against 1.0.0 to check for backwards compatability.
      */
     @Test
     @Transactional
-    public void testPostUpdate_updatingExistingWithValidJarSameName() throws Exception {
+    public void testPostUpdate_updatingExistingWithValidJarSameName_1_0_0() throws Exception {
+        run_testPostUpdate_updatingExistingWithValidJarSameName(TestPluginJars.getTestDeserializerForVersion1_0_0());
+    }
+
+    /**
+     * Test attempting to update an existing message format, uploading a valid jar.
+     * We change the name.  We expect the old file to be removed, and the new one added.
+     *
+     * Use plugin built against 1.1.0 to check for backwards compatability.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_updatingExistingWithValidJarSameName_1_1_0() throws Exception {
+        run_testPostUpdate_updatingExistingWithValidJarSameName(TestPluginJars.getTestDeserializerForVersion1_1_0());
+    }
+
+    /**
+     * Test attempting to update an existing message format, uploading a valid jar.
+     * We change the name.  We expect the old file to be removed, and the new one added.
+     */
+    public void run_testPostUpdate_updatingExistingWithValidJarSameName(final TestPluginJars.TestJar testJar) throws Exception {
         final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat("MyMessageFormat" + System.currentTimeMillis());
         final String originalJarName = messageFormat.getJar();
         final String originalJarContents = "OriginalContents";
@@ -428,11 +479,11 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         FileTestTools.createDummyFile(deserializerUploadPath + messageFormat.getJar(), originalJarContents);
 
         // This is a valid jar
-        final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
-        final MockMultipartFile jarUpload = new MockMultipartFile("file", "testPlugins.jar", null, fileInputStream);
+        final InputStream fileInputStream = testJar.getInputStream();
+        final MockMultipartFile jarUpload = new MockMultipartFile("file", "notARealFile.jar", null, fileInputStream);
 
         final String newName = "MyUpdatedName" + System.currentTimeMillis();
-        final String newClasspath = "examples.deserializer.ExampleDeserializer";
+        final String newClasspath = testJar.getClazz();
 
         // Hit page.
         mockMvc
@@ -454,7 +505,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
         assertEquals("Name updated", newName, updatedMessageFormat.getName());
         assertEquals("classpath updated", newClasspath, updatedMessageFormat.getClasspath());
         assertNotEquals("Jar name not updated", originalJarName, updatedMessageFormat.getJar());
-        assertFalse("Should not be a default format", updatedMessageFormat.isDefaultFormat());
+        assertEquals("Should be a custom format", MessageFormatType.CUSTOM, updatedMessageFormat.getMessageFormatType());
 
         // No parameters were posted, so we should have an empty json parameters
         assertEquals("No parameters should be empty", "{}", updatedMessageFormat.getOptionParameters());
@@ -468,6 +519,7 @@ public class MessageFormatControllerTest extends AbstractMvcTest {
 
         // Cleanup
         Files.deleteIfExists(newJarPath);
+        fileInputStream.close();
     }
 
     /**

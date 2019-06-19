@@ -32,6 +32,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.sourcelab.kafka.webview.ui.manager.plugin.DeserializerDiscoveryManager;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
@@ -44,6 +45,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 
 /**
  * Called on startup to ensure we have sane default data loaded.
@@ -53,14 +60,19 @@ public final class DataLoaderConfig implements ApplicationRunner {
 
     private final MessageFormatRepository messageFormatRepository;
     private final UserRepository userRepository;
+    private final DeserializerDiscoveryManager deserializerDiscoveryManager;
 
     /**
      * Constructor.
      */
     @Autowired
-    private DataLoaderConfig(final MessageFormatRepository messageFormatRepository, final UserRepository userRepository) {
-        this.messageFormatRepository = messageFormatRepository;
-        this.userRepository = userRepository;
+    private DataLoaderConfig(
+        final MessageFormatRepository messageFormatRepository,
+        final UserRepository userRepository,
+        final DeserializerDiscoveryManager deserializerDiscoveryManager) {
+        this.deserializerDiscoveryManager = Objects.requireNonNull(deserializerDiscoveryManager);
+        this.messageFormatRepository = Objects.requireNonNull(messageFormatRepository);
+        this.userRepository = Objects.requireNonNull(userRepository);
     }
 
     /**
@@ -69,6 +81,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
     private void createData() {
         createDefaultUser();
         createDefaultMessageFormats();
+        deserializerDiscoveryManager.discoverDeserializers();
     }
 
     /**
@@ -112,7 +125,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
             messageFormat.setName(entry.getKey());
             messageFormat.setClasspath(entry.getValue());
             messageFormat.setJar("n/a");
-            messageFormat.setDefaultFormat(true);
+            messageFormat.setMessageFormatType(MessageFormatType.DEFAULT);
             messageFormatRepository.save(messageFormat);
         }
     }
