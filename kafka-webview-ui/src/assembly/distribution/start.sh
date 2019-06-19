@@ -20,4 +20,4 @@ export SPRING_CONFIG_LOCATION=classpath:/config/base.yml,config.yml
 exec java -jar kafka-webview-ui-*.jar $HEAP_OPTS $LOG_OPTS
 
 ## Change back to previous directory
-cd $CWD 
+cd $CWD
