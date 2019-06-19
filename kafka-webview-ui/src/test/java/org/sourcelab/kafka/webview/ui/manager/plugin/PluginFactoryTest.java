@@ -24,11 +24,15 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
+import org.sourcelab.kafka.webview.ui.tools.TestPluginJars;
 
 import java.io.File;
 import java.net.URL;
@@ -39,18 +43,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(JUnitParamsRunner.class)
 public class PluginFactoryTest {
 
     /**
      * Test creating a RecordFilter.
      */
     @Test
-    public void testWithRecordFilter() throws LoaderException {
-        final String jarFilename = "testPlugins.jar";
-        final String classPath = "examples.filter.LowOffsetFilter";
+    @Parameters(method = "provideTestFilterJars")
+    public void testWithRecordFilter(final TestPluginJars.TestJar testJar) throws LoaderException {
+        final String jarFilename = testJar.getFilename();
+        final String classPath = testJar.getClazz();
+        final URL jar = testJar.getJarUrl();
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
@@ -81,12 +87,13 @@ public class PluginFactoryTest {
      * Test checking a RecordFilter.
      */
     @Test
-    public void testCheckPlugin_WithRecordFilter() throws LoaderException {
-        final String jarFilename = "testPlugins.jar";
-        final String classPath = "examples.filter.LowOffsetFilter";
+    @Parameters(method = "provideTestFilterJars")
+    public void testCheckPlugin_WithRecordFilter(final TestPluginJars.TestJar testJar) throws LoaderException {
+        final String jarFilename = testJar.getFilename();
+        final String classPath = testJar.getClazz();
+        final URL jar = testJar.getJarUrl();
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
@@ -113,12 +120,13 @@ public class PluginFactoryTest {
      * Test creating a Deserializer.
      */
     @Test
-    public void testWithDeserializer() throws LoaderException {
-        final String jarFilename = "testPlugins.jar";
-        final String classPath = "examples.deserializer.ExampleDeserializer";
+    @Parameters(method = "provideTestDeserializerJars")
+    public void testWithDeserializer(final TestPluginJars.TestJar testJar) throws LoaderException {
+        final String jarFilename = testJar.getFilename();
+        final String classPath = testJar.getClazz();
+        final URL jar = testJar.getJarUrl();
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
@@ -150,12 +158,13 @@ public class PluginFactoryTest {
      * Test checking a Deserializer.
      */
     @Test
-    public void testCheckPlugin_WithDeserializer() throws LoaderException {
-        final String jarFilename = "testPlugins.jar";
-        final String classPath = "examples.deserializer.ExampleDeserializer";
+    @Parameters(method = "provideTestDeserializerJars")
+    public void testCheckPlugin_WithDeserializer(final TestPluginJars.TestJar testJar) throws LoaderException {
+        final String jarFilename = testJar.getFilename();
+        final String classPath = testJar.getClazz();
+        final URL jar = testJar.getJarUrl();
 
         // Find jar on filesystem.
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/" + jarFilename);
         final String jarPath = new File(jar.getFile()).getParent();
 
         // Create factory
@@ -194,5 +203,25 @@ public class PluginFactoryTest {
         // Validate
         assertNotNull(pluginFilterClass);
         assertEquals("Has expected name", classPath, pluginFilterClass.getName());
+    }
+
+    /**
+     * Provide test filter jars.
+     */
+    public static Object[] provideTestFilterJars() {
+        return new Object[] {
+            new Object[] {TestPluginJars.getTestLowOffsetFilterForVersion1_0_0() },
+            new Object[] {TestPluginJars.getTestLowOffsetFilterForVersion1_1_0() },
+        };
+    }
+
+    /**
+     * Provide test deserializer jars.
+     */
+    public static Object[] provideTestDeserializerJars() {
+        return new Object[] {
+            new Object[] {TestPluginJars.getTestDeserializerForVersion1_0_0() },
+            new Object[] {TestPluginJars.getTestDeserializerForVersion1_1_0() },
+        };
     }
 }

@@ -24,8 +24,13 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
+import org.sourcelab.kafka.webview.ui.tools.TestPluginJars;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -38,17 +43,19 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test over the PluginClassLoader.
  */
+@RunWith(JUnitParamsRunner.class)
 public class PluginClassLoaderTest {
 
     /**
      * Tests loading a class from a jar.
      */
     @Test
-    public void testLoadingFilterPlugin() throws ClassNotFoundException, IllegalAccessException,
+    @Parameters(method = "provideTestJars")
+    public void testLoadingFilterPlugin(final TestPluginJars.TestJar testJar) throws ClassNotFoundException, IllegalAccessException,
         InstantiationException, NoSuchMethodException, InvocationTargetException {
         // Get URL to our jar
-        final URL jar = getClass().getClassLoader().getResource("testDeserializer/1.0.0/testPlugins.jar");
-        final String classPath = "examples.filter.LowOffsetFilter";
+        final URL jar = testJar.getJarUrl();
+        final String classPath = testJar.getClazz();
 
         // Create class loader
         final PluginClassLoader pluginClassLoader = new PluginClassLoader(jar, getClass().getClassLoader());
@@ -72,5 +79,15 @@ public class PluginClassLoaderTest {
         final ProtectionDomain protectionDomain = filter.getClass().getProtectionDomain();
         final PermissionCollection permissionCollection = protectionDomain.getPermissions();
         assertTrue("Should have read only permissions", permissionCollection.isReadOnly());
+    }
+
+    /**
+     * Provide test jars.
+     */
+    public static Object[] provideTestJars() {
+        return new Object[] {
+            new Object[] {TestPluginJars.getTestLowOffsetFilterForVersion1_0_0() },
+            new Object[] {TestPluginJars.getTestLowOffsetFilterForVersion1_1_0() },
+        };
     }
 }
