@@ -250,6 +250,7 @@ public class WebKafkaConsumerFactoryTest {
 
     private WebKafkaConsumerFactory createMultiThreadedFactory() {
         final PluginFactory<Deserializer> deserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
+        final PluginFactory<Deserializer> autoconfDeserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
         final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory = new PluginFactory<>("not/used", RecordFilter.class);
         final SecretManager secretManager = new SecretManager("Passphrase");
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
@@ -258,6 +259,7 @@ public class WebKafkaConsumerFactoryTest {
 
         return new WebKafkaConsumerFactory(
             deserializerPluginFactory,
+            autoconfDeserializerPluginFactory,
             filterPluginFactoryPluginFactory,
             secretManager,
             kafkaConsumerFactory,
