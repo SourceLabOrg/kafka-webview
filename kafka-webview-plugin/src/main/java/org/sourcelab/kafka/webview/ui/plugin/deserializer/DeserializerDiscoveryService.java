@@ -24,12 +24,25 @@
 
 package org.sourcelab.kafka.webview.ui.plugin.deserializer;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Discovery service for deserializer auto configuration.
+ *
+ * Adding / implementing this interface on a {@link org.apache.kafka.common.serialization.Deserializer} implementation
+ * will allow Kafka-WebView to detect it on startup and automatically register it within the application.
+ *
+ * On Startup Kafka-WebView will scan for JARs that contain classes that implement this interface.
+ * If it finds any, it will use the information returned from getDeserializersInformation() to attempt to register it.
+ *
+ * If an existing Deserializer exists with the same name:
+ *   - If the Deserializer instance was created via this Discovery mechanism, it will be updated with the most current values.
+ *   - If the Deserializer instance was NOT created via this Discovery mechanism, it will be skipped/ignored.
  */
 public interface DeserializerDiscoveryService {
-
-    public List<DeserializerInformation> getDeserializersInformation();
+    /**
+     * Return registration information for a Deserializer.
+     * @return Collection of registration information.
+     */
+    Collection<DeserializerInformation> getDeserializersInformation();
 }

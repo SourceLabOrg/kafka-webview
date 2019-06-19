@@ -24,15 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.File;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.DoubleDeserializer;
@@ -41,6 +32,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.sourcelab.kafka.webview.ui.manager.plugin.DeserializerDiscoveryManager;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
@@ -52,15 +44,12 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.sourcelab.kafka.webview.ui.plugin.deserializer.DeserializerDiscoveryService;
-import org.sourcelab.kafka.webview.ui.plugin.deserializer.DeserializerInformation;
 import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 
 /**
@@ -69,26 +58,21 @@ import org.sourcelab.kafka.webview.ui.model.MessageFormatType;
 @Component
 public final class DataLoaderConfig implements ApplicationRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataLoaderConfig.class);
-
-    private final AppProperties appProperties;
     private final MessageFormatRepository messageFormatRepository;
     private final UserRepository userRepository;
-    private final ObjectMapper mapper;
+    private final DeserializerDiscoveryManager deserializerDiscoveryManager;
 
     /**
      * Constructor.
      */
     @Autowired
     private DataLoaderConfig(
-        final AppProperties appProperties,
         final MessageFormatRepository messageFormatRepository,
         final UserRepository userRepository,
-        final ObjectMapper mapper) {
-        this.appProperties = appProperties;
-        this.messageFormatRepository = messageFormatRepository;
-        this.userRepository = userRepository;
-        this.mapper = mapper;
+        final DeserializerDiscoveryManager deserializerDiscoveryManager) {
+        this.deserializerDiscoveryManager = Objects.requireNonNull(deserializerDiscoveryManager);
+        this.messageFormatRepository = Objects.requireNonNull(messageFormatRepository);
+        this.userRepository = Objects.requireNonNull(userRepository);
     }
 
     /**
@@ -97,7 +81,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
     private void createData() {
         createDefaultUser();
         createDefaultMessageFormats();
-        discoverDeserializers();
+        deserializerDiscoveryManager.discoverDeserializers();
     }
 
     /**
@@ -143,61 +127,6 @@ public final class DataLoaderConfig implements ApplicationRunner {
             messageFormat.setJar("n/a");
             messageFormat.setMessageFormatType(MessageFormatType.DEFAULT);
             messageFormatRepository.save(messageFormat);
-        }
-    }
-
-    private void discoverDeserializers() {
-        final File deserializerPath = new File(appProperties.getDeserializerPath());
-        
-        // Check preconditions
-        if (!deserializerPath.exists()) {
-            logger.warn("Directory {} doesn't exists.", deserializerPath);
-            return;
-        }
-        if (!deserializerPath.isDirectory()) {
-            logger.error("{} is not a directory.", deserializerPath);
-            return;
-        }
-
-        File[] jars = deserializerPath.listFiles((File dir, String name) -> name.endsWith(".jar"));
-        logger.info("Analyse {} for deserializer", (Object) jars);
-        for (File jar : jars) {
-            try {
-                URL jarUrl = jar.toURI().toURL();
-                ClassLoader cl = new URLClassLoader(new URL[]{jarUrl}, getClass().getClassLoader());
-                ServiceLoader<DeserializerDiscoveryService> services = ServiceLoader.load(DeserializerDiscoveryService.class, cl);
-                loadDeserializers(jar, services);
-            } catch (MalformedURLException ex) {
-                logger.error("Failed to load {}, error: {}", jar, ex.getMessage());
-            }
-        }
-    }
-    
-    private void loadDeserializers(File jar, ServiceLoader<DeserializerDiscoveryService> services) {
-        for (DeserializerDiscoveryService service : services) {
-            List<DeserializerInformation> deserializersInformation = service.getDeserializersInformation();
-            for (DeserializerInformation deserializerInformation : deserializersInformation) {
-                try {
-                    MessageFormat messageFormat = messageFormatRepository.findByName(deserializerInformation.getName());
-                    if (messageFormat == null) {
-                        messageFormat = new MessageFormat();
-                    } else if (MessageFormatType.AUTOCONF != messageFormat.getMessageFormatType()) {
-                        logger.error("Try to register the formatter {} but this name is already register as a {}.",
-                            messageFormat.getName(), messageFormat.getMessageFormatType());
-                        continue;
-                    }
-                    messageFormat.setName(deserializerInformation.getName());
-                    messageFormat.setClasspath(deserializerInformation.getClasspath());
-                    messageFormat.setJar(jar.getName());
-                    messageFormat.setMessageFormatType(MessageFormatType.AUTOCONF);
-                    messageFormat.setOptionParameters(
-                        mapper.writeValueAsString(deserializerInformation.getDefaultConfig()));
-                    messageFormatRepository.save(messageFormat);
-                } catch (JsonProcessingException ex) {
-                    logger.error("Failed to load {}, because the default config are invalid ({})",
-                        deserializerInformation.getName(), ex.getMessage());
-                }
-            }
         }
     }
 

@@ -32,20 +32,47 @@ import java.util.Map;
  */
 public class DeserializerInformation {
 
+    /**
+     * Name the Deserializer should be registered under.
+     */
     private final String name;
+
+    /**
+     * Classpath for the Deserializer.
+     */
     private final String classpath;
+
+    /**
+     * Any configuration options that should be configured by default.
+     */
     private final Map<String, String> defaultConfig;
 
+    /**
+     * Constructor.
+     * @param name Name the deserializer should be registered under.
+     * @param clazz Class reference for Deserializer.  Should implement {@link org.apache.kafka.common.serialization.Deserializer}
+     */
     public DeserializerInformation(String name, Class<?> clazz) {
         this(name, clazz.getName());
     }
 
-    public DeserializerInformation(String name, String classpath) {
-        this(name, classpath,  new HashMap<>());
-    }
-
+    /**
+     * Constructor.
+     * @param name Name the deserializer should be registered under.
+     * @param clazz Class reference for Deserializer.  Should implement {@link org.apache.kafka.common.serialization.Deserializer}
+     * @param defaultConfig Default configuration options.
+     */
     public DeserializerInformation(String name, Class<?> clazz, Map<String, String> defaultConfig) {
         this(name, clazz.getName(), defaultConfig);
+    }
+
+    /**
+     * Constructor.
+     * @param name Name the deserializer should be registered under.
+     * @param classpath Class reference for Deserializer.
+     */
+    public DeserializerInformation(String name, String classpath) {
+        this(name, classpath,  new HashMap<>());
     }
 
     /**
