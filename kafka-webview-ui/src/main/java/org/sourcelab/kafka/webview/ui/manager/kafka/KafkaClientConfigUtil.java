@@ -93,10 +93,15 @@ public class KafkaClientConfigUtil {
         config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getConnectString());
         config.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeoutMs);
 
-        // ClientId and ConsumerGroupId are intended to be unique for each user session.
+        // ClientId is intended to be unique for each user session.
         // See Issue-57 https://github.com/SourceLabOrg/kafka-webview/issues/57#issuecomment-363508531
         config.put(ConsumerConfig.CLIENT_ID_CONFIG, prefixedConsumerId);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, prefixedConsumerId);
+
+        // Consumer groups can be defined at the cluster level, view level, or one is generated dynamically.
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, getConsumerGroupId(clusterConfig, consumerId));
+
+        // Partitioning Strategy is to always get all partitions no matter how many subscribers in a consumer group.
+        config.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, DuplicatedAssignor.class.getName());
 
         // Optionally configure SSL
         applySslSettings(clusterConfig, config);
@@ -155,5 +160,21 @@ public class KafkaClientConfigUtil {
         }
         config.put(SaslConfigs.SASL_MECHANISM, clusterConfig.getSaslMechanism());
         config.put(SaslConfigs.SASL_JAAS_CONFIG, clusterConfig.getSaslJaas());
+    }
+
+    /**
+     * Generate the default consumer group id to be used.  This value may be overriden by a view specific value
+     * later.
+     *
+     * @param clusterConfig cluster configuration definition.
+     * @param consumerId Id of consumer to use.
+     * @return non-null, non-empty value to use as consumer group.
+     */
+    private String getConsumerGroupId(final ClusterConfig clusterConfig, final String consumerId) {
+        if (clusterConfig.hasDefaultConsumerGroupId()) {
+            return clusterConfig.getDefaultConsumerGroupId();
+        }
+        // Backwards compatibility for now.
+        return consumerIdPrefix.concat("-").concat(consumerId);
     }
 }

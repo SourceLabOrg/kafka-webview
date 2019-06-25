@@ -73,6 +73,12 @@ public class View {
     @Column(nullable = false)
     private Integer resultsPerPartition = 10;
 
+    /**
+     * Allow defining a specific consumerId for any subscribers using this view.
+     */
+    private String consumerId;
+
+
     @OneToMany(
         fetch = FetchType.LAZY,
         cascade = { CascadeType.PERSIST, CascadeType.MERGE },
@@ -157,6 +163,14 @@ public class View {
 
     public void setResultsPerPartition(final Integer resultsPerPartition) {
         this.resultsPerPartition = resultsPerPartition;
+    }
+
+    public String getConsumerId() {
+        return consumerId;
+    }
+
+    public void setConsumerId(final String consumerId) {
+        this.consumerId = consumerId;
     }
 
     /**

@@ -151,6 +151,10 @@ public class ClusterConfigController extends BaseController {
         clusterForm.setSaslPassword(saslProperties.getPlainPassword());
         clusterForm.setSaslCustomJaas(saslProperties.getJaas());
 
+        // Set optional parameters
+        clusterForm.setConsumerIdOverrideEnabled(cluster.getDefaultConsumerId() != null);
+        clusterForm.setConsumerIdOverride(cluster.getDefaultConsumerId());
+
         // Display template
         return "configuration/cluster/create";
     }
@@ -198,6 +202,16 @@ public class ClusterConfigController extends BaseController {
                         );
                     }
                 }
+            }
+        }
+
+        // Validate consumerId override value.
+        if (clusterForm.getConsumerIdOverrideEnabled()) {
+            // If no override value is provided, add validation error.
+            if (clusterForm.getConsumerIdOverride() == null || clusterForm.getConsumerIdOverride().trim().isEmpty()) {
+                bindingResult.addError(new FieldError(
+                    "clusterForm", "consumerIdOverride", null, true, null, null, "Enter a Consumer Id value")
+                );
             }
         }
 
@@ -352,6 +366,15 @@ public class ClusterConfigController extends BaseController {
         cluster.setName(clusterForm.getName());
         cluster.setBrokerHosts(clusterForm.getBrokerHosts());
         cluster.setValid(false);
+
+        // Update optional settings.
+        if (clusterForm.getConsumerIdOverrideEnabled()) {
+            cluster.setDefaultConsumerId(clusterForm.getConsumerIdOverride());
+        } else {
+            // Clear
+            cluster.setDefaultConsumerId(null);
+        }
+
         clusterRepository.save(cluster);
 
         // Set flash message

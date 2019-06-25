@@ -90,6 +90,14 @@ public class ClusterForm {
      */
     private String saslCustomJaas;
 
+    // Optional Settings
+
+    /**
+     * If the user elects to override the consumer id for all views.
+     */
+    private Boolean consumerIdOverrideEnabled = false;
+    private String consumerIdOverride;
+
     public Long getId() {
         return id;
     }
@@ -242,6 +250,32 @@ public class ClusterForm {
 
     public boolean isPlainSaslMechanism() {
         return "PLAIN".equals(saslMechanism);
+    }
+
+    public Boolean getConsumerIdOverrideEnabled() {
+        return consumerIdOverrideEnabled;
+    }
+
+    public void setConsumerIdOverrideEnabled(final Boolean consumerIdOverrideEnabled) {
+        if (consumerIdOverrideEnabled == null) {
+            this.consumerIdOverrideEnabled = false;
+        } else {
+            this.consumerIdOverrideEnabled = consumerIdOverrideEnabled;
+        }
+    }
+
+    public String getConsumerIdOverride() {
+        if (consumerIdOverride == null) {
+            return null;
+        }
+        if (consumerIdOverride.trim().isEmpty()) {
+            return null;
+        }
+        return consumerIdOverride;
+    }
+
+    public void setConsumerIdOverride(final String consumerIdOverride) {
+        this.consumerIdOverride = consumerIdOverride;
     }
 
     @Override
