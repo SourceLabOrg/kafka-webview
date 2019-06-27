@@ -277,8 +277,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
      * Not intended to be used to consume records.
      * @return KafkaConsumer instance.
      */
-    private KafkaConsumer<?, ?> getCoordinatorConsumer()
-    {
+    private KafkaConsumer<?, ?> getCoordinatorConsumer() {
         if (coordinatorConsumer == null) {
             // Create new consumer and assign to all partitions.
             coordinatorConsumer = createNewConsumer();
