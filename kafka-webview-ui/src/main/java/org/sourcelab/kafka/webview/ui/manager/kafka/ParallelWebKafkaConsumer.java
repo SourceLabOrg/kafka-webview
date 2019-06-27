@@ -67,7 +67,16 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
     private final Duration pollTimeoutDuration;
     private final ExecutorService executorService;
 
+    /**
+     * Cached topic partition details so they do not need to be retrieved more than once.
+     */
     private List<TopicPartition> cachedTopicsAndPartitions = null;
+
+    /**
+     * KafkaConsumer instance used to perform seek and state operations.
+     * Not used for consuming records.
+     */
+    private KafkaConsumer coordinatorConsumer = null;
 
     /**
      * Constructor.
@@ -88,190 +97,197 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public KafkaResults consumePerPartition() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
-            final List<TopicPartition> allTopicPartitions = getAllPartitions(kafkaConsumer);
 
-            // To preserve order
-            final Map<Integer, CompletableFuture<List<KafkaResult>>> completableFuturesByPartition = new TreeMap<>();
+        final List<TopicPartition> allTopicPartitions = getAllPartitions(getCoordinatorConsumer());
 
-            // Loop over each topic partition
-            for (final TopicPartition topicPartition : allTopicPartitions) {
+        // To preserve order
+        final Map<Integer, CompletableFuture<List<KafkaResult>>> completableFuturesByPartition = new TreeMap<>();
 
-                // Create a new async task
-                final CompletableFuture<List<KafkaResult>> future = CompletableFuture.supplyAsync(() -> {
-                    // Create a new consumer for each task
-                    try (final KafkaConsumer perTopicConsumer = createNewConsumer()) {
-                        // Subscribe to just the single topic partition
-                        perTopicConsumer.assign(Collections.singleton(topicPartition));
+        // Loop over each topic partition
+        for (final TopicPartition topicPartition : allTopicPartitions) {
 
-                        // consume messages from that partition
-                        return consume(perTopicConsumer);
-                    }
-                }, executorService);
+            // Create a new async task
+            final CompletableFuture<List<KafkaResult>> future = CompletableFuture.supplyAsync(() -> {
+                // Create a new consumer for each task
+                try (final KafkaConsumer perTopicConsumer = createNewConsumer()) {
+                    // Subscribe to just the single topic partition
+                    perTopicConsumer.assign(Collections.singleton(topicPartition));
 
-                // Keep references to our ASync Tasks
-                completableFuturesByPartition.put(topicPartition.partition(), future);
-            }
+                    // consume messages from that partition
+                    return consume(perTopicConsumer);
+                }
+            }, executorService);
 
-            // Merge results.
-            final List<KafkaResult> allResults = new ArrayList<>();
-            completableFuturesByPartition.forEach((partition, future) -> {
-                allResults.addAll(future.join());
-            });
-
-            // Create return object
-            return new KafkaResults(
-                allResults,
-                getConsumerState(kafkaConsumer).getOffsets(),
-                getHeadOffsets(kafkaConsumer),
-                getTailOffsets(kafkaConsumer)
-            );
+            // Keep references to our ASync Tasks
+            completableFuturesByPartition.put(topicPartition.partition(), future);
         }
+
+        // Merge results.
+        final List<KafkaResult> allResults = new ArrayList<>();
+        completableFuturesByPartition.forEach((partition, future) -> {
+            allResults.addAll(future.join());
+        });
+
+        // Create return object
+        return new KafkaResults(
+            allResults,
+            getConsumerState(getCoordinatorConsumer()).getOffsets(),
+            getHeadOffsets(getCoordinatorConsumer()),
+            getTailOffsets(getCoordinatorConsumer())
+        );
     }
 
     @Override
     public ConsumerState seek(final Map<Integer, Long> partitionOffsetMap) {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
-            for (final Map.Entry<Integer, Long> entry : partitionOffsetMap.entrySet()) {
-                kafkaConsumer.seek(
-                    new TopicPartition(clientConfig.getTopicConfig().getTopicName(), entry.getKey()),
-                    entry.getValue()
-                );
-            }
-            commit(kafkaConsumer);
-            return getConsumerState(kafkaConsumer);
+
+        for (final Map.Entry<Integer, Long> entry : partitionOffsetMap.entrySet()) {
+            getCoordinatorConsumer().seek(
+                new TopicPartition(clientConfig.getTopicConfig().getTopicName(), entry.getKey()),
+                entry.getValue()
+            );
         }
+        commit(getCoordinatorConsumer());
+        return getConsumerState(getCoordinatorConsumer());
     }
 
     @Override
     public ConsumerState seek(final long timestamp) {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
-            // Find offsets for timestamp
-            final Map<TopicPartition, Long> timestampMap = new HashMap<>();
-            for (final TopicPartition topicPartition : getAllPartitions(kafkaConsumer)) {
-                timestampMap.put(topicPartition, timestamp);
-            }
-            final Map<TopicPartition, OffsetAndTimestamp> offsetMap = kafkaConsumer.offsetsForTimes(timestampMap);
 
-            // Build map of partition => offset
-            final Map<Integer, Long> partitionOffsetMap = new HashMap<>();
-            for (Map.Entry<TopicPartition, OffsetAndTimestamp> entry : offsetMap.entrySet()) {
-                partitionOffsetMap.put(entry.getKey().partition(), entry.getValue().offset());
-            }
-
-            // Now lets seek to those offsets
-            return seek(partitionOffsetMap);
+        // Find offsets for timestamp
+        final Map<TopicPartition, Long> timestampMap = new HashMap<>();
+        for (final TopicPartition topicPartition : getAllPartitions(getCoordinatorConsumer())) {
+            timestampMap.put(topicPartition, timestamp);
         }
+        final Map<TopicPartition, OffsetAndTimestamp> offsetMap = getCoordinatorConsumer().offsetsForTimes(timestampMap);
+
+        // Build map of partition => offset
+        final Map<Integer, Long> partitionOffsetMap = new HashMap<>();
+        for (Map.Entry<TopicPartition, OffsetAndTimestamp> entry : offsetMap.entrySet()) {
+            partitionOffsetMap.put(entry.getKey().partition(), entry.getValue().offset());
+        }
+
+        // Now lets seek to those offsets
+        return seek(partitionOffsetMap);
     }
 
     @Override
     public void close() {
-        // no-op.
-        // Since a single ExecutorService is shared between instances of this class,
-        // we should not close it out.
+        // If we have a coordinator consumer instance, we should close it.
+        // Avoid using the getter method as it will create the instance if it doesn't exist.
+        if (coordinatorConsumer != null) {
+            coordinatorConsumer.close();
+            coordinatorConsumer = null;
+        }
     }
 
     @Override
     public void previous() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
-            // Get all available partitions
-            final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
+        // Get all available partitions
+        final List<TopicPartition> topicPartitions = getAllPartitions(getCoordinatorConsumer());
 
-            // Get head offsets for each partition
-            final Map<TopicPartition, Long> headOffsets = kafkaConsumer.beginningOffsets(topicPartitions);
+        // Get head offsets for each partition
+        final Map<TopicPartition, Long> headOffsets = getCoordinatorConsumer().beginningOffsets(topicPartitions);
 
-            // Loop over each partition
-            for (final TopicPartition topicPartition : topicPartitions) {
-                // Calculate our previous offsets
-                final long headOffset = headOffsets.get(topicPartition);
-                final long currentOffset = kafkaConsumer.position(topicPartition);
-                long newOffset = currentOffset - (clientConfig.getMaxResultsPerPartition() * 2);
+        // Loop over each partition
+        for (final TopicPartition topicPartition : topicPartitions) {
+            // Calculate our previous offsets
+            final long headOffset = headOffsets.get(topicPartition);
+            final long currentOffset = getCoordinatorConsumer().position(topicPartition);
+            long newOffset = currentOffset - (clientConfig.getMaxResultsPerPartition() * 2);
 
-                // Can't go before the head position!
-                if (newOffset < headOffset) {
-                    newOffset = headOffset;
-                }
-
-                logger.info("Partition: {} Previous Offset: {} New Offset: {}", topicPartition.partition(), currentOffset, newOffset);
-
-                // Seek to earlier offset
-                kafkaConsumer.seek(topicPartition, newOffset);
+            // Can't go before the head position!
+            if (newOffset < headOffset) {
+                newOffset = headOffset;
             }
-            commit(kafkaConsumer);
+
+            logger.info("Partition: {} Previous Offset: {} New Offset: {}", topicPartition.partition(), currentOffset, newOffset);
+
+            // Seek to earlier offset
+            getCoordinatorConsumer().seek(topicPartition, newOffset);
         }
+        commit(getCoordinatorConsumer());
     }
 
     @Override
     public void next() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
-            // Get all available partitions
-            final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
+        // Get all available partitions
+        final List<TopicPartition> topicPartitions = getAllPartitions(getCoordinatorConsumer());
 
-            // Get head offsets for each partition
-            final Map<TopicPartition, Long> tailOffsets = kafkaConsumer.endOffsets(topicPartitions);
+        // Get head offsets for each partition
+        final Map<TopicPartition, Long> tailOffsets = getCoordinatorConsumer().endOffsets(topicPartitions);
 
-            // Loop over each partition
-            for (final TopicPartition topicPartition : topicPartitions) {
-                // Calculate our previous offsets
-                final long tailOffset = tailOffsets.get(topicPartition);
-                final long currentOffset = kafkaConsumer.position(topicPartition);
-                long newOffset = currentOffset + clientConfig.getMaxResultsPerPartition();
+        // Loop over each partition
+        for (final TopicPartition topicPartition : topicPartitions) {
+            // Calculate our previous offsets
+            final long tailOffset = tailOffsets.get(topicPartition);
+            final long currentOffset = getCoordinatorConsumer().position(topicPartition);
+            long newOffset = currentOffset + clientConfig.getMaxResultsPerPartition();
 
-                if (newOffset < tailOffset) {
-                    newOffset = tailOffset;
-                }
-                logger.info("Partition: {} Previous Offset: {} New Offset: {}", topicPartition.partition(), currentOffset, newOffset);
-
-                // Seek to earlier offset
-                kafkaConsumer.seek(topicPartition, newOffset);
+            if (newOffset < tailOffset) {
+                newOffset = tailOffset;
             }
-            commit(kafkaConsumer);
+            logger.info("Partition: {} Previous Offset: {} New Offset: {}", topicPartition.partition(), currentOffset, newOffset);
+
+            // Seek to earlier offset
+            getCoordinatorConsumer().seek(topicPartition, newOffset);
         }
+        commit(getCoordinatorConsumer());
     }
 
     @Override
     public ConsumerState toHead() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
-            // Get all available partitions
-            final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
+        // Get all available partitions
+        final List<TopicPartition> topicPartitions = getAllPartitions(getCoordinatorConsumer());
 
-            // Get head offsets for each partition
-            final Map<TopicPartition, Long> headOffsets = kafkaConsumer.beginningOffsets(topicPartitions);
+        // Get head offsets for each partition
+        final Map<TopicPartition, Long> headOffsets = getCoordinatorConsumer().beginningOffsets(topicPartitions);
 
-            // Loop over each partition
-            for (final TopicPartition topicPartition : topicPartitions) {
-                final long newOffset = headOffsets.get(topicPartition);
-                logger.info("Resetting Partition: {} To Head Offset: {}", topicPartition.partition(), newOffset);
+        // Loop over each partition
+        for (final TopicPartition topicPartition : topicPartitions) {
+            final long newOffset = headOffsets.get(topicPartition);
+            logger.info("Resetting Partition: {} To Head Offset: {}", topicPartition.partition(), newOffset);
 
-                // Seek to earlier offset
-                kafkaConsumer.seek(topicPartition, newOffset);
-            }
-            commit(kafkaConsumer);
-            return getConsumerState(kafkaConsumer);
+            // Seek to earlier offset
+            getCoordinatorConsumer().seek(topicPartition, newOffset);
         }
+        commit(getCoordinatorConsumer());
+        return getConsumerState(getCoordinatorConsumer());
     }
 
     @Override
     public ConsumerState toTail() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
-            // Get all available partitions
-            final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
+        // Get all available partitions
+        final List<TopicPartition> topicPartitions = getAllPartitions(getCoordinatorConsumer());
 
-            // Get head offsets for each partition
-            final Map<TopicPartition, Long> tailOffsets = kafkaConsumer.endOffsets(topicPartitions);
+        // Get head offsets for each partition
+        final Map<TopicPartition, Long> tailOffsets = getCoordinatorConsumer().endOffsets(topicPartitions);
 
-            // Loop over each partition
-            for (final TopicPartition topicPartition : topicPartitions) {
-                final long newOffset = tailOffsets.get(topicPartition);
-                logger.info("Resetting Partition: {} To Tail Offset: {}", topicPartition.partition(), newOffset);
+        // Loop over each partition
+        for (final TopicPartition topicPartition : topicPartitions) {
+            final long newOffset = tailOffsets.get(topicPartition);
+            logger.info("Resetting Partition: {} To Tail Offset: {}", topicPartition.partition(), newOffset);
 
-                // Seek to earlier offset
-                kafkaConsumer.seek(topicPartition, newOffset);
-            }
-            commit(kafkaConsumer);
-
-            return getConsumerState(kafkaConsumer);
+            // Seek to earlier offset
+            getCoordinatorConsumer().seek(topicPartition, newOffset);
         }
+        commit(getCoordinatorConsumer());
+
+        return getConsumerState(getCoordinatorConsumer());
+    }
+
+    /**
+     * Get or create the Coordinator Consumer instance.
+     * Not intended to be used to consume records.
+     * @return KafkaConsumer instance.
+     */
+    private KafkaConsumer getCoordinatorConsumer()
+    {
+        if (coordinatorConsumer == null) {
+            // Create new consumer and assign to all partitions.
+            coordinatorConsumer = createNewConsumer();
+            coordinatorConsumer.assign(getAllPartitions(coordinatorConsumer));
+        }
+        return coordinatorConsumer;
     }
 
     /**
@@ -281,14 +297,6 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
      */
     private KafkaConsumer createNewConsumer() {
         return kafkaConsumerFactory.createConsumer(clientConfig);
-    }
-
-    /**
-     * Creates a new consumer AND subscribes to all partitions.
-     * @return KafkaConsumer
-     */
-    private KafkaConsumer createNewConsumerAndSubscribeAllPartitions() {
-        return kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
     }
 
     private ConsumerState getConsumerState(final KafkaConsumer kafkaConsumer) {
