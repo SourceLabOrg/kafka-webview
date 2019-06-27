@@ -88,7 +88,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public KafkaResults consumePerPartition() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
             final List<TopicPartition> allTopicPartitions = getAllPartitions(kafkaConsumer);
 
             // To preserve order
@@ -131,7 +131,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public ConsumerState seek(final Map<Integer, Long> partitionOffsetMap) {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
             for (final Map.Entry<Integer, Long> entry : partitionOffsetMap.entrySet()) {
                 kafkaConsumer.seek(
                     new TopicPartition(clientConfig.getTopicConfig().getTopicName(), entry.getKey()),
@@ -145,7 +145,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public ConsumerState seek(final long timestamp) {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
             // Find offsets for timestamp
             final Map<TopicPartition, Long> timestampMap = new HashMap<>();
             for (final TopicPartition topicPartition : getAllPartitions(kafkaConsumer)) {
@@ -173,7 +173,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public void previous() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
             // Get all available partitions
             final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
 
@@ -203,7 +203,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public void next() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
             // Get all available partitions
             final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
 
@@ -231,7 +231,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public ConsumerState toHead() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
             // Get all available partitions
             final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
 
@@ -253,7 +253,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
     @Override
     public ConsumerState toTail() {
-        try (final KafkaConsumer kafkaConsumer = createNewConsumer()) {
+        try (final KafkaConsumer kafkaConsumer = createNewConsumerAndSubscribeAllPartitions()) {
             // Get all available partitions
             final List<TopicPartition> topicPartitions = getAllPartitions(kafkaConsumer);
 
@@ -274,7 +274,20 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
         }
     }
 
+    /**
+     * Creates a new consumer, but does NOT subscribe to any partitions.
+     * Will be required to subscribe to the partitions manually you require.
+     * @return KafkaConsumer
+     */
     private KafkaConsumer createNewConsumer() {
+        return kafkaConsumerFactory.createConsumer(clientConfig);
+    }
+
+    /**
+     * Creates a new consumer AND subscribes to all partitions.
+     * @return KafkaConsumer
+     */
+    private KafkaConsumer createNewConsumerAndSubscribeAllPartitions() {
         return kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
     }
 
