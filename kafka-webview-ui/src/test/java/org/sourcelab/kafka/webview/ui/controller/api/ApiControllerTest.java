@@ -398,7 +398,7 @@ public class ApiControllerTest extends AbstractMvcTest {
             // {"consumerId":"test-consumer-id-1543825835154","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":52168,"rack":null},"simple":false}]
 
             // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("{\"groupId\":\"" + consumerId )))
             .andExpect(content().string(containsString("partitionAssignor")))
             .andExpect(content().string(containsString("state")))
             .andExpect(content().string(containsString("members")))
@@ -435,7 +435,7 @@ public class ApiControllerTest extends AbstractMvcTest {
             // {"consumerId":"test-consumer-id-1543909384618","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":51229,"rack":null},"simple":false}
 
             // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("{\"groupId\":\"" + consumerId )))
             .andExpect(content().string(containsString("partitionAssignor")))
             .andExpect(content().string(containsString("state")))
             .andExpect(content().string(containsString("members")))

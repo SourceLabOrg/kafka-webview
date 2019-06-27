@@ -86,17 +86,22 @@ public class KafkaClientConfigUtil {
         final String consumerId,
         final Map<String, Object> config
     ) {
-        // Generate consumerId with our configured static prefix.
-        final String prefixedConsumerId = consumerIdPrefix.concat("-").concat(consumerId);
+        // Generate groupId with our configured static prefix.
+        final String prefixedGroupId = consumerIdPrefix.concat("-").concat(consumerId);
+
+        // Generate consumerId, which should be unique per user and thread.
+        final String prefixedConsumerId = prefixedGroupId.concat("-") + Thread.currentThread().getId();
 
         // Set common config items
         config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getConnectString());
         config.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeoutMs);
 
-        // ClientId and ConsumerGroupId are intended to be unique for each user session.
+        // groupId is intended to be unique for each user session.
+        // clientId is intended to be unique per user session and thread.
         // See Issue-57 https://github.com/SourceLabOrg/kafka-webview/issues/57#issuecomment-363508531
+        // See Issue-175 https://github.com/SourceLabOrg/kafka-webview/issues/175
         config.put(ConsumerConfig.CLIENT_ID_CONFIG, prefixedConsumerId);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, prefixedConsumerId);
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, prefixedGroupId);
 
         // Optionally configure SSL
         applySslSettings(clusterConfig, config);

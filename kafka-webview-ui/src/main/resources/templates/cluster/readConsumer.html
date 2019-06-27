@@ -18,7 +18,7 @@
             var ConsumerInfo = {
                 clusterId: '[[${cluster.id}]]',
                 clusterName: '[[${cluster.name}]]',
-                consumerId: '[[${consumerId}]]',
+                groupId: '[[${groupId}]]',
 
                 // Holds reference to last consumer membership data.
                 lastMembershipDetails: [],
@@ -49,7 +49,7 @@
                     jQuery('#consumer-membership-table').toggle(false);
 
                     // Request Cluster Information
-                    ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerDetails);
+                    ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.groupId, ConsumerInfo.handleConsumerDetails);
                 },
 
                 // Handle results from ConsumerDetails request
@@ -78,7 +78,7 @@
                     // Generate html from template
                     var properties = {
                         clusterName: ConsumerInfo.clusterName,
-                        consumerId: ConsumerInfo.consumerId,
+                        groupId: ConsumerInfo.groupId,
                         topic: uniqueTopics,
                         state: results.state,
                         numberOfMembers: results.members.length,
@@ -152,7 +152,7 @@
                     if (!ConsumerInfo.autoRefreshOffsets) {
                         return;
                     }
-                    ApiClient.getConsumerOffsetsWithTailPositions(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerOffsets);
+                    ApiClient.getConsumerOffsetsWithTailPositions(ConsumerInfo.clusterId, ConsumerInfo.groupId, ConsumerInfo.handleConsumerOffsets);
                 },
 
                 // Handle ConsumerOffsets Results
@@ -425,7 +425,7 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Cluster <strong th:text="${cluster.name}"></strong> Consumer <strong th:text="${consumerId}"></strong>
+                        Cluster <strong th:text="${cluster.name}"></strong> Consumer <strong th:text="${groupId}"></strong>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -461,7 +461,7 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Consumer <strong th:text="${consumerId}"></strong> Membership
+                        Consumer Group <strong th:text="${groupId}"></strong> Membership
 
                         <div class="btn-group float-right" role="group" aria-label="Button group">
                             <a id="enable-refresh-details-toggle" class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerDetails(false); return false;">
@@ -509,7 +509,7 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Consumer <strong th:text="${consumerId}"></strong> Positions
+                        Consumer Group <strong th:text="${groupId}"></strong> Positions
 
                         <div class="btn-group float-right" role="group" aria-label="Button group">
                             <a id="enable-refresh-offsets-toggle" class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerOffsets(false); return false;">
@@ -565,8 +565,8 @@
                 <td>{{clusterName}}</td>
             </tr>
             <tr>
-                <td><strong>Consumer Id</strong></td>
-                <td>{{consumerId}}</td>
+                <td><strong>Group Id</strong></td>
+                <td>{{groupId}}</td>
             </tr>
             <tr>
                 <td><strong>Topic</strong></td>

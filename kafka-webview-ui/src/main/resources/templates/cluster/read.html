@@ -154,7 +154,7 @@
 
                     jQuery.each(ClusterInfo.cachedConsumers, function(index, result) {
                         // Filter
-                        if (!SearchTools.doesMatchText(searchStr, result.consumerId)) {
+                        if (!SearchTools.doesMatchText(searchStr, result.groupId)) {
                             // Skip
                             return;
                         }
@@ -175,8 +175,8 @@
 
                         // Generate html from template
                         var properties = {
-                            id: result.consumerId,
-                            encodedId: encodeURIComponent(result.consumerId),
+                            id: result.groupId,
+                            encodedId: encodeURIComponent(result.groupId),
                             topic: uniqueTopics,
                             state: result.state,
                             numberOfMembers: result.members.length,
@@ -214,11 +214,11 @@
                         ClusterInfo.handleAllConsumers(results);
                     });
                 },
-                removeConsumer: function(consumerId) {
+                removeConsumer: function(groupId) {
                     if (!confirm('Are you sure you want to remove this consumer group?')) {
                         return;
                     }
-                    ApiClient.removeConsumer(ClusterInfo.clusterId, consumerId, function(result) {
+                    ApiClient.removeConsumer(ClusterInfo.clusterId, groupId, function(result) {
                         UITools.showSuccess('Successfully remove consumer group.');
 
                         // Display success
