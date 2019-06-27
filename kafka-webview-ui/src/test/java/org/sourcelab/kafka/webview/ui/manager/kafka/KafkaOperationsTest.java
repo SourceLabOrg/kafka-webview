@@ -504,19 +504,21 @@ public class KafkaOperationsTest {
 
         final String consumerId1 = "ConsumerA-" + System.currentTimeMillis();
         final String consumerPrefix = "TestConsumer";
-        final String finalConsumerId = consumerPrefix + "-" + consumerId1;
+
+        final String finalConsumerGroupId = consumerPrefix + "-" + consumerId1;
+        final String finalConsumerId = finalConsumerGroupId + "-" + Thread.currentThread().getId();
 
         // Create consumer, consume from topic, keep alive.
         try (final KafkaConsumer consumer = consumeFromTopic(topicName, consumerId1, consumerPrefix)) {
 
             // Ask for list of consumers.
-            final ConsumerGroupDetails consumerGroupDetails = kafkaOperations.getConsumerGroupDetails(finalConsumerId);
+            final ConsumerGroupDetails consumerGroupDetails = kafkaOperations.getConsumerGroupDetails(finalConsumerGroupId);
 
             // We should have one
             assertNotNull(consumerGroupDetails);
 
             // Validate bits
-            assertEquals(finalConsumerId, consumerGroupDetails.getConsumerId());
+            assertEquals(finalConsumerGroupId, consumerGroupDetails.getGroupId());
             assertFalse(consumerGroupDetails.isSimple());
             assertEquals("range", consumerGroupDetails.getPartitionAssignor());
             assertEquals("Stable", consumerGroupDetails.getState());

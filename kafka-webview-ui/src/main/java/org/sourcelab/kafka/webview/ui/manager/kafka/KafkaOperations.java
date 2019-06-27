@@ -440,7 +440,7 @@ public class KafkaOperations implements AutoCloseable {
                 });
 
             // Sort list by consumer group id
-            consumerGroupDetails.sort(Comparator.comparing(ConsumerGroupDetails::getConsumerId));
+            consumerGroupDetails.sort(Comparator.comparing(ConsumerGroupDetails::getGroupId));
 
             // Return immutable list.
             return Collections.unmodifiableList(consumerGroupDetails);
