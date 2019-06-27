@@ -42,7 +42,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -76,7 +75,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
      * KafkaConsumer instance used to perform seek and state operations.
      * Not used for consuming records.
      */
-    private KafkaConsumer coordinatorConsumer = null;
+    private KafkaConsumer<?, ?> coordinatorConsumer = null;
 
     /**
      * Constructor.
@@ -124,9 +123,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
 
         // Merge results.
         final List<KafkaResult> allResults = new ArrayList<>();
-        completableFuturesByPartition.forEach((partition, future) -> {
-            allResults.addAll(future.join());
-        });
+        completableFuturesByPartition.forEach((partition, future) -> allResults.addAll(future.join()));
 
         // Create return object
         return new KafkaResults(
@@ -280,7 +277,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
      * Not intended to be used to consume records.
      * @return KafkaConsumer instance.
      */
-    private KafkaConsumer getCoordinatorConsumer()
+    private KafkaConsumer<?, ?> getCoordinatorConsumer()
     {
         if (coordinatorConsumer == null) {
             // Create new consumer and assign to all partitions.
@@ -313,13 +310,13 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
     /**
      * Mark synchronized to prevent multi-threaded weirdness.
      */
-    private List<TopicPartition> getAllPartitions(final KafkaConsumer kafkaConsumer) {
+    private List<TopicPartition> getAllPartitions(final KafkaConsumer<?,?> kafkaConsumer) {
         // If we have not pulled this yet
         if (cachedTopicsAndPartitions == null) {
             // Attempt to prevent multi-threaded weirdness.
             synchronized (this) {
                 if (cachedTopicsAndPartitions == null) {
-                    // Determine which partitions to subscribe to, for now do all
+                    // Determine which partitions are available
                     final List<PartitionInfo> partitionInfos = kafkaConsumer.partitionsFor(clientConfig.getTopicConfig().getTopicName());
 
                     // Pull out partitions, convert to topic partitions
@@ -338,7 +335,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
         return cachedTopicsAndPartitions;
     }
 
-    private List<PartitionOffset> getHeadOffsets(final KafkaConsumer kafkaConsumer) {
+    private List<PartitionOffset> getHeadOffsets(final KafkaConsumer<?,?> kafkaConsumer) {
         final Map<TopicPartition, Long> results = kafkaConsumer.beginningOffsets(getAllPartitions(kafkaConsumer));
 
         final List<PartitionOffset> offsets = new ArrayList<>();
@@ -348,7 +345,7 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
         return offsets;
     }
 
-    private List<PartitionOffset> getTailOffsets(final KafkaConsumer kafkaConsumer) {
+    private List<PartitionOffset> getTailOffsets(final KafkaConsumer<?,?> kafkaConsumer) {
         final Map<TopicPartition, Long> results = kafkaConsumer.endOffsets(getAllPartitions(kafkaConsumer));
 
         final List<PartitionOffset> offsets = new ArrayList<>();
@@ -358,21 +355,17 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
         return offsets;
     }
 
-
-    private void commit(final KafkaConsumer kafkaConsumer) {
+    private void commit(final KafkaConsumer<?,?> kafkaConsumer) {
         kafkaConsumer.commitSync();
     }
 
     private List<KafkaResult> consume(final KafkaConsumer kafkaConsumer) {
         final List<KafkaResult> kafkaResultList = new ArrayList<>();
-        final ConsumerRecords consumerRecords = kafkaConsumer.poll(pollTimeoutDuration);
+        final ConsumerRecords<?,?> consumerRecords = kafkaConsumer.poll(pollTimeoutDuration);
 
         logger.info("Consumed {} records", consumerRecords.count());
-        final Iterator<ConsumerRecord> recordIterator = consumerRecords.iterator();
-        while (recordIterator.hasNext()) {
+        for (final ConsumerRecord consumerRecord : consumerRecords) {
             // Get next record
-            final ConsumerRecord consumerRecord = recordIterator.next();
-
             // Convert to KafkaResult.
             final KafkaResult kafkaResult = new KafkaResult(
                 consumerRecord.partition(),
