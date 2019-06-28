@@ -5,6 +5,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.3.1 (UNRELEASED)
 #### Bug Fixes
 - [ISSUE-175](https://github.com/SourceLabOrg/kafka-webview/issues/175) Update multi-threaded consumers with unique consumerId [PR](https://github.com/SourceLabOrg/kafka-webview/pull/176).
+- [PR-178](https://github.com/SourceLabOrg/kafka-webview/pull/178) @[lucrito](https://github.com/lucrito) fixed shebang in start.sh script.  Thanks!
 
 ## 2.3.0 (06/19/2019)
 #### New Features
