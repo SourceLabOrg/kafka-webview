@@ -417,6 +417,11 @@
                         DateTools.displayTimeOnly(rateData.timestamp)
                     );
 
+                    // Limit number of data points, remove first entry if needed
+                    if (ConsumerRateGraph.graphData.labels.length > maxDataPointsPerPartition) {
+                        ConsumerRateGraph.graphData.labels.shift();
+                    }
+
                     // Loop over each partition
                     jQuery.each(rateData.partitions, function(index, partitionRate) {
                         // Find the matching data point
