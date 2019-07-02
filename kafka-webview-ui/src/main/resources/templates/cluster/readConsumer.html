@@ -182,12 +182,14 @@
                         timestamp: results.timestamp,
                         partitions: []
                     };
+                    var totalConsumerRate = 0;
 
                     // Keep track of lag data
                     var lagData = {
                         timestamp: results.timestamp,
                         partitions: []
                     };
+                    totalConsumerLag = 0;
 
                     // Process each partition
                     jQuery.each(results.offsets, function(index, offsetData) {
@@ -206,12 +208,14 @@
                             differences.tailDifference
                         );
                         rateData.partitions.push(rate);
+                        totalConsumerRate += parseFloat(rate.consumerRatePerSec);
 
                         // Calculate lag
                         lagData.partitions.push({
                             partition: offsetData.partition,
                             lag: (offsetData.tail - offsetData.offset)
                         });
+                        totalConsumerLag += (offsetData.tail - offsetData.offset);
 
                         // Generate html from template
                         var properties = {
@@ -237,6 +241,10 @@
                             jQuery(table).append(resultHtml);
                         }
                     });
+
+                    // Update totals
+                    jQuery('td#consumer-total-lag').text(totalConsumerLag);
+                    jQuery('td#consumer-total-rate').text(totalConsumerRate.toFixed(2) + '/sec');
 
                     // Retain previous
                     ConsumerInfo.lastOffsetData = results.offsets;
@@ -841,6 +849,13 @@
                             </thead>
                             <tbody id="consumer-offsets-tbody">
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="font-weight-bold">Total</td>
+                                    <td class="font-weight-bold" id="consumer-total-lag"></td>
+                                    <td class="font-weight-bold" id="consumer-total-rate"></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
