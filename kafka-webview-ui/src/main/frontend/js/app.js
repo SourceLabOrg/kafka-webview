@@ -444,6 +444,20 @@ var DateTools = {
 
         return year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec + DateTools.formatTz(myDate);
     },
+    displayTimeOnly: function(timestampMs) {
+        // Adjusts timestamp into local timezone and locate
+        var myDate = new Date(timestampMs);
+
+        var hour = myDate.getHours();
+        var min = myDate.getMinutes();
+        var sec = myDate.getSeconds();
+
+        hour = (hour < 10 ? "0" : "") + hour;
+        min = (min < 10 ? "0" : "") + min;
+        sec = (sec < 10 ? "0" : "") + sec;
+
+        return hour + ':' + min + ':' + sec;
+    },
     formatTz: function(date) {
         var timezone_offset_min = date.getTimezoneOffset(),
             offset_hrs = parseInt(Math.abs(timezone_offset_min/60)),

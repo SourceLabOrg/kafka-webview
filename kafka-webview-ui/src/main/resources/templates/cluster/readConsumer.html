@@ -39,6 +39,16 @@
                 refreshRateConsumerDetails: 30000,
                 refreshRateConsumerOffsets: 10000,
 
+                // Colors
+                colors: [
+                    "rgb(54, 162, 235)",  // blue
+                    "rgb(75, 192, 192)",  // green
+                    "rgb(255, 159, 64)",  // orange
+                    "rgb(153, 102, 255)", // purple
+                    "rgb(255, 99, 132)",  // red
+                    "rgb(255, 205, 86)"  // yellow
+                ],
+
                 // Refresh ConsumerDetails
                 refreshConsumerDetails: function() {
                     if (!ConsumerInfo.autoRefreshConsumerDetails) {
@@ -167,6 +177,12 @@
                     var source   = jQuery('#consumer-offsets-template').html();
                     var template = Handlebars.compile(source);
 
+                    // Keep track of rate data
+                    var rateData = {
+                        timestamp: results.timestamp,
+                        partitions: []
+                    };
+
                     // Process each partition
                     jQuery.each(results.offsets, function(index, offsetData) {
                         // Calculate differences
@@ -184,7 +200,7 @@
                             differences.tailDifference
                         );
 
-                        console.log(rate);
+                        rateData.partitions.push(rate);
 
                         // Generate html from template
                         var properties = {
@@ -221,8 +237,9 @@
                     // Refresh every 10 seconds
                     ConsumerInfo.refreshOffsetsTimer = setTimeout(ConsumerInfo.refreshConsumerOffsets, ConsumerInfo.refreshRateConsumerOffsets);
 
-                    // Push update to graph
+                    // Push update to graphs
                     ConsumerInfo.updateConsumerPositionsGraph(results.offsets);
+                    ConsumerInfo.updateConsumerRateGraph(rateData);
                 },
 
                 // Attempts to map partition to its assigned consumer id.
@@ -390,7 +407,78 @@
                         // Redraw
                         ConsumerPositionsGraph.chart.update({duration: 0});
                     }
-                }
+                },
+
+                updateConsumerRateGraph: function(rateData) {
+                    var maxDataPointsPerPartition = 30;
+
+                    // Add new label based on time, convert to local timezone
+                    ConsumerRateGraph.graphData.labels.push(
+                        DateTools.displayTimeOnly(rateData.timestamp)
+                    );
+
+                    // Loop over each partition
+                    jQuery.each(rateData.partitions, function(index, partitionRate) {
+                        // Find the matching data point
+                        var needToCreate = true;
+
+                        jQuery.each(ConsumerRateGraph.graphData.datasets, function(dataSetIndex, dataSet) {
+                            // If found, update
+                            if (dataSet.label == "Partition " + partitionRate.partition) {
+                                // Append data
+                                dataSet.data.push(partitionRate.consumerRatePerSec);
+
+                                // Limit number of data points, remove first entry if needed
+                                if (dataSet.data.length > maxDataPointsPerPartition) {
+                                    dataSet.data.shift();
+                                }
+
+                                // Set flag to false
+                                needToCreate = false;
+
+                                // return false to stop loop
+                                return false;
+                            }
+                        });
+
+                        // We need to add an entry for this partition.
+                        if (needToCreate) {
+                            // Determine color
+                            var color = null;
+                            if (ConsumerRateGraph.graphData.datasets.length < ConsumerInfo.colors.length) {
+                                color = ConsumerInfo.colors[ConsumerRateGraph.graphData.datasets.length];
+                            } else {
+                                // Random color
+                                color = "rgb(" + Math.floor(Math.random() * 255) + ","  + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) +")";
+                            }
+
+                            ConsumerRateGraph.graphData.datasets.push({
+                                label: 'Partition ' + partitionRate.partition,
+                                // TODO random color
+                                backgroundColor: color,
+                                borderColor: color,
+                                borderWidth: 1,
+                                data: [
+                                    partitionRate.consumerRatePerSec
+                                ],
+                                fill: false,
+                            });
+                        }
+                    });
+
+                    // Update graph
+                    if (ConsumerRateGraph.graph == null) {
+                        var ctx = document.getElementById("ConsumerRateChart").getContext('2d');
+                        ConsumerRateGraph.chart = new Chart(ctx, {
+                            type: 'line',
+                            data: ConsumerRateGraph.graphData,
+                            options: ConsumerRateGraph.graphOptions
+                        });
+                    } else {
+                        // Redraw
+                        ConsumerRateGraph.chart.update();
+                    }
+                },
             };
 
             // ConsumerPositions Graph
@@ -469,6 +557,51 @@
                                 }
                             }
                         }
+                    }
+                },
+                graph: null
+            };
+
+            // ConsumerRate Graph
+            var ConsumerRateGraph = {
+                graphData: {
+                    // Labels are X axis timestamps
+                    labels: [],
+                    datasets: []
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: "Consumer Rate (Msgs/Sec)"
+                    },
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Msgs/sec'
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
                     }
                 },
                 graph: null
@@ -616,9 +749,38 @@
             </div>
         </div>
 
-        <!-- Consumer Positions Chart -->
-        <div style="height: 500px">
-            <canvas id="ConsumerPositionsChart"></canvas>
+
+        <ul class="nav nav-tabs">
+            <li class="nav-item active">
+                <a data-toggle="tab" class="nav-link" href="#consumerPositionsTab">Consumer Positions</a>
+            </li>
+            <li class="nav-item">
+                <a data-toggle="tab" class="nav-link" href="#consumerRateTab">Consumer Rate</a>
+            </li>
+            <li class="nav-item">
+                <a data-toggle="tab" class="nav-link" href="#tailRateTab">Tail Rate</a>
+            </li>
+        </ul>
+
+        <!-- Tabbed Charts -->
+        <div class="tab-content">
+            <div id="consumerPositionsTab" class="tab-pane container fade active">
+                <!-- Consumer Positions Chart -->
+                <div style="height: 500px">
+                    <canvas id="ConsumerPositionsChart"></canvas>
+                </div>
+            </div>
+            <div id="consumerRateTab" class="tab-pane container fade">
+                <!-- Consumer Rate Chart -->
+                <div style="height: 500px">
+                    <canvas id="ConsumerRateChart"></canvas>
+                </div>
+            </div>
+            <div id="tailRateTab" class="tab-pane container fade">
+                <div style="height: 500px">
+                    tail rate tab
+                </div>
+            </div>
         </div>
 
         <!-- Consumer Details Template -->
