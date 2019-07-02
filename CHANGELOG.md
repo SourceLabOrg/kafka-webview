@@ -2,11 +2,15 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.3.1 (UNRELEASED)
+## 2.4.0 (UNRELEASED)
+#### New Features
+- [PR-180]() Consumer Group inspector now shows average rate of consumption per partition.
+
 #### Bug Fixes
 - [ISSUE-175](https://github.com/SourceLabOrg/kafka-webview/issues/175) Update multi-threaded consumers with unique consumerId [PR](https://github.com/SourceLabOrg/kafka-webview/pull/176).
 - [PR-178](https://github.com/SourceLabOrg/kafka-webview/pull/178) @[lucrito](https://github.com/lucrito) fixed shebang in start.sh script.  Thanks!
 - [PR-179](https://github.com/SourceLabOrg/kafka-webview/pull/179) Streaming consumer now persists consumer state.
+- [PR-180](https://github.com/SourceLabOrg/kafka-webview/pull/180) Adds additional metrics (consume rate, producer rate, lag) and graphs to Consumer details page.
 
 ## 2.3.0 (06/19/2019)
 #### New Features
