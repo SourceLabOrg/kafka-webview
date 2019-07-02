@@ -30,7 +30,6 @@ import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DeleteConsumerGroupsResult;
-import org.apache.kafka.clients.admin.DeleteTopicsOptions;
 import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeConsumerGroupsResult;
@@ -506,7 +505,8 @@ public class KafkaOperations implements AutoCloseable {
         return new ConsumerGroupOffsetsWithTailPositions(
             consumerGroupId,
             consumerGroupOffsets.getTopic(),
-            offsetsWithPartitions
+            offsetsWithPartitions,
+            System.currentTimeMillis()
         );
     }
 

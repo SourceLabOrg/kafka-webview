@@ -26,6 +26,9 @@
                 // Holds reference to last refreshed offset data
                 lastOffsetData: [],
 
+                // Holds reference to rate data.
+                rateData: [],
+
                 // Toggles for auto-refresh
                 autoRefreshOffsets: true,
                 autoRefreshConsumerDetails: true,
@@ -173,6 +176,16 @@
                             offsetData.tail
                         );
 
+                        // Calculate rate
+                        var rate = ConsumerInfo.findRate(
+                            offsetData.partition,
+                            results.timestamp,
+                            differences.consumerDifference,
+                            differences.tailDifference
+                        );
+
+                        console.log(rate);
+
                         // Generate html from template
                         var properties = {
                             partition: offsetData.partition,
@@ -182,7 +195,9 @@
                             tail: offsetData.tail,
                             tailDiff: differences.tailDifference,
                             lag: (offsetData.tail - offsetData.offset),
-                            lagDiff: differences.lagDifference
+                            lagDiff: differences.lagDifference,
+                            consumerRate: rate.consumerRatePerSec,
+                            tailTail: rate.tailRatePerSec
                         };
                         var resultHtml = template(properties);
 
@@ -236,6 +251,7 @@
                     jQuery(el).next("tr.membership-summary").toggle();
                 },
 
+                // Calculate the difference in offsets from the last check.
                 findOffsetDifference: function(partition, newConsumerOffset, newTailOffset) {
                     var results = {
                         consumerDifference: 0,
@@ -264,6 +280,52 @@
                         }
                     });
                     return results;
+                },
+
+                // Calculate the rate of change (msgs per second).
+                findRate(partition, timestamp, consumerDifference, tailDifference) {
+                    var maxRecords = 30;
+
+                    // Setup partition if none exists.
+                    if (ConsumerInfo.rateData[partition] == null) {
+                        ConsumerInfo.rateData[partition] = [];
+                    }
+
+                    // Append value to head of array.
+                    ConsumerInfo.rateData[partition].unshift(
+                        {
+                            timestamp: timestamp,
+                            consumerDifference: consumerDifference,
+                            tailDifference: tailDifference
+                        }
+                    );
+
+                    // Only keep the last 20 values
+                    if (ConsumerInfo.rateData[partition].length > maxRecords) {
+                        ConsumerInfo.rateData[partition].pop();
+                    }
+
+                    // Calculate rate
+                    var totalConsumerMsgs = 0;
+                    var totalTailMsgs = 0;
+                    var initialTimestamp = ConsumerInfo.rateData[partition][ConsumerInfo.rateData[partition].length - 1].timestamp;
+                    var lastTimestamp = ConsumerInfo.rateData[partition][0].timestamp;
+                    var totalTimeSec = Math.round((lastTimestamp - initialTimestamp) / 1000);
+                    if (totalTimeSec == 0) {
+                        totalTimeSec = 1;
+                    }
+
+                    jQuery.each(ConsumerInfo.rateData[partition], function (index, rateData) {
+                        totalConsumerMsgs += rateData.consumerDifference;
+                        totalTailMsgs += rateData.tailDifference;
+                    });
+
+                    return {
+                        partition: partition,
+                        totalTimeSec: totalTimeSec,
+                        consumerRatePerSec: (totalConsumerMsgs/totalTimeSec).toFixed(2),
+                        tailRatePerSec: (totalTailMsgs/totalTimeSec).toFixed(2),
+                    }
                 },
 
                 toggleAutoRefreshForConsumerDetails: function(enable) {
@@ -540,9 +602,10 @@
                             <tr>
                                 <th>Partition</th>
                                 <th>Member Id</th>
-                                <th>Tail Offset</th>
-                                <th>Consumer Offset</th>
-                                <th>Lag</th>
+                                <th title="Consumer's current offset.">Consumer Offset</th>
+                                <th title="Last offset in partition.">Tail Offset</th>
+                                <th title="Difference between tail offset and consumer offset.">Lag</th>
+                                <th title="Messages consumed per second.">Rate</th>
                             </tr>
                             </thead>
                             <tbody id="consumer-offsets-tbody">
@@ -647,9 +710,10 @@
             <tr id="partition-{{partition}}">
                 <td>{{partition}}</td>
                 <td>{{memberId}}</td>
-                <td>{{tail}} {{#if tailDiff }} (+{{tailDiff}}) {{/if}}</td>
                 <td>{{position}} {{#if positionDiff }} (+{{positionDiff}}) {{/if}}</td>
-                <td>{{lag}} {{#if lagDiff }} ({{lagDiff}}) {{/if}}</td>
+                <td>{{tail}} {{#if tailDiff }} (+{{tailDiff}}) {{/if}}</td>
+                <td title="Difference between tail offset and consumer offset.">{{lag}} {{#if lagDiff }} ({{lagDiff}}) {{/if}}</td>
+                <td title="Messages consumed per second.">{{consumerRate}}/sec</td>
             </tr>
         </script>
 

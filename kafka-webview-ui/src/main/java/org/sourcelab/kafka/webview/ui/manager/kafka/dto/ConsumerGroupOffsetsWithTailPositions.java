@@ -41,20 +41,23 @@ public class ConsumerGroupOffsetsWithTailPositions {
     private final String consumerId;
     private final String topic;
     private final Map<Integer, PartitionOffsetWithTailPosition> offsetMap;
+    private final long timestamp;
 
     /**
      * Constructor.
      * @param consumerId id of consumer group.
      * @param topic name of the topic.
      * @param offsets details about each partition and offset.
+     * @param timestamp Timestamp offsets were retrieved.
      */
     public ConsumerGroupOffsetsWithTailPositions(
         final String consumerId,
         final String topic,
-        final Iterable<PartitionOffsetWithTailPosition> offsets
-    ) {
+        final Iterable<PartitionOffsetWithTailPosition> offsets,
+        final long timestamp) {
         this.consumerId = consumerId;
         this.topic = topic;
+        this.timestamp = timestamp;
 
         final Map<Integer, PartitionOffsetWithTailPosition> copiedMap = new HashMap<>();
         for (final PartitionOffsetWithTailPosition offset : offsets) {
@@ -72,6 +75,10 @@ public class ConsumerGroupOffsetsWithTailPositions {
 
     public String getTopic() {
         return topic;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     /**
@@ -143,6 +150,7 @@ public class ConsumerGroupOffsetsWithTailPositions {
         return "ConsumerGroupOffsetsWithTailPositions{"
             + "consumerId='" + consumerId + '\''
             + ", topic='" + topic + '\''
+            + ", timestamp='" + timestamp + '\''
             + ", offsetMap=" + offsetMap
             + '}';
     }
