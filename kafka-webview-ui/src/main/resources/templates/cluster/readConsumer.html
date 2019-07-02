@@ -322,7 +322,8 @@
 
                 // Calculate the rate of change (msgs per second).
                 findRate(partition, timestamp, consumerDifference, tailDifference) {
-                    var maxRecords = 30;
+                    // If we poll once per 10 seconds, then we would average over 3 polls, or ~ 30 secs.
+                    var numberOfEntriesToAverage = 3;
 
                     // Setup partition if none exists.
                     if (ConsumerInfo.rateData[partition] == null) {
@@ -338,8 +339,8 @@
                         }
                     );
 
-                    // Only keep the last 20 values
-                    if (ConsumerInfo.rateData[partition].length > maxRecords) {
+                    // Only keep the last N values to calculate average
+                    if (ConsumerInfo.rateData[partition].length > numberOfEntriesToAverage) {
                         ConsumerInfo.rateData[partition].pop();
                     }
 
