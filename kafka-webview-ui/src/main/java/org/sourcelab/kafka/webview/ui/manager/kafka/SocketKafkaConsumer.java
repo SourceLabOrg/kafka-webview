@@ -141,6 +141,9 @@ public class SocketKafkaConsumer implements Runnable {
                 }
             }
 
+            // Commit state async.
+            kafkaConsumer.commitAsync();
+
             // Sleep for a bit
             sleep(DWELL_TIME_MS);
         }
