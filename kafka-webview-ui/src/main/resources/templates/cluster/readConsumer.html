@@ -239,7 +239,8 @@
 
                     // Push update to graphs
                     ConsumerInfo.updateConsumerPositionsGraph(results.offsets);
-                    ConsumerInfo.updateConsumerRateGraph(rateData);
+                    ConsumerInfo.updateRateGraph(ConsumerRateGraph, "ConsumerRateChart", rateData, "consumerRatePerSec")
+                    ConsumerInfo.updateRateGraph(TailRateGraph, "TailRateChart", rateData, "tailRatePerSec")
                 },
 
                 // Attempts to map partition to its assigned consumer id.
@@ -409,16 +410,16 @@
                     }
                 },
 
-                updateConsumerRateGraph: function(rateData) {
+                updateRateGraph: function(graphInstance, htmlElementId, rateData, propertyName) {
                     var maxDataPointsPerPartition = 30;
 
                     // Add new label based on time, convert to local timezone
-                    ConsumerRateGraph.graphData.labels.push(
+                    graphInstance.graphData.labels.push(
                         DateTools.displayTimeOnly(rateData.timestamp)
                     );
 
                     // Limit number of data points, remove first entry if needed
-                    if (ConsumerRateGraph.graphData.labels.length > maxDataPointsPerPartition) {
+                    if (graphInstance.graphData.labels.length > maxDataPointsPerPartition) {
                         ConsumerRateGraph.graphData.labels.shift();
                     }
 
@@ -427,11 +428,11 @@
                         // Find the matching data point
                         var needToCreate = true;
 
-                        jQuery.each(ConsumerRateGraph.graphData.datasets, function(dataSetIndex, dataSet) {
+                        jQuery.each(graphInstance.graphData.datasets, function(dataSetIndex, dataSet) {
                             // If found, update
                             if (dataSet.label == "Partition " + partitionRate.partition) {
                                 // Append data
-                                dataSet.data.push(partitionRate.consumerRatePerSec);
+                                dataSet.data.push(partitionRate[propertyName]);
 
                                 // Limit number of data points, remove first entry if needed
                                 if (dataSet.data.length > maxDataPointsPerPartition) {
@@ -450,21 +451,21 @@
                         if (needToCreate) {
                             // Determine color
                             var color = null;
-                            if (ConsumerRateGraph.graphData.datasets.length < ConsumerInfo.colors.length) {
-                                color = ConsumerInfo.colors[ConsumerRateGraph.graphData.datasets.length];
+                            if (graphInstance.graphData.datasets.length < ConsumerInfo.colors.length) {
+                                color = ConsumerInfo.colors[graphInstance.graphData.datasets.length];
                             } else {
                                 // Random color
                                 color = "rgb(" + Math.floor(Math.random() * 255) + ","  + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) +")";
                             }
 
-                            ConsumerRateGraph.graphData.datasets.push({
+                            graphInstance.graphData.datasets.push({
                                 label: 'Partition ' + partitionRate.partition,
                                 // TODO random color
                                 backgroundColor: color,
                                 borderColor: color,
                                 borderWidth: 1,
                                 data: [
-                                    partitionRate.consumerRatePerSec
+                                    partitionRate[propertyName]
                                 ],
                                 fill: false,
                             });
@@ -472,18 +473,18 @@
                     });
 
                     // Update graph
-                    if (ConsumerRateGraph.graph == null) {
-                        var ctx = document.getElementById("ConsumerRateChart").getContext('2d');
-                        ConsumerRateGraph.chart = new Chart(ctx, {
+                    if (graphInstance.graph == null) {
+                        var ctx = document.getElementById(htmlElementId).getContext('2d');
+                        graphInstance.chart = new Chart(ctx, {
                             type: 'line',
-                            data: ConsumerRateGraph.graphData,
-                            options: ConsumerRateGraph.graphOptions
+                            data: graphInstance.graphData,
+                            options: graphInstance.graphOptions
                         });
                     } else {
                         // Redraw
-                        ConsumerRateGraph.chart.update();
+                        graphInstance.chart.update();
                     }
-                },
+                }
             };
 
             // ConsumerPositions Graph
@@ -580,6 +581,51 @@
                     title: {
                         display: true,
                         text: "Consumer Rate (Msgs/Sec)"
+                    },
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Msgs/sec'
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
+                },
+                graph: null
+            };
+
+            // TailRate Graph
+            var TailRateGraph = {
+                graphData: {
+                    // Labels are X axis timestamps
+                    labels: [],
+                    datasets: []
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: "Producer Rate (Msgs/Sec)"
                     },
                     animation: {
                         duration: 0
@@ -763,7 +809,7 @@
                 <a data-toggle="tab" class="nav-link" href="#consumerRateTab">Consumer Rate</a>
             </li>
             <li class="nav-item">
-                <a data-toggle="tab" class="nav-link" href="#tailRateTab">Tail Rate</a>
+                <a data-toggle="tab" class="nav-link" href="#tailRateTab">Producer Rate</a>
             </li>
         </ul>
 
@@ -782,8 +828,9 @@
                 </div>
             </div>
             <div id="tailRateTab" class="tab-pane container fade">
+                <!-- Tail Rate Chart -->
                 <div style="height: 500px">
-                    tail rate tab
+                    <canvas id="TailRateChart"></canvas>
                 </div>
             </div>
         </div>
