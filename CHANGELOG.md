@@ -2,9 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.4.0 (UNRELEASED)
+## 2.4.0 (07/02/2019)
 #### New Features
-- [PR-180]() Consumer Group inspector now shows average rate of consumption per partition.
+- [PR-180](https://github.com/SourceLabOrg/kafka-webview/issues/180) Consumer Group page now shows average rate of consumption per partition.
 
 #### Bug Fixes
 - [ISSUE-175](https://github.com/SourceLabOrg/kafka-webview/issues/175) Update multi-threaded consumers with unique consumerId [PR](https://github.com/SourceLabOrg/kafka-webview/pull/176).
