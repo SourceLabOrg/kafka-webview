@@ -183,6 +183,12 @@
                         partitions: []
                     };
 
+                    // Keep track of lag data
+                    var lagData = {
+                        timestamp: results.timestamp,
+                        partitions: []
+                    };
+
                     // Process each partition
                     jQuery.each(results.offsets, function(index, offsetData) {
                         // Calculate differences
@@ -199,8 +205,13 @@
                             differences.consumerDifference,
                             differences.tailDifference
                         );
-
                         rateData.partitions.push(rate);
+
+                        // Calculate lag
+                        lagData.partitions.push({
+                            partition: offsetData.partition,
+                            lag: (offsetData.tail - offsetData.offset)
+                        });
 
                         // Generate html from template
                         var properties = {
@@ -241,6 +252,7 @@
                     ConsumerInfo.updateConsumerPositionsGraph(results.offsets);
                     ConsumerInfo.updateRateGraph(ConsumerRateGraph, "ConsumerRateChart", rateData, "consumerRatePerSec")
                     ConsumerInfo.updateRateGraph(TailRateGraph, "TailRateChart", rateData, "tailRatePerSec")
+                    ConsumerInfo.updateRateGraph(LagGraph, "LagChart", lagData, "lag")
                 },
 
                 // Attempts to map partition to its assigned consumer id.
@@ -420,7 +432,7 @@
 
                     // Limit number of data points, remove first entry if needed
                     if (graphInstance.graphData.labels.length > maxDataPointsPerPartition) {
-                        ConsumerRateGraph.graphData.labels.shift();
+                        graphInstance.graphData.labels.shift();
                     }
 
                     // Loop over each partition
@@ -460,7 +472,6 @@
 
                             graphInstance.graphData.datasets.push({
                                 label: 'Partition ' + partitionRate.partition,
-                                // TODO random color
                                 backgroundColor: color,
                                 borderColor: color,
                                 borderWidth: 1,
@@ -582,9 +593,6 @@
                         display: true,
                         text: "Consumer Rate (Msgs/Sec)"
                     },
-                    animation: {
-                        duration: 0
-                    },
                     scales: {
                         xAxes: [{
                             display: true,
@@ -627,9 +635,6 @@
                         display: true,
                         text: "Producer Rate (Msgs/Sec)"
                     },
-                    animation: {
-                        duration: 0
-                    },
                     scales: {
                         xAxes: [{
                             display: true,
@@ -643,6 +648,48 @@
                             scaleLabel: {
                                 display: true,
                                 labelString: 'Msgs/sec'
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
+                },
+                graph: null
+            };
+
+            // Lag Graph
+            var LagGraph = {
+                graphData: {
+                    // Labels are X axis timestamps
+                    labels: [],
+                    datasets: []
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: "Lag Per Partition (messages)"
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Messages Behind Tail'
                             }
                         }]
                     },
@@ -773,9 +820,9 @@
                         <div class="alert alert-light" role="alert" id="consumer-offsets-loader" style="display: block;">
                             <div class="progress">
                                 <div
-                                        class="progress-bar progress-bar-striped progress-bar-animated"
-                                        role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-                                        style="width: 100%">
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
                                 </div>
                             </div>
                         </div>
@@ -811,6 +858,9 @@
             <li class="nav-item">
                 <a data-toggle="tab" class="nav-link" href="#tailRateTab">Producer Rate</a>
             </li>
+            <li class="nav-item">
+                <a data-toggle="tab" class="nav-link" href="#lagTab">Lag</a>
+            </li>
         </ul>
 
         <!-- Tabbed Charts -->
@@ -828,9 +878,15 @@
                 </div>
             </div>
             <div id="tailRateTab" class="tab-pane container fade">
-                <!-- Tail Rate Chart -->
+                <!-- Producer Rate Chart -->
                 <div style="height: 500px">
                     <canvas id="TailRateChart"></canvas>
+                </div>
+            </div>
+            <div id="lagTab" class="tab-pane container fade">
+                <!-- Lag Chart -->
+                <div style="height: 500px">
+                    <canvas id="LagChart"></canvas>
                 </div>
             </div>
         </div>
