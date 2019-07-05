@@ -1,6 +1,6 @@
 # Kafka WebView Documentation
 
-## Setting up Kafka-WebView behind httpd (apache) reverse proxy.
+## Setting up Kafka WebView behind httpd (apache) reverse proxy.
 
 The following steps have been verified against Apache Httpd version **2.4.5** and higher.
 
@@ -25,7 +25,7 @@ LoadModule proxy_wstunnel_module libexec/apache2/mod_proxy_wstunnel.so
 
 In the following example lets assume:
 - **reverseproxy.example.com** is the hostname your reverse proxy is serving requests on.
-- **internal-hostname:8080** is the hostname Kafka-WebView is listening for requests on.
+- **internal-hostname:8080** is the hostname Kafka WebView is listening for requests on.
    
 Add a new VirtualHost entry to HTTPD. It should be configured to look like: 
 
@@ -43,15 +43,15 @@ Add a new VirtualHost entry to HTTPD. It should be configured to look like:
 </VirtualHost>
 ```
 
-You should be able to now access Kafka-Webview by accessing **http://reverseproxy.example.com/**.
+You should be able to now access Kafka Webview by accessing **http://reverseproxy.example.com/**.
 
 ### Reverse Proxy with Prefixed URL
 
 
 In the following example lets assume:
 - **reverseproxy.example.com** is the hostname your reverse proxy is serving requests on.
-- **internal-hostname:8080** is the hostname Kafka-WebView is listening for requests on.
-- **/kafka-webview-prefix/** is the URL prefix that you want routed to Kafka-Webview.
+- **internal-hostname:8080** is the hostname Kafka WebView is listening for requests on.
+- **/kafka-webview-prefix/** is the URL prefix that you want routed to Kafka Webview.
 
 In this example, the URL you would be making requests on: **http://reverseproxy.example.com/kafka-webview-prefix/**  
 
@@ -71,7 +71,7 @@ Add a new VirtualHost entry to HTTPD. It should be configured to look like:
 </VirtualHost>
 ```
 
-Update your Kafka-WebView `config.yml` file to include the following:
+Update your Kafka WebView `config.yml` file to include the following:
 
 ```yml
 server:
@@ -79,4 +79,4 @@ server:
     context-path: /kafka-webview-prefix
 ```
 
-You should be able to now access Kafka-Webview by accessing **http://reverseproxy.example.com/kafka-webview-prefix/**.
+You should be able to now access Kafka Webview by accessing **http://reverseproxy.example.com/kafka-webview-prefix/**.
