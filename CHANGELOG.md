@@ -2,6 +2,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.4.1 (UNRELEASED)
+#### Internal Dependency Updates
+- org.apache.commons:commons-compress updated from 1.18 to 1.19.
+- Guava from 28.0-jre to 28.1-jre.
+
+
 ## 2.4.0 (07/02/2019)
 #### New Features
 - [PR-180](https://github.com/SourceLabOrg/kafka-webview/issues/180) Consumer Group page now shows average rate of consumption per partition.
