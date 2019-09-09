@@ -2,8 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.4.1 (UNRELEASED)
+## 2.5.0 (UNRELEASED)
 #### Internal Dependency Updates
+- Upgrade from SpringBoot 2.0.8 to 2.1.8.
 - org.apache.commons:commons-compress updated from 1.18 to 1.19.
 - Guava from 28.0-jre to 28.1-jre.
 - Sonatype Nexus plugin updated from 1.6.7 to 1.6.8.
