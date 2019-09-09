@@ -7,7 +7,7 @@
     <groupId>org.sourcelab</groupId>
     <artifactId>kafka-webview</artifactId>
     <packaging>pom</packaging>
-    <version>2.4.0</version>
+    <version>2.4.1</version>
 
     <!-- Define submodules -->
     <modules>
@@ -84,7 +84,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.1</version>
+                <version>3.8.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -95,7 +95,7 @@
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.7</version>
+                <version>1.6.8</version>
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>ossrh</serverId>
