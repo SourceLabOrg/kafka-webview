@@ -30,9 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -111,88 +108,6 @@ public class ConsumerGroupOffsetsWithTailPositions {
             + ", timestamp='" + timestamp + '\''
             + ", offsetMap=" + topicToOffsetMap
             + '}';
-    }
-
-    /**
-     * Defines a Consumer's Offsets and tail positions for a single topic it is consuming from.
-     */
-    public static class ConsumerGroupTopicOffsetsWithTailPositions {
-        private final String topic;
-        private final Map<Integer, PartitionOffsetWithTailPosition> offsetMap;
-
-        public ConsumerGroupTopicOffsetsWithTailPositions(final String topic, final Map<Integer, PartitionOffsetWithTailPosition> offsetMap) {
-            this.topic = topic;
-            this.offsetMap = offsetMap;
-        }
-
-        public String getTopic() {
-            return topic;
-        }
-
-        /**
-         * Get offset for the requested partition.
-         * @param partition id of partition.
-         * @return offset stored
-         * @throws RuntimeException if requested invalid partition.
-         */
-        public long getOffsetForPartition(final int partition) {
-            final Optional<PartitionOffsetWithTailPosition> offsetOptional = getOffsetMap()
-                .values()
-                .stream()
-                .filter((offset) -> offset.getPartition() == partition)
-                .findFirst();
-
-            if (offsetOptional.isPresent()) {
-                return offsetOptional.get().getOffset();
-            }
-            throw new RuntimeException("Unable to find partition " + partition);
-        }
-
-        /**
-         * Get offset for the requested partition.
-         * @param partition id of partition.
-         * @return offset stored
-         * @throws RuntimeException if requested invalid partition.
-         */
-        public long getTailOffsetForPartition(final int partition) {
-            final Optional<PartitionOffsetWithTailPosition> offsetOptional = getOffsetMap()
-                .values()
-                .stream()
-                .filter((offset) -> offset.getPartition() == partition)
-                .findFirst();
-
-            if (offsetOptional.isPresent()) {
-                return offsetOptional.get().getTail();
-            }
-            throw new RuntimeException("Unable to find partition " + partition);
-        }
-
-        /**
-         * @return List of offsets.
-         */
-        public List<PartitionOffsetWithTailPosition> getOffsets() {
-            final List<PartitionOffsetWithTailPosition> offsetList = new ArrayList<>(offsetMap.values());
-
-            // Sort by partition
-            offsetList.sort((o1, o2) -> Integer.valueOf(o1.getPartition()).compareTo(o2.getPartition()));
-            return Collections.unmodifiableList(offsetList);
-        }
-
-        /**
-         * @return Set of all available partitions.
-         */
-        public Set<Integer> getPartitions() {
-            final TreeSet<Integer> partitions = new TreeSet<>(offsetMap.keySet());
-            return Collections.unmodifiableSet(partitions);
-        }
-
-        /**
-         * Marked private to keep from being serialized in responses.
-         */
-        private Map<Integer, PartitionOffsetWithTailPosition> getOffsetMap() {
-            return offsetMap;
-        }
-
     }
 
     public static final class Builder {

@@ -26,7 +26,6 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
@@ -47,6 +46,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupTopicOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsetsWithTailPositions;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupTopicOffsetsWithTailPositions;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
@@ -634,7 +634,7 @@ public class KafkaOperationsTest {
             assertTrue(topicName, consumerGroupOffsets.getTopicNames().contains(topicName));
             assertEquals("Should have a single topic", 1, consumerGroupOffsets.getTopicNames().size());
 
-            final ConsumerGroupOffsetsWithTailPositions.ConsumerGroupTopicOffsetsWithTailPositions topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName);
+            final ConsumerGroupTopicOffsetsWithTailPositions topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName);
 
             assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
             assertEquals(2, topicOffsets.getOffsets().size());
@@ -714,7 +714,7 @@ public class KafkaOperationsTest {
             assertEquals("Should have two topics", 2, consumerGroupOffsets.getTopicNames().size());
 
             // Validate topic 1
-            ConsumerGroupOffsetsWithTailPositions.ConsumerGroupTopicOffsetsWithTailPositions topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName1);
+            ConsumerGroupTopicOffsetsWithTailPositions topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName1);
 
             assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
             assertEquals(2, topicOffsets.getOffsets().size());
