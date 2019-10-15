@@ -26,101 +26,79 @@ package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
- * Represents details about a consumer group offset positions.
+ *
  */
-public class ConsumerGroupOffsets {
+public class ConsumerGroupOffsets
+{
     private final String consumerId;
-    private final String topic;
-    private final Map<Integer, PartitionOffset> offsetMap;
+    private final Map<String, ConsumerGroupTopicOffsets> topics;
 
-    /**
-     * Constructor.
-     * @param consumerId id of consumer group.
-     * @param topic name of the topic.
-     * @param offsets details about each partition and offset.
-     */
-    public ConsumerGroupOffsets(final String consumerId, final String topic, final Collection<PartitionOffset> offsets) {
+    public ConsumerGroupOffsets(final String consumerId, final Map<String, ConsumerGroupTopicOffsets> topics) {
         this.consumerId = consumerId;
-        this.topic = topic;
-
-        final Map<Integer, PartitionOffset> offsetMap = new HashMap<>();
-        for (final PartitionOffset offset : offsets) {
-            offsetMap.put(
-                offset.getPartition(),
-                offset
-            );
-        }
-        this.offsetMap = Collections.unmodifiableMap(offsetMap);
+        this.topics = topics;
     }
 
     public String getConsumerId() {
         return consumerId;
     }
 
-    public String getTopic() {
-        return topic;
+    public Collection<String> getTopicNames() {
+        // Get all topic names sorted.
+        return topics.keySet().stream()
+            .sorted()
+            .collect(Collectors.toList());
     }
 
-    /**
-     * Marked private to keep from being serialized in responses.
-     */
-    private Map<Integer, PartitionOffset> getOffsetMap() {
-        return offsetMap;
-    }
-
-    /**
-     * @return List of offsets.
-     */
-    public List<PartitionOffset> getOffsets() {
-        final List<PartitionOffset> offsetList = new ArrayList<>(offsetMap.values());
-
-        // Sort by partition
-        offsetList.sort((o1, o2) -> Integer.valueOf(o1.getPartition()).compareTo(o2.getPartition()));
-        return Collections.unmodifiableList(offsetList);
-    }
-
-    /**
-     * Get offset for the requested partition.
-     * @param partition id of partition.
-     * @return offset stored
-     * @throws RuntimeException if requested invalid partition.
-     */
-    public long getOffsetForPartition(final int partition) {
-        final Optional<PartitionOffset> offsetOptional = getOffsetMap()
-            .values()
-            .stream()
-            .filter((offset) -> offset.getPartition() == partition)
-            .findFirst();
-
-        if (offsetOptional.isPresent()) {
-            return offsetOptional.get().getOffset();
+    public ConsumerGroupTopicOffsets getOffsetsForTopic(final String topicName) {
+        if (!topics.containsKey(topicName)) {
+            throw new IllegalArgumentException("No topic defined: " + topicName);
         }
-        throw new RuntimeException("Unable to find partition " + partition);
+        return topics.get(topicName);
     }
 
-    /**
-     * @return Set of all available partitions.
-     */
-    public Set<Integer> getPartitions() {
-        final TreeSet<Integer> partitions = new TreeSet<>(offsetMap.keySet());
-        return Collections.unmodifiableSet(partitions);
+    public static Builder newBuilder()
+    {
+        return new Builder();
     }
 
-    @Override
-    public String toString() {
-        return "ConsumerGroupOffsets{"
-            + "consumerId='" + consumerId + '\''
-            + ", topic='" + topic + '\''
-            + ", offsetMap=" + offsetMap
-            + '}';
+
+    public static final class Builder {
+        private String consumerId;
+        private Map<String, List<PartitionOffset>> topicOffsets = new HashMap<>();
+
+        private Builder() {
+        }
+
+        public Builder withConsumerId(String consumerId) {
+            this.consumerId = consumerId;
+            return this;
+        }
+
+        public Builder withOffsets(String topic, int partition, long offset) {
+            if (!topicOffsets.containsKey(topic)) {
+                topicOffsets.put(topic, new ArrayList<>());
+            }
+            topicOffsets.get(topic).add(new PartitionOffset(
+                partition, offset
+            ));
+            return this;
+        }
+
+        public ConsumerGroupOffsets build() {
+            final Map<String, ConsumerGroupTopicOffsets> topicOffsetsMap = new HashMap<>();
+            for (final Map.Entry<String, List<PartitionOffset>> entry : topicOffsets.entrySet()) {
+                topicOffsetsMap.put(
+                    entry.getKey(), new ConsumerGroupTopicOffsets(entry.getKey(), entry.getValue())
+                );
+            }
+
+            return new ConsumerGroupOffsets(consumerId, topicOffsetsMap);
+        }
     }
 }

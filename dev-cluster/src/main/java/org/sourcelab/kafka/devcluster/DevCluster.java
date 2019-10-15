@@ -47,7 +47,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -146,15 +151,11 @@ public class DevCluster {
         if (topicNames != null && topicNames.length > 0) {
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
             if (cmd.hasOption("consumer")) {
-                for (final String topicName : topicNames) {
-                    runEndlessConsumer(topicName, testUtils);
-                }
+                runEndlessConsumer(Arrays.asList(topicNames), testUtils);
             }
 
             if (cmd.hasOption("producer")) {
-                for (final String topicName : topicNames) {
-                    runEndlessProducer(topicName, testUtils);
-                }
+                runEndlessProducer(Arrays.asList(topicNames), testUtils);
             }
         }
 
@@ -237,46 +238,57 @@ public class DevCluster {
 
     /**
      * Fire up a new thread running an endless producer script into the given topic and partitions.
-     * @param topicName Name of the topic to produce records into.
+     * @param topicNames Names of the topic to produce records into.
      * @param utils KafkaUtils instance.
      */
     private static void runEndlessProducer(
-        final String topicName,
+        final Collection<String> topicNames,
         final KafkaTestUtils utils
     ) {
         final Thread producerThread = new Thread(() -> {
-            // Determine how many partitions there are
-            final TopicDescription topicDescription = utils.describeTopic(topicName);
+            final Map<String, TopicDescription> topicDescriptions = new HashMap<>();
+
+            // Gather details about topics
+            for (final String topicName : topicNames) {
+                // Determine how many partitions there are
+                topicDescriptions.put(topicName, utils.describeTopic(topicName));
+            }
 
             do {
                 // Publish some data into that topic for each partition.
-                for (final TopicPartitionInfo partitionInfo : topicDescription.partitions()) {
-                    utils.produceRecords(1000, topicName, partitionInfo.partition());
+                for (final Map.Entry<String, TopicDescription> entry : topicDescriptions.entrySet()) {
+                    final String topicName = entry.getKey();
+                    final TopicDescription topicDescription = entry.getValue();
+
+                    for (final TopicPartitionInfo partitionInfo : topicDescription.partitions()) {
+                        utils.produceRecords(1000, topicName, partitionInfo.partition());
+                        try {
+                            Thread.sleep(1000L);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
                     try {
-                        Thread.sleep(1000L);
+                        Thread.sleep(5000L);
                     } catch (InterruptedException e) {
                         return;
                     }
                 }
-                try {
-                    Thread.sleep(5000L);
-                } catch (InterruptedException e) {
-                    return;
-                }
+
             } while (true);
         });
 
-        logger.info("Starting endless producer for topic {}", topicName);
-        producerThread.setName("Endless producer for topic " + topicName);
+        logger.info("Starting endless producer for topic {}", topicNames);
+        producerThread.setName("Endless producer for topic " + topicNames);
         producerThread.start();
     }
 
     /**
      * Fire up a new thread running an enless consumer script that reads from the given topic.
-     * @param topicName Topic to consume from.
+     * @param topicNames Topics to consume from.
      * @param utils KafkaUtils instance.
      */
-    private static void runEndlessConsumer(final String topicName, final KafkaTestUtils utils) {
+    private static void runEndlessConsumer(final Collection<String> topicNames, final KafkaTestUtils utils) {
         final Thread consumerThread = new Thread(() -> {
             // Start a consumer
             final Properties properties = new Properties();
@@ -286,7 +298,7 @@ public class DevCluster {
             try (final KafkaConsumer<String, String> consumer
                      = utils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, properties)) {
 
-                consumer.subscribe(Collections.singleton(topicName));
+                consumer.subscribe(topicNames);
                 do {
                     final ConsumerRecords<String, String> records = consumer.poll(1000);
                     consumer.commitSync();
@@ -305,8 +317,8 @@ public class DevCluster {
             }
         });
 
-        logger.info("Starting endless consumer for topic {}", topicName);
-        consumerThread.setName("Endless consumer for topic " + topicName);
+        logger.info("Starting endless consumer for topic {}", topicNames);
+        consumerThread.setName("Endless consumer for topic " + topicNames);
         consumerThread.start();
     }
 }
