@@ -26,16 +26,16 @@ package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Contains details about a consumer group's current offsets for one or more topics they are consuming from.
  */
-public class ConsumerGroupOffsets
-{
+public class ConsumerGroupOffsets {
     private final String consumerId;
     private final Map<String, ConsumerGroupTopicOffsets> topics;
 
@@ -48,13 +48,23 @@ public class ConsumerGroupOffsets
         return consumerId;
     }
 
+    /**
+     * All topic names consuming from.
+     * @return Immutable list of all topic names being consumed.
+     */
     public Collection<String> getTopicNames() {
         // Get all topic names sorted.
-        return topics.keySet().stream()
+        return Collections.unmodifiableList(topics.keySet().stream()
             .sorted()
-            .collect(Collectors.toList());
+            .collect(Collectors.toList())
+        );
     }
 
+    /**
+     * For a given topic, return the consumer group offsets for it.
+     * @param topicName name of the topic to retrieve offsets for.
+     * @return Offsets for the topic.
+     */
     public ConsumerGroupTopicOffsets getOffsetsForTopic(final String topicName) {
         if (!topics.containsKey(topicName)) {
             throw new IllegalArgumentException("No topic defined: " + topicName);
@@ -62,12 +72,17 @@ public class ConsumerGroupOffsets
         return topics.get(topicName);
     }
 
-    public static Builder newBuilder()
-    {
+    /**
+     * Builder instance.
+     * @return new builder instance.
+     */
+    public static Builder newBuilder() {
         return new Builder();
     }
 
-
+    /**
+     * Builder instance.
+     */
     public static final class Builder {
         private String consumerId;
         private Map<String, List<PartitionOffset>> topicOffsets = new HashMap<>();
@@ -80,6 +95,13 @@ public class ConsumerGroupOffsets
             return this;
         }
 
+        /**
+         * Add offsets entry.
+         * @param topic name of topic.
+         * @param partition which partition on the topic.
+         * @param offset The current offset for the topic and partition.
+         * @return Builder instance.
+         */
         public Builder withOffsets(String topic, int partition, long offset) {
             if (!topicOffsets.containsKey(topic)) {
                 topicOffsets.put(topic, new ArrayList<>());
@@ -90,6 +112,10 @@ public class ConsumerGroupOffsets
             return this;
         }
 
+        /**
+         * Build a ConsumerGroupOffsets instance.
+         * @return ConsumerGroupOffsets instance.
+         */
         public ConsumerGroupOffsets build() {
             final Map<String, ConsumerGroupTopicOffsets> topicOffsetsMap = new HashMap<>();
             for (final Map.Entry<String, List<PartitionOffset>> entry : topicOffsets.entrySet()) {

@@ -84,12 +84,22 @@ public class ConsumerGroupOffsetsWithTailPositions {
         return timestamp;
     }
 
+    /**
+     * All topic names that the consumer is currently consuming/subscribed to.
+     * @return Immutable list of all topic names.
+     */
     public Collection<String> getTopicNames() {
-        return topicToOffsetMap.keySet().stream()
+        return Collections.unmodifiableList(topicToOffsetMap.keySet().stream()
             .sorted()
-            .collect(Collectors.toList());
+            .collect(Collectors.toList())
+        );
     }
 
+    /**
+     * For a given topic, return its offset map.
+     * @param topic topic to return map for.
+     * @return Offsets and tail positions for the given topic.
+     */
     public ConsumerGroupTopicOffsetsWithTailPositions getOffsetsForTopic(final String topic) {
         if (!topicToOffsetMap.containsKey(topic)) {
             throw new IllegalArgumentException("No topic exists: " + topic);
@@ -110,6 +120,9 @@ public class ConsumerGroupOffsetsWithTailPositions {
             + '}';
     }
 
+    /**
+     * Builder instance.
+     */
     public static final class Builder {
         private String consumerId;
         private Map<String, List<PartitionOffsetWithTailPosition>> topicToOffsetMap = new HashMap<>();
@@ -118,7 +131,7 @@ public class ConsumerGroupOffsetsWithTailPositions {
         private Builder() {
         }
 
-        public Builder withConsumerId(String consumerId) {
+        public Builder withConsumerId(final String consumerId) {
             this.consumerId = consumerId;
             return this;
         }
@@ -128,7 +141,13 @@ public class ConsumerGroupOffsetsWithTailPositions {
             return this;
         }
 
-        public Builder withOffsetsForTopic(final String topic, PartitionOffsetWithTailPosition partitionOffsetWithTailPosition) {
+        /**
+         * Add new tail position offsets for a given topic.
+         * @param topic topic to add tail position for.
+         * @param partitionOffsetWithTailPosition partition and tail offsets.
+         * @return Builder instance
+         */
+        public Builder withOffsetsForTopic(final String topic, final PartitionOffsetWithTailPosition partitionOffsetWithTailPosition) {
             if (!topicToOffsetMap.containsKey(topic)) {
                 topicToOffsetMap.put(topic, new ArrayList<>());
             }
@@ -136,8 +155,10 @@ public class ConsumerGroupOffsetsWithTailPositions {
             return this;
         }
 
-
-
+        /**
+         * Build a new ConsumerGroupOffsetsWithTailPositions instance.
+         * @return new ConsumerGroupOffsetsWithTailPositions instance.
+         */
         public ConsumerGroupOffsetsWithTailPositions build() {
             return new ConsumerGroupOffsetsWithTailPositions(
                 consumerId,
