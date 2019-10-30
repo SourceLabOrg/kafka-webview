@@ -92,7 +92,7 @@ public class DeserializerConfig {
         final Map<String, String> mergedOptions = new HashMap<>();
         mergedOptions.putAll(getKeyDeserializerOptions());
         mergedOptions.putAll(getValueDeserializerOptions());
-        logger.warn("Merged options are ", mergedOptions);
+        logger.warn("Merged options are {}", mergedOptions);
         return mergedOptions;
     }
 
