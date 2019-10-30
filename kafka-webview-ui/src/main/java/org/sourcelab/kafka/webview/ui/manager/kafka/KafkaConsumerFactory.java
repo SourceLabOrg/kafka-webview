@@ -139,6 +139,7 @@ public class KafkaConsumerFactory {
             if (configMap.containsKey(entry.getKey())) {
                 continue;
             }
+            logger.warn("Setting property {} value to {}", entry.getKey(), entry.getValue());
             configMap.put(entry.getKey(), entry.getValue());
         }
 
