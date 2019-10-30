@@ -41,6 +41,8 @@ import java.util.Map;
  * Factory class for creating new KafkaConsumers.
  */
 public class KafkaConsumerFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerFactory.class);
     /**
      * Utility class for setting up common kafka client properties.
      */

@@ -34,6 +34,9 @@ import java.util.Map;
  * Configuration defining how to Deserialize values from Kafka.
  */
 public class DeserializerConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(DeserializerConfig.class);
+
     private final Class<? extends Deserializer> keyDeserializerClass;
     private final Map<String, String> keyDeserializerOptions;
 
