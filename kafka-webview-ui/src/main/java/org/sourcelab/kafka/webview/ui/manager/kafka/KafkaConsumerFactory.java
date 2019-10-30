@@ -1,18 +1,18 @@
 /**
  * MIT License
- * <p>
+ *
  * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
- * <p>
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * <p>
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * <p>
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,7 +52,6 @@ public class KafkaConsumerFactory {
 
     /**
      * Constructor.
-     *
      * @param configUtil Utility class to DRY out common kafka client settings.
      */
     public KafkaConsumerFactory(final KafkaClientConfigUtil configUtil) {
@@ -73,7 +72,6 @@ public class KafkaConsumerFactory {
     /**
      * Create a new KafkaConsumer based on the passed in ClientConfig, and subscribe to the appropriate
      * partitions.
-     *
      * @deprecated To be removed.
      */
     public KafkaConsumer createConsumerAndSubscribe(final ClientConfig clientConfig) {
@@ -84,7 +82,7 @@ public class KafkaConsumerFactory {
 
         // Pull out partitions, convert to topic partitions
         final Collection<TopicPartition> topicPartitions = new ArrayList<>();
-        for (final PartitionInfo partitionInfo : partitionInfos) {
+        for (final PartitionInfo partitionInfo: partitionInfos) {
             // Skip filtered partitions
             if (!clientConfig.isPartitionFiltered(partitionInfo.partition())) {
                 topicPartitions.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
@@ -104,17 +102,17 @@ public class KafkaConsumerFactory {
     private Map<String, Object> buildConsumerConfig(final ClientConfig clientConfig) {
         // Build config
         final Map<String, Object> configMap = configUtil.applyCommonSettings(
-                clientConfig.getTopicConfig().getClusterConfig(),
-                clientConfig.getConsumerId()
+            clientConfig.getTopicConfig().getClusterConfig(),
+            clientConfig.getConsumerId()
         );
 
         // Set deserializer classes.
         configMap.put(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                clientConfig.getTopicConfig().getDeserializerConfig().getKeyDeserializerClass());
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+            clientConfig.getTopicConfig().getDeserializerConfig().getKeyDeserializerClass());
         configMap.put(
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                clientConfig.getTopicConfig().getDeserializerConfig().getValueDeserializerClass());
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+            clientConfig.getTopicConfig().getDeserializerConfig().getValueDeserializerClass());
 
         // Default to reset to earliest
         configMap.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -138,7 +136,7 @@ public class KafkaConsumerFactory {
 
         // Since we basically allow free-form setting options, we want to disallow overwriting already set options
         // with user defined ones. So lets loop through and only set options that are NOT already set.
-        for (final Map.Entry<String, String> entry : deserializerOptions.entrySet()) {
+        for (final Map.Entry<String, String> entry: deserializerOptions.entrySet()) {
             // Skip config items already set.
             if (configMap.containsKey(entry.getKey())) {
                 continue;
