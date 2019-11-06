@@ -24,11 +24,11 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
-import java.io.IOException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.UnableToFindClassException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.WrongImplementationException;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
