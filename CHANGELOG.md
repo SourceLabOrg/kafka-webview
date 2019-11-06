@@ -3,6 +3,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.5.0 (UNRELEASED)
+#### New Features
+- [PR-194](https://github.com/SourceLabOrg/kafka-webview/pull/194) Adds a new built-in deserializer for byte[] that decodes the bytes into HEX values.
+
 #### Internal Dependency Updates
 - Upgrade from SpringBoot 2.0.8 to 2.1.8.
 - org.apache.commons:commons-compress updated from 1.18 to 1.19.
