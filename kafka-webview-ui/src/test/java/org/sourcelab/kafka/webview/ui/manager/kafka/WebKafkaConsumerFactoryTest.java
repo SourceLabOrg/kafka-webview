@@ -36,7 +36,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
-import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
