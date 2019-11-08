@@ -47,8 +47,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -260,7 +263,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Hit end point
         mockMvc
@@ -289,7 +292,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Construct payload
         final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
@@ -337,7 +340,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Construct payload
         final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
@@ -382,7 +385,10 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {
+            "TestTopic-A" + System.currentTimeMillis(),
+            "TestTopic-B" + System.currentTimeMillis()
+        });
 
         // Hit end point
         mockMvc
@@ -419,7 +425,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Hit end point
         mockMvc
@@ -456,7 +462,9 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String topicNameA = "TestTopicA-" + System.currentTimeMillis();
+        final String topicNameB = "TestTopicB-" + System.currentTimeMillis();
+        final String consumerId = createConsumerWithState(new String[] {topicNameA, topicNameB});
 
         // Hit end point
         mockMvc
@@ -471,12 +479,11 @@ public class ApiControllerTest extends AbstractMvcTest {
             // Should have content similar to:
             // {"consumerId":"MyConsumerId","topics":[{"topic":"topic-a","partitions":[0,1],"offsets":[{"partition":0,"offset":0},{"partition":1,"offset":1}]},{"topic":"topic-b","partitions":[0,1],"offsets":[{"partition":0,"offset":2},{"partition":1,"offset":3}]}],"topicNames":["topic-a","topic-b"]}
 
-
             // Validate results seem right.
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
-            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
-            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10}]")))
-            .andExpect(content().string(containsString("\"partitions\":[0]")));
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\",\"offsets\":[{\"partition\":0,\"offset\":10}],\"partitions\":[0]")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\",\"offsets\":[{\"partition\":0,\"offset\":10}],\"partitions\":[0]")))
+            .andExpect(content().string(containsString("\"topicNames\":[\"" + topicNameA + "\",\"" + topicNameB + "\"]")));
     }
 
     /**
@@ -492,7 +499,9 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String topicNameA = "TestTopicA-" + System.currentTimeMillis();
+        final String topicNameB = "TestTopicB-" + System.currentTimeMillis();
+        final String consumerId = createConsumerWithState(new String[] {topicNameA, topicNameB});
 
         // Hit end point
         mockMvc
@@ -505,13 +514,13 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
 
             // Should have content similar to:
-            // {"consumerId":"test-consumer-id-1544775318028","topic":"TestTopic-1544775318028","offsets":[{"partition":0,"offset":10,"tail":10}],"partitions":[0]}
+            // {"consumerId":"test-consumer-id-1573204049314","topicToOffsetMap":{"TestTopic-1573204049314":{"topic":"TestTopic-1573204049314","offsets":[{"partition":0,"offset":10,"tail":10}],"partitions":[0]}},"timestamp":1573204054752,"topicNames":["TestTopic-1573204049314"]}
 
             // Validate results seem right.
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
-            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
-            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}]")))
-            .andExpect(content().string(containsString("\"partitions\":[0]")));
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\",\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}],\"partitions\":[0]")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\",\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}],\"partitions\":[0]")))
+            .andExpect(content().string(containsString("\"topicNames\":[\"" + topicNameA + "\",\"" + topicNameB + "\"]")));
     }
 
     /**
@@ -611,20 +620,21 @@ public class ApiControllerTest extends AbstractMvcTest {
      * Helper method to create a consumer with state on the given cluster.
      * @return Consumer group id created.
      */
-    private String createConsumerWithState() {
+    private String createConsumerWithState(final String[] topics) {
         final int totalRecords = 10;
         final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
 
         // Define our new topic name
-        final String newTopic = "TestTopic-" + System.currentTimeMillis();
-        sharedKafkaTestResource
-            .getKafkaTestUtils()
-            .createTopic(newTopic, 1, (short)1);
+        for (final String topic : topics) {
+            sharedKafkaTestResource
+                .getKafkaTestUtils()
+                .createTopic(topic, 1, (short) 1);
 
-        // Publish records into topic
-        sharedKafkaTestResource
-            .getKafkaTestUtils()
-            .produceRecords(totalRecords, newTopic, 0);
+            // Publish records into topic
+            sharedKafkaTestResource
+                .getKafkaTestUtils()
+                .produceRecords(totalRecords, topic, 0);
+        }
 
         // Create a consumer and consume from the records, maintaining state.
         final Properties consumerProperties = new Properties();
@@ -636,7 +646,7 @@ public class ApiControllerTest extends AbstractMvcTest {
             .getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, consumerProperties)) {
 
             // Consume
-            consumer.subscribe(Collections.singleton(newTopic));
+            consumer.subscribe(Arrays.asList(topics));
             consumer.poll(Duration.ofSeconds(5));
 
             // Save state.
