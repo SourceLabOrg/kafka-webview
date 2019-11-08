@@ -463,15 +463,14 @@ public class KafkaOperations implements AutoCloseable {
             // Make request
             final ListConsumerGroupOffsetsResult results = adminClient.listConsumerGroupOffsets(consumerGroupId);
 
-            final List<PartitionOffset> offsetList = new ArrayList<>();
-
             // Iterate over results
             final Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> partitionsToOffsets = results
                 .partitionsToOffsetAndMetadata()
                 .get();
 
+            // Loop over results
             for (final Map.Entry<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> entry : partitionsToOffsets.entrySet()) {
-                builder.withOffsets(
+                builder.withOffset(
                     entry.getKey().topic(), entry.getKey().partition(), entry.getValue().offset()
                 );
             }

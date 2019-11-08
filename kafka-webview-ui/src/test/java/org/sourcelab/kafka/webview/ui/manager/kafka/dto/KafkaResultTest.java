@@ -47,7 +47,6 @@ public class KafkaResultTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
     /**
      * Verify that we serialize using jackson appropriately using a 'known'/string value.
      */

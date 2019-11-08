@@ -469,7 +469,8 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
 
             // Should have content similar to:
-            // {"consumerId":"test-consumer-id-1543909610144","topic":"TestTopic-1543909610145","offsets":[{"partition":0,"offset":10}],"partitions":[0]}
+            // {"consumerId":"MyConsumerId","topics":[{"topic":"topic-a","partitions":[0,1],"offsets":[{"partition":0,"offset":0},{"partition":1,"offset":1}]},{"topic":"topic-b","partitions":[0,1],"offsets":[{"partition":0,"offset":2},{"partition":1,"offset":3}]}],"topicNames":["topic-a","topic-b"]}
+
 
             // Validate results seem right.
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))

@@ -61,6 +61,14 @@ public class ConsumerGroupOffsets {
     }
 
     /**
+     * Return all offsets per topic as an immutable list.
+     * @return Immutable list of offsets for each topic and partition.
+     */
+    public List<ConsumerGroupTopicOffsets> getTopics() {
+        return Collections.unmodifiableList(new ArrayList<>(topics.values()));
+    }
+
+    /**
      * For a given topic, return the consumer group offsets for it.
      * @param topicName name of the topic to retrieve offsets for.
      * @return Offsets for the topic.
@@ -90,7 +98,7 @@ public class ConsumerGroupOffsets {
         private Builder() {
         }
 
-        public Builder withConsumerId(String consumerId) {
+        public Builder withConsumerId(final String consumerId) {
             this.consumerId = consumerId;
             return this;
         }
@@ -102,7 +110,7 @@ public class ConsumerGroupOffsets {
          * @param offset The current offset for the topic and partition.
          * @return Builder instance.
          */
-        public Builder withOffsets(String topic, int partition, long offset) {
+        public Builder withOffset(final String topic, final int partition, final long offset) {
             if (!topicOffsets.containsKey(topic)) {
                 topicOffsets.put(topic, new ArrayList<>());
             }
