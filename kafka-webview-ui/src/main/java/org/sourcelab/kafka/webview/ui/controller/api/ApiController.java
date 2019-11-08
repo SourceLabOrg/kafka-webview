@@ -554,7 +554,8 @@ public class ApiController extends BaseController {
         final Cluster cluster = retrieveClusterById(id);
 
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
-            return operations.getConsumerGroupOffsets(consumerGroupId);
+            final ConsumerGroupOffsets offsets = operations.getConsumerGroupOffsets(consumerGroupId);
+            return offsets;
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
         }

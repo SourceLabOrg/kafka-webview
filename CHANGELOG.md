@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.4.0 (07/02/2019)
 #### New Features
 - [PR-180](https://github.com/SourceLabOrg/kafka-webview/issues/180) Consumer Group page now shows average rate of consumption per partition.
+- [ISSUE-184](https://github.com/SourceLabOrg/kafka-webview/issues/184) Cluster Kafka Consumer View for multiple topics.
 
 #### Bug Fixes
 - [ISSUE-175](https://github.com/SourceLabOrg/kafka-webview/issues/175) Update multi-threaded consumers with unique consumerId [PR](https://github.com/SourceLabOrg/kafka-webview/pull/176).

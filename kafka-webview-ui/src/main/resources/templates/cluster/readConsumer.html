@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
-        xmlns:th="http://www.thymeleaf.org"
-        layout:decorate="~{layout}">
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
 
 <head>
     <title>Cluster Explorer</title>
@@ -84,9 +84,23 @@
                         });
                     });
 
+                    // Generate unique list of topics.
                     var uniqueTopics = topics.filter(function (value, index, self) {
                         return self.indexOf(value) === index;
                     });
+
+                    // Populate topic selector only once.
+                    if (jQuery('#topicSelector option').length === 0) {
+                        var selectorSource = jQuery('#consumer-topic-select-template').html();
+                        var selectorTemplate = Handlebars.compile(selectorSource);
+                        jQuery.each(uniqueTopics, function (index, topic) {
+                            var properties = {
+                                topic: topic
+                            };
+                            var resultHtml = selectorTemplate(properties);
+                            jQuery('#topicSelector').append(resultHtml);
+                        });
+                    }
 
                     // Generate html from template
                     var properties = {
@@ -168,8 +182,46 @@
                     ApiClient.getConsumerOffsetsWithTailPositions(ConsumerInfo.clusterId, ConsumerInfo.groupId, ConsumerInfo.handleConsumerOffsets);
                 },
 
+                resetGraph : function(graphInstance, topicName) {
+                    // Clear labels
+                    graphInstance.graphData.labels = [];
+
+                    // Clear data points
+                    jQuery.each(graphInstance.graphData.datasets, function(index, dataSet) {
+                        dataSet.data = [];
+                    });
+
+                    // Reset title
+                    graphInstance.graphOptions.title.text = graphInstance.graphOptions.title.srcText.replace('{{topic}}', topicName);
+                },
+
                 // Handle ConsumerOffsets Results
                 handleConsumerOffsets: function(results) {
+                    // Determine which topic we're watching
+                    console.log("Refreshing for topic: " + jQuery('#topicSelector').val());
+                    var currentTopic = jQuery('#topicSelector').val();
+                    if (ConsumerInfo.lastTopicSelected === null || ConsumerInfo.lastTopicSelected !== currentTopic) {
+                        console.log("Resetting Graphs");
+                        // Reset all data/graphs.
+                        ConsumerInfo.lastOffsetData = null;
+                        ConsumerInfo.rateData = [];
+
+                        // For each graph
+                        ConsumerInfo.resetGraph(ConsumerPositionsGraph, currentTopic);
+                        ConsumerInfo.resetGraph(ConsumerRateGraph, currentTopic);
+                        ConsumerInfo.resetGraph(TailRateGraph, currentTopic);
+                        ConsumerInfo.resetGraph(LagGraph, currentTopic);
+                    }
+                    ConsumerInfo.lastTopicSelected = currentTopic;
+
+                    // Get results for specific topic
+                    var topicResults = results.topicToOffsetMap[currentTopic];
+
+                    // Gracefully handle when a consumer group is not consuming ANY topics.
+                    if (topicResults === undefined || topicResults === null) {
+                        topicResults = {offsets: {}};
+                    }
+
                     // Get consumer offsets table
                     var table = jQuery('#consumer-offsets-tbody');
 
@@ -192,7 +244,7 @@
                     totalConsumerLag = 0;
 
                     // Process each partition
-                    jQuery.each(results.offsets, function(index, offsetData) {
+                    jQuery.each(topicResults.offsets, function(index, offsetData) {
                         // Calculate differences
                         var differences = ConsumerInfo.findOffsetDifference(
                             offsetData.partition,
@@ -247,7 +299,7 @@
                     jQuery('td#consumer-total-rate').text(totalConsumerRate.toFixed(2) + '/sec');
 
                     // Retain previous
-                    ConsumerInfo.lastOffsetData = results.offsets;
+                    ConsumerInfo.lastOffsetData = topicResults.offsets;
 
                     // Hide loaders
                     jQuery('#consumer-offsets-loader').toggle(false);
@@ -257,7 +309,7 @@
                     ConsumerInfo.refreshOffsetsTimer = setTimeout(ConsumerInfo.refreshConsumerOffsets, ConsumerInfo.refreshRateConsumerOffsets);
 
                     // Push update to graphs
-                    ConsumerInfo.updateConsumerPositionsGraph(results.offsets);
+                    ConsumerInfo.updateConsumerPositionsGraph(topicResults.offsets);
                     ConsumerInfo.updateRateGraph(ConsumerRateGraph, "ConsumerRateChart", rateData, "consumerRatePerSec")
                     ConsumerInfo.updateRateGraph(TailRateGraph, "TailRateChart", rateData, "tailRatePerSec")
                     ConsumerInfo.updateRateGraph(LagGraph, "LagChart", lagData, "lag")
@@ -321,7 +373,7 @@
                 },
 
                 // Calculate the rate of change (msgs per second).
-                findRate(partition, timestamp, consumerDifference, tailDifference) {
+                findRate: function (partition, timestamp, consumerDifference, tailDifference) {
                     // If we poll once per 10 seconds, then we would average over 3 polls, or ~ 30 secs.
                     var numberOfEntriesToAverage = 3;
 
@@ -531,8 +583,9 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     title: {
-                    display: true,
-                        text: "Consumer Lag (Percent Consumed)"
+                        display: true,
+                        text: "Consumer Lag (Percent Consumed)",
+                        srcText: "Consumer Lag (Percent Consumed) on topic {{topic}}"
                     },
                     animation: {
                         duration: 0
@@ -600,7 +653,8 @@
                     maintainAspectRatio: false,
                     title: {
                         display: true,
-                        text: "Consumer Rate (Msgs/Sec)"
+                        text: "Consumer Rate (Msgs/Sec)",
+                        srcText: "Consumer Rate (Msgs/Sec) on topic {{topic}}"
                     },
                     scales: {
                         xAxes: [{
@@ -642,7 +696,8 @@
                     maintainAspectRatio: false,
                     title: {
                         display: true,
-                        text: "Producer Rate (Msgs/Sec)"
+                        text: "Producer Rate (Msgs/Sec)",
+                        srcText: "Producer Rate (Msgs/Sec) on topic {{topic}}"
                     },
                     scales: {
                         xAxes: [{
@@ -684,7 +739,8 @@
                     maintainAspectRatio: false,
                     title: {
                         display: true,
-                        text: "Lag Per Partition (messages)"
+                        text: "Lag Per Partition (messages)",
+                        srcText: "Lag Per Partition (messages) on topic {{topic}}"
                     },
                     scales: {
                         xAxes: [{
@@ -811,7 +867,11 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Consumer Group <strong th:text="${groupId}"></strong> Positions
+                        Consumer Group <strong th:text="${groupId}"></strong> Positions on Topic:
+
+                        <!-- For selecting topic to view stats for -->
+                        <select id="topicSelector">
+                        </select>
 
                         <div class="btn-group float-right" role="group" aria-label="Button group">
                             <a id="enable-refresh-offsets-toggle" class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerOffsets(false); return false;">
@@ -863,7 +923,7 @@
             </div>
         </div>
 
-
+        <!-- Tabs for Charts -->
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <a data-toggle="tab" class="nav-link active" href="#consumerPositionsTab">Consumer Positions</a>
@@ -1001,6 +1061,11 @@
                 <td title="Difference between tail offset and consumer offset.">{{lag}} {{#if lagDiff }} ({{lagDiff}}) {{/if}}</td>
                 <td title="Messages consumed per second.">{{consumerRate}}/sec</td>
             </tr>
+        </script>
+
+        <!-- topic selector option -->
+        <script id="consumer-topic-select-template" type="text/x-handlebars-template">
+            <option value="{{topic}}">{{topic}}</option>
         </script>
 
     </div>
