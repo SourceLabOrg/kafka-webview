@@ -481,9 +481,12 @@ public class ApiControllerTest extends AbstractMvcTest {
 
             // Validate results seem right.
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
-            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\",\"offsets\":[{\"partition\":0,\"offset\":10}],\"partitions\":[0]")))
-            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\",\"offsets\":[{\"partition\":0,\"offset\":10}],\"partitions\":[0]")))
-            .andExpect(content().string(containsString("\"topicNames\":[\"" + topicNameA + "\",\"" + topicNameB + "\"]")));
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\"")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\"")))
+            .andExpect(content().string(containsString("\"topicNames\":[\"" + topicNameA + "\",\"" + topicNameB + "\"]")))
+            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10}]")))
+            .andExpect(content().string(containsString("\"partitions\":[0]")));
+
     }
 
     /**
@@ -518,8 +521,10 @@ public class ApiControllerTest extends AbstractMvcTest {
 
             // Validate results seem right.
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
-            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\",\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}],\"partitions\":[0]")))
-            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\",\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}],\"partitions\":[0]")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\"")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\"")))
+            .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}]")))
+            .andExpect(content().string(containsString("\"partitions\":[0]")))
             .andExpect(content().string(containsString("\"topicNames\":[\"" + topicNameA + "\",\"" + topicNameB + "\"]")));
     }
 
