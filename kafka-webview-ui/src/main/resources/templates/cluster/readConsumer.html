@@ -217,6 +217,11 @@
                     // Get results for specific topic
                     var topicResults = results.topicToOffsetMap[currentTopic];
 
+                    // Gracefully handle when a consumer group is not consuming ANY topics.
+                    if (topicResults === undefined || topicResults === null) {
+                        topicResults = {offsets: {}};
+                    }
+
                     // Get consumer offsets table
                     var table = jQuery('#consumer-offsets-tbody');
 
