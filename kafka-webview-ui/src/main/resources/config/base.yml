@@ -43,6 +43,12 @@ spring:
     show-sql: false
     open-in-view: true
 
+## Disable LDAP Management by default
+management:
+  health:
+    ldap:
+      enabled: false
+
 ## Various App Configs
 app:
   name: Kafka Web View

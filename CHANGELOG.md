@@ -6,12 +6,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 #### New Features
 - [PR-194](https://github.com/SourceLabOrg/kafka-webview/pull/194) Adds a new built-in deserializer for byte[] that decodes the bytes into HEX values.
 
+#### Bug Fixes
+- [ISSUE-184](https://github.com/SourceLabOrg/kafka-webview/issues/184)  Cluster Kafka Consumer View for multiple topics. When using Cluster Kafka Consumer view for a specific consumer that is connected to multiple topics the WebView shows diagram and information of only of one topic.  First pass effort to allow selecting which topic to view metrics for.
+ 
 #### Internal Dependency Updates
-- Upgrade from SpringBoot 2.0.8 to 2.1.8.
+- Upgrade from SpringBoot 2.0.8 to 2.1.9.
 - org.apache.commons:commons-compress updated from 1.18 to 1.19.
 - Guava from 28.0-jre to 28.1-jre.
 - Sonatype Nexus plugin updated from 1.6.7 to 1.6.8.
 - maven-compiler-plugin from 3.6.1 to 3.8.1.
+
+#### Other Notes
+
+The LDAP Actuator health check is now disabled by default.  If needed, you can explicitly re-enable this by adding the following to your configuration file:
+
+```yml
+management:
+  health:
+    ldap:
+      enabled: true
+``` 
 
 ## 2.4.0 (07/02/2019)
 #### New Features
