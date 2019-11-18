@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.5.0 (UNRELEASED)
+## 2.5.0 (11/18/2019)
 #### New Features
 - [PR-194](https://github.com/SourceLabOrg/kafka-webview/pull/194) Adds a new built-in deserializer for byte[] that decodes the bytes into HEX values.
 
