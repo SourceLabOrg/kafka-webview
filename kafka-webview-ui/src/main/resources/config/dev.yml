@@ -14,7 +14,26 @@ spring:
   jpa:
     show-sql: true
 
+# Spring Actuator - global
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Spring Actuator - Info endpoint
+info:
+  app:
+    name: ${spring.application.name}
+
 app:
+  # secondary-port: 9090
   requireSsl: false
   user:
     enabled: true
