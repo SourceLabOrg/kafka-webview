@@ -33,7 +33,6 @@ info:
     name: ${spring.application.name}
 
 app:
-  # secondary-port: 9090
   requireSsl: false
   user:
     enabled: true
