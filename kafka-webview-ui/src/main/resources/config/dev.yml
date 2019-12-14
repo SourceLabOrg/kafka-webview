@@ -2,6 +2,9 @@ server:
   servlet:
     session:
       persistent: true
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 spring:
   # H2 Datbase
