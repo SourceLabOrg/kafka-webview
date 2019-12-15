@@ -147,8 +147,6 @@ Your application yml file should be configured with the following options:
 ```yml
 ## App Configs
 app:
-  ## Secondary port options
-  secondary-port: 9090
   ## User authentication options
   user:
     ## Ensure user authentication is ENABLED

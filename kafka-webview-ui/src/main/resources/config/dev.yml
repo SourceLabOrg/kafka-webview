@@ -19,6 +19,8 @@ spring:
 
 # Spring Actuator - global
 management:
+  server:
+    port: 9090
   endpoints:
     web:
       exposure:
