@@ -2,40 +2,16 @@ server:
   servlet:
     session:
       persistent: true
-  tomcat:
-    mbeanregistry:
-      enabled: true
 
 spring:
+  jpa:
+    show-sql: true
   # H2 Datbase
   h2:
     console:
       ## Disable for release
       enabled: true
       path: /h2
-
-  jpa:
-    show-sql: true
-
-# Spring Actuator - global
-management:
-  server:
-    port: 9090
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      show-details: when_authorized
-  metrics:
-    tags:
-      application: ${spring.application.name}
-
-# Spring Actuator - Info endpoint
-info:
-  app:
-    name: ${spring.application.name}
 
 app:
   requireSsl: false
