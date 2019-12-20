@@ -1,14 +1,95 @@
+
+# General
 server:
+
   ## What port to run the service on.
   port: 8080
+
+  tomcat:
+    remote_ip_header: x-forwarded-for
+    protocol_header: x-forwarded-proto
+    mbeanregistry:
+      enabled: true
+
   servlet:
     session:
+      ## User sessions should not be persistent across service restarts by default.
+      persistent: false
       ## User login session timeout after 1 hour (3600 seconds)
       timeout: 3600
 
 
-## Various App Configs
+# Spring
+spring:
+
+  application:
+    name: Kafka Webview
+
+  datasource:
+    url: "jdbc:h2:file:./data/db"
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  flyway:
+    locations: "classpath:schema/migration/{vendor}"
+    baselineOnMigrate: true
+
+  servlet:
+    multipart:
+      max-file-size: 64MB
+      max-request-size: 64MB
+
+  thymeleaf:
+    cache: false
+    enabled: true
+    prefix: "classpath:/templates/"
+    suffix: ".html"
+    mode: HTML
+    encoding: UTF-8
+    check-template-location: true
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: true
+
+
+# Spring Actuator - Global
+management:
+  server:
+    port: 9090
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  ## Disable LDAP by default
+  health:
+    ldap:
+      enabled: false
+
+# Spring Actuator - Info endpoint
+info:
+  app:
+    name: ${spring.application.name}
+
+
+# Kafka WebView custom
 app:
+
+  ## Application name
+  name: Kafka WebView
+
+  ## TODO: add a description to this configuration
+  uploadPath: "./data/uploads"
+
   ## Should be unique to your installation.
   ## This key will be used for symmetric encryption of JKS/TrustStore secrets if you configure any SSL enabled Kafka clusters.
   key: "SuperSecretKey"
@@ -36,13 +117,14 @@ app:
     ## Setting to false will disable login requirement.
     enabled: true
 
+    ## Ldap auth settings
     ## Optional: if you want to use LDAP for user authentication instead of locally defined users.
     ldap:
       ## Disabled by default.
       enabled: false
 
       ## URL/Hostname for your LDAP server
-      url: "ldap://localhost:8389/dc=example,dc=org"
+      url: "ldap://localhost:63182/dc=example,dc=org"
 
       ## Example values defined below, adjust as needed.
       ## How to find user records

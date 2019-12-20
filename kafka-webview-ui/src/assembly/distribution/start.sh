@@ -1,23 +1,15 @@
-#!/bin/bash
+#!/bin/sh
 
+# Temporary save current directory
 CWD=`pwd`
 
-## Change to local directory
+# Change to local directory
 cd "${0%/*}"
 
-# Define empty options as defaults if none set
-if [[ -z "$HEAP_OPTS" ]]; then
-    export HEAP_OPTS=""
-fi
-if [[ -z "$LOG_OPTS" ]]; then
-    export LOG_OPTS=""
-fi
+# Start application
+export JVM_OPTS="-noverify -server -XX:TieredStopAtLevel=1"
+#export MEM_OPTS="-Xms2G -Xmx2G -XX:MaxMetaspaceSize=300M"
+exec java $JVM_OPTS $MEM_OPTS $JAVA_OPTS -jar kafka-webview-ui-*.jar
 
-## Define configuration
-export SPRING_CONFIG_LOCATION=classpath:/config/base.yml,config.yml
-
-## launch webapp
-exec java -jar kafka-webview-ui-*.jar $HEAP_OPTS $LOG_OPTS
-
-## Change back to previous directory
+# Change back to previous directory
 cd $CWD
