@@ -1,6 +1,9 @@
 # Set the base image
 FROM openjdk:8-jre-alpine
 
+ARG UI_PORT=8080
+ARG MNG_PORT=9090
+
 # Dockerfile author / maintainer
 MAINTAINER SourceLab.org <stephen.powis@gmail.com>
 
@@ -32,8 +35,10 @@ RUN echo "${WEBVIEW_SHA1}  /tmp/kafka-webview-ui-bin.zip" | sha1sum -c - && \
 # Create volume to persist data
 VOLUME ${WEBVIEW_HOME}/data
 
-# Expose port
-EXPOSE 8080
+# Expose ui
+EXPOSE ${UI_PORT}
+# Expose management
+EXPOSE ${MNG_PORT}
 
 # What to run when the container starts
 ENTRYPOINT [ "/app/start.sh" ]
