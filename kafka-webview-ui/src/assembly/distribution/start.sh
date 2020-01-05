@@ -1,23 +1,35 @@
-#!/bin/bash
+#!/bin/sh
 
-CWD=`pwd`
+# Get the directory of this script
+SCRIPT_DIR=$(dirname "$0")
 
-## Change to local directory
-cd "${0%/*}"
-
-# Define empty options as defaults if none set
-if [[ -z "$HEAP_OPTS" ]]; then
-    export HEAP_OPTS=""
+# Define environment variables
+## New
+if [[ -z "$JVM_OPTS" ]]; then
+    export JVM_OPTS="-noverify -server -XX:TieredStopAtLevel=1"
 fi
-if [[ -z "$LOG_OPTS" ]]; then
-    export LOG_OPTS=""
+if [[ -z "$MEM_OPTS" ]]; then
+    export MEM_OPTS="-Xms2G -Xmx2G -XX:MaxMetaspaceSize=300M"
+fi
+if [[ -z "$JAVA_OPTS" ]]; then
+    export JAVA_OPTS=""
+fi
+## Deprecated
+if [[ ! -z "$LOG_OPTS" ]]; then
+    echo "Usage of 'LOG_OPTS' is deprecated and will be removed in the future, please switch to 'JAVA_OPTS'"
+    export JAVA_OPTS="$JAVA_OPTS $LOG_OPTS"
+fi
+if [[ ! -z "$HEAP_OPTS" ]]; then
+    echo "Usage of 'HEAP_OPTS' is deprecated and will be removed in the future, please switch to 'MEM_OPTS'"
+    export MEM_OPTS="$MEM_OPTS $HEAP_OPTS"
 fi
 
-## Define configuration
-export SPRING_CONFIG_LOCATION=classpath:/config/base.yml,config.yml
-
-## launch webapp
-exec java -jar kafka-webview-ui-*.jar $HEAP_OPTS $LOG_OPTS
-
-## Change back to previous directory
-cd $CWD
+# Start application
+echo "Start Kafka-WebView with following parameters:"
+echo "\tJVM_OPTS: $JVM_OPTS"
+echo "\tMEM_OPTS: $MEM_OPTS"
+echo "\tJAVA_OPTS: $JAVA_OPTS"
+echo "\tLOG_OPTS: deprecated, added to JAVA_OPTS"
+echo "\tHEAP_OPTS: deprecated, added to MEM_OPTS"
+echo 
+java $JVM_OPTS $MEM_OPTS $JAVA_OPTS -jar kafka-webview-ui-*.jar

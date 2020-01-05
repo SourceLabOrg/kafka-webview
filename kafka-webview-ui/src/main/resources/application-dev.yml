@@ -1,20 +1,27 @@
+
+# General
 server:
+
   servlet:
     session:
       persistent: true
 
+
+# Spring
 spring:
+
   jpa:
     show-sql: true
-  # H2 Datbase
+
   h2:
     console:
-      ## Disable for release
       enabled: true
       path: /h2
 
+
+# Kafka WebView custom
 app:
-  requireSsl: false
+
   user:
     enabled: true
     ## Development server Ldap auth settings
