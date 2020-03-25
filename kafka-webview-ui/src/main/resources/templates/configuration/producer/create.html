@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.thymeleaf.org"
+        layout:decorate="~{layout}">
+
+<head>
+    <title>Producer Configuration</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <script type="application/javascript">
+            // On ready register handlers
+            jQuery(document).ready(function() {
+
+                // Enable fancy multi-select
+                jQuery('#enforced_filters_available')
+                    .multiselect({
+                            right: '#enforced_filters',
+                            sort: false,
+                            submitAllLeft: false,
+                            submitAllRight: true,
+                            afterMoveToRight: function(t,e,o) {
+                                // grab filterId
+                                var filterId = o.val();
+
+                                // Define parent container
+                                var parentContainerId = '#filterOptions' + filterId;
+
+                                // Toggle display on
+                                jQuery('#filterOptions' + filterId).toggle(true);
+
+                                // Mark all inputs as enabled
+                                jQuery(parentContainerId + ' input').removeAttr("disabled");
+                            },
+                            afterMoveToLeft: function(t,e,o) {
+                                // grab filterId
+                                var filterId = o.val();
+
+                                // Define parent container
+                                var parentContainerId = '#filterOptions' + filterId;
+
+                                // Toggle display off
+                                jQuery(parentContainerId).toggle(false);
+
+                                // Mark all inputs as disabled
+                                jQuery(parentContainerId + ' input').attr("disabled", true);
+                            }
+                        }
+                    );
+
+                jQuery('#optional_filters_available')
+                    .multiselect({
+                            right: '#optional_filters',
+                            sort: false,
+                            submitAllLeft: false,
+                            submitAllRight: true
+                        }
+                    );
+
+                // Handle selecting a cluster.
+                jQuery('#clusterId').change(function() {
+                    var clusterId = jQuery('#clusterId').val();
+                    ApiClient.getTopics(clusterId, function(topicList) {
+                        var topicSelector = jQuery('#topic');
+                        jQuery(topicSelector).empty();
+                        jQuery(topicSelector).removeAttr('disabled');
+                        jQuery(topicSelector).append(jQuery('<option></option>')
+                            .attr('value', '!')
+                            .text('Please select a topic')
+                        );
+                        jQuery.each(topicList, function (index, topic) {
+                            jQuery(topicSelector)
+                                .append(
+                                    jQuery('<option></option>')
+                                        .attr('value', topic.name)
+                                        .text(topic.name)
+                                );
+                        });
+                    });
+                });
+
+                // Handle selecting a topic
+                jQuery('#topic').change(function() {
+                    var topic = jQuery(this).val();
+                    if (topic === '!') {
+                        // Clear partitions
+                        return
+                    }
+                    var clusterId = jQuery('#clusterId').val();
+                    var topic = jQuery('#topic').val();
+
+                    ApiClient.getTopicDetails(clusterId, topic, function(results) {
+                        var partitionSelector = jQuery('#partitions');
+                        jQuery(partitionSelector).empty();
+                        jQuery(partitionSelector).removeAttr('disabled');
+                        jQuery(partitionSelector).append(jQuery('<option></option>')
+                            .attr('value', '')
+                            .text('producer all partitions')
+                            .attr('selected', 'selected')
+                        );
+
+                        jQuery.each(results.partitions, function(index, result) {
+                            jQuery(partitionSelector)
+                                .append(
+                                    jQuery('<option></option>')
+                                        .attr('value', result.partition)
+                                        .text(result.partition)
+                                );
+                        });
+                    });
+                });
+            });
+        </script>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <strong th:text="${producerForm.exists()} ? 'Edit producer' : 'Create'">Create</strong>
+                        <span th:text="${producerForm.exists()} ? ${producerForm.name} : 'New producer'"></span>
+                    </div>
+                    <form id="producer-form"
+                          method="post" class="form-horizontal"
+                          th:action="@{/configuration/producer/update}"
+                          th:object="${producerForm}">
+
+                        <div class="card-body">
+                            <!-- Topic Options -->
+                            <h6>Topic Selection</h6>
+                            <hr>
+
+                            <!-- Name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="name">
+                                    Producer Name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                            id="name" name="name" class="form-control" type="text"
+                                            placeholder="A unique name to identify this producer"
+                                            th:errorclass="is-invalid"
+                                            th:value="*{name}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Cluster -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="clusterId">
+                                    Cluster
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                            id="clusterId" name="clusterId" class="form-control"
+                                            th:errorclass="is-invalid"
+                                            th:field="*{clusterId}">
+                                        <option value="">Please select a cluster</option>
+                                        <option th:each="cluster : ${clusters}"
+                                                th:value="${cluster.id}" th:text="${cluster.name}">Cluster Name</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('clusterId')}" th:errors="*{clusterId}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Topic -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="topic">
+                                    Topic
+                                </label>
+                                <div class="col-md-9">
+                                    <select
+                                            id="topic" name="topic" class="form-control"
+                                            th:attr="disabled=${topics.isEmpty()}? 'disabled'"
+                                            th:errorclass="is-invalid"
+                                            th:field="*{topic}">
+                                        <option value="!">Please select a topic</option>
+                                        <option th:if="${topics} != null" th:each="topic : ${topics}"
+                                                th:value="${topic.name}" th:text="${topic.name}">Topic Name</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('topic')}" th:errors="*{topic}"></div>
+                                </div>
+                            </div>
+
+<!--                            TODO uncomment when we want to send more than a map of string/string as a kafka message-->
+<!--                            &lt;!&ndash; Key Message Formats &ndash;&gt;-->
+<!--                            <div class="form-group row">-->
+<!--                                <label class="col-md-3 form-control-label" for="keyMessageFormatId">-->
+<!--                                    Message Format for Keys-->
+<!--                                </label>-->
+<!--                                <div class="col-md-9">-->
+<!--                                    <select-->
+<!--                                            id="keyMessageFormatId" name="keyMessageFormatId" class="form-control"-->
+<!--                                            th:errorclass="is-invalid"-->
+<!--                                            th:field="*{keyMessageFormatId}">-->
+<!--                                        <option value="">Please select a message format</option>-->
+<!--                                        <optgroup label="Default Formats">-->
+<!--                                            <option th:each="messageFormat : ${defaultMessageFormats}"-->
+<!--                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>-->
+<!--                                        </optgroup>-->
+<!--                                        <optgroup label="Custom Formats">-->
+<!--                                            <option th:each="messageFormat : ${customMessageFormats}"-->
+<!--                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>-->
+<!--                                        </optgroup>-->
+<!--                                    </select>-->
+<!--                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('keyMessageFormatId')}" th:errors="*{keyMessageFormatId}"></div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+
+<!--                            &lt;!&ndash; Key Message Formats &ndash;&gt;-->
+<!--                            <div class="form-group row">-->
+<!--                                <label class="col-md-3 form-control-label" for="valueMessageFormatId">-->
+<!--                                    Message Format for Values-->
+<!--                                </label>-->
+<!--                                <div class="col-md-9">-->
+<!--                                    <select-->
+<!--                                            id="valueMessageFormatId" name="valueMessageFormatId" class="form-control"-->
+<!--                                            th:errorclass="is-invalid"-->
+<!--                                            th:field="*{valueMessageFormatId}">-->
+<!--                                        <option value="">Please select a message format</option>-->
+<!--                                        <optgroup label="Default Formats">-->
+<!--                                            <option th:each="messageFormat : ${defaultMessageFormats}"-->
+<!--                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>-->
+<!--                                        </optgroup>-->
+<!--                                        <optgroup label="Custom Formats">-->
+<!--                                            <option th:each="messageFormat : ${customMessageFormats}"-->
+<!--                                                    th:value="${messageFormat.id}" th:text="${messageFormat.name}">Format Name</option>-->
+<!--                                        </optgroup>-->
+<!--                                    </select>-->
+<!--                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('valueMessageFormatId')}" th:errors="*{valueMessageFormatId}"></div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+
+
+                            <!-- Producer Message Qualified Class Name -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="name">
+                                    Producer Message Class Name
+                                </label>
+                                <div class="col-md-9">
+                                    <input
+                                            id="producerMessageClassName" name="producerMessageClassName" class="form-control" type="text"
+                                            placeholder="The qualified class name this producer's message will represent"
+                                            th:errorclass="is-invalid"
+                                            th:value="*{producerMessageClassName}">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('producerMessageClassName')}" th:errors="*{producerMessageClassName}"></div>
+                                </div>
+                            </div>
+
+                            <div id="optionsContainer"/>
+
+                            <!-- Dynamic Producer Message Key/valueFields -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="newOption">
+                                    Add new producer message key
+                                </label>
+                                <div class="col-md-8">
+                                    <input
+                                            autocomplete="off" class="form-control" id="newOption" name="newOption" type="text"
+                                            placeholder="Enter property name"/>
+                                </div>
+                                <div class="col-md-1">
+                                    <button id="addOption" class="btn add-more" type="button">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- All the keys for the producer's message -->
+                        <input id="producerMessagePropertyNameList" name="producerMessagePropertyNameList" hidden />
+
+                        <!-- Footer -->
+                        <div class="card-footer">
+                            <input type="hidden" name="id" th:if="${producerForm.exists()}" th:field="*{id}"></input>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa fa-dot-circle-o"></i>
+                                Submit
+                            </button>
+                            <a class="btn btn-sm btn-danger" th:href="@{/configuration/producer}" role="button">
+                                <i class="fa fa-ban"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="application/javascript">
+        jQuery().ready(function() {
+            jQuery('#addOption').click(function(e) {
+                e.preventDefault();
+                // Get and compile template
+                var source   = jQuery('#options-template').html();
+                var template = Handlebars.compile(source);
+
+                // Get name from input
+                var optionName = jQuery('#newOption').val();
+                if (optionName == null || optionName.trim().length == 0) {
+                    alert('Must enter a name for a property');
+                    return;
+                }
+
+                // Generate html from template
+                var properties = {
+                    optionName: optionName,
+                };
+                var optionsHtml = template(properties);
+
+                // Append it to our div
+                jQuery('#optionsContainer').append(optionsHtml);
+
+                // Clear input
+                jQuery('#newOption').val("");
+            });
+        });
+
+        // Handle removing custom options
+        function removeOption(element) {
+            if (confirm('Are you sure you want to remove this property?')) {
+                jQuery(element).closest('.custom-option').remove();
+            }
+        }
+
+        jQuery('#producer-form').submit(function(){
+            //get all custom keys
+            var propertyNames = jQuery('.peanutButter');
+
+            var producerMessagePropertyNames = "";
+
+            var counter = 0;
+
+            while(counter < propertyNames.length - 1)
+            {
+                producerMessagePropertyNames += propertyNames[counter].value + ",";
+                counter++;
+            }
+
+            producerMessagePropertyNames += propertyNames[counter].value;
+
+            jQuery('#producerMessagePropertyNameList').val(producerMessagePropertyNames);
+
+            return true;
+        });
+    </script>
+
+    <!-- Options Template -->
+    <script id="options-template" type="text/x-handlebars-template">
+        <!-- Message Property Name -->
+        <div class="form-group row custom-option">
+            <label class="col-md-2 form-control-label">
+                <i>{{optionName}}</i>
+            </label>
+            <input type="hidden" class="peanutButter" value="{{optionName}}">
+            <div class="col-md-1">
+                <button class="btn removeOption" type="button" onclick="removeOption(this);">-</button>
+            </div>
+        </div>
+    </script>
+</section>
+
+</body>
+</html>

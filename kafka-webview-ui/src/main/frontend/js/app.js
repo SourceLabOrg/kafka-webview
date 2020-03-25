@@ -364,6 +364,20 @@ var ApiClient = {
             }
         });
     },
+    submitKafkaMessage: function(producerId, messageRequest, callback){
+        jQuery.ajax({
+            type: 'POST',
+            url: ApiClient.buildUrl('api/producer/' + producerId + '/send-message'),
+            data: messageRequest,
+            dataType: 'json',
+            headers: ApiClient.getCsrfHeader(),
+            success: callback,
+            error: ApiClient.defaultErrorHandler,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            }
+        });
+    },
     defaultErrorHandler: function(jqXHR, textStatus, errorThrown) {
         // convert response to json
         var response = jQuery.parseJSON(jqXHR.responseText);

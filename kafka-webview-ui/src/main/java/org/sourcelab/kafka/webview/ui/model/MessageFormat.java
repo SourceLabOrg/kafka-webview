@@ -24,17 +24,20 @@
 
 package org.sourcelab.kafka.webview.ui.model;
 
+import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 
 /**
  * Represents a record in the message_format table.
  */
 @Entity
-public class MessageFormat {
+public class MessageFormat implements UploadableJarEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -86,6 +89,18 @@ public class MessageFormat {
         this.jar = jar;
     }
 
+    @Transient
+    @Override
+    public boolean isDefault() {
+        return isDefaultFormat();
+    }
+
+    @Transient
+    @Override
+    public void setDefault(final boolean defaultFormat) {
+        setDefaultFormat(defaultFormat);
+    }
+
     public boolean isDefaultFormat() {
         return isDefaultFormat;
     }
@@ -100,6 +115,11 @@ public class MessageFormat {
 
     public void setOptionParameters(final String optionParameters) {
         this.optionParameters = optionParameters;
+    }
+
+    @Override
+    public UploadManager.UploadType getUploadType() {
+        return UploadManager.UploadType.DESERIALIZER;
     }
 
     @Override

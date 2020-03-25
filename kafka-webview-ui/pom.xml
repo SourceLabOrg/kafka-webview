@@ -259,6 +259,13 @@
             <version>0.7</version>
             <scope>test</scope>
         </dependency>
+
+<!--        For Kafka things-->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -29,6 +29,8 @@ import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 /**
  * Helpful tools for Clusters in tests.
  */
