@@ -27,8 +27,10 @@ package org.sourcelab.kafka.webview.ui.controller;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.sourcelab.kafka.webview.ui.model.Producer;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
+import org.sourcelab.kafka.webview.ui.repository.ProducerRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -51,6 +53,9 @@ public abstract class BaseController {
 
     @Autowired
     private ViewRepository viewRepository;
+
+    @Autowired
+    private ProducerRepository producerRepository;
 
     @Autowired
     private AppProperties appProperties;
@@ -108,10 +113,12 @@ public abstract class BaseController {
         // TODO put a limit on these
         final Iterable<Cluster> clusters = clusterRepository.findAllByOrderByNameAsc();
         final Iterable<View> views = viewRepository.findAllByOrderByNameAsc();
+        final Iterable<Producer> producers = producerRepository.findAllByOrderByNameAsc();
 
         model.addAttribute("MenuClusters", clusters);
         model.addAttribute("MenuViews", views);
         model.addAttribute("UserId", getLoggedInUserId());
+        model.addAttribute( "MenuProducers", producers );
 
         if (!appProperties.isUserAuthEnabled() || appProperties.getLdapProperties().isEnabled()) {
             model.addAttribute("MenuShowUserConfig", false);

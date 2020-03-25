@@ -45,6 +45,8 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsetsWithTailPositions;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupTopicOffsets;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupTopicOffsetsWithTailPositions;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
@@ -59,6 +61,8 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
 import org.sourcelab.kafka.webview.ui.manager.socket.StartingPosition;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -346,6 +350,31 @@ public class KafkaOperationsTest {
     }
 
     /**
+     * Test creating a new topic.
+     */
+    @Test
+    public void testRemoveTopic() {
+        final String newTopic = "TestTopic-" + System.currentTimeMillis();
+
+        // Create topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(newTopic, 1, (short) 1);
+
+        // Validate topic exists now.
+        TopicList topicsList = kafkaOperations.getAvailableTopics();
+        assertTrue("Should contain our topic now", topicsList.getTopicNames().contains(newTopic));
+
+        // Attempt to remove the topic
+        final boolean result = kafkaOperations.removeTopic(newTopic);
+        assertTrue("Should have returned true", result);
+
+        // Validate our topic doesn't exist
+        topicsList = kafkaOperations.getAvailableTopics();
+        assertFalse("Should not contain our topic anymore", topicsList.getTopicNames().contains(newTopic));
+    }
+
+    /**
      * Test listing consumer group ids.
      */
     @Test
@@ -479,19 +508,21 @@ public class KafkaOperationsTest {
 
         final String consumerId1 = "ConsumerA-" + System.currentTimeMillis();
         final String consumerPrefix = "TestConsumer";
-        final String finalConsumerId = consumerPrefix + "-" + consumerId1;
+
+        final String finalConsumerGroupId = consumerPrefix + "-" + consumerId1;
+        final String finalConsumerId = finalConsumerGroupId + "-" + Thread.currentThread().getId();
 
         // Create consumer, consume from topic, keep alive.
         try (final KafkaConsumer consumer = consumeFromTopic(topicName, consumerId1, consumerPrefix)) {
 
             // Ask for list of consumers.
-            final ConsumerGroupDetails consumerGroupDetails = kafkaOperations.getConsumerGroupDetails(finalConsumerId);
+            final ConsumerGroupDetails consumerGroupDetails = kafkaOperations.getConsumerGroupDetails(finalConsumerGroupId);
 
             // We should have one
             assertNotNull(consumerGroupDetails);
 
             // Validate bits
-            assertEquals(finalConsumerId, consumerGroupDetails.getConsumerId());
+            assertEquals(finalConsumerGroupId, consumerGroupDetails.getGroupId());
             assertFalse(consumerGroupDetails.isSimple());
             assertEquals("range", consumerGroupDetails.getPartitionAssignor());
             assertEquals("Stable", consumerGroupDetails.getState());
@@ -540,18 +571,23 @@ public class KafkaOperationsTest {
             assertNotNull(consumerGroupOffsets);
 
             // Validate bits
-            assertEquals(topicName, consumerGroupOffsets.getTopic());
-            assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
-            assertEquals(2, consumerGroupOffsets.getOffsets().size());
-            assertEquals(10, consumerGroupOffsets.getOffsetForPartition(0));
-            assertEquals(10, consumerGroupOffsets.getOffsetForPartition(1));
+            assertTrue(consumerGroupOffsets.getTopicNames().contains(topicName));
+            assertEquals(1, consumerGroupOffsets.getTopicNames().size());
 
-            final PartitionOffset offsetsPartition0 = consumerGroupOffsets.getOffsets().get(0);
+            ConsumerGroupTopicOffsets topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName);
+
+            assertEquals(topicName, topicOffsets.getTopic());
+            assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
+            assertEquals(2, topicOffsets.getOffsets().size());
+            assertEquals(10, topicOffsets.getOffsetForPartition(0));
+            assertEquals(10, topicOffsets.getOffsetForPartition(1));
+
+            final PartitionOffset offsetsPartition0 = topicOffsets.getOffsets().get(0);
             assertNotNull(offsetsPartition0);
             assertEquals(0, offsetsPartition0.getPartition());
             assertEquals(10, offsetsPartition0.getOffset());
 
-            final PartitionOffset offsetsPartition1 = consumerGroupOffsets.getOffsets().get(1);
+            final PartitionOffset offsetsPartition1 = topicOffsets.getOffsets().get(1);
             assertNotNull(offsetsPartition1);
             assertEquals(1, offsetsPartition1.getPartition());
             assertEquals(10, offsetsPartition1.getOffset());
@@ -559,10 +595,11 @@ public class KafkaOperationsTest {
     }
 
     /**
-     * Test getting details about a consumer with tail offset positions incuded.
+     * Test getting details about a consumer with tail offset positions included for a consumer
+     * consuming from a single topic.
      */
     @Test
-    public void testGetConsumerGroupOffsetsWithTailPositions() {
+    public void testGetConsumerGroupOffsetsWithTailPositions_singleTopic() {
         // First need to create a topic.
         final String topicName = "AnotherTestTopic-" + System.currentTimeMillis();
 
@@ -594,23 +631,127 @@ public class KafkaOperationsTest {
             assertNotNull(consumerGroupOffsets);
 
             // Validate bits
-            assertEquals(topicName, consumerGroupOffsets.getTopic());
-            assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
-            assertEquals(2, consumerGroupOffsets.getOffsets().size());
-            assertEquals(10, consumerGroupOffsets.getOffsetForPartition(0));
-            assertEquals(10, consumerGroupOffsets.getOffsetForPartition(1));
+            assertTrue(topicName, consumerGroupOffsets.getTopicNames().contains(topicName));
+            assertEquals("Should have a single topic", 1, consumerGroupOffsets.getTopicNames().size());
 
-            final PartitionOffsetWithTailPosition offsetsPartition0 = consumerGroupOffsets.getOffsets().get(0);
+            final ConsumerGroupTopicOffsetsWithTailPositions topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName);
+
+            assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
+            assertEquals(2, topicOffsets.getOffsets().size());
+            assertEquals(10, topicOffsets.getOffsetForPartition(0));
+            assertEquals(10, topicOffsets.getOffsetForPartition(1));
+
+            final PartitionOffsetWithTailPosition offsetsPartition0 = topicOffsets.getOffsets().get(0);
             assertNotNull(offsetsPartition0);
             assertEquals(0, offsetsPartition0.getPartition());
             assertEquals(10, offsetsPartition0.getOffset());
             assertEquals(10, offsetsPartition0.getTail());
 
-            final PartitionOffsetWithTailPosition offsetsPartition1 = consumerGroupOffsets.getOffsets().get(1);
+            final PartitionOffsetWithTailPosition offsetsPartition1 = topicOffsets.getOffsets().get(1);
             assertNotNull(offsetsPartition1);
             assertEquals(1, offsetsPartition1.getPartition());
             assertEquals(10, offsetsPartition1.getOffset());
             assertEquals(10, offsetsPartition1.getTail());
+        }
+    }
+
+    /**
+     * Test getting details about a consumer with tail offset positions included for a consumer
+     * consuming from multiple topics.
+     */
+    @Test
+    public void testGetConsumerGroupOffsetsWithTailPositions_multipleTopics() {
+        // First need to create a topic.
+        final String topicName1 = "AnotherTestTopic1-" + System.currentTimeMillis();
+        final String topicName2 = "AnotherTestTopic2-" + System.currentTimeMillis();
+
+        final Collection<String> topicNames = new ArrayList<>();
+        topicNames.add(topicName1);
+        topicNames.add(topicName2);
+
+        // Create topics
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName1, 2, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName2, 2, (short) 1);
+
+        // Publish data into the topics
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName1, 0);
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(10, topicName1, 1);
+
+        // Publish data into the topics
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(20, topicName2, 0);
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .produceRecords(20, topicName2, 1);
+
+        final String consumerId1 = "ConsumerA-" + System.currentTimeMillis();
+        final String consumerPrefix = "TestConsumer";
+        final String finalConsumerId = consumerPrefix + "-" + consumerId1;
+
+        // Create consumer, consume from topic, keep alive.
+        try (final KafkaConsumer consumer = consumeFromTopics(topicNames, consumerId1, consumerPrefix)) {
+
+            // Ask for list of offsets.
+            final ConsumerGroupOffsetsWithTailPositions consumerGroupOffsets
+                = kafkaOperations.getConsumerGroupOffsetsWithTailOffsets(finalConsumerId);
+
+            // We should have one
+            assertNotNull(consumerGroupOffsets);
+
+            // Validate bits
+            assertTrue(topicName1, consumerGroupOffsets.getTopicNames().contains(topicName1));
+            assertTrue(topicName2, consumerGroupOffsets.getTopicNames().contains(topicName2));
+            assertEquals("Should have two topics", 2, consumerGroupOffsets.getTopicNames().size());
+
+            // Validate topic 1
+            ConsumerGroupTopicOffsetsWithTailPositions topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName1);
+
+            assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
+            assertEquals(2, topicOffsets.getOffsets().size());
+            assertEquals(10, topicOffsets.getOffsetForPartition(0));
+            assertEquals(10, topicOffsets.getOffsetForPartition(1));
+
+            PartitionOffsetWithTailPosition offsetsPartition0 = topicOffsets.getOffsets().get(0);
+            assertNotNull(offsetsPartition0);
+            assertEquals(0, offsetsPartition0.getPartition());
+            assertEquals(10, offsetsPartition0.getOffset());
+            assertEquals(10, offsetsPartition0.getTail());
+
+            PartitionOffsetWithTailPosition offsetsPartition1 = topicOffsets.getOffsets().get(1);
+            assertNotNull(offsetsPartition1);
+            assertEquals(1, offsetsPartition1.getPartition());
+            assertEquals(10, offsetsPartition1.getOffset());
+            assertEquals(10, offsetsPartition1.getTail());
+
+            // Validate topic 2
+            topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName2);
+
+            assertEquals(finalConsumerId, consumerGroupOffsets.getConsumerId());
+            assertEquals(2, topicOffsets.getOffsets().size());
+            assertEquals(20, topicOffsets.getOffsetForPartition(0));
+            assertEquals(20, topicOffsets.getOffsetForPartition(1));
+
+            offsetsPartition0 = topicOffsets.getOffsets().get(0);
+            assertNotNull(offsetsPartition0);
+            assertEquals(0, offsetsPartition0.getPartition());
+            assertEquals(20, offsetsPartition0.getOffset());
+            assertEquals(20, offsetsPartition0.getTail());
+
+            offsetsPartition1 = topicOffsets.getOffsets().get(1);
+            assertNotNull(offsetsPartition1);
+            assertEquals(1, offsetsPartition1.getPartition());
+            assertEquals(20, offsetsPartition1.getOffset());
+            assertEquals(20, offsetsPartition1.getTail());
         }
     }
 
@@ -691,6 +832,16 @@ public class KafkaOperationsTest {
      * @param consumerPrefix Any consumer Id prefix.
      */
     private KafkaConsumer<String, String> consumeFromTopic(final String topic, final String consumerId, final String consumerPrefix) {
+        return consumeFromTopics(Collections.singleton(topic), consumerId, consumerPrefix);
+    }
+
+    /**
+     * Helper method to consumer records from a topic.
+     *  @param topics topics to consume from.
+     * @param consumerId Consumer's consumerId
+     * @param consumerPrefix Any consumer Id prefix.
+     */
+    private KafkaConsumer<String, String> consumeFromTopics(final Collection<String> topics, final String consumerId, final String consumerPrefix) {
         // Create cluster config.
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(sharedKafkaTestResource.getKafkaConnectString())
@@ -714,6 +865,7 @@ public class KafkaOperationsTest {
             .build();
 
         // Create Topic Config
+        final String topic = topics.iterator().next();
         final org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig topicConfig = new org.sourcelab.kafka.webview.ui.manager.kafka.config.TopicConfig(clusterConfig, deserializerConfig, topic);
 
         // Create FilterConfig
@@ -733,10 +885,9 @@ public class KafkaOperationsTest {
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(new KafkaClientConfigUtil("not/used", consumerPrefix));
         final KafkaConsumer<String, String> consumer = kafkaConsumerFactory.createConsumerAndSubscribe(clientConfig);
 
-        // "Subscribe" to topic.
+        // subscribe to all topics.
         consumer.unsubscribe();
-        consumer.subscribe(Collections.singletonList(topicConfig.getTopicName()));
-
+        consumer.subscribe(topics);
 
         // consume and commit offsets.
         // Wait for assignment to complete.

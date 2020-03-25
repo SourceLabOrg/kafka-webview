@@ -24,20 +24,13 @@
 
 package org.sourcelab.kafka.webview.ui.controller.api;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.api.exceptions.ApiException;
 import org.sourcelab.kafka.webview.ui.controller.api.exceptions.NotFoundApiException;
-import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumeRequest;
-import org.sourcelab.kafka.webview.ui.controller.api.requests.ConsumerRemoveRequest;
-import org.sourcelab.kafka.webview.ui.controller.api.requests.CreateTopicRequest;
-import org.sourcelab.kafka.webview.ui.controller.api.requests.ModifyTopicConfigRequest;
+import org.sourcelab.kafka.webview.ui.controller.api.requests.*;
 import org.sourcelab.kafka.webview.ui.controller.api.responses.ResultResponse;
-import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
-import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
-import org.sourcelab.kafka.webview.ui.manager.kafka.SessionIdentifier;
-import org.sourcelab.kafka.webview.ui.manager.kafka.ViewCustomizer;
-import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumer;
-import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
+import org.sourcelab.kafka.webview.ui.manager.kafka.*;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.FilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConfigItem;
@@ -54,33 +47,20 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.PartitionDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicListing;
-import org.sourcelab.kafka.webview.ui.model.Cluster;
-import org.sourcelab.kafka.webview.ui.model.Filter;
-import org.sourcelab.kafka.webview.ui.model.View;
-import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
-import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
-import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
+import org.sourcelab.kafka.webview.ui.model.*;
+import org.sourcelab.kafka.webview.ui.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Handles API requests.
@@ -96,6 +76,9 @@ public class ApiController extends BaseController {
 
     @Autowired
     private FilterRepository filterRepository;
+
+    @Autowired
+    private ProducerRepository producerRepository;
 
     @Autowired
     private WebKafkaConsumerFactory webKafkaConsumerFactory;
@@ -225,13 +208,22 @@ public class ApiController extends BaseController {
      */
     @ResponseBody
     @RequestMapping(path = "/cluster/{id}/topics/list", method = RequestMethod.GET, produces = "application/json")
-    public List<TopicListing> getTopics(@PathVariable final Long id) {
+    public List<TopicListing> getTopics(@PathVariable final Long id, @RequestParam(required = false) final String search) {
         // Retrieve cluster
         final Cluster cluster = retrieveClusterById(id);
 
         // Create new Operational Client
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
-            final TopicList topics = operations.getAvailableTopics();
+            // Get all topics available on cluster.
+            TopicList topics = operations.getAvailableTopics();
+
+            // If search value supplied
+            if (search != null && !search.trim().isEmpty()) {
+                // filter
+                topics = topics.filterByTopicName(search);
+            }
+
+            // return matched topics.
             return topics.getTopics();
         } catch (final Exception e) {
             throw new ApiException("Topics", e);
@@ -349,7 +341,7 @@ public class ApiController extends BaseController {
             final boolean result = operations.createTopic(createTopic);
 
             // Quick n dirty json response
-            return new ResultResponse("CreateTopic", result, "");
+            return new ResultResponse("CreateTopic", result, "Created topic '" + createTopicRequest.getName() + "'");
         } catch (final Exception e) {
             throw new ApiException("CreateTopic", e);
         }
@@ -383,6 +375,34 @@ public class ApiController extends BaseController {
             return operations.alterTopicConfig(name, configEntries).getConfigEntries();
         } catch (final Exception e) {
             throw new ApiException("ModifyTopic", e);
+        }
+    }
+
+    /**
+     * POST Delete existing topic on cluster.
+     * This should require ADMIN role.
+     *
+     * TODO explicitly disabled until custom user roles. https://github.com/SourceLabOrg/kafka-webview/issues/157
+     */
+//    @ResponseBody
+//    @RequestMapping(path = "/cluster/{id}/delete/topic", method = RequestMethod.POST, produces = "application/json")
+    public ResultResponse deleteTopic(@PathVariable final Long id, @RequestBody final DeleteTopicRequest deleteTopicRequest) {
+        // Retrieve cluster
+        final Cluster cluster = retrieveClusterById(id);
+
+        final String name = deleteTopicRequest.getName();
+        if (name == null || name.trim().isEmpty()) {
+            throw new ApiException("DeleteTopic", "Invalid topic name");
+        }
+
+        // Create new Operational Client
+        try (final KafkaOperations operations = createOperationsClient(cluster)) {
+            final boolean result = operations.removeTopic(deleteTopicRequest.getName());
+
+            // Quick n dirty json response
+            return new ResultResponse("DeleteTopic", result, "Removed topic '" + deleteTopicRequest.getName() + "'");
+        } catch (final Exception e) {
+            throw new ApiException("DeleteTopic", e);
         }
     }
 
@@ -515,7 +535,8 @@ public class ApiController extends BaseController {
         final Cluster cluster = retrieveClusterById(id);
 
         try (final KafkaOperations operations = createOperationsClient(cluster)) {
-            return operations.getConsumerGroupOffsets(consumerGroupId);
+            final ConsumerGroupOffsets offsets = operations.getConsumerGroupOffsets(consumerGroupId);
+            return offsets;
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
         }
@@ -560,6 +581,38 @@ public class ApiController extends BaseController {
             return operations.removeConsumerGroup(consumerRemoveRequest.getConsumerId());
         } catch (final Exception exception) {
             throw new ApiException("ClusterNodes", exception);
+        }
+    }
+
+    /**
+     * POST put a message on kafka bus
+     */
+    @ResponseBody
+    @PostMapping(path="/producer/{id}/send-message", produces = "application/json")
+    public void sendMessage(@PathVariable final Long id, @RequestBody final SendMessageRequest request )
+    {
+
+        final Producer producer = producerRepository.findById( id  ).orElseThrow( () -> new NotFoundApiException( "Producer", "Unable to find producer" ) );
+        final Cluster cluster = clusterRepository.findById( producer.getCluster().getId() ).orElseThrow( () -> new NotFoundApiException( "Producer", "Unable to find cluster" ) );
+
+
+        Map<String, Object> producerFactoryConfigs = new HashMap<>();
+        producerFactoryConfigs.put( "bootstrap.servers", cluster.getBrokerHosts() );
+        producerFactoryConfigs.put( "key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        producerFactoryConfigs.put( "value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        KafkaTemplate<String, String> template = new KafkaTemplate<>( new DefaultKafkaProducerFactory<>( producerFactoryConfigs ) );
+
+        ProducerRecord<String, String> record = new ProducerRecord<>( producer.getTopic(), UUID.randomUUID().toString(), request.getMessageAsJson() );
+
+        ListenableFuture<SendResult<String, String>> future = template.send( record );
+
+        try
+        {
+            future.get(); // ensure it was successful. will throw exception otherwise
+        } catch( ExecutionException | InterruptedException e )
+        {
+            //pfffft?????
         }
     }
 

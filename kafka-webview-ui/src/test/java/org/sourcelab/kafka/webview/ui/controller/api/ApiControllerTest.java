@@ -24,19 +24,23 @@
 
 package org.sourcelab.kafka.webview.ui.controller.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.sourcelab.kafka.webview.ui.model.Producer;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
+import org.sourcelab.kafka.webview.ui.tools.ProducerTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,11 +50,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
@@ -74,6 +74,9 @@ public class ApiControllerTest extends AbstractMvcTest {
     @Autowired
     private ClusterTestTools clusterTestTools;
 
+    @Autowired
+    private ProducerTestTools prodcuerTestTools;
+
     /**
      * Test cannot load pages that require an admin role.
      */
@@ -82,6 +85,7 @@ public class ApiControllerTest extends AbstractMvcTest {
     public void test_withoutAdminRole() throws Exception {
         testUrlWithOutAdminRole("/api/cluster/1/create/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/modify/topic", true);
+        testUrlWithOutAdminRole("/api/cluster/1/delete/topic", true);
         testUrlWithOutAdminRole("/api/cluster/1/consumer/remove", true);
     }
 
@@ -123,7 +127,9 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
 
             // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("{\"operation\":\"CreateTopic\",\"result\":true,\"message\":\"\"}")));
+            .andExpect(content().string(containsString(
+                "{\"operation\":\"CreateTopic\",\"result\":true,\"message\":\"Created topic '" + newTopic + "'\"}"
+            )));
 
         // Validate topic now exists
         // Sanity test, verify topic doesn't exists
@@ -193,6 +199,57 @@ public class ApiControllerTest extends AbstractMvcTest {
     }
 
     /**
+     * Test the delete topic end point.
+     * TODO explicitly disabled until custom user roles. https://github.com/SourceLabOrg/kafka-webview/issues/157
+     */
+    //@Test
+    @Transactional
+    public void test_deleteTopic() throws Exception {
+        // Define our new topic name
+        final String topicName = "DeleteTestTopic-" + System.currentTimeMillis();
+
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create a new topic
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(topicName, 1, (short) 1);
+
+        // Sanity test - Validate topic exists
+        Set<String> topicNames = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getTopicNames();
+        assertTrue("Topic should exist now", topicNames.contains(topicName));
+
+        // Construct payload
+        final String payload = "{ \"name\": \"" + topicName + "\" }";
+
+        // Hit end point as admin user
+        mockMvc
+            .perform(post("/api/cluster/" + cluster.getId() + "/delete/topic")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .content(payload)
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate result message seems correct.
+            .andExpect(content().string(containsString("{\"operation\":\"DeleteTopic\",\"result\":true,\"message\":\"Removed topic '" + topicName + "'\"}")));
+
+        // Validate topic no longer exists
+        topicNames = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getTopicNames();
+        assertFalse("Topic should not exist now", topicNames.contains(topicName));
+    }
+
+    /**
      * Test the list Consumers end point.
      */
     @Test
@@ -205,7 +262,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Hit end point
         mockMvc
@@ -234,7 +291,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Construct payload
         final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
@@ -282,7 +339,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Construct payload
         final String payload = "{ \"consumerId\": \"" + consumerId + "\", \"clusterId\": \"" + cluster.getId() + "\"}";
@@ -327,7 +384,10 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {
+            "TestTopic-A" + System.currentTimeMillis(),
+            "TestTopic-B" + System.currentTimeMillis()
+        });
 
         // Hit end point
         mockMvc
@@ -343,7 +403,7 @@ public class ApiControllerTest extends AbstractMvcTest {
             // {"consumerId":"test-consumer-id-1543825835154","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":52168,"rack":null},"simple":false}]
 
             // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("{\"groupId\":\"" + consumerId )))
             .andExpect(content().string(containsString("partitionAssignor")))
             .andExpect(content().string(containsString("state")))
             .andExpect(content().string(containsString("members")))
@@ -364,7 +424,7 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String consumerId = createConsumerWithState(new String[] {"TestTopic-" + System.currentTimeMillis()});
 
         // Hit end point
         mockMvc
@@ -380,7 +440,7 @@ public class ApiControllerTest extends AbstractMvcTest {
             // {"consumerId":"test-consumer-id-1543909384618","partitionAssignor":"","state":"Empty","members":[],"coordinator":{"id":1,"host":"127.0.0.1","port":51229,"rack":null},"simple":false}
 
             // Validate submit button seems to show up.
-            .andExpect(content().string(containsString("{\"consumerId\":\"" + consumerId )))
+            .andExpect(content().string(containsString("{\"groupId\":\"" + consumerId )))
             .andExpect(content().string(containsString("partitionAssignor")))
             .andExpect(content().string(containsString("state")))
             .andExpect(content().string(containsString("members")))
@@ -401,7 +461,9 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String topicNameA = "TestTopicA-" + System.currentTimeMillis();
+        final String topicNameB = "TestTopicB-" + System.currentTimeMillis();
+        final String consumerId = createConsumerWithState(new String[] {topicNameA, topicNameB});
 
         // Hit end point
         mockMvc
@@ -414,13 +476,16 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
 
             // Should have content similar to:
-            // {"consumerId":"test-consumer-id-1543909610144","topic":"TestTopic-1543909610145","offsets":[{"partition":0,"offset":10}],"partitions":[0]}
+            // {"consumerId":"MyConsumerId","topics":[{"topic":"topic-a","partitions":[0,1],"offsets":[{"partition":0,"offset":0},{"partition":1,"offset":1}]},{"topic":"topic-b","partitions":[0,1],"offsets":[{"partition":0,"offset":2},{"partition":1,"offset":3}]}],"topicNames":["topic-a","topic-b"]}
 
             // Validate results seem right.
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
-            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\"")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\"")))
+            .andExpect(content().string(containsString("\"topicNames\":[\"" + topicNameA + "\",\"" + topicNameB + "\"]")))
             .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10}]")))
             .andExpect(content().string(containsString("\"partitions\":[0]")));
+
     }
 
     /**
@@ -436,7 +501,9 @@ public class ApiControllerTest extends AbstractMvcTest {
         );
 
         // Create a consumer with state on the cluster.
-        final String consumerId = createConsumerWithState();
+        final String topicNameA = "TestTopicA-" + System.currentTimeMillis();
+        final String topicNameB = "TestTopicB-" + System.currentTimeMillis();
+        final String consumerId = createConsumerWithState(new String[] {topicNameA, topicNameB});
 
         // Hit end point
         mockMvc
@@ -449,33 +516,231 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk())
 
             // Should have content similar to:
-            // {"consumerId":"test-consumer-id-1544775318028","topic":"TestTopic-1544775318028","offsets":[{"partition":0,"offset":10,"tail":10}],"partitions":[0]}
+            // {"consumerId":"test-consumer-id-1573204049314","topicToOffsetMap":{"TestTopic-1573204049314":{"topic":"TestTopic-1573204049314","offsets":[{"partition":0,"offset":10,"tail":10}],"partitions":[0]}},"timestamp":1573204054752,"topicNames":["TestTopic-1573204049314"]}
 
             // Validate results seem right.
             .andExpect(content().string(containsString("\"consumerId\":\"" + consumerId )))
-            .andExpect(content().string(containsString("\"topic\":\"TestTopic-")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameA + "\"")))
+            .andExpect(content().string(containsString("\"topic\":\"" + topicNameB + "\"")))
             .andExpect(content().string(containsString("\"offsets\":[{\"partition\":0,\"offset\":10,\"tail\":10}]")))
-            .andExpect(content().string(containsString("\"partitions\":[0]")));
+            .andExpect(content().string(containsString("\"partitions\":[0]")))
+            .andExpect(content().string(containsString("\"topicNames\":[\"" + topicNameA + "\",\"" + topicNameB + "\"]")));
+    }
+
+    /**
+     * Test listing topics without a search string.
+     */
+    @Test
+    @Transactional
+    public void test_listTopics_noSearchString() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        // Create some topics
+        final String expectedTopic1 = "A-ExpectedTopic1-" + System.currentTimeMillis();
+        final String expectedTopic2= "C-ExpectedTopic2-" + System.currentTimeMillis();
+        final String expectedTopic3 = "B-ExpectedTopic3-" + System.currentTimeMillis();
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic1, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic2, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic3, 1, (short) 1);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/topics/list")
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate all topics show up.
+            .andExpect(content().string(containsString(expectedTopic1)))
+            .andExpect(content().string(containsString(expectedTopic2)))
+            .andExpect(content().string(containsString(expectedTopic3)));
+    }
+
+    /**
+     * Test listing topics with a search string only returns filtered results.
+     */
+    @Test
+    @Transactional
+    public void test_listTopics_withSearchString() throws Exception {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        final String searchStr = "CaT";
+
+        // Create some topics
+        final String expectedTopic1 = "ExpectedTopic1-" + System.currentTimeMillis();
+        final String expectedTopic2= "ExpectedCATTopic2-" + System.currentTimeMillis();
+        final String expectedTopic3 = "ExpectedTopic3-" + System.currentTimeMillis();
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic1, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic2, 1, (short) 1);
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(expectedTopic3, 1, (short) 1);
+
+        // Hit end point
+        mockMvc
+            .perform(get("/api/cluster/" + cluster.getId() + "/topics/list")
+                .param("search", searchStr)
+                .with(user(nonAdminUserDetails))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+
+            // Validate Only the filtered instance shows up.
+            .andExpect(content().string(containsString(expectedTopic2)))
+            .andExpect(content().string(Matchers.not(containsString(expectedTopic1))))
+            .andExpect(content().string(Matchers.not(containsString(expectedTopic3))));
+    }
+
+    @Test
+    @Transactional
+    public void test_producer_send_message() throws Exception
+    {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        String producerTopic = "test-producer-send-topic";
+
+        String messageId = UUID.randomUUID().toString();
+        String messageName = "Paul Rudd";
+        String messagePhone = "5558675309";
+
+        Map<String, String> messageProperties = new HashMap<>();
+        messageProperties.put( "id", messageId );
+        messageProperties.put( "name", messageName );
+        messageProperties.put( "phone", messagePhone );
+
+        final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
+        final Properties consumerProperties = new Properties();
+        consumerProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerId);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerId);
+        consumerProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, cluster.getBrokerHosts());
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(producerTopic, 1, (short) 1);
+
+        final KafkaConsumer<String, String> testConsumer = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, consumerProperties);
+
+        final Producer producer = prodcuerTestTools.createProducer( "test-producer-send", producerTopic, String.join( ",", messageProperties.keySet().toArray( new String[0] ) ), cluster );
+
+        String messageRequest = buildMessageRequest( messageProperties );
+
+
+        testConsumer.subscribe( Collections.singletonList( producerTopic ), new ConsumerRebalanceListener() {
+
+            @Override
+            public void onPartitionsRevoked(Collection<TopicPartition> partitions) {}
+
+            @Override
+            public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                System.out.println("Assigned " + partitions);
+                testConsumer.seekToBeginning( partitions );
+            }
+        });
+
+        mockMvc.perform( post("/api/producer/" + producer.getId() + "/send-message")
+            .contentType( MediaType.APPLICATION_JSON )
+            .with( user(adminUserDetails) )
+            .with(csrf())
+            .content(messageRequest) )
+               .andExpect( status().is2xxSuccessful() );
+
+        ConsumerRecords<String, String> consumerRecords = testConsumer.poll(Duration.ofSeconds( 5 ));
+
+        assert(!consumerRecords.isEmpty());
+
+        ConsumerRecord<String, String> postedRecord = consumerRecords.iterator().next();
+        ObjectMapper mapper = new ObjectMapper();
+
+        Map<String,String> consumerRecordValueAsMap = mapper.readValue(postedRecord.value(), Map.class);
+
+        boolean allMessagePropertiesPresent = true;
+
+        for(String key : messageProperties.keySet())
+        {
+            if(!consumerRecordValueAsMap.containsKey( key ) || !consumerRecordValueAsMap.containsValue( messageProperties.get( key ) ))
+            {
+                allMessagePropertiesPresent = false;
+            }
+        }
+
+        assert(allMessagePropertiesPresent);
+
+        clusterTestTools.deleteAllClusters();
+        prodcuerTestTools.deleteAllProducers();
+
+    }
+
+    private String buildMessageRequest(Map<String, String> messageProperties)
+    {
+        StringBuilder messageRequestBuilder = new StringBuilder("{\"messageMap\":{");
+        String messagePropertyKey;
+        for(int i = 0; i<messageProperties.keySet().size() - 1; i++)
+        {
+            messagePropertyKey = (String) messageProperties.keySet().toArray()[i];
+            messageRequestBuilder.append( "\"" + messagePropertyKey + "\":\"" + messageProperties.get( messagePropertyKey ) + "\",");
+        }
+
+        messagePropertyKey = (String) messageProperties.keySet().toArray()[messageProperties.keySet().size() - 1];
+        messageRequestBuilder.append( "\"" + messagePropertyKey + "\":\"" + messageProperties.get( messagePropertyKey ) + "\"}}");
+
+        return messageRequestBuilder.toString();
     }
 
     /**
      * Helper method to create a consumer with state on the given cluster.
      * @return Consumer group id created.
      */
-    private String createConsumerWithState() {
+    private String createConsumerWithState(final String[] topics) {
         final int totalRecords = 10;
         final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
 
         // Define our new topic name
-        final String newTopic = "TestTopic-" + System.currentTimeMillis();
-        sharedKafkaTestResource
-            .getKafkaTestUtils()
-            .createTopic(newTopic, 1, (short)1);
+        for (final String topic : topics) {
+            sharedKafkaTestResource
+                .getKafkaTestUtils()
+                .createTopic(topic, 1, (short) 1);
 
-        // Publish records into topic
-        sharedKafkaTestResource
-            .getKafkaTestUtils()
-            .produceRecords(totalRecords, newTopic, 0);
+            // Publish records into topic
+            sharedKafkaTestResource
+                .getKafkaTestUtils()
+                .produceRecords(totalRecords, topic, 0);
+        }
 
         // Create a consumer and consume from the records, maintaining state.
         final Properties consumerProperties = new Properties();
@@ -487,7 +752,7 @@ public class ApiControllerTest extends AbstractMvcTest {
             .getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, consumerProperties)) {
 
             // Consume
-            consumer.subscribe(Collections.singleton(newTopic));
+            consumer.subscribe(Arrays.asList(topics));
             consumer.poll(Duration.ofSeconds(5));
 
             // Save state.

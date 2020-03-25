@@ -78,6 +78,38 @@ public class PluginFactoryTest {
     }
 
     /**
+     * Test checking a RecordFilter.
+     */
+    @Test
+    public void testCheckPlugin_WithRecordFilter() throws LoaderException {
+        final String jarFilename = "testPlugins.jar";
+        final String classPath = "examples.filter.LowOffsetFilter";
+
+        // Find jar on filesystem.
+        final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
+        final String jarPath = new File(jar.getFile()).getParent();
+
+        // Create factory
+        final PluginFactory<RecordFilter> factory = new PluginFactory<>(jarPath, RecordFilter.class);
+        final Path pathForJar = factory.getPathForJar(jarFilename);
+
+        // Validate path is correct
+        assertEquals("Has expected Path", jar.getPath(), pathForJar.toString());
+
+        // Get class instance
+        final Class<? extends RecordFilter> pluginFilterClass = factory.getPluginClass(jarFilename, classPath);
+
+        // Validate
+        assertNotNull(pluginFilterClass);
+        assertEquals("Has expected name", classPath, pluginFilterClass.getName());
+        assertTrue("Validate came from correct class loader", pluginFilterClass.getClassLoader() instanceof PluginClassLoader);
+
+        // Check filter instance
+        final boolean result = factory.checkPlugin(jarFilename, classPath);
+        assertTrue(result);
+    }
+
+    /**
      * Test creating a Deserializer.
      */
     @Test
@@ -104,7 +136,7 @@ public class PluginFactoryTest {
         assertEquals("Has expected name", classPath, pluginFilterClass.getName());
         assertTrue("Validate came from correct class loader", pluginFilterClass.getClassLoader() instanceof PluginClassLoader);
 
-        // Crete filter instance
+        // Crete Deserializer instance
         final Deserializer deserializer = factory.getPlugin(jarFilename, classPath);
         assertNotNull(deserializer);
         assertEquals("Has correct name", classPath, deserializer.getClass().getName());
@@ -112,6 +144,38 @@ public class PluginFactoryTest {
         // Call method on interface
         final String value = "MyValue";
         final String result = (String) deserializer.deserialize("MyTopic", value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Test checking a Deserializer.
+     */
+    @Test
+    public void testCheckPlugin_WithDeserializer() throws LoaderException {
+        final String jarFilename = "testPlugins.jar";
+        final String classPath = "examples.deserializer.ExampleDeserializer";
+
+        // Find jar on filesystem.
+        final URL jar = getClass().getClassLoader().getResource("testDeserializer/" + jarFilename);
+        final String jarPath = new File(jar.getFile()).getParent();
+
+        // Create factory
+        final PluginFactory<Deserializer> factory = new PluginFactory<>(jarPath, Deserializer.class);
+        final Path pathForJar = factory.getPathForJar(jarFilename);
+
+        // Validate path is correct
+        assertEquals("Has expected Path", jar.getPath(), pathForJar.toString());
+
+        // Get class instance
+        final Class<? extends Deserializer> pluginFilterClass = factory.getPluginClass(jarFilename, classPath);
+
+        // Validate
+        assertNotNull(pluginFilterClass);
+        assertEquals("Has expected name", classPath, pluginFilterClass.getName());
+        assertTrue("Validate came from correct class loader", pluginFilterClass.getClassLoader() instanceof PluginClassLoader);
+
+        // Check Deserializer instance
+        final boolean result = factory.checkPlugin(jarFilename, classPath);
+        assertTrue(result);
     }
 
     /**

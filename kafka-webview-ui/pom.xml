@@ -5,11 +5,11 @@
     <parent>
         <artifactId>kafka-webview</artifactId>
         <groupId>org.sourcelab</groupId>
-        <version>2.1.1</version>
+        <version>2.5.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kafka-webview-ui</artifactId>
-    <version>2.1.1</version>
+    <version>2.5.0</version>
 
     <!-- Module Description and Ownership -->
     <name>Kafka WebView UI</name>
@@ -30,9 +30,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+
+        <!-- Dependency versions -->
+        <avro.version>1.8.2</avro.version>
         <bootstrap.version>4.0.0-beta</bootstrap.version>
-        <thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
-        <kafka.version>2.0.0</kafka.version>
+        <kafka.version>2.0.1</kafka.version>
+        <protobuf.version>3.6.1</protobuf.version>
+        <thymeleaf.version>3.0.11.RELEASE</thymeleaf.version>
     </properties>
 
     <dependencies>
@@ -72,8 +76,8 @@
         </dependency>
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
-            <artifactId>thymeleaf-extras-springsecurity4</artifactId>
-            <version>3.0.2.RELEASE</version>
+            <artifactId>thymeleaf-extras-springsecurity5</artifactId>
+            <version>3.0.4.RELEASE</version>
         </dependency>
 
         <!-- JPA -->
@@ -120,11 +124,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- Micrometer Prometheus registry  -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>javax.interceptor</groupId>
             <artifactId>javax.interceptor-api</artifactId>
-            <version>1.2.1</version>
+            <version>1.2.2</version>
         </dependency>
 
         <dependency>
@@ -169,13 +178,33 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>27.0.1-jre</version>
+            <version>28.1-jre</version>
         </dependency>
         <!-- Explicitly include updated protocol buffer version -->
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>3.6.1</version>
+            <version>${protobuf.version}</version>
+        </dependency>
+
+        <!-- Jackson support for avro-->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+            <exclusions>
+                <!-- exclude vulnerable dependency -->
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Explicitly include updated version -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.19</version>
         </dependency>
 
         <!-- For tests -->
@@ -194,7 +223,7 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit4</artifactId>
-            <version>3.1.0</version>
+            <version>3.1.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -230,6 +259,13 @@
             <version>0.7</version>
             <scope>test</scope>
         </dependency>
+
+<!--        For Kafka things-->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

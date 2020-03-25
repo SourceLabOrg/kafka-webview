@@ -68,6 +68,7 @@ public class KafkaConsumerFactory {
     /**
      * Create a new KafkaConsumer based on the passed in ClientConfig, and subscribe to the appropriate
      * partitions.
+     * @deprecated To be removed.
      */
     public KafkaConsumer createConsumerAndSubscribe(final ClientConfig clientConfig) {
         final KafkaConsumer kafkaConsumer = createConsumer(clientConfig);

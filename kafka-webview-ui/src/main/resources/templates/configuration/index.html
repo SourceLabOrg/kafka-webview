@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
     layout:decorate="~{layout}">
 
 <head>
@@ -28,7 +29,7 @@
                             <tbody>
                             <tr th:if="${MenuShowUserConfig}">
                                 <td>
-                                    <a href="/configuration/user">Users</a>
+                                    <a th:href="@{/configuration/user}">Users</a>
                                 </td>
                                 <td>
                                     Define who can login and what access they have.
@@ -36,7 +37,7 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <a href="/configuration/cluster">Clusters</a>
+                                    <a th:href="@{/configuration/cluster}">Clusters</a>
                                 </td>
                                 <td>
                                     Define connection parameters for Kafka clusters you want to view data on.
@@ -44,7 +45,7 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <a href="/configuration/messageFormat">Message Formats</a>
+                                    <a th:href="@{/configuration/messageFormat}">Message Formats</a>
                                 </td>
                                 <td>
                                     Messages stored within Kafka can be persisted in various formats.  This section allows you
@@ -53,7 +54,7 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <a href="/configuration/filter">Record Filters</a>
+                                    <a th:href="@{/configuration/filter}">Record Filters</a>
                                 </td>
                                 <td>
                                     Often when viewing data in a Kafka topic, you are only interested in a subset of the
@@ -63,7 +64,7 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <a href="/configuration/view">Views</a>
+                                    <a th:href="@{/configuration/view}">Views</a>
                                 </td>
                                 <td>
                                     This section allows you to define how you would like view data from a configured
@@ -72,10 +73,19 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <a href="/configuration/stream">Active Streams</a>
+                                    <a th:href="@{/configuration/stream}">Active Streams</a>
                                 </td>
                                 <td>
                                     This section allows you to view any active stream consumers.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a th:href="@{/configuration/producer}">Producers</a>
+                                </td>
+                                <td>
+                                    This section allows you to define how you would like write messages to a configured
+                                    Kafka cluster and topic.
                                 </td>
                             </tr>
                             </tbody>

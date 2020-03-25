@@ -61,7 +61,7 @@ public class SocketKafkaConsumer implements Runnable {
     // get a large flood of messages, which maybe is a good thing? Or bad? Unsure.
     private static final int maxQueueCapacity = 25;
 
-    private final KafkaConsumer kafkaConsumer;
+    private final KafkaConsumer<?,?> kafkaConsumer;
     private final ClientConfig clientConfig;
     private final Duration pollTimeoutDuration = Duration.ofMillis(POLL_TIMEOUT_MS);
     private final BlockingQueue<KafkaResult> outputQueue;
@@ -74,7 +74,7 @@ public class SocketKafkaConsumer implements Runnable {
      * @param clientConfig The client's configuration.
      */
     public SocketKafkaConsumer(
-        final KafkaConsumer kafkaConsumer,
+        final KafkaConsumer<?,?> kafkaConsumer,
         final ClientConfig clientConfig) {
 
         this.kafkaConsumer = kafkaConsumer;
@@ -109,7 +109,7 @@ public class SocketKafkaConsumer implements Runnable {
 
         do {
             // Start trying to consume messages from kafka
-            final ConsumerRecords consumerRecords = kafkaConsumer.poll(pollTimeoutDuration);
+            final ConsumerRecords<?,?> consumerRecords = kafkaConsumer.poll(pollTimeoutDuration);
 
             // If no records found
             if (consumerRecords.isEmpty()) {
@@ -121,7 +121,7 @@ public class SocketKafkaConsumer implements Runnable {
             }
 
             // Push messages onto output queue
-            for (final ConsumerRecord consumerRecord : (Iterable<ConsumerRecord>) consumerRecords) {
+            for (final ConsumerRecord consumerRecord : consumerRecords) {
                 // Translate record
                 final KafkaResult kafkaResult = new KafkaResult(
                     consumerRecord.partition(),
@@ -140,6 +140,9 @@ public class SocketKafkaConsumer implements Runnable {
                     requestStop();
                 }
             }
+
+            // Commit state async.
+            kafkaConsumer.commitAsync();
 
             // Sleep for a bit
             sleep(DWELL_TIME_MS);
@@ -231,7 +234,6 @@ public class SocketKafkaConsumer implements Runnable {
     /**
      * Seek to the specified offsets.
      * @param partitionOffsetMap Map of PartitionId to Offset to seek to.
-     * @return ConsumerState representing the consumer's positions.
      */
     private void seek(final Map<TopicPartition, Long> partitionOffsetMap) {
         for (final Map.Entry<TopicPartition, Long> entry: partitionOffsetMap.entrySet()) {

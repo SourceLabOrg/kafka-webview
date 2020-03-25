@@ -3,6 +3,8 @@ server:
   tomcat:
     remote_ip_header: x-forwarded-for
     protocol_header: x-forwarded-proto
+    mbeanregistry:
+      enabled: true
   servlet:
     session:
       ## User sessions should not be persistent across service restarts by default.
@@ -43,11 +45,37 @@ spring:
     show-sql: false
     open-in-view: true
 
+# Spring Actuator - global
+management:
+  server:
+    port: 9090
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  ## Disable LDAP by default
+  health:
+    ldap:
+      enabled: false
+
+# Spring Actuator - Info endpoint
+info:
+  app:
+    name: ${spring.application.name}
+
 ## Various App Configs
 app:
   name: Kafka Web View
   uploadPath: "./data/uploads"
   key: "SuperSecretKey"
+  multiThreadedConsumer: true
+  maxConcurrentWebConsumers: 32
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"
   requireSsl: true
@@ -59,6 +87,7 @@ app:
       userDnPattern: "uid={0},ou=people"
       groupSearchBase: "ou=groups"
       groupRoleAttribute: "cn"
+      groupSearchFilter: "(uniqueMember={0})"
       passwordAttribute: "userPassword"
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
       adminGroups: ""

@@ -29,11 +29,19 @@ import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 /**
  * Helpful tools for Clusters in tests.
  */
 @Component
 public class ClusterTestTools {
+    // Clusters text
+    public static final String NO_CLUSTERS_SETUP_TEXT = "It looks like you have no Kafka Clusters configured yet";
+    public static final String CREATE_CLUSTER_TEXT = "Setup new Cluster";
+    public static final String ASK_ADMIN_CREATE_CLUSTER_TEXT = "Ask an Administrator to configure a cluster.";
+    public static final String CREATE_CLUSTER_LINK = "/configuration/cluster/create";
+
     private final ClusterRepository clusterRepository;
 
     @Autowired
@@ -65,6 +73,13 @@ public class ClusterTestTools {
         save(cluster);
 
         return cluster;
+    }
+
+    /**
+     * Clear all clusters from the database.
+     */
+    public void deleteAllClusters() {
+        clusterRepository.deleteAll();
     }
 
     /**

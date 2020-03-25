@@ -28,9 +28,11 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.UnableToFindClassException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.WrongImplementationException;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -84,16 +86,15 @@ public class PluginFactory<T> {
      */
     public Class<? extends T> getPluginClass(final String jarName, final String classpath) throws LoaderException {
         try {
-            final String absolutePath = getPathForJar(jarName).toString();
-            final URL jarUrl = new URL("file://" + absolutePath);
+            final Path absolutePath = getPathForJar(jarName);
+            final URL jarUrl = absolutePath.toUri().toURL();
             final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader());
-            //final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl);
             return getPluginClass(pluginClassLoader, classpath);
         } catch (MalformedURLException exception) {
             throw new LoaderException("Unable to load jar " + jarName, exception);
         }
     }
-
+    
     /**
      * Internal method to load the given classpath using the given ClassLoader.
      * @return Class instance.
@@ -139,12 +140,52 @@ public class PluginFactory<T> {
             throw new LoaderException(errorMsg, e);
         }
     }
+    
+    /**
+     * Check if instance of the class given at the classpath can be load from the given Jar.
+     * @param jarName Jar to load the class from
+     * @param classpath Classpath to class.
+     * @return boolean true on success.
+     * @throws LoaderException LoaderException When we run into issues.
+     */
+    public boolean checkPlugin(final String jarName, final String classpath) throws LoaderException {
+        try {
+            final Path absolutePath = getPathForJar(jarName);
+            final URL jarUrl = absolutePath.toUri().toURL();
+            // Windows issue, URLClassLoader open file so if we need to delete them 
+            // (that the case for new uploaded file) then the close must be explicitly call.
+            // More information available here:
+            // https://docs.oracle.com/javase/8/docs/technotes/guides/net/ClassLoader.html
+            try (URLClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader())) {
+                Class<? extends T> pluginClass = getPluginClass(pluginClassLoader, classpath);
+                pluginClass.getDeclaredConstructor().newInstance();
+
+                return true;
+            }
+        } catch (final IOException exception) {
+            throw new LoaderException("Unable to load jar " + jarName, exception);
+        } catch (final NoClassDefFoundError e) {
+            // Typically this happens if the uploaded JAR references some dependency that was
+            // not package in the JAR.  Attempt to provide a useful error msg.
+            final String errorMsg = e.getMessage()
+                + " - Does your JAR include all of its required dependencies? "
+                + "See https://github.com/SourceLabOrg/kafka-webview-examples#packaging-a-jar";
+            throw new LoaderException(errorMsg, e);
+        } catch (final InstantiationException | IllegalAccessException e) {
+            throw new LoaderException(e.getMessage(), e);
+        } catch (final NoSuchMethodException | InvocationTargetException e) {
+            // Typically this happens if referenced class in the uploaded JAR has no default constructor.
+            final String errorMsg = e.getMessage()
+                + " - Does your class contain a default no argument constructor?";
+            throw new LoaderException(errorMsg, e);
+        }
+    }
 
     /**
      * Get the full path on disk to the given Jar file.
      * @param jarName Jar to lookup full path to.
      */
     public Path getPathForJar(final String jarName) {
-        return Paths.get(jarDirectory + "/", jarName).toAbsolutePath();
+        return Paths.get(jarDirectory, jarName).toAbsolutePath();
     }
 }

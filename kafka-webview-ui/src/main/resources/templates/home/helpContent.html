@@ -40,7 +40,7 @@
                         If you've logged in with the Default Admin account, you'll want to create your own Administrator user account
                         and remove the default one.<br/>
                         <br/>
-                        <a class="btn btn-primary" role="button" href="/configuration/user">Setup Users</a>
+                        <a class="btn btn-primary" role="button" th:href="@{/configuration/user}">Setup Users</a>
                     </p>
                 </div>
                 <div class="list-group-item">
@@ -52,7 +52,7 @@
                         WebView supports connecting to Clusters using SSL.  You'll need to follow the <a href="https://kafka.apache.org/documentation.html#security_ssl" target="_blank">standard Kafka consumer client directions</a> to
                         create a Java Key Store (JKS) for your Trusted CA (TrustStore), and a JKS for your Consumer Key (KeyStore).<br/>
                         <br/>
-                        <a class="btn btn-primary" role="button" href="/configuration/cluster">Setup Clusters</a>
+                        <a class="btn btn-primary" role="button" th:href="@{/configuration/cluster}">Setup Clusters</a>
                     </p>
                 </div>
                 <div class="list-group-item">
@@ -77,7 +77,7 @@
                     <br/>
                     Read more about implementing <a href="#" onclick="showTab('#deserializers');">Deserializers</a>.<br/>
                     <br/>
-                    <a class="btn btn-primary" role="button" href="/configuration/messageFormat">Setup Message Formats</a>
+                    <a class="btn btn-primary" role="button" th:href="@{/configuration/messageFormat}">Setup Message Formats</a>
                     </p>
                 </div>
                 <div class="list-group-item">
@@ -90,7 +90,7 @@
                         <br/>
                         Read more about implementing <a href="#filters" onclick="showTab('#filters');">Filters</a>.<br/>
                         <br/>
-                        <a class="btn btn-primary" role="button" href="/configuration/filter">Setup Filters</a>
+                        <a class="btn btn-primary" role="button" th:href="@{/configuration/filter}">Setup Filters</a>
                     </p>
                 </div>
                 <div class="list-group-item">
@@ -98,7 +98,7 @@
                     <p class="mb-1">
                         Views are the last step where you put everything together.  Views let you configure what Topic you want to consume from, configure which Message Formats the Topic uses, and apply any Filters.<br/>
                         <br/>
-                        <a class="btn btn-primary" role="button" href="/configuration/view">Setup Views</a>
+                        <a class="btn btn-primary" role="button" th:href="@{/configuration/view}">Setup Views</a>
                     </p>
                 </div>
             </div>

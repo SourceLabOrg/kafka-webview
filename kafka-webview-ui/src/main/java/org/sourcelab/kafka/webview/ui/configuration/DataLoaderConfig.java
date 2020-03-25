@@ -33,6 +33,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.sourcelab.kafka.webview.ui.manager.kafka.deserializer.BytesToHexDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.PartitioningStrategy;
@@ -112,6 +113,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
         defaultFormats.put("Integer", IntegerDeserializer.class.getName());
         defaultFormats.put("Long", LongDeserializer.class.getName());
         defaultFormats.put("String", StringDeserializer.class.getName());
+        defaultFormats.put("Bytes (Hex Encoded)", BytesToHexDeserializer.class.getName());
 
         // Create if needed.
         for (final Map.Entry<String, String> entry : defaultFormats.entrySet()) {
