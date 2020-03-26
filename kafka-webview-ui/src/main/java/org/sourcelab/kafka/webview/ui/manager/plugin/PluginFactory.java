@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
+import org.sourcelab.kafka.webview.ui.manager.file.FileStorageService;
+import org.sourcelab.kafka.webview.ui.manager.file.LocalDiskStorage;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.UnableToFindClassException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.WrongImplementationException;
@@ -53,6 +55,9 @@ public class PluginFactory<T> {
      */
     private final Class<T> typeParameterClass;
 
+    private final FileStorageService fileStorageService;
+    private final LocalDiskStorage localDiskStorage;
+
     /**
      * Constructor.
      * @param jarDirectory Where we can load JARs from.
@@ -61,6 +66,12 @@ public class PluginFactory<T> {
     public PluginFactory(final String jarDirectory, final Class<T> typeParameterClass) {
         this.jarDirectory = jarDirectory;
         this.typeParameterClass = typeParameterClass;
+
+        // For accessing the actual files.
+        this.fileStorageService = new LocalDiskStorage(jarDirectory);
+
+        // For creating local cache.
+        this.localDiskStorage = new LocalDiskStorage(jarDirectory);
     }
 
     /**
