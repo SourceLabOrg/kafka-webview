@@ -42,6 +42,7 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
+import org.sourcelab.kafka.webview.ui.plugin.serializer.SerializerTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -72,7 +73,7 @@ public class PluginConfig {
      * @param appProperties Definition of app properties.
      * @return PluginFactory for Deserializers.
      */
-    //@Bean
+    @Bean
     public PluginFactory<Deserializer> getDeserializerPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/deserializers";
         return new PluginFactory<>(jarDirectory, Deserializer.class);
@@ -109,6 +110,17 @@ public class PluginConfig {
     public PluginFactory<Serializer> getSerializerPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/serializers";
         return new PluginFactory<>(jarDirectory, Serializer.class);
+    }
+
+    /**
+     * PluginFactory for creating instances of Serializer Transformers.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Serializer Transformers.
+     */
+    @Bean
+    public PluginFactory<SerializerTransformer> getSerializerTransformerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getUploadPath() + "/serializers";
+        return new PluginFactory<>(jarDirectory, SerializerTransformer.class);
     }
 
     /**
