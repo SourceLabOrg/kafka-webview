@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -107,7 +107,7 @@ public class SerializerController extends BaseController {
      *
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
-    public String create(
+    public String update(
         @Valid final SerializerForm form,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
