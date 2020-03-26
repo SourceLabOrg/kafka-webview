@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ClusterTestTools {
+    // Clusters text
+    public static final String NO_CLUSTERS_SETUP_TEXT = "It looks like you have no Kafka Clusters configured yet";
+    public static final String CREATE_CLUSTER_TEXT = "Setup new Cluster";
+    public static final String ASK_ADMIN_CREATE_CLUSTER_TEXT = "Ask an Administrator to configure a cluster.";
+    public static final String CREATE_CLUSTER_LINK = "/configuration/cluster/create";
+
     private final ClusterRepository clusterRepository;
 
     @Autowired
@@ -65,6 +71,13 @@ public class ClusterTestTools {
         save(cluster);
 
         return cluster;
+    }
+
+    /**
+     * Clear all clusters from the database.
+     */
+    public void deleteAllClusters() {
+        clusterRepository.deleteAll();
     }
 
     /**

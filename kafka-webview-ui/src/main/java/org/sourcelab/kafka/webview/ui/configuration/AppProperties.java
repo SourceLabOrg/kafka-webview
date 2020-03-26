@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,13 @@ public class AppProperties {
     @Value("${app.key}")
     private String appKey;
 
-    @Value("${app.maxConcurrentWebSocketConsumers}")
+    @Value("${app.multiThreadedConsumer:true}")
+    private boolean enableMultiThreadedConsumer;
+
+    @Value("${app.maxConcurrentWebConsumers:32}")
+    private Integer maxConcurrentWebConsumers = 32;
+
+    @Value("${app.maxConcurrentWebSocketConsumers:100}")
     private Integer maxConcurrentWebSocketConsumers = 100;
 
     @Value("${app.consumerIdPrefix}")
@@ -51,6 +57,9 @@ public class AppProperties {
 
     @Value("${app.requireSsl:false}")
     private boolean requireSsl = false;
+
+    @Value("${app.avro.includeSchema:true}")
+    private boolean avroIncludeSchema = true;
 
     /**
      * Flag read from configuration file to determine if the app should
@@ -95,6 +104,18 @@ public class AppProperties {
 
     public LdapAppProperties getLdapProperties() {
         return ldapProperties;
+    }
+
+    public boolean isAvroIncludeSchema() {
+        return avroIncludeSchema;
+    }
+
+    public boolean isEnableMultiThreadedConsumer() {
+        return enableMultiThreadedConsumer;
+    }
+
+    public Integer getMaxConcurrentWebConsumers() {
+        return maxConcurrentWebConsumers;
     }
 
     @Override

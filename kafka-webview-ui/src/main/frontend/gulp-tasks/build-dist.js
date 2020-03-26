@@ -136,7 +136,6 @@ gulp.task('replace:vendorsCSS', function(){
         './dist/vendors/css/*.css',
     ], {base: './'})
         .pipe(replace(/img\//g, '\/vendors/img/'))
-        .pipe(replace(/..\/fonts\//g, '\/vendors/fonts/'))
         .pipe(gulp.dest('./'));
 });
 

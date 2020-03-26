@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,6 +62,28 @@ public class TopicList {
             topicNames.add(topicListing.getName());
         }
         return Collections.unmodifiableList(topicNames);
+    }
+
+    /**
+     * Given a search value for topic names, return all entries that match search.
+     * @param search search string.
+     * @return filtered TopicList.
+     */
+    public TopicList filterByTopicName(final String search) {
+        // Null means match nothing.
+        if (search == null) {
+            return new TopicList(Collections.emptyList());
+        }
+        final String normalizedSearch = search.toLowerCase();
+
+        final List<TopicListing> topicListings = new ArrayList<>();
+        for (final TopicListing topicListing : getTopics()) {
+            if (topicListing.getName().toLowerCase().contains(normalizedSearch)) {
+                topicListings.add(topicListing);
+            }
+        }
+
+        return new TopicList(topicListings);
     }
 
     @Override

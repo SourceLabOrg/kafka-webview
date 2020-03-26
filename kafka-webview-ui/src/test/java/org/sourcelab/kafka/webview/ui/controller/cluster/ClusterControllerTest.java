@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.controller.cluster;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
@@ -55,6 +56,97 @@ public class ClusterControllerTest extends AbstractMvcTest {
 
     @Autowired
     private ClusterTestTools clusterTestTools;
+
+    /**
+     * Clear out all clusters prior to running test.
+     */
+    @Before
+    public void setup() {
+        // Ensure all clusters have been removed.
+        clusterTestTools.deleteAllClusters();
+    }
+
+    /**
+     * Ensure authentication is required.
+     */
+    @Test
+    @Transactional
+    public void testUrlsRequireAuthentication() throws Exception {
+        // cluster index page.
+        testUrlRequiresAuthentication("/cluster", false);
+    }
+
+    /**
+     * Test loading index page with no clusters created, as an admin, you should see a message
+     * telling you no clusters exist, and a link to create one.
+     */
+    @Test
+    @Transactional
+    public void test_indexAsAdminWithNoClustersShowsCreateClusterLink() throws Exception {
+        // Hit the index page.
+        mockMvc
+            .perform(get("/cluster/")
+                .with(user(adminUserDetails)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            // Should contain this text
+            .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
+            .andExpect(content().string(containsString(ClusterTestTools.CREATE_CLUSTER_TEXT)))
+            .andExpect(content().string(containsString(ClusterTestTools.CREATE_CLUSTER_LINK)))
+            // But not this
+            .andExpect(content().string(not(containsString(ClusterTestTools.ASK_ADMIN_CREATE_CLUSTER_TEXT))));
+    }
+
+    /**
+     * Test loading index page with no clusters created, as normal user, you should see a message
+     * telling you no clusters exist, and text telling you to get an admin to create one.
+     */
+    @Test
+    @Transactional
+    public void test_indexAsNonAdminWithNoClustersShowsCreateText() throws Exception {
+        // Hit the index page.
+        mockMvc
+            .perform(get("/cluster/")
+                .with(user(nonAdminUserDetails)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            // Validate no clusters exists text
+            .andExpect(content().string(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT)))
+            .andExpect(content().string(containsString(ClusterTestTools.ASK_ADMIN_CREATE_CLUSTER_TEXT)))
+            // Shouldn't have these links
+            .andExpect(content().string(not(containsString(ClusterTestTools.CREATE_CLUSTER_TEXT))))
+            .andExpect(content().string(not(containsString(ClusterTestTools.CREATE_CLUSTER_LINK))));
+    }
+
+    /**
+     * Test loading index page with a cluster created.
+     */
+    @Test
+    @Transactional
+    public void test_indexWithClusterShowsData() throws Exception {
+        // Create a cluster
+        final String cluster1Name = "My Test Cluster";
+        final String cluster2Name = "My Other Test Cluster";
+        final Cluster cluster1 = clusterTestTools.createCluster(cluster1Name);
+        final Cluster cluster2 = clusterTestTools.createCluster(cluster2Name);
+
+        // Hit the index page.
+        mockMvc
+            .perform(get("/cluster/")
+                .with(user(adminUserDetails)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            // Should contain this text
+            .andExpect(content().string(containsString("Kafka Clusters")))
+            .andExpect(content().string(containsString(cluster1Name)))
+            .andExpect(content().string(containsString(cluster2Name)))
+            .andExpect(content().string(containsString("\"/cluster/" + cluster1.getId() + "\"")))
+            .andExpect(content().string(containsString("\"/cluster/" + cluster2.getId() + "\"")))
+            .andExpect(content().string(containsString("\"/view?clusterId=" + cluster1.getId() + "\"")))
+            .andExpect(content().string(containsString("\"/view?clusterId=" + cluster2.getId() + "\"")))
+            // But not this
+            .andExpect(content().string(not(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT))));
+    }
 
     /**
      * Test loading read page as admin shows 'create topic' link.

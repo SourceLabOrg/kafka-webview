@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
-        xmlns:th="http://www.thymeleaf.org"
-        layout:decorate="~{layout}">
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
 
 <head>
     <title>Cluster Explorer</title>
@@ -18,13 +18,16 @@
             var ConsumerInfo = {
                 clusterId: '[[${cluster.id}]]',
                 clusterName: '[[${cluster.name}]]',
-                consumerId: '[[${consumerId}]]',
+                groupId: '[[${groupId}]]',
 
                 // Holds reference to last consumer membership data.
                 lastMembershipDetails: [],
 
                 // Holds reference to last refreshed offset data
                 lastOffsetData: [],
+
+                // Holds reference to rate data.
+                rateData: [],
 
                 // Toggles for auto-refresh
                 autoRefreshOffsets: true,
@@ -35,6 +38,16 @@
                 // Configuration for refresh rates
                 refreshRateConsumerDetails: 30000,
                 refreshRateConsumerOffsets: 10000,
+
+                // Colors
+                colors: [
+                    "rgb(54, 162, 235)",  // blue
+                    "rgb(75, 192, 192)",  // green
+                    "rgb(255, 159, 64)",  // orange
+                    "rgb(153, 102, 255)", // purple
+                    "rgb(255, 99, 132)",  // red
+                    "rgb(255, 205, 86)"  // yellow
+                ],
 
                 // Refresh ConsumerDetails
                 refreshConsumerDetails: function() {
@@ -49,7 +62,7 @@
                     jQuery('#consumer-membership-table').toggle(false);
 
                     // Request Cluster Information
-                    ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerDetails);
+                    ApiClient.getConsumerDetails(ConsumerInfo.clusterId, ConsumerInfo.groupId, ConsumerInfo.handleConsumerDetails);
                 },
 
                 // Handle results from ConsumerDetails request
@@ -71,14 +84,28 @@
                         });
                     });
 
+                    // Generate unique list of topics.
                     var uniqueTopics = topics.filter(function (value, index, self) {
                         return self.indexOf(value) === index;
                     });
 
+                    // Populate topic selector only once.
+                    if (jQuery('#topicSelector option').length === 0) {
+                        var selectorSource = jQuery('#consumer-topic-select-template').html();
+                        var selectorTemplate = Handlebars.compile(selectorSource);
+                        jQuery.each(uniqueTopics, function (index, topic) {
+                            var properties = {
+                                topic: topic
+                            };
+                            var resultHtml = selectorTemplate(properties);
+                            jQuery('#topicSelector').append(resultHtml);
+                        });
+                    }
+
                     // Generate html from template
                     var properties = {
                         clusterName: ConsumerInfo.clusterName,
-                        consumerId: ConsumerInfo.consumerId,
+                        groupId: ConsumerInfo.groupId,
                         topic: uniqueTopics,
                         state: results.state,
                         numberOfMembers: results.members.length,
@@ -152,11 +179,49 @@
                     if (!ConsumerInfo.autoRefreshOffsets) {
                         return;
                     }
-                    ApiClient.getConsumerOffsetsWithTailPositions(ConsumerInfo.clusterId, ConsumerInfo.consumerId, ConsumerInfo.handleConsumerOffsets);
+                    ApiClient.getConsumerOffsetsWithTailPositions(ConsumerInfo.clusterId, ConsumerInfo.groupId, ConsumerInfo.handleConsumerOffsets);
+                },
+
+                resetGraph : function(graphInstance, topicName) {
+                    // Clear labels
+                    graphInstance.graphData.labels = [];
+
+                    // Clear data points
+                    jQuery.each(graphInstance.graphData.datasets, function(index, dataSet) {
+                        dataSet.data = [];
+                    });
+
+                    // Reset title
+                    graphInstance.graphOptions.title.text = graphInstance.graphOptions.title.srcText.replace('{{topic}}', topicName);
                 },
 
                 // Handle ConsumerOffsets Results
                 handleConsumerOffsets: function(results) {
+                    // Determine which topic we're watching
+                    console.log("Refreshing for topic: " + jQuery('#topicSelector').val());
+                    var currentTopic = jQuery('#topicSelector').val();
+                    if (ConsumerInfo.lastTopicSelected === null || ConsumerInfo.lastTopicSelected !== currentTopic) {
+                        console.log("Resetting Graphs");
+                        // Reset all data/graphs.
+                        ConsumerInfo.lastOffsetData = null;
+                        ConsumerInfo.rateData = [];
+
+                        // For each graph
+                        ConsumerInfo.resetGraph(ConsumerPositionsGraph, currentTopic);
+                        ConsumerInfo.resetGraph(ConsumerRateGraph, currentTopic);
+                        ConsumerInfo.resetGraph(TailRateGraph, currentTopic);
+                        ConsumerInfo.resetGraph(LagGraph, currentTopic);
+                    }
+                    ConsumerInfo.lastTopicSelected = currentTopic;
+
+                    // Get results for specific topic
+                    var topicResults = results.topicToOffsetMap[currentTopic];
+
+                    // Gracefully handle when a consumer group is not consuming ANY topics.
+                    if (topicResults === undefined || topicResults === null) {
+                        topicResults = {offsets: {}};
+                    }
+
                     // Get consumer offsets table
                     var table = jQuery('#consumer-offsets-tbody');
 
@@ -164,14 +229,45 @@
                     var source   = jQuery('#consumer-offsets-template').html();
                     var template = Handlebars.compile(source);
 
+                    // Keep track of rate data
+                    var rateData = {
+                        timestamp: results.timestamp,
+                        partitions: []
+                    };
+                    var totalConsumerRate = 0;
+
+                    // Keep track of lag data
+                    var lagData = {
+                        timestamp: results.timestamp,
+                        partitions: []
+                    };
+                    totalConsumerLag = 0;
+
                     // Process each partition
-                    jQuery.each(results.offsets, function(index, offsetData) {
+                    jQuery.each(topicResults.offsets, function(index, offsetData) {
                         // Calculate differences
                         var differences = ConsumerInfo.findOffsetDifference(
                             offsetData.partition,
                             offsetData.offset,
                             offsetData.tail
                         );
+
+                        // Calculate rate
+                        var rate = ConsumerInfo.findRate(
+                            offsetData.partition,
+                            results.timestamp,
+                            differences.consumerDifference,
+                            differences.tailDifference
+                        );
+                        rateData.partitions.push(rate);
+                        totalConsumerRate += parseFloat(rate.consumerRatePerSec);
+
+                        // Calculate lag
+                        lagData.partitions.push({
+                            partition: offsetData.partition,
+                            lag: (offsetData.tail - offsetData.offset)
+                        });
+                        totalConsumerLag += (offsetData.tail - offsetData.offset);
 
                         // Generate html from template
                         var properties = {
@@ -182,7 +278,9 @@
                             tail: offsetData.tail,
                             tailDiff: differences.tailDifference,
                             lag: (offsetData.tail - offsetData.offset),
-                            lagDiff: differences.lagDifference
+                            lagDiff: differences.lagDifference,
+                            consumerRate: rate.consumerRatePerSec,
+                            tailTail: rate.tailRatePerSec
                         };
                         var resultHtml = template(properties);
 
@@ -196,8 +294,12 @@
                         }
                     });
 
+                    // Update totals
+                    jQuery('td#consumer-total-lag').text(totalConsumerLag);
+                    jQuery('td#consumer-total-rate').text(totalConsumerRate.toFixed(2) + '/sec');
+
                     // Retain previous
-                    ConsumerInfo.lastOffsetData = results.offsets;
+                    ConsumerInfo.lastOffsetData = topicResults.offsets;
 
                     // Hide loaders
                     jQuery('#consumer-offsets-loader').toggle(false);
@@ -206,8 +308,11 @@
                     // Refresh every 10 seconds
                     ConsumerInfo.refreshOffsetsTimer = setTimeout(ConsumerInfo.refreshConsumerOffsets, ConsumerInfo.refreshRateConsumerOffsets);
 
-                    // Push update to graph
-                    ConsumerInfo.updateConsumerPositionsGraph(results.offsets);
+                    // Push update to graphs
+                    ConsumerInfo.updateConsumerPositionsGraph(topicResults.offsets);
+                    ConsumerInfo.updateRateGraph(ConsumerRateGraph, "ConsumerRateChart", rateData, "consumerRatePerSec")
+                    ConsumerInfo.updateRateGraph(TailRateGraph, "TailRateChart", rateData, "tailRatePerSec")
+                    ConsumerInfo.updateRateGraph(LagGraph, "LagChart", lagData, "lag")
                 },
 
                 // Attempts to map partition to its assigned consumer id.
@@ -236,6 +341,7 @@
                     jQuery(el).next("tr.membership-summary").toggle();
                 },
 
+                // Calculate the difference in offsets from the last check.
                 findOffsetDifference: function(partition, newConsumerOffset, newTailOffset) {
                     var results = {
                         consumerDifference: 0,
@@ -264,6 +370,53 @@
                         }
                     });
                     return results;
+                },
+
+                // Calculate the rate of change (msgs per second).
+                findRate: function (partition, timestamp, consumerDifference, tailDifference) {
+                    // If we poll once per 10 seconds, then we would average over 3 polls, or ~ 30 secs.
+                    var numberOfEntriesToAverage = 3;
+
+                    // Setup partition if none exists.
+                    if (ConsumerInfo.rateData[partition] == null) {
+                        ConsumerInfo.rateData[partition] = [];
+                    }
+
+                    // Append value to head of array.
+                    ConsumerInfo.rateData[partition].unshift(
+                        {
+                            timestamp: timestamp,
+                            consumerDifference: consumerDifference,
+                            tailDifference: tailDifference
+                        }
+                    );
+
+                    // Only keep the last N values to calculate average
+                    if (ConsumerInfo.rateData[partition].length > numberOfEntriesToAverage) {
+                        ConsumerInfo.rateData[partition].pop();
+                    }
+
+                    // Calculate rate
+                    var totalConsumerMsgs = 0;
+                    var totalTailMsgs = 0;
+                    var initialTimestamp = ConsumerInfo.rateData[partition][ConsumerInfo.rateData[partition].length - 1].timestamp;
+                    var lastTimestamp = ConsumerInfo.rateData[partition][0].timestamp;
+                    var totalTimeSec = Math.round((lastTimestamp - initialTimestamp) / 1000);
+                    if (totalTimeSec == 0) {
+                        totalTimeSec = 1;
+                    }
+
+                    jQuery.each(ConsumerInfo.rateData[partition], function (index, rateData) {
+                        totalConsumerMsgs += rateData.consumerDifference;
+                        totalTailMsgs += rateData.tailDifference;
+                    });
+
+                    return {
+                        partition: partition,
+                        totalTimeSec: totalTimeSec,
+                        consumerRatePerSec: (totalConsumerMsgs/totalTimeSec).toFixed(2),
+                        tailRatePerSec: (totalTailMsgs/totalTimeSec).toFixed(2),
+                    }
                 },
 
                 toggleAutoRefreshForConsumerDetails: function(enable) {
@@ -328,6 +481,81 @@
                         // Redraw
                         ConsumerPositionsGraph.chart.update({duration: 0});
                     }
+                },
+
+                updateRateGraph: function(graphInstance, htmlElementId, rateData, propertyName) {
+                    var maxDataPointsPerPartition = 30;
+
+                    // Add new label based on time, convert to local timezone
+                    graphInstance.graphData.labels.push(
+                        DateTools.displayTimeOnly(rateData.timestamp)
+                    );
+
+                    // Limit number of data points, remove first entry if needed
+                    if (graphInstance.graphData.labels.length > maxDataPointsPerPartition) {
+                        graphInstance.graphData.labels.shift();
+                    }
+
+                    // Loop over each partition
+                    jQuery.each(rateData.partitions, function(index, partitionRate) {
+                        // Find the matching data point
+                        var needToCreate = true;
+
+                        jQuery.each(graphInstance.graphData.datasets, function(dataSetIndex, dataSet) {
+                            // If found, update
+                            if (dataSet.label == "Partition " + partitionRate.partition) {
+                                // Append data
+                                dataSet.data.push(partitionRate[propertyName]);
+
+                                // Limit number of data points, remove first entry if needed
+                                if (dataSet.data.length > maxDataPointsPerPartition) {
+                                    dataSet.data.shift();
+                                }
+
+                                // Set flag to false
+                                needToCreate = false;
+
+                                // return false to stop loop
+                                return false;
+                            }
+                        });
+
+                        // We need to add an entry for this partition.
+                        if (needToCreate) {
+                            // Determine color
+                            var color = null;
+                            if (graphInstance.graphData.datasets.length < ConsumerInfo.colors.length) {
+                                color = ConsumerInfo.colors[graphInstance.graphData.datasets.length];
+                            } else {
+                                // Random color
+                                color = "rgb(" + Math.floor(Math.random() * 255) + ","  + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) +")";
+                            }
+
+                            graphInstance.graphData.datasets.push({
+                                label: 'Partition ' + partitionRate.partition,
+                                backgroundColor: color,
+                                borderColor: color,
+                                borderWidth: 1,
+                                data: [
+                                    partitionRate[propertyName]
+                                ],
+                                fill: false,
+                            });
+                        }
+                    });
+
+                    // Update graph
+                    if (graphInstance.graph == null) {
+                        var ctx = document.getElementById(htmlElementId).getContext('2d');
+                        graphInstance.chart = new Chart(ctx, {
+                            type: 'line',
+                            data: graphInstance.graphData,
+                            options: graphInstance.graphOptions
+                        });
+                    } else {
+                        // Redraw
+                        graphInstance.chart.update();
+                    }
                 }
             };
 
@@ -355,8 +583,9 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     title: {
-                    display: true,
-                        text: "Consumer Lag (Percent Consumed)"
+                        display: true,
+                        text: "Consumer Lag (Percent Consumed)",
+                        srcText: "Consumer Lag (Percent Consumed) on topic {{topic}}"
                     },
                     animation: {
                         duration: 0
@@ -412,6 +641,135 @@
                 graph: null
             };
 
+            // ConsumerRate Graph
+            var ConsumerRateGraph = {
+                graphData: {
+                    // Labels are X axis timestamps
+                    labels: [],
+                    datasets: []
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: "Consumer Rate (Msgs/Sec)",
+                        srcText: "Consumer Rate (Msgs/Sec) on topic {{topic}}"
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Msgs/sec'
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
+                },
+                graph: null
+            };
+
+            // TailRate Graph
+            var TailRateGraph = {
+                graphData: {
+                    // Labels are X axis timestamps
+                    labels: [],
+                    datasets: []
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: "Producer Rate (Msgs/Sec)",
+                        srcText: "Producer Rate (Msgs/Sec) on topic {{topic}}"
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Msgs/sec'
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
+                },
+                graph: null
+            };
+
+            // Lag Graph
+            var LagGraph = {
+                graphData: {
+                    // Labels are X axis timestamps
+                    labels: [],
+                    datasets: []
+                },
+                graphOptions: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    title: {
+                        display: true,
+                        text: "Lag Per Partition (messages)",
+                        srcText: "Lag Per Partition (messages) on topic {{topic}}"
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Messages Behind Tail'
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
+                },
+                graph: null
+            };
+
             // On load, fire off ajax request to load results.
             jQuery(document).ready(function() {
                 ConsumerInfo.refreshConsumerDetails();
@@ -425,7 +783,7 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Cluster <strong th:text="${cluster.name}"></strong> Consumer <strong th:text="${consumerId}"></strong>
+                        Cluster <strong th:text="${cluster.name}"></strong> Consumer <strong th:text="${groupId}"></strong>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -461,7 +819,7 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Consumer <strong th:text="${consumerId}"></strong> Membership
+                        Consumer Group <strong th:text="${groupId}"></strong> Membership
 
                         <div class="btn-group float-right" role="group" aria-label="Button group">
                             <a id="enable-refresh-details-toggle" class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerDetails(false); return false;">
@@ -509,7 +867,11 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Consumer <strong th:text="${consumerId}"></strong> Positions
+                        Consumer Group <strong th:text="${groupId}"></strong> Positions on Topic:
+
+                        <!-- For selecting topic to view stats for -->
+                        <select id="topicSelector">
+                        </select>
 
                         <div class="btn-group float-right" role="group" aria-label="Button group">
                             <a id="enable-refresh-offsets-toggle" class="btn" href="#" style="padding-bottom: 0;" onclick="ConsumerInfo.toggleAutoRefreshForConsumerOffsets(false); return false;">
@@ -527,9 +889,9 @@
                         <div class="alert alert-light" role="alert" id="consumer-offsets-loader" style="display: block;">
                             <div class="progress">
                                 <div
-                                        class="progress-bar progress-bar-striped progress-bar-animated"
-                                        role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-                                        style="width: 100%">
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                    style="width: 100%">
                                 </div>
                             </div>
                         </div>
@@ -540,22 +902,69 @@
                             <tr>
                                 <th>Partition</th>
                                 <th>Member Id</th>
-                                <th>Tail Offset</th>
-                                <th>Consumer Offset</th>
-                                <th>Lag</th>
+                                <th title="Consumer's current offset.">Consumer Offset</th>
+                                <th title="Last offset in partition.">Tail Offset</th>
+                                <th title="Difference between tail offset and consumer offset.">Lag</th>
+                                <th title="Messages consumed per second.">Rate</th>
                             </tr>
                             </thead>
                             <tbody id="consumer-offsets-tbody">
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="font-weight-bold">Total</td>
+                                    <td class="font-weight-bold" id="consumer-total-lag"></td>
+                                    <td class="font-weight-bold" id="consumer-total-rate"></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Consumer Positions Chart -->
-        <div style="height: 500px">
-            <canvas id="ConsumerPositionsChart"></canvas>
+        <!-- Tabs for Charts -->
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a data-toggle="tab" class="nav-link active" href="#consumerPositionsTab">Consumer Positions</a>
+            </li>
+            <li class="nav-item">
+                <a data-toggle="tab" class="nav-link" href="#consumerRateTab">Consumer Rate</a>
+            </li>
+            <li class="nav-item">
+                <a data-toggle="tab" class="nav-link" href="#tailRateTab">Producer Rate</a>
+            </li>
+            <li class="nav-item">
+                <a data-toggle="tab" class="nav-link" href="#lagTab">Lag</a>
+            </li>
+        </ul>
+
+        <!-- Tabbed Charts -->
+        <div class="tab-content">
+            <div id="consumerPositionsTab" class="tab-pane active show container fade">
+                <!-- Consumer Positions Chart -->
+                <div style="height: 500px">
+                    <canvas id="ConsumerPositionsChart"></canvas>
+                </div>
+            </div>
+            <div id="consumerRateTab" class="tab-pane container fade">
+                <!-- Consumer Rate Chart -->
+                <div style="height: 500px">
+                    <canvas id="ConsumerRateChart"></canvas>
+                </div>
+            </div>
+            <div id="tailRateTab" class="tab-pane container fade">
+                <!-- Producer Rate Chart -->
+                <div style="height: 500px">
+                    <canvas id="TailRateChart"></canvas>
+                </div>
+            </div>
+            <div id="lagTab" class="tab-pane container fade">
+                <!-- Lag Chart -->
+                <div style="height: 500px">
+                    <canvas id="LagChart"></canvas>
+                </div>
+            </div>
         </div>
 
         <!-- Consumer Details Template -->
@@ -565,8 +974,8 @@
                 <td>{{clusterName}}</td>
             </tr>
             <tr>
-                <td><strong>Consumer Id</strong></td>
-                <td>{{consumerId}}</td>
+                <td><strong>Group Id</strong></td>
+                <td>{{groupId}}</td>
             </tr>
             <tr>
                 <td><strong>Topic</strong></td>
@@ -647,10 +1056,16 @@
             <tr id="partition-{{partition}}">
                 <td>{{partition}}</td>
                 <td>{{memberId}}</td>
-                <td>{{tail}} {{#if tailDiff }} (+{{tailDiff}}) {{/if}}</td>
                 <td>{{position}} {{#if positionDiff }} (+{{positionDiff}}) {{/if}}</td>
-                <td>{{lag}} {{#if lagDiff }} ({{lagDiff}}) {{/if}}</td>
+                <td>{{tail}} {{#if tailDiff }} (+{{tailDiff}}) {{/if}}</td>
+                <td title="Difference between tail offset and consumer offset.">{{lag}} {{#if lagDiff }} ({{lagDiff}}) {{/if}}</td>
+                <td title="Messages consumed per second.">{{consumerRate}}/sec</td>
             </tr>
+        </script>
+
+        <!-- topic selector option -->
+        <script id="consumer-topic-select-template" type="text/x-handlebars-template">
+            <option value="{{topic}}">{{topic}}</option>
         </script>
 
     </div>

@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,6 +57,9 @@ public class LdapAppProperties {
     @Value("${app.user.ldap.groupRoleAttribute:}")
     private String groupRoleAttribute;
 
+    @Value("${app.user.ldap.groupSearchFilter:(uniqueMember={0})}")
+    private String groupSearchFilter;
+
     /**
      * Ldap server url.
      */
@@ -106,6 +109,10 @@ public class LdapAppProperties {
 
     public String getGroupSearchBase() {
         return groupSearchBase;
+    }
+
+    public String getGroupSearchFilter() {
+        return groupSearchFilter;
     }
 
     public String getUrl() {
@@ -159,6 +166,7 @@ public class LdapAppProperties {
             + ", userDnPattern='" + userDnPattern + '\''
             + ", groupSearchBase='" + groupSearchBase + '\''
             + ", groupRoleAttribute='" + groupRoleAttribute + '\''
+            + ", groupSearchFilter='" + groupSearchFilter + '\''
             + ", url='" + url + '\''
             + ", passwordAttribute='" + passwordAttribute + '\''
             + ", passwordEncoderClass='" + passwordEncoderClass + '\''

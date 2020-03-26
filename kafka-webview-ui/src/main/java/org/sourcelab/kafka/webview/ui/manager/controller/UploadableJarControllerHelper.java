@@ -258,7 +258,7 @@ public class UploadableJarControllerHelper<EntityT extends UploadableJarEntity> 
 
                 // Attempt to load jar?
                 try {
-                    pluginFactory.getPlugin(tempFilename, form.getClasspath());
+                    pluginFactory.checkPlugin(tempFilename, form.getClasspath());
                 } catch (final LoaderException exception) {
                     // If we had issues, remove the temp location
                     Files.delete(Paths.get(jarPath));

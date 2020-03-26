@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DeleteConsumerGroupsResult;
+import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeConsumerGroupsResult;
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
@@ -49,6 +50,7 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupIdentifier;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupOffsetsWithTailPositions;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ConsumerGroupTopicOffsets;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.CreateTopic;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeDetails;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.NodeList;
@@ -292,6 +294,26 @@ public class KafkaOperations implements AutoCloseable {
     }
 
     /**
+     * Remove a topic from a kafka cluster.  This is destructive!
+     * @param topic name of the topic to remove.
+     * @return true on success.
+     */
+    public boolean removeTopic(final String topic) {
+        try {
+            final DeleteTopicsResult result = adminClient.deleteTopics(Collections.singletonList(topic));
+
+            // Wait for the async request to process.
+            result.all().get();
+
+            // return true?
+            return true;
+        } catch (final InterruptedException | ExecutionException exception) {
+            // TODO Handle this
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
+    }
+
+    /**
      * List all consumer groups on server.
      * @return Immutable sorted list of Consumer Group Identifiers.
      */
@@ -418,7 +440,7 @@ public class KafkaOperations implements AutoCloseable {
                 });
 
             // Sort list by consumer group id
-            consumerGroupDetails.sort(Comparator.comparing(ConsumerGroupDetails::getConsumerId));
+            consumerGroupDetails.sort(Comparator.comparing(ConsumerGroupDetails::getGroupId));
 
             // Return immutable list.
             return Collections.unmodifiableList(consumerGroupDetails);
@@ -434,27 +456,26 @@ public class KafkaOperations implements AutoCloseable {
      */
     public ConsumerGroupOffsets getConsumerGroupOffsets(final String consumerGroupId) {
         try {
+            // Create new builder
+            final ConsumerGroupOffsets.Builder builder = ConsumerGroupOffsets.newBuilder()
+                .withConsumerId(consumerGroupId);
+
             // Make request
             final ListConsumerGroupOffsetsResult results = adminClient.listConsumerGroupOffsets(consumerGroupId);
-
-            final List<PartitionOffset> offsetList = new ArrayList<>();
-            String topic = null;
 
             // Iterate over results
             final Map<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> partitionsToOffsets = results
                 .partitionsToOffsetAndMetadata()
                 .get();
 
+            // Loop over results
             for (final Map.Entry<org.apache.kafka.common.TopicPartition, OffsetAndMetadata> entry : partitionsToOffsets.entrySet()) {
-                offsetList.add(new PartitionOffset(
-                    entry.getKey().partition(), entry.getValue().offset()
-                ));
-                if (topic == null) {
-                    topic = entry.getKey().topic();
-                }
+                builder.withOffset(
+                    entry.getKey().topic(), entry.getKey().partition(), entry.getValue().offset()
+                );
             }
 
-            return new ConsumerGroupOffsets(consumerGroupId, topic, offsetList);
+            return builder.build();
         } catch (final InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -469,23 +490,30 @@ public class KafkaOperations implements AutoCloseable {
      */
     public ConsumerGroupOffsetsWithTailPositions getConsumerGroupOffsetsWithTailOffsets(final String consumerGroupId) {
         final ConsumerGroupOffsets consumerGroupOffsets = getConsumerGroupOffsets(consumerGroupId);
-        final TailOffsets tailOffsets = getTailOffsets(consumerGroupOffsets.getTopic(), consumerGroupOffsets.getPartitions());
 
-        final List<PartitionOffsetWithTailPosition> offsetsWithPartitions = new ArrayList<>();
+        // Create builder
+        final ConsumerGroupOffsetsWithTailPositions.Builder builder = ConsumerGroupOffsetsWithTailPositions.newBuilder()
+            .withConsumerId(consumerGroupId)
+            .withTimestamp(System.currentTimeMillis());
 
-        for (final PartitionOffset entry : tailOffsets.getOffsets()) {
-            offsetsWithPartitions.add(new PartitionOffsetWithTailPosition(
-                entry.getPartition(),
-                consumerGroupOffsets.getOffsetForPartition(entry.getPartition()),
-                entry.getOffset()
-            ));
+        // Loop over each topic
+        for (final String topicName : consumerGroupOffsets.getTopicNames()) {
+            final ConsumerGroupTopicOffsets topicOffsets = consumerGroupOffsets.getOffsetsForTopic(topicName);
+
+            // Retrieve tail offsets
+            final TailOffsets tailOffsets = getTailOffsets(topicName, topicOffsets.getPartitions());
+
+            // Build offsets with partitions
+            for (final PartitionOffset entry : tailOffsets.getOffsets()) {
+                builder.withOffsetsForTopic(topicName, new PartitionOffsetWithTailPosition(
+                    entry.getPartition(),
+                    topicOffsets.getOffsetForPartition(entry.getPartition()),
+                    entry.getOffset()
+                ));
+            }
         }
 
-        return new ConsumerGroupOffsetsWithTailPositions(
-            consumerGroupId,
-            consumerGroupOffsets.getTopic(),
-            offsetsWithPartitions
-        );
+        return builder.build();
     }
 
     /**

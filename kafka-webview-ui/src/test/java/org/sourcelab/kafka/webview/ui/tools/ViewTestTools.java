@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,12 @@ import java.sql.Timestamp;
  */
 @Component
 public class ViewTestTools {
+    // Views text
+    public static final String NO_VIEWS_SETUP_TEXT= "It looks like you have no Views configured yet!";
+    public static final String CREATE_VIEW_TEXT="Let's head over and set one up now!";
+    public static final String ASK_ADMIN_CREATE_VIEW_TEXT = "Ask an Administrator to configure a view.";
+    public static final String CREATE_VIEW_LINK = "/configuration/view/create";
+
     private final ViewRepository viewRepository;
     private final ClusterTestTools clusterTestTools;
     private final MessageFormatTestTools messageFormatTestTools;
@@ -56,8 +62,16 @@ public class ViewTestTools {
         // Create a dummy cluster
         final Cluster cluster = clusterTestTools.createCluster(name);
 
-        // Create a dummy message format
-        final MessageFormat messageFormat = messageFormatTestTools.createMessageFormat(name);
+        // Default to using String message format
+        final MessageFormat messageFormat = messageFormatTestTools.createStringMessageFormat(name);
+
+        // Create it.
+        return createView(name, cluster, messageFormat);
+    }
+
+    public View createViewWithCluster(final String name, final Cluster cluster) {
+        // Default to using String message format
+        final MessageFormat messageFormat = messageFormatTestTools.createStringMessageFormat(name);
 
         // Create it.
         return createView(name, cluster, messageFormat);
@@ -87,6 +101,13 @@ public class ViewTestTools {
 
         viewRepository.save(view);
         return view;
+    }
+
+    /**
+     * Clear all views from the database.
+     */
+    public void deleteAllViews() {
+        viewRepository.deleteAll();
     }
 
     /**

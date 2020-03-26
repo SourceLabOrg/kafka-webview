@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +57,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -160,7 +159,7 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
         // Hit index.
         mockMvc
             .perform(get("/configuration/stream").with(user(adminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isOk())
             // Validate consumer 1
             .andExpect(content().string(containsString(userName1)))
@@ -208,7 +207,7 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
             .perform(post("/configuration/stream/close/" + sessionHash)
                 .with(user(adminUserDetails))
                 .with(csrf())
-            ).andDo(print())
+            )//.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/stream"))
             .andExpect(flash().attributeExists("FlashMessage"))
@@ -243,7 +242,7 @@ public class StreamConfigControllerTest extends AbstractMvcTest {
             .perform(post("/configuration/stream/close/" + sessionHash)
                 .with(user(adminUserDetails))
                 .with(csrf())
-            ).andDo(print())
+            )//.andDo(print())
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/configuration/stream"))
             .andExpect(flash().attributeExists("FlashMessage"))

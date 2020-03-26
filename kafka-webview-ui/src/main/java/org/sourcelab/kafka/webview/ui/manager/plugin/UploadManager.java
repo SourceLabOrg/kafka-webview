@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -205,8 +206,9 @@ public class UploadManager {
         }
 
         // Get the file and save it somewhere
-        final byte[] bytes = file.getBytes();
-        Files.write(fullOutputPath, bytes);
+        try (BufferedInputStream in = new BufferedInputStream(file.getInputStream())) {
+            Files.copy(in, fullOutputPath);
+        }
 
         return fullOutputPath.toString();
     }

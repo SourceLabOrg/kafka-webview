@@ -21,72 +21,82 @@
     <meta name="keyword" content="Kafka WebView">
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <link rel="shortcut icon" href="/img/favicon.png">
+    <meta name="_url_base" th:content="@{/}"/>
+
+    <link rel="shortcut icon" th:href="@{/img/favicon.png}">
     <title>Kafka WebView</title>
 
     <!-- Icons -->
-    <link href="/vendors/css/font-awesome.min.css" rel="stylesheet">
-    <link href="/vendors/css/simple-line-icons.min.css" rel="stylesheet">
+    <link th:href="@{/vendors/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/css/simple-line-icons.min.css}" rel="stylesheet">
 
     <!-- Main styles for this application -->
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/app.css" rel="stylesheet">
-    <link href="/vendors/css/jquery-ui.min.css" rel="stylesheet">
-    <link href="/vendors/css/jquery-ui-timepicker-addon.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/app.css}" rel="stylesheet">
+    <link th:href="@{/vendors/css/jquery-ui.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/css/jquery-ui-timepicker-addon.min.css}" rel="stylesheet">
 
     <!-- Bootstrap and necessary plugins -->
-    <script src="/vendors/js/jquery.min.js"></script>
-    <script src="/vendors/js/popper.min.js"></script>
-    <script src="/vendors/js/bootstrap.min.js"></script>
-    <script src="/vendors/js/pace.min.js"></script>
+    <script th:src="@{/vendors/js/jquery.min.js}"></script>
+    <script th:src="@{/vendors/js/popper.min.js}"></script>
+    <script th:src="@{/vendors/js/bootstrap.min.js}"></script>
+    <script th:src="@{/vendors/js/pace.min.js}"></script>
 
     <!-- Plugins and scripts required by all views -->
-    <script src="/vendors/js/Chart.min.js"></script>
+    <script th:src="@{/vendors/js/Chart.min.js}"></script>
 
     <!-- Handlebars -->
-    <script src="/vendors/js/handlebars.min.js"></script>
+    <script th:src="@{/vendors/js/handlebars.min.js}"></script>
 
     <!-- Fancy Multi-select -->
-    <script src="/vendors/js/multiselect.min.js"></script>
+    <script th:src="@{/vendors/js/multiselect.min.js}"></script>
 
     <!-- Fancy DateTime -->
-    <script src="/vendors/js/jquery-ui.min.js"></script>
-    <script src="/vendors/js/jquery-ui-timepicker-addon.min.js"></script>
+    <script th:src="@{/vendors/js/jquery-ui.min.js}"></script>
+    <script th:src="@{/vendors/js/jquery-ui-timepicker-addon.min.js}"></script>
 
     <!-- JSON Rendering -->
-    <script src="/vendors/js/renderjson.min.js"></script>
+    <script th:src="@{/vendors/js/renderjson.min.js}"></script>
 
     <!-- Websocket -->
-    <script src="/vendors/js/sockjs.min.js"></script>
-    <script src="/vendors/js/stomp.min.js"></script>
+    <script th:src="@{/vendors/js/sockjs.min.js}"></script>
+    <script th:src="@{/vendors/js/stomp.min.js}"></script>
 
     <!-- moment / time -->
-    <script src="/vendors/js/moment.min.js"></script>
+    <script th:src="@{/vendors/js/moment.min.js}"></script>
 
     <!-- main scripts -->
-    <script src="/js/app.js"></script>
+    <script th:src="@{/js/app.js}"></script>
 </head>
 
 <body class="app header-fixed breadcrumb-fixed sidebar-minimized aside-menu-fixed aside-menu-hidden">
 <header class="app-header navbar">
-    <a class="navbar-brand" href="/"></a>
+    <a class="navbar-brand" th:href="@{/}"></a>
 
     <!-- User Settings Nav -->
     <ul class="nav navbar-nav ml-auto">
         <li class="nav-item dropdown" style="padding-right: 50px;">
-            <a class="nav-link dropdown-toggle nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            <a
+                class="nav-link nav-link"
+                th:classappend="${MenuShowUserConfig} ? dropdown-toggle : blank"
+                data-toggle="dropdown"
+                href="#"
+                role="button"
+                aria-haspopup="true"
+                aria-expanded="false">
+
                 <i class="icon-user"></i>
                 <span class="d-md-down-none" sec:authentication="name"></span>
             </a>
-            <div class="dropdown-menu dropdown-menu-right">
-                <div class="dropdown-header text-center" th:if="${MenuShowUserConfig}">
+            <div class="dropdown-menu dropdown-menu-right" th:if="${MenuShowUserConfig}">
+                <div class="dropdown-header text-center">
                     <strong>Settings</strong>
                 </div>
-                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}" th:if="${MenuShowUserConfig}">
+                <a class="dropdown-item" th:href="@{/configuration/user/edit/{id}(id=${UserId})}">
                     <i class="fa fa-user"></i> Profile
                 </a>
                 <div class="divider"></div>
-                <a class="dropdown-item" href="/logout">
+                <a class="dropdown-item" th:href="@{/logout}">
                     <i class="fa fa-lock"></i> Logout
                 </a>
             </div>
@@ -101,7 +111,7 @@
             <ul class="nav">
                 <!-- Home? -->
                 <li class="nav-item">
-                    <a class="nav-link" href="/"><i class="icon-speedometer"></i>
+                    <a class="nav-link" th:href="@{/}"><i class="icon-speedometer"></i>
                         Home
                     </a>
                 </li>
@@ -109,12 +119,12 @@
 
                 <!-- Clusters -->
                 <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="/cluster">
+                    <a class="nav-link nav-dropdown-toggle" th:href="@{/cluster}">
                         <i class="icon-layers"></i> Clusters
                     </a>
                     <ul class="nav-dropdown-items">
                         <li class="nav-item" th:title="${cluster.name}" th:each="cluster : ${MenuClusters}">
-                            <a class="nav-link" th:href="'/cluster/' + ${cluster.id}">
+                            <a class="nav-link" th:href="@{/cluster/{id}(id=${cluster.id})}">
                                 <i class="icon-layers"></i>
                                 [[${cluster.name}]]
                             </a>
@@ -124,7 +134,7 @@
 
                 <!-- Views -->
                 <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="/view">
+                    <a class="nav-link nav-dropdown-toggle" th:href="@{/view}">
                         <i class="icon-eye"></i> Views
                     </a>
                     <ul class="nav-dropdown-items">
@@ -140,43 +150,43 @@
                 <!-- Setup -->
                 <li class="divider"></li>
                 <li class="nav-item nav-dropdown" sec:authorize="hasRole('ROLE_ADMIN')">
-                    <a class="nav-link nav-dropdown-toggle" href="/configuration">
+                    <a class="nav-link nav-dropdown-toggle" th:href="@{/configuration}">
                         <i class="icon-settings"></i>
                         Configuration
                     </a>
                     <ul class="nav-dropdown-items">
                         <li class="nav-item" th:if="${MenuShowUserConfig}">
-                            <a class="nav-link" href="/configuration/user" target="_top">
+                            <a class="nav-link" th:href="@{/configuration/user}" target="_top">
                                 <i class="icon-people"></i>
                                 Users
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/configuration/cluster" target="_top">
+                            <a class="nav-link" th:href="@{/configuration/cluster}" target="_top">
                                 <i class="icon-layers"></i>
                                 Clusters
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/configuration/messageFormat" target="_top">
+                            <a class="nav-link" th:href="@{/configuration/messageFormat}" target="_top">
                                 <i class="icon-envelope-letter"></i>
                                 Message Formats
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/configuration/filter" target="_top">
+                            <a class="nav-link" th:href="@{/configuration/filter}" target="_top">
                                 <i class="icon-magnifier"></i>
                                 Filters
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/configuration/view" target="_top">
+                            <a class="nav-link" th:href="@{/configuration/view}" target="_top">
                                 <i class="icon-eye"></i>
                                 Views
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/configuration/stream" target="_top">
+                            <a class="nav-link" th:href="@{/configuration/stream}" target="_top">
                                 <i class="icon-eye"></i>
                                 Streams
                             </a>
@@ -186,7 +196,7 @@
                 <!-- Help -->
                 <li class="divider"></li>
                 <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="/help">
+                    <a class="nav-link nav-dropdown-toggle" th:href="@{/help}">
                         <i class="icon-support"></i>
                         Help
                     </a>
@@ -203,7 +213,7 @@
         <!-- Handles showing breadcrumbs -->
         <ol class="breadcrumb" th:if="${BreadCrumbs != null}">
             <li class="breadcrumb-item" th:classappend="${itrStat.last} ? 'active'" th:each="crumb, itrStat: ${BreadCrumbs.getCrumbs()}">
-                <a th:if="${crumb.url != null}" th:href="${crumb.url}" th:text="${crumb.name}"></a>
+                <a th:if="${crumb.url != null}" th:href="@{${crumb.url}}" th:text="${crumb.name}"></a>
                 <span th:if="${crumb.url == null}" th:text="${crumb.name}"></span>
             </li>
 

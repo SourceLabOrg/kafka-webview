@@ -18,7 +18,20 @@
                 clusterId: '[[${cluster.id}]]',
                 brokerId: '[[${brokerId}]]',
 
+                // Cached topics for client side searching
+                cachedTopics: [],
+                cachedConfigResults: [],
+
                 handleClusterNodeResults: function(topics) {
+                    BrokerInfo.cachedTopics = topics;
+                    BrokerInfo.displayClusterNodeResults();
+                },
+
+                displayClusterNodeResults: function() {
+                    // Get our search text
+                    var searchStr = jQuery("#topicSearch").val();
+                    var matchedEntries = 0;
+
                     // Clear nodes table
                     var table = jQuery('#broker-tbody');
                     jQuery(table).empty();
@@ -31,13 +44,20 @@
                     var brokerHost = null;
 
                     // Loop over each topic
-                    jQuery(topics).each(function(topicIndex, topic) {
+                    jQuery(BrokerInfo.cachedTopics).each(function(topicIndex, topic) {
                         // Loop thru each partitions
                         jQuery(topic.partitions).each(function(partitionIndex, partition) {
                             var topicName = partition.topic;
                             var partitionId = partition.partition;
                             var role = null;
                             var inSync = false;
+
+                            // Filter
+                            if (!SearchTools.doesMatchText(searchStr, topicName)) {
+                                // Skip
+                                return;
+                            }
+                            matchedEntries++;
 
                             // If we're the leader
                             if (partition.leader != null && partition.leader.id == BrokerInfo.brokerId) {
@@ -86,15 +106,26 @@
                     // Hide loader
                     jQuery('#broker-loader').toggle(false);
 
-                    if (brokerHost == null) {
+                    if (brokerHost === null) {
                         jQuery('#broker-no-results').toggle(true);
+                        jQuery('#broker-table').toggle(false);
                     } else {
                         jQuery('.broker-host').text(brokerHost);
                         jQuery('#broker-no-results').toggle(false);
                         jQuery('#broker-table').toggle(true);
                     }
                 },
+
                 handleConfigResults: function(results) {
+                    BrokerInfo.cachedConfigResults = results;
+                    BrokerInfo.displayConfigResults();
+                },
+
+                displayConfigResults: function() {
+                    // Get our search text
+                    var searchStr = jQuery("#configSearch").val();
+                    var matchedEntries = 0;
+
                     // Clear topic table
                     var table = jQuery('#config-tbody');
                     jQuery(table).empty();
@@ -103,7 +134,17 @@
                     var source   = jQuery('#config-template').html();
                     var template = Handlebars.compile(source);
 
-                    jQuery(results).each(function(index, config) {
+                    jQuery(BrokerInfo.cachedConfigResults).each(function(index, config) {
+                        // Filter on name AND value
+                        if (
+                            !SearchTools.doesMatchText(searchStr, config.name) &&
+                            !SearchTools.doesMatchText(searchStr, config.value)
+                        ) {
+                            // Skip
+                            return;
+                        }
+                        matchedEntries++;
+
                         var properties = {
                             name: config.name,
                             value: config.value,
@@ -119,8 +160,9 @@
                     // Hide loader
                     jQuery('#config-loader').toggle(false);
 
-                    if (results.length == 0) {
+                    if (matchedEntries === 0) {
                         jQuery('#config-no-results').toggle(true);
+                        jQuery('#config-table').toggle(false);
                     } else {
                         jQuery('#config-no-results').toggle(false);
                         jQuery('#config-table').toggle(true);
@@ -153,6 +195,16 @@
                         <i class="fa fa-align-justify"></i>
                         Broker <strong th:text="${brokerId}"></strong> <strong class="broker-host"></strong>
                         on Cluster <strong th:text="${cluster.name}"></strong>
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="topicSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="BrokerInfo.displayClusterNodeResults();">
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -198,6 +250,16 @@
                         <i class="fa fa-align-justify"></i>
                         Broker <strong th:text="${brokerId}"></strong> <strong class="broker-host"></strong> Configuration
                         on Cluster <strong th:text="${cluster.name}"></strong>
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <input
+                                th:type="text"
+                                th:id="configSearch"
+                                placeholder="Search..."
+                                size="15"
+                                style="padding: 0px;"
+                                onkeyup="BrokerInfo.displayConfigResults();">
+                        </div>
                     </div>
                     <div class="card-body">
                         <!-- Display Loader First -->
@@ -213,8 +275,8 @@
 
                         <!-- No Results Found -->
                         <div class="alert alert-light" role="alert" id="config-no-results" style="display: none;">
-                            <h4 class="alert-heading">Broker Not Found</h4>
-                            <p>Looks like we couldn't find any information about this broker!</p>
+                            <h4 class="alert-heading">No Configurations Found</h4>
+                            <p>Looks like we couldn't find any configurations on this broker!</p>
                         </div>
 
                         <!-- Hide Results Table -->
@@ -238,7 +300,7 @@
         <script id="broker-template" type="text/x-handlebars-template">
             <tr>
                 <td>
-                    <a href="/cluster/{{clusterId}}/topic/{{encodedTopic}}">
+                    <a th:href="@{/cluster/{{clusterId}}/topic/{{encodedTopic}}}">
                         {{topic}}
                     </a>
                 </td>

@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ import java.util.Set;
  * Details about a specific consumer group.
  */
 public class ConsumerGroupDetails {
-    private final String consumerId;
+    private final String groupId;
     private final boolean isSimple;
     private final String partitionAssignor;
     private final String state;
@@ -43,7 +43,7 @@ public class ConsumerGroupDetails {
 
     /**
      * Constructor.
-     * @param consumerId consumer group id.
+     * @param groupId consumer group id.
      * @param isSimple if its a simple consumer group
      * @param partitionAssignor How partitions are assigned
      * @param state state of consumer
@@ -51,13 +51,13 @@ public class ConsumerGroupDetails {
      * @param coordinator node that is acting as the coordinator for this group.
      */
     public ConsumerGroupDetails(
-        final String consumerId,
+        final String groupId,
         final boolean isSimple,
         final String partitionAssignor,
         final String state,
         final List<Member> members,
         final NodeDetails coordinator) {
-        this.consumerId = consumerId;
+        this.groupId = groupId;
         this.isSimple = isSimple;
         this.partitionAssignor = partitionAssignor;
         this.members = Collections.unmodifiableList(new ArrayList<>(members));
@@ -65,8 +65,8 @@ public class ConsumerGroupDetails {
         this.coordinator = coordinator;
     }
 
-    public String getConsumerId() {
-        return consumerId;
+    public String getGroupId() {
+        return groupId;
     }
 
     public boolean isSimple() {
@@ -142,7 +142,7 @@ public class ConsumerGroupDetails {
     @Override
     public String toString() {
         return "ConsumerGroupDetails{"
-            + "consumerId='" + consumerId + '\''
+            + "groupId='" + groupId + '\''
             + ", isSimple=" + isSimple
             + ", partitionAssignor='" + partitionAssignor + '\''
             + ", state='" + state + '\''

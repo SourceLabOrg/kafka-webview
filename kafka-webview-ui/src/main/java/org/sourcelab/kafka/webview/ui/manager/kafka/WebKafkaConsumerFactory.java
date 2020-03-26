@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,6 +53,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Factory class for creating new Kafka Consumers to be used by WebRequests.
@@ -70,6 +71,9 @@ public class WebKafkaConsumerFactory {
     private final SecretManager secretManager;
     private final KafkaConsumerFactory kafkaConsumerFactory;
 
+    //  Multi-threaded consumer
+    private final ExecutorService multiThreadedConsumerThreadPool;
+
     // For parsing json options
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -80,11 +84,13 @@ public class WebKafkaConsumerFactory {
         final PluginFactory<Deserializer> deserializerPluginFactory,
         final PluginFactory<RecordFilter> recordFilterPluginFactory,
         final SecretManager secretManager,
-        final KafkaConsumerFactory kafkaConsumerFactory) {
+        final KafkaConsumerFactory kafkaConsumerFactory,
+        final ExecutorService multiThreadedConsumerThreadPool) {
         this.deserializerPluginFactory = deserializerPluginFactory;
         this.recordFilterPluginFactory = recordFilterPluginFactory;
         this.secretManager = secretManager;
         this.kafkaConsumerFactory = kafkaConsumerFactory;
+        this.multiThreadedConsumerThreadPool = multiThreadedConsumerThreadPool;
     }
 
     /**
@@ -105,11 +111,15 @@ public class WebKafkaConsumerFactory {
             .withStartingPosition(StartingPosition.newResumeFromExistingState())
             .build();
 
-        // Create kafka consumer
-        final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
-
-        // Create consumer
-        return new WebKafkaConsumer(kafkaConsumer, clientConfig);
+        // If we've been passed an executor service
+        if (multiThreadedConsumerThreadPool != null) {
+            // Assume we want to use multi-threaded consumer.
+            return new ParallelWebKafkaConsumer(kafkaConsumerFactory, clientConfig, multiThreadedConsumerThreadPool);
+        } else {
+            // Create single threaded kafka consumer
+            final KafkaConsumer kafkaConsumer = createKafkaConsumer(clientConfig);
+            return new DefaultWebKafkaConsumer(kafkaConsumer, clientConfig);
+        }
     }
 
     /**

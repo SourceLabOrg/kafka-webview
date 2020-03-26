@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,8 @@ public class KafkaClientConfigUtilTest {
     private final KafkaClientConfigUtil util = new KafkaClientConfigUtil("/tmp", "TestPrefix");
 
     private final String consumerId = "MyConsumer";
-    private final String expectedFinalConsumerId = "TestPrefix-MyConsumer";
+    private final String expectedFinalGroupId = "TestPrefix-MyConsumer";
+    private final String expectedFinalConsumerId = "TestPrefix-MyConsumer-" + Thread.currentThread().getId();
     private final String expectedBrokerHosts = "localhost:9092,yourHost:8282";
     private final int expectedRequestTimeoutValue = 15000;
 
@@ -226,7 +227,7 @@ public class KafkaClientConfigUtilTest {
         validateKey(config, AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, expectedBrokerHosts);
         validateKey(config, AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, expectedRequestTimeoutValue);
         validateKey(config, AdminClientConfig.CLIENT_ID_CONFIG, expectedFinalConsumerId);
-        validateKey(config, ConsumerConfig.GROUP_ID_CONFIG, expectedFinalConsumerId);
+        validateKey(config, ConsumerConfig.GROUP_ID_CONFIG, expectedFinalGroupId);
     }
 
     private void validateKey(final Map<String, Object> config, final String key, final Object expectedValue) {

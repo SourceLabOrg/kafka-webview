@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +25,12 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Represents details about a consumer group offset positions, including the current tail offset positions for
@@ -39,111 +38,133 @@ import java.util.TreeSet;
  */
 public class ConsumerGroupOffsetsWithTailPositions {
     private final String consumerId;
-    private final String topic;
-    private final Map<Integer, PartitionOffsetWithTailPosition> offsetMap;
+    private final Map<String, ConsumerGroupTopicOffsetsWithTailPositions> topicToOffsetMap;
+    private final long timestamp;
 
     /**
      * Constructor.
      * @param consumerId id of consumer group.
-     * @param topic name of the topic.
-     * @param offsets details about each partition and offset.
+     * @param topicToOffsets details about each partition and offset mapped by topic.
+     * @param timestamp Timestamp offsets were retrieved.
      */
     public ConsumerGroupOffsetsWithTailPositions(
         final String consumerId,
-        final String topic,
-        final Iterable<PartitionOffsetWithTailPosition> offsets
-    ) {
+        final Map<String, List<PartitionOffsetWithTailPosition>> topicToOffsets,
+        final long timestamp) {
         this.consumerId = consumerId;
-        this.topic = topic;
+        this.timestamp = timestamp;
 
-        final Map<Integer, PartitionOffsetWithTailPosition> copiedMap = new HashMap<>();
-        for (final PartitionOffsetWithTailPosition offset : offsets) {
-            copiedMap.put(
-                offset.getPartition(),
-                offset
-            );
+        final Map<String, ConsumerGroupTopicOffsetsWithTailPositions> tempMap = new HashMap<>();
+
+        for (final Map.Entry<String, List<PartitionOffsetWithTailPosition>> entry : topicToOffsets.entrySet()) {
+            final String topic = entry.getKey();
+            final Iterable<PartitionOffsetWithTailPosition> offsets = entry.getValue();
+
+            final Map<Integer, PartitionOffsetWithTailPosition> copiedMap = new HashMap<>();
+            for (final PartitionOffsetWithTailPosition offset : offsets) {
+                copiedMap.put(
+                    offset.getPartition(),
+                    offset
+                );
+            }
+            tempMap.put(topic,  new ConsumerGroupTopicOffsetsWithTailPositions(topic, Collections.unmodifiableMap(copiedMap)));
         }
-        this.offsetMap = Collections.unmodifiableMap(copiedMap);
+        this.topicToOffsetMap = Collections.unmodifiableMap(tempMap);
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     public String getConsumerId() {
         return consumerId;
     }
 
-    public String getTopic() {
-        return topic;
+    public long getTimestamp() {
+        return timestamp;
     }
 
     /**
-     * Marked private to keep from being serialized in responses.
+     * All topic names that the consumer is currently consuming/subscribed to.
+     * @return Immutable list of all topic names.
      */
-    private Map<Integer, PartitionOffsetWithTailPosition> getOffsetMap() {
-        return offsetMap;
+    public Collection<String> getTopicNames() {
+        return Collections.unmodifiableList(topicToOffsetMap.keySet().stream()
+            .sorted()
+            .collect(Collectors.toList())
+        );
     }
 
     /**
-     * @return List of offsets.
+     * For a given topic, return its offset map.
+     * @param topic topic to return map for.
+     * @return Offsets and tail positions for the given topic.
      */
-    public List<PartitionOffsetWithTailPosition> getOffsets() {
-        final List<PartitionOffsetWithTailPosition> offsetList = new ArrayList<>(offsetMap.values());
-
-        // Sort by partition
-        offsetList.sort((o1, o2) -> Integer.valueOf(o1.getPartition()).compareTo(o2.getPartition()));
-        return Collections.unmodifiableList(offsetList);
-    }
-
-    /**
-     * Get offset for the requested partition.
-     * @param partition id of partition.
-     * @return offset stored
-     * @throws RuntimeException if requested invalid partition.
-     */
-    public long getOffsetForPartition(final int partition) {
-        final Optional<PartitionOffsetWithTailPosition> offsetOptional = getOffsetMap()
-            .values()
-            .stream()
-            .filter((offset) -> offset.getPartition() == partition)
-            .findFirst();
-
-        if (offsetOptional.isPresent()) {
-            return offsetOptional.get().getOffset();
+    public ConsumerGroupTopicOffsetsWithTailPositions getOffsetsForTopic(final String topic) {
+        if (!topicToOffsetMap.containsKey(topic)) {
+            throw new IllegalArgumentException("No topic exists: " + topic);
         }
-        throw new RuntimeException("Unable to find partition " + partition);
+        return topicToOffsetMap.get(topic);
     }
 
-    /**
-     * Get offset for the requested partition.
-     * @param partition id of partition.
-     * @return offset stored
-     * @throws RuntimeException if requested invalid partition.
-     */
-    public long getTailOffsetForPartition(final int partition) {
-        final Optional<PartitionOffsetWithTailPosition> offsetOptional = getOffsetMap()
-            .values()
-            .stream()
-            .filter((offset) -> offset.getPartition() == partition)
-            .findFirst();
-
-        if (offsetOptional.isPresent()) {
-            return offsetOptional.get().getTail();
-        }
-        throw new RuntimeException("Unable to find partition " + partition);
-    }
-
-    /**
-     * @return Set of all available partitions.
-     */
-    public Set<Integer> getPartitions() {
-        final TreeSet<Integer> partitions = new TreeSet<>(offsetMap.keySet());
-        return Collections.unmodifiableSet(partitions);
+    public Map<String, ConsumerGroupTopicOffsetsWithTailPositions> getTopicToOffsetMap() {
+        return topicToOffsetMap;
     }
 
     @Override
     public String toString() {
         return "ConsumerGroupOffsetsWithTailPositions{"
             + "consumerId='" + consumerId + '\''
-            + ", topic='" + topic + '\''
-            + ", offsetMap=" + offsetMap
+            + ", timestamp='" + timestamp + '\''
+            + ", offsetMap=" + topicToOffsetMap
             + '}';
+    }
+
+    /**
+     * Builder instance.
+     */
+    public static final class Builder {
+        private String consumerId;
+        private Map<String, List<PartitionOffsetWithTailPosition>> topicToOffsetMap = new HashMap<>();
+        private long timestamp;
+
+        private Builder() {
+        }
+
+        public Builder withConsumerId(final String consumerId) {
+            this.consumerId = consumerId;
+            return this;
+        }
+
+        public Builder withTimestamp(long timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        /**
+         * Add new tail position offsets for a given topic.
+         * @param topic topic to add tail position for.
+         * @param partitionOffsetWithTailPosition partition and tail offsets.
+         * @return Builder instance
+         */
+        public Builder withOffsetsForTopic(final String topic, final PartitionOffsetWithTailPosition partitionOffsetWithTailPosition) {
+            if (!topicToOffsetMap.containsKey(topic)) {
+                topicToOffsetMap.put(topic, new ArrayList<>());
+            }
+            topicToOffsetMap.get(topic).add(partitionOffsetWithTailPosition);
+            return this;
+        }
+
+        /**
+         * Build a new ConsumerGroupOffsetsWithTailPositions instance.
+         * @return new ConsumerGroupOffsetsWithTailPositions instance.
+         */
+        public ConsumerGroupOffsetsWithTailPositions build() {
+            return new ConsumerGroupOffsetsWithTailPositions(
+                consumerId,
+                topicToOffsetMap,
+                timestamp
+            );
+        }
     }
 }

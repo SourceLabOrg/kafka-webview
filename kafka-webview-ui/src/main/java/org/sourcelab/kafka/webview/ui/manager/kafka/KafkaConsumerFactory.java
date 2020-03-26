@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,6 +68,7 @@ public class KafkaConsumerFactory {
     /**
      * Create a new KafkaConsumer based on the passed in ClientConfig, and subscribe to the appropriate
      * partitions.
+     * @deprecated To be removed.
      */
     public KafkaConsumer createConsumerAndSubscribe(final ClientConfig clientConfig) {
         final KafkaConsumer kafkaConsumer = createConsumer(clientConfig);

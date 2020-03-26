@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,12 @@ package org.sourcelab.kafka.webview.ui.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import org.apache.avro.generic.GenericData;
+import org.sourcelab.kafka.webview.ui.manager.jackson.SimpleAvroDataSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -42,6 +46,9 @@ import java.util.List;
 @Configuration
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
+    @Autowired
+    private AppProperties appProperties;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // css resource
@@ -76,7 +83,11 @@ public class WebConfig implements WebMvcConfigurer {
         final ObjectMapper mapper = Jackson2ObjectMapperBuilder
             .json()
             .modulesToInstall(new ProtobufModule())
+            .serializerByType(GenericData.Record.class, new SimpleAvroDataSerializer(appProperties.isAvroIncludeSchema()))
             .build();
+
         converters.add(new MappingJackson2HttpMessageConverter(mapper));
+        converters.add(new StringHttpMessageConverter());
     }
+
 }

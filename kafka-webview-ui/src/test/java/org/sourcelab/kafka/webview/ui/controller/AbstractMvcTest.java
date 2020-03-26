@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public abstract class AbstractMvcTest {
@@ -89,7 +89,7 @@ public abstract class AbstractMvcTest {
      * Utility method to test URLs are/are not accessible w/o the admin role.
      * @param url Url to hit
      * @param isPost If its a POST true, false if GET
-     * @throws Exception
+     * @throws Exception on error.
      */
     protected void testUrlWithOutAdminRole(final String url, final boolean isPost) throws Exception {
         final MockHttpServletRequestBuilder action;
@@ -102,7 +102,29 @@ public abstract class AbstractMvcTest {
 
         mockMvc
             .perform(action.with(user(nonAdminUserDetails)))
-            .andDo(print())
+            //.andDo(print())
             .andExpect(status().isForbidden());
+    }
+
+    /**
+     * Utility method to test URLs require user authentication to be accessed.
+     * @param url Url to hit
+     * @param isPost If its a POST true, false if GET
+     * @throws Exception on error.
+     */
+    protected void testUrlRequiresAuthentication(final String url, final boolean isPost) throws Exception {
+        final MockHttpServletRequestBuilder action;
+        if (isPost) {
+            action = post(url)
+                .with(csrf());
+        } else {
+            action = get(url);
+        }
+
+        mockMvc
+            .perform(action)
+            //.andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrlPattern("**/login"));
     }
 }

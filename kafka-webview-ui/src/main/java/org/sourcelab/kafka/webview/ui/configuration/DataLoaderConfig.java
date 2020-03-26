@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@ import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.LongTransformer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.StringTransformer;
+import org.sourcelab.kafka.webview.ui.manager.kafka.deserializer.BytesToHexDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.PartitioningStrategy;
@@ -119,6 +120,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
         defaultFormats.put("Integer", IntegerDeserializer.class.getName());
         defaultFormats.put("Long", LongDeserializer.class.getName());
         defaultFormats.put("String", StringDeserializer.class.getName());
+        defaultFormats.put("Bytes (Hex Encoded)", BytesToHexDeserializer.class.getName());
 
         // Create if needed.
         for (final Map.Entry<String, String> entry : defaultFormats.entrySet()) {

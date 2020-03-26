@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2017, 2018 SourceLab.org (https://github.com/Crim/kafka-webview/)
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class TopicListTest {
 
@@ -101,5 +103,60 @@ public class TopicListTest {
         // Should be immutable.
         expectedException.expect(UnsupportedOperationException.class);
         results.remove(1);
+    }
+
+    /**
+     * Validates if you filter by null, it returns empty.
+     */
+    @Test
+    public void testFilterByTopicName_nullValueReturnsEmpty() {
+        final List<TopicListing> topicListingList = new ArrayList<>();
+        topicListingList.add(new TopicListing("A", false));
+        topicListingList.add(new TopicListing("B", false));
+        topicListingList.add(new TopicListing("C", false));
+
+        // Create instance
+        final TopicList topicList = new TopicList(topicListingList);
+        final TopicList filtered = topicList.filterByTopicName(null);
+
+        // Validate original listing not modified.
+        final List<String> results = topicList.getTopicNames();
+        assertEquals("A", results.get(0));
+        assertEquals("B", results.get(1));
+        assertEquals("C", results.get(2));
+
+        // Validate filtered is empty because we passed null.
+        assertTrue("Should be empty", filtered.getTopicNames().isEmpty());
+        assertTrue("Should be empty", filtered.getTopics().isEmpty());
+    }
+
+    /**
+     * Validates if you filter it is not case sensitive.
+     */
+    @Test
+    public void testFilterByTopicName_canFilter() {
+        final List<TopicListing> topicListingList = new ArrayList<>();
+        topicListingList.add(new TopicListing("A Cat In The HAT", false));
+        topicListingList.add(new TopicListing("Hat Man", false));
+        topicListingList.add(new TopicListing("Something Else", false));
+
+        // Create instance
+        final TopicList topicList = new TopicList(topicListingList);
+        final TopicList filtered = topicList.filterByTopicName("at");
+
+        // Validate original listing not modified.
+        List<String> results = topicList.getTopicNames();
+        assertEquals("A Cat In The HAT", results.get(0));
+        assertEquals("Hat Man", results.get(1));
+        assertEquals("Something Else", results.get(2));
+
+        // Validate filtered is empty because we passed null.
+        assertFalse("Should not be empty", filtered.getTopicNames().isEmpty());
+        assertEquals(2, filtered.getTopicNames().size());
+        assertEquals(2, filtered.getTopics().size());
+
+        results = filtered.getTopicNames();
+        assertEquals("A Cat In The HAT", results.get(0));
+        assertEquals("Hat Man", results.get(1));
     }
 }

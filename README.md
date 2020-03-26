@@ -21,6 +21,7 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
   - Filtering by partition.
   - Configurable server-side filtering logic.
 - "Live" web socket based streaming consumer.
+- Consumer group state monitoring
   
 ### Screen Shots
 
@@ -66,6 +67,14 @@ app:
 
   ## Defines a prefix prepended to the Id of all consumers.
   consumerIdPrefix: "KafkaWebViewConsumer"
+  
+  ## Enable multi-threaded consumer support
+  ## The previous single-threaded implementation is still available by setting this property to false.
+  ## The previous implementation along with this property will be removed in future release.
+  multiThreadedConsumer: true
+  
+  ## Sets upper limit on the number of concurrent consumers (non-websocket) supported.
+  maxConcurrentWebConsumers: 32
 
   ## Sets upper limit on the number of concurrent web socket consumers supported.
   maxConcurrentWebSocketConsumers: 64
@@ -157,6 +166,7 @@ app:
       ## Where to find user group membership
       groupSearchBase: "ou=groups"
       groupRoleAttribute: "cn"
+      groupSearchfilter = "(uniqueMember={0})"
 
       ## How passwords are validated, must implement PasswordEncoder interface
       passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
@@ -195,6 +205,10 @@ app:
     ## Ensure user authentication is DISABLED
     enabled: false
 ```
+
+#### Reverse proxy setup
+
+Kafka WebView can be configured to run behind a reverse proxy. See [docs/httpdReverseProxySetup.md](docs/httpdReverseProxySetup.md) for detailed instructions.
 
 ## Logging in for the first time
 
@@ -280,8 +294,8 @@ implementations.
 # Releasing
 Steps for performing a release:
 
-1. Update release version: mvn versions:set -DnewVersion=X.Y.Z
-2. Validate and then commit version: mvn versions:commit
+1. Update release version: `mvn versions:set -DnewVersion=X.Y.Z`
+2. Validate and then commit version: `mvn versions:commit`
 3. Update CHANGELOG and README files.
 4. Merge to master.
 5. Deploy to Maven Central: mvn clean deploy -P release-kafka-webview
@@ -290,8 +304,8 @@ Steps for performing a release:
     - `docker build -t kafka-webview .`
     - `docker tag kafka-webview sourcelaborg/kafka-webview:latest`
     - `docker push sourcelaborg/kafka-webview:latest`
-    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.1.VERSIONHERE`
-    - `docker push sourcelaborg/kafka-webview:2.1.VERSIONHERE`
+    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.2.VERSIONHERE`
+    - `docker push sourcelaborg/kafka-webview:2.2.VERSIONHERE`
     - Commit updated docker files.
 7. Create release on Github project.
 
