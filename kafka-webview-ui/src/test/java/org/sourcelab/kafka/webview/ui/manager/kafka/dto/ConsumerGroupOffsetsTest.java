@@ -91,29 +91,28 @@ public class ConsumerGroupOffsetsTest {
     }
 
     /**
-     * TODO borked 3/25/2020
      * Validates the object serializes to json correctly.
      */
-//    @Test
-//    public void testSerialization() throws JsonProcessingException {
-//        // Define our expected output.
-//        final String expectedResult = "{\"consumerId\":\"MyConsumerId\",\"topics\":[{\"topic\":\"topic-a\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":0},{\"partition\":1,\"offset\":1}]},{\"topic\":\"topic-b\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":2},{\"partition\":1,\"offset\":3}]}],\"topicNames\":[\"topic-a\",\"topic-b\"]}";
-//
-//        final ConsumerGroupOffsets offsets = ConsumerGroupOffsets.newBuilder()
-//            .withConsumerId("MyConsumerId")
-//            .withOffset("topic-a", 0, 0)
-//            .withOffset("topic-a", 1, 1)
-//            .withOffset("topic-b", 0, 2)
-//            .withOffset("topic-b", 1, 3)
-//            .build();
-//
-//        // Now attempt to serialize
-//        assertTrue("Should be able to serialize", objectMapper.canSerialize(ConsumerGroupOffsets.class));
-//
-//        // Attempt to serialize
-//        final String result = objectMapper.writeValueAsString(offsets);
-//
-//        // Validate
-//        assertEquals("Should have expected serialized value", expectedResult, result);
-//    }
+    @Test
+    public void testSerialization() throws JsonProcessingException {
+        // Define our expected output.
+        final String expectedResult = "{\"consumerId\":\"MyConsumerId\",\"topics\":[{\"topic\":\"topic-a\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":0},{\"partition\":1,\"offset\":1}]},{\"topic\":\"topic-b\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":2},{\"partition\":1,\"offset\":3}]}],\"topicNames\":[\"topic-a\",\"topic-b\"]}";
+
+        final ConsumerGroupOffsets offsets = ConsumerGroupOffsets.newBuilder()
+            .withConsumerId("MyConsumerId")
+            .withOffset("topic-a", 0, 0)
+            .withOffset("topic-a", 1, 1)
+            .withOffset("topic-b", 0, 2)
+            .withOffset("topic-b", 1, 3)
+            .build();
+
+        // Now attempt to serialize
+        assertTrue("Should be able to serialize", objectMapper.canSerialize(ConsumerGroupOffsets.class));
+
+        // Attempt to serialize
+        final String result = objectMapper.writeValueAsString(offsets);
+
+        // Validate
+        assertEquals("Should have expected serialized value", expectedResult, result);
+    }
 }
