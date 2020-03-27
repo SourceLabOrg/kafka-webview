@@ -138,6 +138,11 @@ public class ProducerForm
         return getId() != null;
     }
 
+    public String[] getPropertyNameListAsArray()
+    {
+        return producerMessagePropertyNameList.split( "," );
+    }
+
     @Override
     public String toString()
     {

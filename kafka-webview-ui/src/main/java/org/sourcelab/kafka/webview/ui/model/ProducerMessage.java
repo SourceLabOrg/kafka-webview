@@ -121,9 +121,4 @@ public class ProducerMessage
     {
         this.propertyNameList = propertyNameList;
     }
-
-    public String[] getPropertyNameListAsArray()
-    {
-        return propertyNameList.split( "," );
-    }
 }

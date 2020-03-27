@@ -249,8 +249,6 @@
                                 </div>
                             </div>
 
-                            <div id="optionsContainer"/>
-
                             <!-- Dynamic Producer Message Key/valueFields -->
                             <div class="form-group row">
                                 <label class="col-md-3 form-control-label" for="newOption">
@@ -260,6 +258,19 @@
                                     <input
                                             autocomplete="off" class="form-control" id="newOption" name="newOption" type="text"
                                             placeholder="Enter property name"/>
+                                    <div id="optionsContainer">
+                                        <div th:each="propertyName : ${producerForm.getPropertyNameListAsArray()}">
+                                            <div class="form-group row custom-option" style="padding-top: 5px">
+                                                <label class="col-md-2 form-control-label">
+                                                    <i th:text="${propertyName}"/>
+                                                </label>
+                                                <input type="hidden" class="peanutButter" th:value="${propertyName}">
+                                                <div class="col-md-1">
+                                                    <button class="btn removeOption" type="button" onclick="removeOption(this);">-</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-1">
                                     <button id="addOption" class="btn add-more" type="button">+</button>

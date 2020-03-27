@@ -25,6 +25,7 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.producer;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.producer.forms.ProducerForm;
+import org.sourcelab.kafka.webview.ui.controller.configuration.view.forms.ViewForm;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
@@ -123,6 +124,33 @@ public class ProducerConfigController extends BaseController
         }
 
         return "configuration/producer/create";
+    }
+
+    @GetMapping("/edit/{id}")
+    public String editProducer(@PathVariable final Long id, final ProducerForm producerForm,
+        final RedirectAttributes redirectAttributes,
+        final Model model)
+    {
+        final Optional<Producer> producerOptional = producerRepository.findById( id );
+        if(!producerOptional.isPresent())
+        {
+            // Set flash message
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find producer!"));
+
+            // redirect to producer index
+            return "redirect:/configuration/producer";
+        }
+        final Producer producer = producerOptional.get();
+
+        setupBreadCrumbs( model, "Edit: " + producer.getName(), null );
+
+        producerForm.setId( producer.getId() );
+        producerForm.setClusterId( producer.getCluster().getId() );
+        producerForm.setName( producer.getName() );
+        producerForm.setProducerMessageClassName( producer.getProducerMessage().getQualifiedClassName() );
+        producerForm.setProducerMessagePropertyNameList( producer.getProducerMessage().getPropertyNameList() );
+
+        return createProducerForm( producerForm, model );
     }
 
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
