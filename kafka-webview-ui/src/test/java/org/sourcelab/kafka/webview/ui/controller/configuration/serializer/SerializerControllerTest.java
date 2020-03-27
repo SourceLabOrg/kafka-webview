@@ -22,18 +22,20 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.configuration.partitioningstrategy;
+package org.sourcelab.kafka.webview.ui.controller.configuration.serializer;
 
 import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
+import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.LongTransformer;
+import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.StringTransformer;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
-import org.sourcelab.kafka.webview.ui.model.PartitioningStrategy;
-import org.sourcelab.kafka.webview.ui.repository.PartitioningStrategyRepository;
+import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
+import org.sourcelab.kafka.webview.ui.repository.SerializerFormatRepository;
 import org.sourcelab.kafka.webview.ui.tools.FileTestTools;
-import org.sourcelab.kafka.webview.ui.tools.PartitioningStrategyTestTools;
+import org.sourcelab.kafka.webview.ui.tools.SerializerFormatTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,6 +48,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -69,22 +73,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class PartitionStrategyControllerTest extends AbstractMvcTest {
+public class SerializerControllerTest extends AbstractMvcTest {
     /**
      * Bae path to hit this controller.
      */
-    private static final String controllerPath = "/configuration/partitionStrategy";
+    private static final String controllerPath = "/configuration/serializer";
 
     /**
      * Attribute name of the form instance.
      */
-    private static final String formAttributeName = "partitioningStrategyForm";
+    private static final String formAttributeName = "serializerForm";
 
     @Autowired
-    private PartitioningStrategyTestTools entityTestTools;
+    private SerializerFormatTestTools entityTestTools;
 
     @Autowired
-    private PartitioningStrategyRepository entityRepository;
+    private SerializerFormatRepository entityRepository;
 
     /**
      * Where Partitioners files are uploaded to.
@@ -93,7 +97,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
 
     @Before
     public void setupUploadPath() {
-        entityUploadPath = uploadPath + "/partitioners/";
+        entityUploadPath = uploadPath + "/serializers/";
     }
 
     /**
@@ -116,29 +120,34 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
     @Transactional
     public void testIndex() throws Exception {
         // Create some custom formats
-        final PartitioningStrategy partitioner1 = entityTestTools.createStrategy("Strategy 1");
-        final PartitioningStrategy partitioner2 = entityTestTools.createStrategy("Strategy 2");
+        final SerializerFormat serializerFormat1 = entityTestTools.createStrategy("Strategy 1");
+        final SerializerFormat serializerFormat2 = entityTestTools.createStrategy("Strategy 2");
 
         // Check for default instance
-        final String defaultInstanceName = "Default Partitioner";
-        final String defaultInstanceClass = "org.apache.kafka.clients.producer.internals.DefaultPartitioner";
+        final Map<String, String> expectedDefaultInstances = new HashMap<>();
+        expectedDefaultInstances.put("String Serializer", StringTransformer.class.getName());
+        expectedDefaultInstances.put("Long Serializer", LongTransformer.class.getName());
 
         // Hit index.
-        mockMvc
+        final MvcResult result = mockMvc
             .perform(get(controllerPath).with(user(adminUserDetails)))
             .andDo(print())
             .andExpect(status().isOk())
             // Validate instance 1
-            .andExpect(content().string(containsString(partitioner1.getName())))
-            .andExpect(content().string(containsString(partitioner1.getClasspath())))
+            .andExpect(content().string(containsString(serializerFormat1.getName())))
+            .andExpect(content().string(containsString(serializerFormat1.getClasspath())))
 
             // Validate instance 2
-            .andExpect(content().string(containsString(partitioner2.getName())))
-            .andExpect(content().string(containsString(partitioner2.getClasspath())))
+            .andExpect(content().string(containsString(serializerFormat2.getName())))
+            .andExpect(content().string(containsString(serializerFormat2.getClasspath())))
+            .andReturn();
 
-            // Validate default instance
-            .andExpect(content().string(containsString(defaultInstanceName)))
-            .andExpect(content().string(containsString(defaultInstanceClass)));
+        // Validate default instances
+        final String responseContent = result.getResponse().getContentAsString();
+        for (final Map.Entry<String, String> expectedEntry : expectedDefaultInstances.entrySet()) {
+            assertTrue("Content should contain " + expectedEntry.getKey(), responseContent.contains(expectedEntry.getKey()));
+            assertTrue("Content should contain " + expectedEntry.getValue(), responseContent.contains(expectedEntry.getValue()));
+        }
     }
 
     /**
@@ -159,7 +168,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
      */
     @Test
     @Transactional
-    public void testPostUpdate_newPartitioningStrategy() throws Exception {
+    public void testPostUpdate_newSerializerFormat() throws Exception {
         final String expectedName = "MyPartitioner" + System.currentTimeMillis();
         final String expectedClassPath = "examples.partitioner.StaticPartitioner";
 
@@ -187,21 +196,21 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl(controllerPath));
 
         // Validate
-        final PartitioningStrategy partitioningStrategy = entityRepository.findByName(expectedName);
-        assertNotNull("Should have partitioning strategy", partitioningStrategy);
-        assertEquals("Has correct name", expectedName, partitioningStrategy.getName());
-        assertEquals("Has correct classpath", expectedClassPath, partitioningStrategy.getClasspath());
-        assertNotNull("Has jar path", partitioningStrategy.getJar());
-        assertFalse("Should not be a default format", partitioningStrategy.isDefault());
+        final SerializerFormat serializerFormat = entityRepository.findByName(expectedName);
+        assertNotNull("Should have partitioning strategy", serializerFormat);
+        assertEquals("Has correct name", expectedName, serializerFormat.getName());
+        assertEquals("Has correct classpath", expectedClassPath, serializerFormat.getClasspath());
+        assertNotNull("Has jar path", serializerFormat.getJar());
+        assertFalse("Should not be a default format", serializerFormat.isDefault());
 
         // Validate that our options got set
-        assertEquals("Got options", expectedOptionsJson, partitioningStrategy.getOptionParameters());
+        assertEquals("Got options", expectedOptionsJson, serializerFormat.getOptionParameters());
 
-        final boolean doesJarExist = Files.exists(Paths.get(entityUploadPath, partitioningStrategy.getJar()));
+        final boolean doesJarExist = Files.exists(Paths.get(entityUploadPath, serializerFormat.getJar()));
         assertTrue("Partitioner jar file should have been uploaded", doesJarExist);
 
         // Cleanup
-        Files.deleteIfExists(Paths.get(entityUploadPath, partitioningStrategy.getJar()));
+        Files.deleteIfExists(Paths.get(entityUploadPath, serializerFormat.getJar()));
     }
 
     /**
@@ -231,7 +240,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk());
 
         // Validate
-        final PartitioningStrategy messageFormat = entityRepository.findByName(expectedName);
+        final SerializerFormat messageFormat = entityRepository.findByName(expectedName);
         assertNull("Should NOT have partitioning strategy", messageFormat);
     }
 
@@ -261,7 +270,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk());
 
         // Validate
-        final PartitioningStrategy messageFormat = entityRepository.findByName(expectedName);
+        final SerializerFormat messageFormat = entityRepository.findByName(expectedName);
         assertNull("Should NOT have partitioning strategy", messageFormat);
     }
 
@@ -309,16 +318,16 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_updatingExistingButWithInvalidJar() throws Exception {
-        final PartitioningStrategy partitioningStrategy = entityTestTools.createStrategy("MyPartitioner" + System.currentTimeMillis());
-        final String expectedName = partitioningStrategy.getName();
-        final String expectedClasspath = partitioningStrategy.getClasspath();
-        final String expectedJarName = partitioningStrategy.getJar();
+        final SerializerFormat serializerFormat = entityTestTools.createStrategy("MyPartitioner" + System.currentTimeMillis());
+        final String expectedName = serializerFormat.getName();
+        final String expectedClasspath = serializerFormat.getClasspath();
+        final String expectedJarName = serializerFormat.getJar();
         final String expectedJarContents = "OriginalContents";
-        final String expectedParametersJson = partitioningStrategy.getOptionParameters();
-        final Path expectedJarPath = Paths.get(entityUploadPath, partitioningStrategy.getJar());
+        final String expectedParametersJson = serializerFormat.getOptionParameters();
+        final Path expectedJarPath = Paths.get(entityUploadPath, serializerFormat.getJar());
 
         // Create a dummy jar
-        FileTestTools.createDummyFile(entityUploadPath + partitioningStrategy.getJar(), expectedJarContents);
+        FileTestTools.createDummyFile(entityUploadPath + serializerFormat.getJar(), expectedJarContents);
 
         // This is an invalid jar.
         final MockMultipartFile jarUpload =
@@ -330,7 +339,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
-                .param("id", String.valueOf(partitioningStrategy.getId()))
+                .param("id", String.valueOf(serializerFormat.getId()))
                 .param("name", "Updated Name")
                 .param("classpath", "made.up.classpath")
                 .param("customOptionNames", "option1")
@@ -343,13 +352,13 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
             .andExpect(status().isOk());
 
         // Validate partitioning strategy was not updated.
-        final PartitioningStrategy updatedPartitioningStrategy = entityRepository.findById(partitioningStrategy.getId()).get();
-        assertNotNull("Has partitioning strategy", updatedPartitioningStrategy);
-        assertEquals("Name not updated", expectedName, updatedPartitioningStrategy.getName());
-        assertEquals("classpath not updated", expectedClasspath, updatedPartitioningStrategy.getClasspath());
-        assertEquals("Jar name not updated", expectedJarName, updatedPartitioningStrategy.getJar());
-        assertFalse("Should not be a default format", updatedPartitioningStrategy.isDefault());
-        assertEquals("Parameters not updated", expectedParametersJson, updatedPartitioningStrategy.getOptionParameters());
+        final SerializerFormat updatedSerializerFormat = entityRepository.findById(serializerFormat.getId()).get();
+        assertNotNull("Has partitioning strategy", updatedSerializerFormat);
+        assertEquals("Name not updated", expectedName, updatedSerializerFormat.getName());
+        assertEquals("classpath not updated", expectedClasspath, updatedSerializerFormat.getClasspath());
+        assertEquals("Jar name not updated", expectedJarName, updatedSerializerFormat.getJar());
+        assertFalse("Should not be a default format", updatedSerializerFormat.isDefault());
+        assertEquals("Parameters not updated", expectedParametersJson, updatedSerializerFormat.getOptionParameters());
 
         // Validate previous jar not overwritten.
         assertTrue("File should exist", Files.exists(expectedJarPath));
@@ -367,14 +376,14 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_updatingExistingNoJarUploaded() throws Exception {
-        final PartitioningStrategy partitioningStrategy = entityTestTools.createStrategy("myPatitioner" + System.currentTimeMillis());
-        final String originalClasspath = partitioningStrategy.getClasspath();
-        final String originalJarName = partitioningStrategy.getJar();
+        final SerializerFormat serializerFormat = entityTestTools.createStrategy("myPatitioner" + System.currentTimeMillis());
+        final String originalClasspath = serializerFormat.getClasspath();
+        final String originalJarName = serializerFormat.getJar();
         final String originalJarContents = "OriginalContents";
-        final Path originalJarPath = Paths.get(entityUploadPath, partitioningStrategy.getJar());
+        final Path originalJarPath = Paths.get(entityUploadPath, serializerFormat.getJar());
 
         // Create a dummy jar
-        FileTestTools.createDummyFile(entityUploadPath + partitioningStrategy.getJar(), originalJarContents);
+        FileTestTools.createDummyFile(entityUploadPath + serializerFormat.getJar(), originalJarContents);
 
         // This is the same as not uploading a jar.
         final InputStream emptyFile = null;
@@ -389,7 +398,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
-                .param("id", String.valueOf(partitioningStrategy.getId()))
+                .param("id", String.valueOf(serializerFormat.getId()))
                 .param("name", newName)
                 .param("classpath", newClasspath)
                 .param("customOptionNames", "option1")
@@ -402,17 +411,17 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl(controllerPath));
 
         // Validate partitioning strategy was updated.
-        final PartitioningStrategy updatedPartitioningStrategy = entityRepository.findById(partitioningStrategy.getId()).get();
-        assertNotNull("Has partitioning strategy", updatedPartitioningStrategy);
-        assertEquals("Name updated", newName, updatedPartitioningStrategy.getName());
-        assertEquals("classpath was NOT updated", originalClasspath, updatedPartitioningStrategy.getClasspath());
-        assertNotEquals("classpath was NOT updated", newClasspath, updatedPartitioningStrategy.getClasspath());
-        assertEquals("Jar name not updated", originalJarName, updatedPartitioningStrategy.getJar());
-        assertFalse("Should not be a default format", updatedPartitioningStrategy.isDefault());
+        final SerializerFormat updatedSerializerFormat = entityRepository.findById(serializerFormat.getId()).get();
+        assertNotNull("Has partitioning strategy", updatedSerializerFormat);
+        assertEquals("Name updated", newName, updatedSerializerFormat.getName());
+        assertEquals("classpath was NOT updated", originalClasspath, updatedSerializerFormat.getClasspath());
+        assertNotEquals("classpath was NOT updated", newClasspath, updatedSerializerFormat.getClasspath());
+        assertEquals("Jar name not updated", originalJarName, updatedSerializerFormat.getJar());
+        assertFalse("Should not be a default format", updatedSerializerFormat.isDefault());
 
         // Define our expected json string
         final String expectedOptionsJson = "{\"option1\":\"value1\",\"option2\":\"value2\"}";
-        assertEquals("Parameters should have been updated", expectedOptionsJson, updatedPartitioningStrategy.getOptionParameters());
+        assertEquals("Parameters should have been updated", expectedOptionsJson, updatedSerializerFormat.getOptionParameters());
 
         // Validate jar should still exist
         assertTrue("File should exist", Files.exists(originalJarPath));
@@ -432,13 +441,13 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testPostUpdate_updatingExistingWithValidJarSameName() throws Exception {
-        final PartitioningStrategy partitioningStrategy = entityTestTools.createStrategy("MyPartitioner" + System.currentTimeMillis());
-        final String originalJarName = partitioningStrategy.getJar();
+        final SerializerFormat serializerFormat = entityTestTools.createStrategy("MyPartitioner" + System.currentTimeMillis());
+        final String originalJarName = serializerFormat.getJar();
         final String originalJarContents = "OriginalContents";
-        final Path originalJarPath = Paths.get(entityUploadPath, partitioningStrategy.getJar());
+        final Path originalJarPath = Paths.get(entityUploadPath, serializerFormat.getJar());
 
         // Create a dummy jar
-        FileTestTools.createDummyFile(entityUploadPath + partitioningStrategy.getJar(), originalJarContents);
+        FileTestTools.createDummyFile(entityUploadPath + serializerFormat.getJar(), originalJarContents);
 
         // This is a valid jar
         final InputStream fileInputStream = getClass().getClassLoader().getResourceAsStream("testDeserializer/testPlugins.jar");
@@ -453,7 +462,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
                 .file(jarUpload)
                 .with(user(adminUserDetails))
                 .with(csrf())
-                .param("id", String.valueOf(partitioningStrategy.getId()))
+                .param("id", String.valueOf(serializerFormat.getId()))
                 .param("name", newName)
                 .param("classpath", newClasspath))
             .andDo(print())
@@ -462,7 +471,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
             .andExpect(redirectedUrl(controllerPath));
 
         // Validate partitioning strategy was updated.
-        final PartitioningStrategy updatedPartitionStrategy = entityRepository.findById(partitioningStrategy.getId()).get();
+        final SerializerFormat updatedPartitionStrategy = entityRepository.findById(serializerFormat.getId()).get();
         assertNotNull("Has partitioning strategy", updatedPartitionStrategy);
         assertEquals("Name updated", newName, updatedPartitionStrategy.getName());
         assertEquals("classpath updated", newClasspath, updatedPartitionStrategy.getClasspath());
@@ -489,21 +498,21 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
     @Test
     @Transactional
     public void testGetEdit_existingMessageFormat() throws Exception {
-        final PartitioningStrategy partitioningStrategy = entityTestTools.createStrategy("My Partitioner" + System.currentTimeMillis());
-        partitioningStrategy.setOptionParameters("{\"myOption1\":\"myValue1\",\"myOption2\":\"myValue2\"}");
-        entityRepository.save(partitioningStrategy);
+        final SerializerFormat serializerFormat = entityTestTools.createStrategy("My Partitioner" + System.currentTimeMillis());
+        serializerFormat.setOptionParameters("{\"myOption1\":\"myValue1\",\"myOption2\":\"myValue2\"}");
+        entityRepository.save(serializerFormat);
 
         // Hit edit page.
         mockMvc
-            .perform(get(controllerPath + "/edit/" + partitioningStrategy.getId())
+            .perform(get(controllerPath + "/edit/" + serializerFormat.getId())
                 .with(user(adminUserDetails)))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(content().string(containsString(partitioningStrategy.getName())))
-            .andExpect(content().string(containsString(partitioningStrategy.getClasspath())))
+            .andExpect(content().string(containsString(serializerFormat.getName())))
+            .andExpect(content().string(containsString(serializerFormat.getClasspath())))
 
             // Should have our Id input
-            .andExpect(content().string(containsString("value=\"" + partitioningStrategy.getId() + "\"")))
+            .andExpect(content().string(containsString("value=\"" + serializerFormat.getId() + "\"")))
 
             // Should have our defined options
             .andExpect(content().string(containsString("myValue1")))
@@ -519,11 +528,11 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
     @Transactional
     public void testPostDelete_notUsed() throws Exception {
         // Create some dummy formats
-        final PartitioningStrategy partitioningStrategy = entityTestTools.createStrategy("Strategy 2");
-        final long formatId = partitioningStrategy.getId();
+        final SerializerFormat serializerFormat = entityTestTools.createStrategy("Strategy 2");
+        final long formatId = serializerFormat.getId();
 
         // Generate a dummy file
-        final Path expectedJarPath = Paths.get(entityUploadPath, partitioningStrategy.getJar());
+        final Path expectedJarPath = Paths.get(entityUploadPath, serializerFormat.getJar());
         FileTestTools.createDummyFile(expectedJarPath.toString(), "MyContents");
         assertTrue("Sanity test", Files.exists(expectedJarPath));
 
@@ -553,7 +562,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
     @Transactional
     public void testPostDelete_inUse() throws Exception {
 //        // Create some dummy formats
-//        final PartitioningStrategy format = entityTestTools.createStrategy("Format 1");
+//        final SerializerFormat format = entityTestTools.createStrategy("Format 1");
 //        final long formatId = format.getId();
 //
 //        // Create a Views that uses our format.
@@ -583,7 +592,7 @@ public class PartitionStrategyControllerTest extends AbstractMvcTest {
 //        assertEquals("Should have our error msg", expectedError, flashMessage.getMessage());
 //
 //        // Validate
-//        final PartitioningStrategy messageFormat = entityRepository.findById(formatId).get();
+//        final SerializerFormat messageFormat = entityRepository.findById(formatId).get();
 //        assertNotNull("Should NOT have removed partitioning strategy", messageFormat);
 //
 //        // Jar should still exist

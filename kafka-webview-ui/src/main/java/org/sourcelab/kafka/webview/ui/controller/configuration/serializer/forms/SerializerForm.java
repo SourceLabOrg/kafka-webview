@@ -22,15 +22,13 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.repository;
+package org.sourcelab.kafka.webview.ui.controller.configuration.serializer.forms;
 
-import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
-import org.springframework.stereotype.Repository;
+import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarForm;
 
 /**
- * For access records on the message_format table.
+ * Represents the form to create/update a Serializer.
  */
-@Repository
-public interface SerializerFormatRepository extends UploadableJarRepository<SerializerFormat> {
+public class SerializerForm extends UploadableJarForm {
 
 }

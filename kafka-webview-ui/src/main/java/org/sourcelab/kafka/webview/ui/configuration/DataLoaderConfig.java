@@ -33,13 +33,17 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.LongTransformer;
+import org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer.StringTransformer;
 import org.sourcelab.kafka.webview.ui.manager.kafka.deserializer.BytesToHexDeserializer;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.PartitioningStrategy;
+import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.PartitioningStrategyRepository;
+import org.sourcelab.kafka.webview.ui.repository.SerializerFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -58,6 +62,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
     private final MessageFormatRepository messageFormatRepository;
     private final UserRepository userRepository;
     private final PartitioningStrategyRepository partitioningStrategyRepository;
+    private final SerializerFormatRepository serializerFormatRepository;
 
     /**
      * Constructor.
@@ -66,11 +71,12 @@ public final class DataLoaderConfig implements ApplicationRunner {
     private DataLoaderConfig(
         final MessageFormatRepository messageFormatRepository,
         final UserRepository userRepository,
-        final PartitioningStrategyRepository partitioningStrategyRepository
-    ) {
+        final PartitioningStrategyRepository partitioningStrategyRepository,
+        final SerializerFormatRepository serializerFormatRepository) {
         this.messageFormatRepository = messageFormatRepository;
         this.userRepository = userRepository;
         this.partitioningStrategyRepository = partitioningStrategyRepository;
+        this.serializerFormatRepository = serializerFormatRepository;
     }
 
     /**
@@ -80,6 +86,7 @@ public final class DataLoaderConfig implements ApplicationRunner {
         createDefaultUser();
         createDefaultMessageFormats();
         createDefaultPartitioningStrategies();
+        createDefaultSerializationFormats();
     }
 
     /**
@@ -147,6 +154,28 @@ public final class DataLoaderConfig implements ApplicationRunner {
             partitioningStrategy.setJar("n/a");
             partitioningStrategy.setDefault(true);
             partitioningStrategyRepository.save(partitioningStrategy);
+        }
+    }
+
+    /**
+     * Creates default serialization formats.
+     */
+    private void createDefaultSerializationFormats() {
+        final Map<String, String> defaultEntries = new HashMap<>();
+        defaultEntries.put("String Serializer", StringTransformer.class.getName());
+        defaultEntries.put("Long Serializer", LongTransformer.class.getName());
+
+        // Create if needed.
+        for (final Map.Entry<String, String> entry : defaultEntries.entrySet()) {
+            SerializerFormat serializerFormat = serializerFormatRepository.findByName(entry.getKey());
+            if (serializerFormat == null) {
+                serializerFormat = new SerializerFormat();
+            }
+            serializerFormat.setName(entry.getKey());
+            serializerFormat.setClasspath(entry.getValue());
+            serializerFormat.setJar("n/a");
+            serializerFormat.setDefault(true);
+            serializerFormatRepository.save(serializerFormat);
         }
     }
 

@@ -22,44 +22,39 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer;
+package org.sourcelab.kafka.webview.ui.tools;
 
-import org.apache.kafka.common.serialization.Serializer;
-
-import java.util.Collection;
-import java.util.Map;
+import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
+import org.sourcelab.kafka.webview.ui.repository.SerializerFormatRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
- * For mapping web entered data to a serializer instance.
- *
- * @param <T> value that the serializer instance is expecting.
+ * Helpful tools for Filters in tests.
  */
-public interface ValueTransformer<T> {
+@Component
+public class SerializerFormatTestTools {
+
+    private final SerializerFormatRepository serializerFormatRepository;
+
+    @Autowired
+    public SerializerFormatTestTools(final SerializerFormatRepository serializerFormatRepository) {
+        this.serializerFormatRepository = serializerFormatRepository;
+    }
 
     /**
-     * Configure this class.
-     * @param configs configs in key/value pairs
-     * @param isKey whether is for key or value
+     * Utility for creating partitioning strategies.
+     * @param name Name of the strategy.
+     * @return Persisted Strategy.
      */
-    void configure(final Map<String, ?> configs, boolean isKey);
+    public SerializerFormat createStrategy(final String name) {
+        final SerializerFormat format = new SerializerFormat();
+        format.setName(name);
+        format.setClasspath("com.example." + name);
+        format.setJar(name + ".jar");
+        format.setOptionParameters("{\"key\": \"value\"}");
+        serializerFormatRepository.save(format);
 
-    /**
-     * Transformation logic.
-     * @param topic The topic being produced to.
-     * @param valueMap Map of values to produce.
-     * @return Serialized/flattened value that will get passed to the serializer instance.
-     */
-    T transform(final String topic, final Map<String, String> valueMap);
-
-    /**
-     * Underlying Kafka value serializer class.
-     * @return Underlying Kafka value serializer class.
-     */
-    Class<? extends Serializer> getSerializerClass();
-
-    /**
-     * Return collection of field names to collect values for.
-     * @return Collection of file names.
-     */
-    Collection<String> getFieldNames();
+        return format;
+    }
 }

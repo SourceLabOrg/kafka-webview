@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer;
 
+import org.sourcelab.kafka.webview.ui.plugin.serializer.SerializerTransformer;
+
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,7 +35,7 @@ import java.util.Map;
  * Abstract implementation for default serializers bundled with Kafka client package.
  * @param <T> value that the serializer instance is expecting.
  */
-public abstract class DefaultTransformer<T> implements ValueTransformer<T> {
+public abstract class DefaultTransformer<T> implements SerializerTransformer<T> {
 
     private static final String defaultFieldName = "value";
     private static final Collection<String> defaultFieldNames = Collections.singletonList(defaultFieldName);
