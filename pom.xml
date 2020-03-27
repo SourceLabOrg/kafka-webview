@@ -63,7 +63,7 @@
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
-        <skipCheckStyle>true</skipCheckStyle>
+        <skipCheckStyle>false</skipCheckStyle>
         <skipLicenseCheck>false</skipLicenseCheck>
     </properties>
 
