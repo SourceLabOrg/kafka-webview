@@ -26,6 +26,8 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.filter;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.filter.forms.FilterForm;
+import org.sourcelab.kafka.webview.ui.manager.file.FileManager;
+import org.sourcelab.kafka.webview.ui.manager.file.FileType;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
@@ -68,6 +70,9 @@ public class FilterConfigController extends BaseController {
 
     @Autowired
     private UploadManager uploadManager;
+
+    @Autowired
+    private FileManager fileManager;
 
     @Autowired
     private PluginFactory<RecordFilter> recordFilterPluginFactory;
@@ -218,7 +223,6 @@ public class FilterConfigController extends BaseController {
 
                 // Persist jar on filesystem into temp location
                 final String tmpJarLocation = uploadManager.handleFilterUpload(file, tmpFilename);
-                final String finalJarLocation = tmpJarLocation.substring(0, tmpJarLocation.lastIndexOf(".tmp"));
 
                 // Attempt to load jar?
                 final String filterOptionNames;
@@ -230,7 +234,7 @@ public class FilterConfigController extends BaseController {
                     filterOptionNames = filterOptions.stream().collect(Collectors.joining(","));
                 } catch (final LoaderException exception) {
                     // Remove jar
-                    Files.delete(new File(tmpJarLocation).toPath());
+                    fileManager.deleteFile(tmpJarLocation, FileType.FILTER);
 
                     bindingResult.addError(new FieldError(
                         "filterForm", "file", "", true, null, null, exception.getMessage())
@@ -239,10 +243,7 @@ public class FilterConfigController extends BaseController {
                 }
 
                 // If successful overwrite original jar
-                final Path tmpJarPath = new File(tmpJarLocation).toPath();
-                final Path finalJarPath = new File(finalJarLocation).toPath();
-                Files.deleteIfExists(finalJarPath);
-                Files.move(tmpJarPath, finalJarPath);
+                fileManager.moveFile(tmpFilename, filename, FileType.FILTER);
 
                 // Set properties
                 filter.setClasspath(filterForm.getClasspath());
@@ -289,7 +290,7 @@ public class FilterConfigController extends BaseController {
                 filterRepository.deleteById(id);
 
                 // Delete jar from disk
-                Files.delete(recordFilterPluginFactory.getPathForJar(filter.getJar()));
+                fileManager.deleteFile(filter.getJar(), FileType.FILTER);
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted filter!"));
             } catch (IOException e) {
                 e.printStackTrace();

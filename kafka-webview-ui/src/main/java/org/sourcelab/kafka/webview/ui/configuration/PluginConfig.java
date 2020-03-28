@@ -31,6 +31,10 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
+import org.sourcelab.kafka.webview.ui.manager.file.FileManager;
+import org.sourcelab.kafka.webview.ui.manager.file.FileStorageService;
+import org.sourcelab.kafka.webview.ui.manager.file.FileType;
+import org.sourcelab.kafka.webview.ui.manager.file.LocalDiskStorage;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaConsumerFactory;
@@ -57,34 +61,32 @@ public class PluginConfig {
 
     /**
      * Upload manager, for handling uploads of Plugins and Keystores.
-     * @param appProperties Definition of app properties.
+     * @param fileManager for managing file persistence.
      * @return UploadManager for Plugins
      */
     @Bean
-    public UploadManager getPluginUploadManager(final AppProperties appProperties) {
-        return new UploadManager(appProperties.getUploadPath());
+    public UploadManager getPluginUploadManager(final FileManager fileManager) {
+        return new UploadManager(fileManager);
     }
 
     /**
      * PluginFactory for creating instances of Deserializers.
-     * @param appProperties Definition of app properties.
+     * @param fileManager for managing file persistence.
      * @return PluginFactory for Deserializers.
      */
-    @Bean
-    public PluginFactory<Deserializer> getDeserializerPluginFactory(final AppProperties appProperties) {
-        final String jarDirectory = appProperties.getUploadPath() + "/deserializers";
-        return new PluginFactory<>(jarDirectory, Deserializer.class);
+    @Bean("PluginFactoryForDeserializer")
+    public PluginFactory<Deserializer> getDeserializerPluginFactory(final FileManager fileManager) {
+        return new PluginFactory<>(FileType.DESERIALIZER, Deserializer.class, fileManager);
     }
 
     /**
      * PluginFactory for creating instances of Record Filters.
-     * @param appProperties Definition of app properties.
+     * @param fileManager for managing file persistence.
      * @return PluginFactory for Record Filters.
      */
-    @Bean
-    public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final AppProperties appProperties) {
-        final String jarDirectory = appProperties.getUploadPath() + "/filters";
-        return new PluginFactory<>(jarDirectory, RecordFilter.class);
+    @Bean("PluginFactoryForRecordFilter")
+    public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final FileManager fileManager) {
+        return new PluginFactory<>(FileType.FILTER, RecordFilter.class, fileManager);
     }
 
     /**
@@ -103,7 +105,13 @@ public class PluginConfig {
      * @return Web Kafka Consumer Factory instance.
      */
     @Bean
-    public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties, final KafkaClientConfigUtil configUtil) {
+    public WebKafkaConsumerFactory getWebKafkaConsumerFactory(
+        final AppProperties appProperties,
+        final KafkaClientConfigUtil configUtil,
+        final PluginFactory<Deserializer> deserializerPluginFactory,
+        final PluginFactory<RecordFilter> recordFilterPluginFactory,
+        final SecretManager secretManager
+    ) {
         final ExecutorService executorService;
 
         // If we have multi-threaded consumer option enabled
@@ -123,9 +131,9 @@ public class PluginConfig {
         }
 
         return new WebKafkaConsumerFactory(
-            getDeserializerPluginFactory(appProperties),
-            getRecordFilterPluginFactory(appProperties),
-            getSecretManager(appProperties),
+            deserializerPluginFactory,
+            recordFilterPluginFactory,
+            secretManager,
             getKafkaConsumerFactory(configUtil),
             executorService
         );
@@ -133,14 +141,16 @@ public class PluginConfig {
 
     /**
      * For creating Kafka operational consumers.
-     * @param appProperties Definition of app properties.
      * @param configUtil Utility for configuring kafka clients.
      * @return Web Kafka Operations Client Factory instance.
      */
     @Bean
-    public KafkaOperationsFactory getKafkaOperationsFactory(final AppProperties appProperties, final KafkaClientConfigUtil configUtil) {
+    public KafkaOperationsFactory getKafkaOperationsFactory(
+        final KafkaClientConfigUtil configUtil,
+        final SecretManager secretManager
+    ) {
         return new KafkaOperationsFactory(
-            getSecretManager(appProperties),
+            secretManager,
             getKafkaAdminFactory(configUtil)
         );
     }
@@ -201,5 +211,22 @@ public class PluginConfig {
     @Bean
     public SaslUtility getSaslUtility(final SecretManager secretManager) {
         return new SaslUtility(secretManager);
+    }
+
+    @Bean
+    public FileStorageService fileStorageService(final AppProperties appProperties) {
+        return new LocalDiskStorage(appProperties.getUploadPath());
+    }
+
+    /**
+     * Utility for managing file storage operations.
+     * @param fileStorageService Where to back filestorage.
+     * @param appProperties Definition of app properties.
+     * @return FileManager instance.
+     */
+    @Bean
+    public FileManager fileManager(final FileStorageService fileStorageService, final AppProperties appProperties) {
+        final LocalDiskStorage localCacheStorage = new LocalDiskStorage(appProperties.getCachePath());
+        return new FileManager(fileStorageService, localCacheStorage);
     }
 }

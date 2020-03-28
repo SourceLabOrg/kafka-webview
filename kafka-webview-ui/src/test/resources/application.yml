@@ -41,6 +41,7 @@ spring:
 app:
   name: Kafka Web View
   uploadPath: "./data/uploads"
+  cachePath: "./data/cache"
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"

@@ -238,7 +238,12 @@ public class ClusterConfigController extends BaseController {
             if (!clusterForm.exists() || (clusterForm.getTrustStoreFile() != null && !clusterForm.getTrustStoreFile().isEmpty())) {
                 // Delete previous trust store if updating
                 if (cluster.getTrustStoreFile() != null) {
-                    uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+                    try {
+                        uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+                    } catch (final IOException exception) {
+                        // TODO handle
+                        throw new RuntimeException(exception.getMessage(), exception);
+                    }
                     cluster.setTrustStoreFile(null);
                     cluster.setTrustStorePassword(null);
                 }
@@ -257,7 +262,7 @@ public class ClusterConfigController extends BaseController {
                     // Persist in model.
                     cluster.setTrustStoreFile(filename);
                     cluster.setTrustStorePassword(encrypted);
-                } catch (IOException exception) {
+                } catch (final IOException exception) {
                     // TODO handle
                     throw new RuntimeException(exception.getMessage(), exception);
                 }
@@ -266,7 +271,12 @@ public class ClusterConfigController extends BaseController {
             if (!clusterForm.exists() || (clusterForm.getKeyStoreFile() != null && !clusterForm.getKeyStoreFile().isEmpty())) {
                 // Delete previous key store if updating, or if SASL is enabled.
                 if (clusterForm.getSasl() || cluster.getKeyStoreFile() != null) {
-                    uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+                    try {
+                        uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+                    } catch (final IOException exception) {
+                        // TODO handle
+                        throw new RuntimeException(exception.getMessage(), exception);
+                    }
                     cluster.setKeyStoreFile(null);
                     cluster.setKeyStorePassword(null);
                 }
@@ -298,8 +308,13 @@ public class ClusterConfigController extends BaseController {
             cluster.setSslEnabled(false);
 
             // Remove from disk
-            uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
-            uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+            try {
+                uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+                uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+            } catch (final IOException exception) {
+                // TODO handle
+                throw new RuntimeException(exception.getMessage(), exception);
+            }
 
             // Null out fields
             cluster.setKeyStoreFile(null);
@@ -376,11 +391,16 @@ public class ClusterConfigController extends BaseController {
             final Cluster cluster = clusterOptional.get();
 
             // Delete KeyStores
-            if (cluster.getTrustStoreFile() != null) {
-                uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
-            }
-            if (cluster.getKeyStoreFile() != null) {
-                uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+            try {
+                if (cluster.getTrustStoreFile() != null) {
+                    uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+                }
+                if (cluster.getKeyStoreFile() != null) {
+                    uploadManager.deleteKeyStore(cluster.getKeyStoreFile());
+                }
+            } catch (final IOException exception) {
+                // TODO handle
+                throw new RuntimeException(exception.getMessage(), exception);
             }
 
             // Delete it
