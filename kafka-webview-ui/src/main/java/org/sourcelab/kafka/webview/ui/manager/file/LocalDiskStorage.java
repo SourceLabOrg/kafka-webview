@@ -1,10 +1,33 @@
+/**
+ * MIT License
+ *
+ * Copyright (c) 2017, 2018, 2019 SourceLab.org (https://github.com/SourceLabOrg/kafka-webview/)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.sourcelab.kafka.webview.ui.manager.file;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +39,7 @@ import java.util.Objects;
 /**
  * Implementation that stores files on local disk.
  */
-public class LocalDiskStorage implements FileStorageService {
+public class LocalDiskStorage implements FileStorageService, LocalFileStorageService {
     private static final Logger logger = LoggerFactory.getLogger(LocalDiskStorage.class);
 
     /**
@@ -34,7 +57,7 @@ public class LocalDiskStorage implements FileStorageService {
 
     @Override
     public boolean saveFile(final InputStream fileInputStream, final String filename, final FileType type) throws IOException {
-        final String rootPath = getPathFromType(type);
+        final String rootPath = getPathForType(type);
         final File parentDir = new File(rootPath);
         if (!parentDir.exists() && !parentDir.mkdirs()) {
             throw new IOException("Failed to createConsumer directory: " + rootPath);
@@ -54,7 +77,7 @@ public class LocalDiskStorage implements FileStorageService {
 
     @Override
     public boolean doesFileExist(final String filename, final FileType type) throws IOException {
-        final String rootPath = getPathFromType(type);
+        final String rootPath = getPathForType(type);
         final File parentDir = new File(rootPath);
 
         // If the parent dir doesn't exist
@@ -64,7 +87,7 @@ public class LocalDiskStorage implements FileStorageService {
         }
 
         // Create final output file name
-        final Path fullOutputPath = Paths.get(rootPath, filename);
+        final Path fullOutputPath = getFilePath(filename, type);
         return fullOutputPath.toFile().exists();
     }
 
@@ -75,10 +98,8 @@ public class LocalDiskStorage implements FileStorageService {
             return true;
         }
 
-        final String rootPath = getPathFromType(type);
-
         // Create final output file name
-        final Path fullOutputPath = Paths.get(rootPath, filename).toAbsolutePath();
+        final Path fullOutputPath = getFilePath(filename, type);
         if (!fullOutputPath.toFile().exists()) {
             return true;
         }
@@ -98,12 +119,16 @@ public class LocalDiskStorage implements FileStorageService {
     }
 
     @Override
-    public byte[] getFile(final String filename, final FileType type) throws IOException {
-        // TODO
-        return new byte[0];
+    public InputStream getFile(final String filename, final FileType type) throws IOException {
+        if (!doesFileExist(filename, type)) {
+            // error?
+            throw new IOException("File does not exist at " + getFilePath(filename, type));
+        }
+        final Path fullOutputPath = getFilePath(filename, type);
+        return Files.newInputStream(fullOutputPath);
     }
 
-    private String getPathFromType(final FileType type) {
+    private String getPathForType(final FileType type) {
         switch (type) {
             // For backwards compat.
             case DESERIALIZER:
@@ -117,5 +142,17 @@ public class LocalDiskStorage implements FileStorageService {
             default:
                 return uploadPath + "/" + type.name();
         }
+    }
+
+    private Path getFilePath(final String filename, final FileType type) {
+        final String rootPath = getPathForType(type);
+
+        // Create final output file name
+        return Paths.get(rootPath, filename).toAbsolutePath();
+    }
+
+    @Override
+    public Path getLocalPathToFile(final String filename, final FileType fileType) {
+        return getFilePath(filename, fileType);
     }
 }

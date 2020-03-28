@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
+import org.sourcelab.kafka.webview.ui.manager.file.FileManager;
 import org.sourcelab.kafka.webview.ui.manager.file.FileStorageService;
 import org.sourcelab.kafka.webview.ui.manager.file.FileType;
 import org.sourcelab.kafka.webview.ui.manager.file.LocalDiskStorage;
@@ -31,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Handles uploading jars from the frontend UI and placing them into the expected locations on disk.
@@ -39,14 +41,14 @@ public class UploadManager {
     /**
      * Underlying Storage Mechanism.
      */
-    private final FileStorageService fileStorageService;
+    private final FileManager fileManager;
 
     /**
      * Constructor.
-     * @param uploadPath Parent upload directory.
+     * @param fileManager manages file storage.
      */
-    public UploadManager(final String uploadPath) {
-        this.fileStorageService = new LocalDiskStorage(uploadPath);
+    public UploadManager(final FileManager fileManager) {
+        this.fileManager = Objects.requireNonNull(fileManager);
     }
 
     /**
@@ -85,20 +87,18 @@ public class UploadManager {
      * @return True if successful, false if not.
      */
     public boolean deleteKeyStore(final String keyStoreFile) throws IOException {
-        return fileStorageService.deleteFile(keyStoreFile, FileType.KEYSTORE);
+        return fileManager.deleteFile(keyStoreFile, FileType.KEYSTORE);
     }
 
 
     private String handleFileUpload(final MultipartFile file, final String outFileName, final FileType fileType) throws IOException {
         // Check if file exists
-        if (fileStorageService.doesFileExist(outFileName, fileType)) {
+        if (fileManager.doesFileExist(outFileName, fileType)) {
             throw new IOException("Output file of type " + fileType.name() + " already exists with name " + outFileName);
         }
 
-        // Get the file and save it somewhere
-        try (final BufferedInputStream in = new BufferedInputStream(file.getInputStream())) {
-            fileStorageService.saveFile(in, outFileName, fileType);
-        }
+        // Store it
+        fileManager.putFile(file.getInputStream(), outFileName, fileType);
         return outFileName;
     }
 }

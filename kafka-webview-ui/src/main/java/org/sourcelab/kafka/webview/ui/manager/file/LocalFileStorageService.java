@@ -24,8 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.file;
 
-public enum FileType {
-    DESERIALIZER,
-    FILTER,
-    KEYSTORE;
+import java.nio.file.Path;
+
+public interface LocalFileStorageService {
+    Path getLocalPathToFile(final String filename, final FileType fileType);
 }

@@ -36,6 +36,9 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
+import org.sourcelab.kafka.webview.ui.manager.file.FileManager;
+import org.sourcelab.kafka.webview.ui.manager.file.FileType;
+import org.sourcelab.kafka.webview.ui.manager.file.LocalDiskStorage;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResult;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.KafkaResults;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
@@ -228,8 +231,11 @@ public class WebKafkaConsumerFactoryTest {
     }
 
     private WebKafkaConsumerFactory createDefaultFactory() {
-        final PluginFactory<Deserializer> deserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
-        final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory = new PluginFactory<>("not/used", RecordFilter.class);
+        final FileManager fileManager = new FileManager(new LocalDiskStorage("/tmp"), new LocalDiskStorage("/tmp"));
+        final PluginFactory<Deserializer> deserializerPluginFactory
+            = new PluginFactory<>(FileType.DESERIALIZER, Deserializer.class, fileManager);
+        final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory
+            = new PluginFactory<>(FileType.FILTER, RecordFilter.class, fileManager);
         final SecretManager secretManager = new SecretManager("Passphrase");
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
             new KafkaClientConfigUtil("not/used", "MyPrefix")
@@ -245,8 +251,12 @@ public class WebKafkaConsumerFactoryTest {
     }
 
     private WebKafkaConsumerFactory createMultiThreadedFactory() {
-        final PluginFactory<Deserializer> deserializerPluginFactory = new PluginFactory<>("not/used", Deserializer.class);
-        final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory = new PluginFactory<>("not/used", RecordFilter.class);
+        final FileManager fileManager = new FileManager(new LocalDiskStorage("/tmp"), new LocalDiskStorage("/tmp"));
+        final PluginFactory<Deserializer> deserializerPluginFactory
+            = new PluginFactory<>(FileType.DESERIALIZER, Deserializer.class, fileManager);
+        final PluginFactory<RecordFilter> filterPluginFactoryPluginFactory
+            = new PluginFactory<>(FileType.FILTER, RecordFilter.class, fileManager);
+
         final SecretManager secretManager = new SecretManager("Passphrase");
         final KafkaConsumerFactory kafkaConsumerFactory = new KafkaConsumerFactory(
             new KafkaClientConfigUtil("not/used", "MyPrefix")

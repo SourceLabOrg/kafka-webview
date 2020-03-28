@@ -24,7 +24,9 @@
 
 package org.sourcelab.kafka.webview.ui.manager.plugin;
 
+import org.sourcelab.kafka.webview.ui.manager.file.FileManager;
 import org.sourcelab.kafka.webview.ui.manager.file.FileStorageService;
+import org.sourcelab.kafka.webview.ui.manager.file.FileType;
 import org.sourcelab.kafka.webview.ui.manager.file.LocalDiskStorage;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.UnableToFindClassException;
@@ -37,6 +39,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 /**
  * A factory class for creating instances of uploaded plugins.
@@ -46,32 +49,28 @@ import java.nio.file.Paths;
  */
 public class PluginFactory<T> {
     /**
-     * Directory where JARs can be loaded from.
+     * Manages access to files.
      */
-    private final String jarDirectory;
+    private final FileManager fileManager;
 
     /**
      * Type/Interface of class we want to create instances of.
      */
     private final Class<T> typeParameterClass;
 
-    private final FileStorageService fileStorageService;
-    private final LocalDiskStorage localDiskStorage;
+    /**
+     * Type of file.
+     */
+    private final FileType fileType;
 
     /**
      * Constructor.
-     * @param jarDirectory Where we can load JARs from.
      * @param typeParameterClass The type/interface of classes we can create instances of.
      */
-    public PluginFactory(final String jarDirectory, final Class<T> typeParameterClass) {
-        this.jarDirectory = jarDirectory;
-        this.typeParameterClass = typeParameterClass;
-
-        // For accessing the actual files.
-        this.fileStorageService = new LocalDiskStorage(jarDirectory);
-
-        // For creating local cache.
-        this.localDiskStorage = new LocalDiskStorage(jarDirectory);
+    public PluginFactory(final FileType fileType, final Class<T> typeParameterClass, final FileManager fileManager) {
+        this.fileType = Objects.requireNonNull(fileType);
+        this.typeParameterClass = Objects.requireNonNull(typeParameterClass);
+        this.fileManager = Objects.requireNonNull(fileManager);
     }
 
     /**
@@ -101,7 +100,7 @@ public class PluginFactory<T> {
             final URL jarUrl = absolutePath.toUri().toURL();
             final ClassLoader pluginClassLoader = new PluginClassLoader(jarUrl, getClass().getClassLoader());
             return getPluginClass(pluginClassLoader, classpath);
-        } catch (MalformedURLException exception) {
+        } catch (final IOException exception) {
             throw new LoaderException("Unable to load jar " + jarName, exception);
         }
     }
@@ -196,7 +195,7 @@ public class PluginFactory<T> {
      * Get the full path on disk to the given Jar file.
      * @param jarName Jar to lookup full path to.
      */
-    public Path getPathForJar(final String jarName) {
-        return Paths.get(jarDirectory, jarName).toAbsolutePath();
+    public Path getPathForJar(final String jarName) throws IOException {
+        return fileManager.getFile(jarName, fileType);
     }
 }

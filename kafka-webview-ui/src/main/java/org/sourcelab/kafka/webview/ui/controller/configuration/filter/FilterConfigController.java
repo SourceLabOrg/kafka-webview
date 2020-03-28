@@ -26,6 +26,8 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.filter;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.filter.forms.FilterForm;
+import org.sourcelab.kafka.webview.ui.manager.file.FileManager;
+import org.sourcelab.kafka.webview.ui.manager.file.FileType;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
@@ -68,6 +70,9 @@ public class FilterConfigController extends BaseController {
 
     @Autowired
     private UploadManager uploadManager;
+
+    @Autowired
+    private FileManager fileManager;
 
     @Autowired
     private PluginFactory<RecordFilter> recordFilterPluginFactory;
@@ -289,7 +294,7 @@ public class FilterConfigController extends BaseController {
                 filterRepository.deleteById(id);
 
                 // Delete jar from disk
-                Files.delete(recordFilterPluginFactory.getPathForJar(filter.getJar()));
+                fileManager.deleteFile(filter.getJar(), FileType.FILTER);
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Deleted filter!"));
             } catch (IOException e) {
                 e.printStackTrace();

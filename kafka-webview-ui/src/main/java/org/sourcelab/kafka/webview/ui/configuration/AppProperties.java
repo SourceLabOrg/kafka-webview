@@ -40,6 +40,9 @@ public class AppProperties {
     @Value("${app.uploadPath}")
     private String uploadPath;
 
+    @Value("${app.cachePath}")
+    private String cachePath;
+
     @Value("${app.key}")
     private String appKey;
 
@@ -80,6 +83,10 @@ public class AppProperties {
 
     public String getUploadPath() {
         return uploadPath;
+    }
+
+    public String getCachePath() {
+        return cachePath;
     }
 
     public String getAppKey() {
@@ -123,6 +130,7 @@ public class AppProperties {
         return "AppProperties{"
             + "name='" + name + '\''
             + ", uploadPath='" + uploadPath + '\''
+            + ", cachePath='" + cachePath + '\''
             + ", appKey='XXXXXX'"
             + ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers
             + ", consumerIdPrefix='" + consumerIdPrefix + '\''

@@ -29,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
+import org.sourcelab.kafka.webview.ui.manager.file.FileManager;
+import org.sourcelab.kafka.webview.ui.manager.file.FileType;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.plugin.exception.LoaderException;
@@ -70,6 +72,9 @@ public class MessageFormatController extends BaseController {
 
     @Autowired
     private UploadManager uploadManager;
+
+    @Autowired
+    private FileManager fileManager;
 
     @Autowired
     private PluginFactory<Deserializer> deserializerLoader;
@@ -242,7 +247,7 @@ public class MessageFormatController extends BaseController {
                 // 1 - remove pre-existing jar if it exists
                 if (messageFormat.getJar() != null && !messageFormat.getJar().isEmpty()) {
                     // Delete pre-existing jar.
-                    Files.deleteIfExists(deserializerLoader.getPathForJar(messageFormat.getJar()));
+                    fileManager.deleteFile(messageFormat.getJar(), FileType.DESERIALIZER);
                 }
 
                 // 2 - move tempFilename => filename.
@@ -336,7 +341,7 @@ public class MessageFormatController extends BaseController {
 
             // Delete jar from disk
             try {
-                Files.deleteIfExists(deserializerLoader.getPathForJar(messageFormat.getJar()));
+                fileManager.deleteFile(messageFormat.getJar(), FileType.DESERIALIZER);
             } catch (final NoSuchFileException exception) {
                 // swallow.
             }
