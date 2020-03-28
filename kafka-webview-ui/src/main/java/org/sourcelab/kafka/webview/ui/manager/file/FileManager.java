@@ -86,6 +86,21 @@ public class FileManager {
         return fileStorageService.deleteFile(filename, fileType);
     }
 
+    public synchronized boolean moveFile(final String originalFilename, final String newFileName, final FileType fileType) throws IOException {
+        // If the storage engine is just a local file on disk.
+        if (fileStorageService instanceof LocalFileStorageService) {
+            // Just save it and we're done.
+            return fileStorageService.moveFile(originalFilename, newFileName, fileType);
+        }
+
+        // Update in local cache
+        if (localCacheStorage.doesFileExist(originalFilename, fileType)) {
+            return localCacheStorage.moveFile(originalFilename, newFileName, fileType);
+        }
+
+        return true;
+    }
+
     public synchronized boolean doesFileExist(final String filename, final FileType fileType) throws IOException {
         return fileStorageService.doesFileExist(filename, fileType);
     }

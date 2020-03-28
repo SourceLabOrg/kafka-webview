@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -53,18 +54,35 @@ public class LocalDiskStorage implements FileStorageService, LocalFileStorageSer
      */
     public LocalDiskStorage(final String uploadPath) {
         this.uploadPath = Objects.requireNonNull(uploadPath);
+
+        try {
+            final Path rootPath = Paths.get(uploadPath).toAbsolutePath();
+            if (!Files.isDirectory(rootPath)) {
+                Files.createDirectory(rootPath);
+            }
+
+            // Ensure all of our directories exist
+            for (final FileType fileType : FileType.values()) {
+                final Path typeDirectory = getPathForType(fileType);
+                if (Files.isDirectory(typeDirectory)) {
+                    continue;
+                }
+                Files.createDirectory(typeDirectory);
+            }
+        } catch (final IOException exception) {
+            throw new RuntimeException("Unable to create directory: " + exception.getMessage(), exception);
+        }
     }
 
     @Override
     public boolean saveFile(final InputStream fileInputStream, final String filename, final FileType type) throws IOException {
-        final String rootPath = getPathForType(type);
-        final File parentDir = new File(rootPath);
-        if (!parentDir.exists() && !parentDir.mkdirs()) {
-            throw new IOException("Failed to createConsumer directory: " + rootPath);
+        final Path rootPath = getPathForType(type);
+        if (!Files.exists(rootPath)) {
+            Files.createDirectory(rootPath);
         }
 
         // Create final output file name
-        final Path fullOutputPath = Paths.get(rootPath, filename);
+        final Path fullOutputPath = getFilePath(filename, type);
         if (fullOutputPath.toFile().exists()) {
             throw new IOException("Output file already exists with filename: " + fullOutputPath.toString());
         }
@@ -77,15 +95,6 @@ public class LocalDiskStorage implements FileStorageService, LocalFileStorageSer
 
     @Override
     public boolean doesFileExist(final String filename, final FileType type) throws IOException {
-        final String rootPath = getPathForType(type);
-        final File parentDir = new File(rootPath);
-
-        // If the parent dir doesn't exist
-        if (!parentDir.exists()) {
-            // The file can't exist... right?
-            return false;
-        }
-
         // Create final output file name
         final Path fullOutputPath = getFilePath(filename, type);
         return fullOutputPath.toFile().exists();
@@ -119,6 +128,24 @@ public class LocalDiskStorage implements FileStorageService, LocalFileStorageSer
     }
 
     @Override
+    public boolean moveFile(final String originalFilename, final String newFileName, final FileType type) throws IOException {
+        if (!doesFileExist(originalFilename, type)) {
+            throw new IOException("Unable to find original file name: " + originalFilename);
+        }
+
+        // Delete destination
+        Files.deleteIfExists(getFilePath(newFileName, type));
+
+        // Move original file to destination file
+        Files.move(
+            getFilePath(originalFilename, type),
+            getFilePath(newFileName, type)
+        );
+
+        return true;
+    }
+
+    @Override
     public InputStream getFile(final String filename, final FileType type) throws IOException {
         if (!doesFileExist(filename, type)) {
             // error?
@@ -128,27 +155,27 @@ public class LocalDiskStorage implements FileStorageService, LocalFileStorageSer
         return Files.newInputStream(fullOutputPath);
     }
 
-    private String getPathForType(final FileType type) {
+    private Path getPathForType(final FileType type) {
         switch (type) {
             // For backwards compat.
             case DESERIALIZER:
-                return uploadPath + "/deserializers";
+                return Paths.get(uploadPath, "deserializers").toAbsolutePath();
             case FILTER:
-                return uploadPath + "/filters";
+                return Paths.get(uploadPath, "filters").toAbsolutePath();
             case KEYSTORE:
-                return uploadPath + "/keyStores";
+                return Paths.get(uploadPath, "keyStores").toAbsolutePath();
 
             // Any future ones just use the enum type.
             default:
-                return uploadPath + "/" + type.name();
+                return Paths.get(uploadPath, type.name()).toAbsolutePath();
         }
     }
 
     private Path getFilePath(final String filename, final FileType type) {
-        final String rootPath = getPathForType(type);
+        final Path rootPath = getPathForType(type);
 
         // Create final output file name
-        return Paths.get(rootPath, filename).toAbsolutePath();
+        return rootPath.resolve(filename).toAbsolutePath();
     }
 
     @Override

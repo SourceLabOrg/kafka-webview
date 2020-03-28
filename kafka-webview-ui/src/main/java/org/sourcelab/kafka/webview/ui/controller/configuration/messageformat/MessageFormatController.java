@@ -234,7 +234,7 @@ public class MessageFormatController extends BaseController {
                     deserializerLoader.checkPlugin(tempFilename, messageFormatForm.getClasspath());
                 } catch (final LoaderException exception) {
                     // If we had issues, remove the temp location
-                    Files.delete(Paths.get(jarPath));
+                    fileManager.deleteFile(jarPath, FileType.DESERIALIZER);
 
                     // Add an error
                     bindingResult.addError(new FieldError(
@@ -251,9 +251,7 @@ public class MessageFormatController extends BaseController {
                 }
 
                 // 2 - move tempFilename => filename.
-                // Lets just delete the temp path and re-handle the upload.
-                Files.deleteIfExists(Paths.get(jarPath));
-                uploadManager.handleDeserializerUpload(file, newFilename);
+                fileManager.moveFile(tempFilename, newFilename, FileType.DESERIALIZER);
 
                 // 3 - Update the jar and class path properties.
                 messageFormat.setJar(newFilename);

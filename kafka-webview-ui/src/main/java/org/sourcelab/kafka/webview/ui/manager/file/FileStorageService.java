@@ -38,5 +38,7 @@ public interface FileStorageService {
 
     boolean deleteFile(final String filename, final FileType type) throws IOException;
 
+    boolean moveFile(final String originalFilename, final String newFileName, final FileType type) throws IOException;
+
     InputStream getFile(final String filename, final FileType type) throws IOException;
 }

@@ -223,7 +223,6 @@ public class FilterConfigController extends BaseController {
 
                 // Persist jar on filesystem into temp location
                 final String tmpJarLocation = uploadManager.handleFilterUpload(file, tmpFilename);
-                final String finalJarLocation = tmpJarLocation.substring(0, tmpJarLocation.lastIndexOf(".tmp"));
 
                 // Attempt to load jar?
                 final String filterOptionNames;
@@ -235,7 +234,7 @@ public class FilterConfigController extends BaseController {
                     filterOptionNames = filterOptions.stream().collect(Collectors.joining(","));
                 } catch (final LoaderException exception) {
                     // Remove jar
-                    Files.delete(new File(tmpJarLocation).toPath());
+                    fileManager.deleteFile(tmpJarLocation, FileType.FILTER);
 
                     bindingResult.addError(new FieldError(
                         "filterForm", "file", "", true, null, null, exception.getMessage())
@@ -244,10 +243,7 @@ public class FilterConfigController extends BaseController {
                 }
 
                 // If successful overwrite original jar
-                final Path tmpJarPath = new File(tmpJarLocation).toPath();
-                final Path finalJarPath = new File(finalJarLocation).toPath();
-                Files.deleteIfExists(finalJarPath);
-                Files.move(tmpJarPath, finalJarPath);
+                fileManager.moveFile(tmpFilename, filename, FileType.FILTER);
 
                 // Set properties
                 filter.setClasspath(filterForm.getClasspath());
