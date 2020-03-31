@@ -1,3 +1,5 @@
+package org.sourcelab.kafka.webview.ui.model;
+
 /**
  * MIT License
  *
@@ -21,16 +23,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.sourcelab.kafka.webview.ui.model;
 
 import org.hibernate.annotations.Cascade;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Column;
+import javax.persistence.ManyToOne;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+
 import java.sql.Timestamp;
 
+/**
+ * Producer Class.
+ */
 @Entity
-public class Producer
-{
+public class Producer {
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
     private Long id;
@@ -62,33 +74,27 @@ public class Producer
     @Cascade( org.hibernate.annotations.CascadeType.DELETE )
     private ProducerMessage producerMessage;
 
-    public Long getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId( Long id )
-    {
+    public void setId( Long id ) {
         this.id = id;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
-    public Cluster getCluster()
-    {
+    public Cluster getCluster() {
         return cluster;
     }
 
-    public void setCluster( Cluster cluster )
-    {
+    public void setCluster( Cluster cluster ) {
         this.cluster = cluster;
     }
 // TODO uncomment when we want to send more than a map of string/string as a kafka message
@@ -113,43 +119,35 @@ public class Producer
 //        this.valueMessageFormat = valueMessageFormat;
 //    }
 
-    public String getTopic()
-    {
+    public String getTopic() {
         return topic;
     }
 
-    public void setTopic( String topic )
-    {
+    public void setTopic( String topic ) {
         this.topic = topic;
     }
 
-    public Timestamp getCreatedAt()
-    {
+    public Timestamp getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt( Timestamp createdAt )
-    {
+    public void setCreatedAt( Timestamp createdAt ) {
         this.createdAt = createdAt;
     }
 
-    public Timestamp getUpdatedAt()
-    {
+    public Timestamp getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt( Timestamp updatedAt )
-    {
+    public void setUpdatedAt( Timestamp updatedAt ) {
         this.updatedAt = updatedAt;
     }
 
-    public ProducerMessage getProducerMessage()
-    {
+    public ProducerMessage getProducerMessage() {
         return producerMessage;
     }
 
-    public void setProducerMessage( ProducerMessage producerMessage )
-    {
+    public void setProducerMessage( ProducerMessage producerMessage ) {
         this.producerMessage = producerMessage;
     }
 }

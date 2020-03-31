@@ -29,29 +29,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 
-public class SendMessageRequest
-{
+/**
+ * An API request body to put a message on the Kafka Bus.
+ */
+public class SendMessageRequest {
+
     private Map<String, Object> messageMap;
 
-    public Map<String, Object> getMessageMap()
-    {
+    public Map<String, Object> getMessageMap() {
         return messageMap;
     }
 
-    public void setMessageMap( Map<String, Object> messageMap )
-    {
+    public void setMessageMap( Map<String, Object> messageMap ) {
         this.messageMap = messageMap;
     }
 
-    public String getMessageAsJson()
-    {
+    /**
+     * Get the message map as a JSON representation string.
+     * @return a JSON representation of the message map
+     */
+    public String getMessageAsJson() {
         String result = "";
         ObjectMapper mapper = new ObjectMapper();
-        try
-        {
+        try {
             result = mapper.writeValueAsString( messageMap );
-        }catch ( JsonProcessingException e )
-        {
+        } catch ( JsonProcessingException e ) {
             //lol oops
         }
 

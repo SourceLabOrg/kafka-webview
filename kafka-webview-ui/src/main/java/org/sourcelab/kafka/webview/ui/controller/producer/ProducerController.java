@@ -1,3 +1,5 @@
+package org.sourcelab.kafka.webview.ui.controller.producer;
+
 /**
  * MIT License
  *
@@ -21,7 +23,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.sourcelab.kafka.webview.ui.controller.producer;
 
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
@@ -34,17 +35,22 @@ import org.sourcelab.kafka.webview.ui.repository.ProducerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Controller for Producer Operations.
+ */
 @Controller
 @RequestMapping("/producer")
-public class ProducerController
-{
+public class ProducerController {
     @Autowired
     private ProducerRepository producerRepository;
 
@@ -127,8 +133,7 @@ public class ProducerController
         final Producer producer = producerOptional.get();
 
         final Optional<ProducerMessage> producerMessageOptional = producerMessageRepository.findByProducer( producer );
-        if(!producerMessageOptional.isPresent())
-        {
+        if (!producerMessageOptional.isPresent()) {
             // yeah, I don't know. This shouldn't be possible
             return "redirect:/";
         }

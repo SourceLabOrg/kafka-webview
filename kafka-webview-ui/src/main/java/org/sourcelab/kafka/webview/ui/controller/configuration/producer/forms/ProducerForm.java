@@ -1,3 +1,5 @@
+package org.sourcelab.kafka.webview.ui.controller.configuration.producer.forms;
+
 /**
  * MIT License
  *
@@ -21,13 +23,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.sourcelab.kafka.webview.ui.controller.configuration.producer.forms;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-public class ProducerForm
-{
+/**
+ * The form for creating/updating a Producer.
+ */
+public class ProducerForm {
     private Long id = null;
 
     @NotNull( message = "Enter a unique name")
@@ -53,33 +56,27 @@ public class ProducerForm
     @NotNull(message = "A producer message must reference an existing class in the platform")
     private String producerMessageClassName;
 
-    public Long getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId( Long id )
-    {
+    public void setId( Long id ) {
         this.id = id;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
-    public Long getClusterId()
-    {
+    public Long getClusterId() {
         return clusterId;
     }
 
-    public void setClusterId( Long clusterId )
-    {
+    public void setClusterId( Long clusterId ) {
         this.clusterId = clusterId;
     }
 //    TODO uncomment when we want to send more than a map of string/string as a kafka message
@@ -104,33 +101,27 @@ public class ProducerForm
 //        this.valueMessageFormatId = valueMessageFormatId;
 //    }
 
-    public String getTopic()
-    {
+    public String getTopic() {
         return topic;
     }
 
-    public void setTopic( String topic )
-    {
+    public void setTopic( String topic ) {
         this.topic = topic;
     }
 
-    public String getProducerMessagePropertyNameList()
-    {
+    public String getProducerMessagePropertyNameList() {
         return producerMessagePropertyNameList;
     }
 
-    public void setProducerMessagePropertyNameList( String producerMessagePropertyNameList )
-    {
+    public void setProducerMessagePropertyNameList( String producerMessagePropertyNameList ) {
         this.producerMessagePropertyNameList = producerMessagePropertyNameList;
     }
 
-    public String getProducerMessageClassName()
-    {
+    public String getProducerMessageClassName() {
         return producerMessageClassName;
     }
 
-    public void setProducerMessageClassName( String producerMessageClassName )
-    {
+    public void setProducerMessageClassName( String producerMessageClassName ) {
         this.producerMessageClassName = producerMessageClassName;
     }
 
@@ -138,23 +129,25 @@ public class ProducerForm
         return getId() != null;
     }
 
-    public String[] getPropertyNameListAsArray()
-    {
+    public boolean hasPropertyList() {
+        return producerMessagePropertyNameList != null;
+    }
+
+    public String[] getPropertyNameListAsArray() {
         return producerMessagePropertyNameList.split( "," );
     }
 
     @Override
-    public String toString()
-    {
-        return "ProductForm{id=" + id +
-               ",name='" + name + '\'' +
-               ",clusterId=" + clusterId +
+    public String toString() {
+        return "ProductForm{id=" + id
+                + ",name='" + name + '\''
+                + ",clusterId=" + clusterId
 //               TODO uncomment when we want to send more than a map of string/string as a kafka message
 //               ",keyMessageFormatId=" + keyMessageFormatId +
 //               ",valueMessageFormatId=" + valueMessageFormatId +
-               ",topic='" + topic + '\'' +
-               ",producerMessageKeys='" + producerMessagePropertyNameList + '\'' +
-               ",producerMessageClassName='" + producerMessageClassName + '\'' +
-               '}';
+               + ",topic='" + topic + '\''
+               + ",producerMessageKeys='" + producerMessagePropertyNameList + '\''
+               + ",producerMessageClassName='" + producerMessageClassName + '\''
+               + '}';
     }
 }

@@ -258,19 +258,7 @@
                                     <input
                                             autocomplete="off" class="form-control" id="newOption" name="newOption" type="text"
                                             placeholder="Enter property name"/>
-                                    <div id="optionsContainer">
-                                        <div th:each="propertyName : ${producerForm.getPropertyNameListAsArray()}">
-                                            <div class="form-group row custom-option" style="padding-top: 5px">
-                                                <label class="col-md-2 form-control-label">
-                                                    <i th:text="${propertyName}"/>
-                                                </label>
-                                                <input type="hidden" class="peanutButter" th:value="${propertyName}">
-                                                <div class="col-md-1">
-                                                    <button class="btn removeOption" type="button" onclick="removeOption(this);">-</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div id="messagePropertyNamesContainer" />
                                 </div>
                                 <div class="col-md-1">
                                     <button id="addOption" class="btn add-more" type="button">+</button>
@@ -321,12 +309,38 @@
                 var optionsHtml = template(properties);
 
                 // Append it to our div
-                jQuery('#optionsContainer').append(optionsHtml);
+                jQuery('#messagePropertyNamesContainer').append(optionsHtml);
 
                 // Clear input
                 jQuery('#newOption').val("");
             });
+
+            populateMessageNamesContainer();
         });
+
+        function populateMessageNamesContainer() {
+            var producerFormMessagePropertyNames = [[${producerMessagePropertyNames}]]
+
+            if ( producerFormMessagePropertyNames !== null ) {
+                var source   = jQuery('#options-template').html();
+                var template = Handlebars.compile(source);
+
+                for( var propertyName in producerFormMessagePropertyNames )
+                {
+                    // Generate html from template
+                    var properties = {
+                        optionName: propertyName,
+                    };
+                    var optionsHtml = template(properties);
+
+                    // Append it to our div
+                    jQuery('#messagePropertyNamesContainer').append(optionsHtml);
+                }
+            }
+
+
+        }
+
 
         // Handle removing custom options
         function removeOption(element) {

@@ -1,3 +1,5 @@
+package org.sourcelab.kafka.webview.ui.controller.configuration.producer;
+
 /**
  * MIT License
  *
@@ -21,11 +23,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.sourcelab.kafka.webview.ui.controller.configuration.producer;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.producer.forms.ProducerForm;
-import org.sourcelab.kafka.webview.ui.controller.configuration.view.forms.ViewForm;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicDetails;
@@ -44,20 +44,26 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 import javax.validation.Valid;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  *  Controller for CRUD over Producer entities.
  */
 @Controller
-@RequestMapping("/configuration/producer")
-public class ProducerConfigController extends BaseController
-{
+@RequestMapping( "/configuration/producer")
+public class ProducerConfigController extends BaseController {
     @Autowired
     private ClusterRepository clusterRepository;
 
@@ -73,7 +79,9 @@ public class ProducerConfigController extends BaseController
     @Autowired
     private KafkaOperationsFactory kafkaOperationsFactory;
 
-
+    /**
+     * Initialize the index page for Configuring Producers.
+     */
     @GetMapping
     public String index(final Model model) {
         // Setup breadcrumbs
@@ -87,14 +95,12 @@ public class ProducerConfigController extends BaseController
     }
 
     /**
-     * GET Displays create producer form.
+     * Get the Create Producer page.
      */
     @GetMapping( "/create")
-    public String createProducerForm( final ProducerForm producerForm, final Model model)
-    {
+    public String createProducerForm( final ProducerForm producerForm, final Model model) {
         // Setup breadcrubs
-        if(!model.containsAttribute( "BreadCrumbs" ))
-        {
+        if (!model.containsAttribute( "BreadCrumbs" )) {
             setupBreadCrumbs( model, "Create", null );
         }
 
@@ -107,8 +113,11 @@ public class ProducerConfigController extends BaseController
 
         model.addAttribute("topics", new ArrayList<>());
 
-        if( producerForm.getClusterId() != null )
-        {
+        if ( producerForm.hasPropertyList() ) {
+            model.addAttribute( "producerMessagePropertyNames", producerForm.getPropertyNameListAsArray() );
+        }
+
+        if ( producerForm.getClusterId() != null ) {
             clusterRepository.findById( producerForm.getClusterId() ).ifPresent( (cluster) -> {
                 try (final KafkaOperations operations = kafkaOperationsFactory.create(cluster, getLoggedInUserId())) {
                     final TopicList topics = operations.getAvailableTopics();
@@ -126,14 +135,15 @@ public class ProducerConfigController extends BaseController
         return "configuration/producer/create";
     }
 
+    /**
+     * Edit a Producer by Id.
+     */
     @GetMapping("/edit/{id}")
     public String editProducer(@PathVariable final Long id, final ProducerForm producerForm,
         final RedirectAttributes redirectAttributes,
-        final Model model)
-    {
+        final Model model) {
         final Optional<Producer> producerOptional = producerRepository.findById( id );
-        if(!producerOptional.isPresent())
-        {
+        if (!producerOptional.isPresent()) {
             // Set flash message
             redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find producer!"));
 
@@ -153,7 +163,10 @@ public class ProducerConfigController extends BaseController
         return createProducerForm( producerForm, model );
     }
 
-    @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
+    /**
+     * Delete a Producer by Id.
+     */
+    @PostMapping( path = "/delete/{id}" )
     public String deleteProducer(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
         // Retrieve it
         if (!producerRepository.existsById(id)) {
@@ -170,13 +183,15 @@ public class ProducerConfigController extends BaseController
         return "redirect:/configuration/producer";
     }
 
-    @RequestMapping(path = "/update", method = RequestMethod.POST)
+    /**
+     * Update a producer.
+     */
+    @PostMapping(path = "/update")
     public String updateProducer(
         @Valid final ProducerForm producerForm,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
-        final Model model)
-    {
+        final Model model) {
         // Determine if we're updating or creating
         final boolean updateExisting = producerForm.exists();
 
@@ -215,8 +230,7 @@ public class ProducerConfigController extends BaseController
 
             //Retrieve producer message
             final Optional<ProducerMessage> producerMessageOptional = producerMessageRepository.findByProducer( producer );
-            if(!producerMessageOptional.isPresent())
-            {
+            if (!producerMessageOptional.isPresent()) {
                 // Set flash message and redirect
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find producer's message!"));
 

@@ -1,3 +1,5 @@
+package org.sourcelab.kafka.webview.ui.repository;
+
 /**
  * MIT License
  *
@@ -21,7 +23,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.Producer;
 import org.sourcelab.kafka.webview.ui.model.ProducerMessage;
@@ -31,8 +32,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Producer Message Repository.
+ */
 @Repository
-public interface ProducerMessageRepository extends CrudRepository<ProducerMessage, Long>
-{
+public interface ProducerMessageRepository extends CrudRepository<ProducerMessage, Long> {
     Optional<ProducerMessage> findByProducer(@Param("producer") Producer producer);
 }

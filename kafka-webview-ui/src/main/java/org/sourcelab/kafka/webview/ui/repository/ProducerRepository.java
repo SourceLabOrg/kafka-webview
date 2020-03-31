@@ -1,3 +1,5 @@
+package org.sourcelab.kafka.webview.ui.repository;
+
 /**
  * MIT License
  *
@@ -21,15 +23,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.Producer;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Producer Repository.
+ */
 @Repository
-public interface ProducerRepository extends CrudRepository<Producer, Long>
-{
+public interface ProducerRepository extends CrudRepository<Producer, Long> {
     Producer findByName(final String name);
 
     Iterable<Producer> findAllByOrderByNameAsc();

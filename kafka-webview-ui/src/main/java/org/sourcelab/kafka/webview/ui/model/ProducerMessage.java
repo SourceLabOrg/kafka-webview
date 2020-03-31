@@ -1,3 +1,5 @@
+package org.sourcelab.kafka.webview.ui.model;
+
 /**
  * MIT License
  *
@@ -21,14 +23,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.sourcelab.kafka.webview.ui.model;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Column;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.FetchType;
 import java.sql.Timestamp;
 
+/**
+ * Message associated with a Producer.
+ */
 @Entity
-public class ProducerMessage
-{
+public class ProducerMessage {
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
     private Long id;
@@ -52,73 +62,59 @@ public class ProducerMessage
     @Column(nullable = false)
     private String propertyNameList;
 
-    public Long getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId( Long id )
-    {
+    public void setId( Long id ) {
         this.id = id;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    public void setName( String name )
-    {
+    public void setName( String name ) {
         this.name = name;
     }
 
-    public String getQualifiedClassName()
-    {
+    public String getQualifiedClassName() {
         return qualifiedClassName;
     }
 
-    public void setQualifiedClassName( String qualifiedClassName )
-    {
+    public void setQualifiedClassName( String qualifiedClassName ) {
         this.qualifiedClassName = qualifiedClassName;
     }
 
-    public Timestamp getCreatedAt()
-    {
+    public Timestamp getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt( Timestamp createdAt )
-    {
+    public void setCreatedAt( Timestamp createdAt ) {
         this.createdAt = createdAt;
     }
 
-    public Timestamp getUpdatedAt()
-    {
+    public Timestamp getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt( Timestamp updatedAt )
-    {
+    public void setUpdatedAt( Timestamp updatedAt ) {
         this.updatedAt = updatedAt;
     }
 
-    public Producer getProducer()
-    {
+    public Producer getProducer() {
         return producer;
     }
 
-    public void setProducer( Producer producer )
-    {
+    public void setProducer( Producer producer ) {
         this.producer = producer;
     }
 
-    public String getPropertyNameList()
-    {
+    public String getPropertyNameList() {
         return propertyNameList;
     }
 
-    public void setPropertyNameList( String propertyNameList )
-    {
+    public void setPropertyNameList( String propertyNameList ) {
         this.propertyNameList = propertyNameList;
     }
 }
