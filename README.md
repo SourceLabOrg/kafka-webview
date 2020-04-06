@@ -268,7 +268,16 @@ to the client web browser when you're looking for a small subset of messages.  F
 
 ### 5. Define Views
 
-Views are the last step putting all of the pieces together.  Views let you configure a Topic to consume from, configure which Message Formats the Topic uses, and optionally apply any Filters.
+Views let you configure a Topic to consume from, configure which Message Formats the Topic uses, and optionally apply any Filters.
+
+### 6. Define Producers
+
+Producers let you write messages onto Kafka. With the limitation of one Producer per topic, you add the fully qualified class name of the object that will be represented by the message, and individually add field names that are remembered by the producer for easy message generation.
+![Producer Configuration Screenshot](images/webproducer.PNG)
+
+Upon sending a message, the Producer does no data validation and the consumer is responsible for affirming proper object shape. 
+![Producer Send Message Screenshot](images/webproducer-sendmessage.PNG)
+
 
 ## Writing Custom Deserializers
 

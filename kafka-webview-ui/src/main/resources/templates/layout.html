@@ -147,6 +147,21 @@
                     </ul>
                 </li>
 
+                <!-- Producers -->
+                <li class="nav-item nav-dropdown">
+                    <a class="nav-link nav-dropdown-toggle" th:href="@{/producer}">
+                        <i class="icon-cloud-upload"></i> Producers
+                    </a>
+                    <ul class="nav-dropdown-items">
+                        <li class="nav-item" th:title="${producer.name}" th:each="producer : ${MenuProducers}">
+                            <a class="nav-link" th:href="@{/producer/{id}(id=${producer.id})}">
+                                <i class="icon-cloud-upload"></i>
+                                [[${producer.name}]]
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- Setup -->
                 <li class="divider"></li>
                 <li class="nav-item nav-dropdown" sec:authorize="hasRole('ROLE_ADMIN')">
@@ -183,6 +198,12 @@
                             <a class="nav-link" th:href="@{/configuration/view}" target="_top">
                                 <i class="icon-eye"></i>
                                 Views
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/configuration/producer}" target="_top">
+                                <i class="icon-cloud-upload"></i>
+                                Producers
                             </a>
                         </li>
                         <li class="nav-item">

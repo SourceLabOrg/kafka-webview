@@ -24,12 +24,13 @@
 
 package org.sourcelab.kafka.webview.ui.controller.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.hamcrest.Matchers;
 import org.junit.ClassRule;
@@ -37,7 +38,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sourcelab.kafka.webview.ui.controller.AbstractMvcTest;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.sourcelab.kafka.webview.ui.model.Producer;
 import org.sourcelab.kafka.webview.ui.tools.ClusterTestTools;
+import org.sourcelab.kafka.webview.ui.tools.ProducerTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,14 +50,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
@@ -77,6 +73,9 @@ public class ApiControllerTest extends AbstractMvcTest {
 
     @Autowired
     private ClusterTestTools clusterTestTools;
+
+    @Autowired
+    private ProducerTestTools prodcuerTestTools;
 
     /**
      * Test cannot load pages that require an admin role.
@@ -619,6 +618,108 @@ public class ApiControllerTest extends AbstractMvcTest {
             .andExpect(content().string(containsString(expectedTopic2)))
             .andExpect(content().string(Matchers.not(containsString(expectedTopic1))))
             .andExpect(content().string(Matchers.not(containsString(expectedTopic3))));
+    }
+
+    @Test
+    @Transactional
+    public void test_producer_send_message() throws Exception
+    {
+        // Create a cluster.
+        final Cluster cluster = clusterTestTools.createCluster(
+            "Test Cluster",
+            sharedKafkaTestResource.getKafkaConnectString()
+        );
+
+        String producerTopic = "test-producer-send-topic";
+
+        String messageId = UUID.randomUUID().toString();
+        String messageName = "Paul Rudd";
+        String messagePhone = "5558675309";
+
+        Map<String, String> messageProperties = new HashMap<>();
+        messageProperties.put( "id", messageId );
+        messageProperties.put( "name", messageName );
+        messageProperties.put( "phone", messagePhone );
+
+        final String consumerId = "test-consumer-id-" + System.currentTimeMillis();
+        final Properties consumerProperties = new Properties();
+        consumerProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerId);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerId);
+        consumerProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, cluster.getBrokerHosts());
+
+        sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .createTopic(producerTopic, 1, (short) 1);
+
+        final KafkaConsumer<String, String> testConsumer = sharedKafkaTestResource
+            .getKafkaTestUtils()
+            .getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, consumerProperties);
+
+        final Producer producer = prodcuerTestTools.createProducer( "test-producer-send", producerTopic, String.join( ",", messageProperties.keySet().toArray( new String[0] ) ), cluster );
+
+        String messageRequest = buildMessageRequest( messageProperties );
+
+
+        testConsumer.subscribe( Collections.singletonList( producerTopic ), new ConsumerRebalanceListener() {
+
+            @Override
+            public void onPartitionsRevoked(Collection<TopicPartition> partitions) {}
+
+            @Override
+            public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                System.out.println("Assigned " + partitions);
+                testConsumer.seekToBeginning( partitions );
+            }
+        });
+
+        mockMvc.perform( post("/api/producer/" + producer.getId() + "/send-message")
+            .contentType( MediaType.APPLICATION_JSON )
+            .with( user(adminUserDetails) )
+            .with(csrf())
+            .content(messageRequest) )
+               .andExpect( status().is2xxSuccessful() );
+
+        ConsumerRecords<String, String> consumerRecords = testConsumer.poll(Duration.ofSeconds( 5 ));
+
+        assert(!consumerRecords.isEmpty());
+
+        ConsumerRecord<String, String> postedRecord = consumerRecords.iterator().next();
+        ObjectMapper mapper = new ObjectMapper();
+
+        Map<String,String> consumerRecordValueAsMap = mapper.readValue(postedRecord.value(), Map.class);
+
+        boolean allMessagePropertiesPresent = true;
+
+        for(String key : messageProperties.keySet())
+        {
+            if(!consumerRecordValueAsMap.containsKey( key ) || !consumerRecordValueAsMap.containsValue( messageProperties.get( key ) ))
+            {
+                allMessagePropertiesPresent = false;
+            }
+        }
+
+        assert(allMessagePropertiesPresent);
+
+        clusterTestTools.deleteAllClusters();
+        prodcuerTestTools.deleteAllProducers();
+
+    }
+
+    private String buildMessageRequest(Map<String, String> messageProperties)
+    {
+        StringBuilder messageRequestBuilder = new StringBuilder("{\"messageMap\":{");
+        String messagePropertyKey;
+        for(int i = 0; i<messageProperties.keySet().size() - 1; i++)
+        {
+            messagePropertyKey = (String) messageProperties.keySet().toArray()[i];
+            messageRequestBuilder.append( "\"" + messagePropertyKey + "\":\"" + messageProperties.get( messagePropertyKey ) + "\",");
+        }
+
+        messagePropertyKey = (String) messageProperties.keySet().toArray()[messageProperties.keySet().size() - 1];
+        messageRequestBuilder.append( "\"" + messagePropertyKey + "\":\"" + messageProperties.get( messagePropertyKey ) + "\"}}");
+
+        return messageRequestBuilder.toString();
     }
 
     /**

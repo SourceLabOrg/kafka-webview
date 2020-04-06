@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kafka-webview-ui</artifactId>
-    <version>2.5.0</version>
+    <version>2.7.1</version>
 
     <!-- Module Description and Ownership -->
     <name>Kafka WebView UI</name>
@@ -259,6 +259,13 @@
             <version>0.7</version>
             <scope>test</scope>
         </dependency>
+
+<!--        For Kafka things-->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

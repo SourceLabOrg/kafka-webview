@@ -96,7 +96,9 @@ public class ConsumerGroupOffsetsTest {
     @Test
     public void testSerialization() throws JsonProcessingException {
         // Define our expected output.
-        final String expectedResult = "{\"consumerId\":\"MyConsumerId\",\"topics\":[{\"topic\":\"topic-a\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":0},{\"partition\":1,\"offset\":1}]},{\"topic\":\"topic-b\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":2},{\"partition\":1,\"offset\":3}]}],\"topicNames\":[\"topic-a\",\"topic-b\"]}";
+        final String expectedResult = "{\"consumerId\":\"MyConsumerId\",\"topics\":[{\"topic\":\"topic-a\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":0}," +
+                                      "{\"partition\":1,\"offset\":1}]},{\"topic\":\"topic-b\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":2},{\"partition\":1," +
+                                      "\"offset\":3}]}],\"topicNames\":[\"topic-a\",\"topic-b\"]}";
 
         final ConsumerGroupOffsets offsets = ConsumerGroupOffsets.newBuilder()
             .withConsumerId("MyConsumerId")
