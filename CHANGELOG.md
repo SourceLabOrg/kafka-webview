@@ -2,6 +2,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.5.1 (05/18/2020)
+Expose HealthCheck and App Info endpoints without requiring authentication.
+
+#### Internal Dependency Updates
+-[PR-198](https://github.com/SourceLabOrg/kafka-webview/pull/198) Upgrade from SpringBoot 2.1.9 to 2.1.14.
+
 ## 2.5.0 (11/18/2019)
 #### New Features
 - [PR-194](https://github.com/SourceLabOrg/kafka-webview/pull/194) Adds a new built-in deserializer for byte[] that decodes the bytes into HEX values.
