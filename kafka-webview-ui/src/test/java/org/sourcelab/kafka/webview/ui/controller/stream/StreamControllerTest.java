@@ -98,19 +98,24 @@ public class StreamControllerTest extends AbstractMvcTest {
     @Transactional
     public void smokeTestStream() throws Exception {
 
-        final View view = viewTestTools.createView("TestView");
+        final View view = viewTestTools.createView("TestView-" + System.currentTimeMillis());
 
-        // Hit the stream page for specified view.
-        mockMvc
-            .perform(get("/stream/" + view.getId())
-                .with(user(adminUserDetails)))
-            //.andDo(print())
-            .andExpect(status().isOk())
-            // Contains some basic text
-            .andExpect(content().string(containsString(view.getName())))
-            .andExpect(content().string(containsString(view.getTopic())))
-            .andExpect(content().string(containsString("Switch to View")))
-            .andExpect(content().string(containsString("href=\"/view/" + view.getId() + "\"")));
+        try {
+            // Hit the stream page for specified view.
+            mockMvc
+                .perform(get("/stream/" + view.getId())
+                    .with(user(adminUserDetails)))
+                //.andDo(print())
+                .andExpect(status().isOk())
+                // Contains some basic text
+                .andExpect(content().string(containsString(view.getName())))
+                .andExpect(content().string(containsString(view.getTopic())))
+                .andExpect(content().string(containsString("Switch to View")))
+                .andExpect(content().string(containsString("href=\"/view/" + view.getId() + "\"")));
+        } finally {
+            // Cleanup.
+            viewRepository.delete(view);
+        }
     }
 
     /**
@@ -137,7 +142,7 @@ public class StreamControllerTest extends AbstractMvcTest {
 
             // Create view
             final View view = viewTestTools
-                .createViewWithCluster("TestView", cluster);
+                .createViewWithCluster("TestView-" + System.currentTimeMillis(), cluster);
 
             // Sanity test, no enforced partitions
             assertEquals("Partitions Property should be empty string", "", view.getPartitions());
