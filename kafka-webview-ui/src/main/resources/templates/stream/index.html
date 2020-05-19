@@ -217,6 +217,9 @@
                 // Merge parameters with start position parameters.
                 jQuery.extend(params, SocketDetails.getStartPositionParams());
 
+                // TODO remove.
+                console.log("Params: " + JSON.stringify(params));
+
                 // Send request down websocket.
                 SocketDetails.stompClient.send(SocketDetails.getSubscribeUrl(), {}, JSON.stringify(params));
             },
@@ -441,12 +444,12 @@
 
             <!-- Partition Filter -->
             <div
-                th:replace="fragments/consumerSetting/partitionFilter :: partitionFilter">
+                th:replace="fragments/consumerSetting/partitionFilter :: partitionFilter (showApplyButton=false)">
             </div>
 
             <!-- Record Filters -->
             <div
-                th:replace="fragments/consumerSetting/recordFilter :: recordFilter (view=${view})">
+                th:replace="fragments/consumerSetting/recordFilter :: recordFilter (view=${view},showApplyButton=false)">
             </div>
 
         </div>

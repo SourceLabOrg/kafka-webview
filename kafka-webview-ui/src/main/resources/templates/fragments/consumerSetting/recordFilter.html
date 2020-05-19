@@ -5,10 +5,10 @@
 <body>
 
 <!-- Record Filters -->
-<div th:fragment="recordFilter(view)">
+<div th:fragment="recordFilter(view, showApplyButton)">
     <!-- Optional Record Filters -->
     <hr class="mx-3 my-0">
-    <div class="callout callout-info m-0 py-3">
+    <div class="callout callout-info m-0 py-3" id="container-filters">
         <div>
             <div
                 style="cursor: pointer;"
@@ -50,6 +50,14 @@
                         </tr>
                     </th:block>
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2" style="text-align: center;">
+                                <input th:if="${showApplyButton}" type="button" value="Apply" id="filter-apply"/>
+                                <input type="button" value="Reset" id="filter-reset"/>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -68,6 +76,31 @@
                 var filterId = jQuery(this).val();
                 var checked = jQuery(this).is(':checked');
                 jQuery('.filter-options' + filterId).toggle(checked);
+            });
+
+            /**
+             * Called when you click 'Reset' button to toggle all filters off.
+             */
+            jQuery('input#filter-reset').click(function() {
+                var shouldReload = false;
+                jQuery('input.filter-toggle:checked').each(function(index, checkboxEl) {
+                    var filterId = jQuery(checkboxEl).val();
+                    jQuery('.filter-options' + filterId).toggle(false);
+                    jQuery(checkboxEl).prop("checked", false);
+                    shouldReload = true;
+                });
+
+                if (shouldReload) {
+                    RecordFilter.reload();
+                }
+            });
+
+            /**
+             * Called when you click 'Apply' button to reload current position, but
+             * with filters applied.
+             */
+            jQuery('input#filter-apply').click(function() {
+                RecordFilter.reload();
             });
         });
 
@@ -103,6 +136,8 @@
              * Used to build request json parameters for filters.
              */
             buildFilterParameters: function() {
+                RecordFilter.updateContainerColor();
+
                 // Get the enabled filters
                 var filterIds = RecordFilter.getToggledFilters();
 
@@ -115,6 +150,33 @@
                     recordFilterDefinitions.push(recordFilterDefinition);
                 });
                 return recordFilterDefinitions;
+            },
+
+            /**
+             * Updates container color from 'info' when no filters applied,
+             * to 'warning' when one or more filters are applied.
+             */
+            updateContainerColor: function() {
+                if (RecordFilter.getToggledFilters().length === 0) {
+                    // Move to info color
+                    jQuery("div#container-filters").removeClass("callout-warning");
+                    jQuery("div#container-filters").addClass("callout-info");
+                } else {
+                    // Switch to warning color
+                    jQuery("div#container-filters").removeClass("callout-info");
+                    jQuery("div#container-filters").addClass("callout-warning");
+                }
+            },
+
+            /**
+             * Reload the current page of results.
+             */
+            reload: function() {
+                if (typeof window.executeConsume === "function") {
+                    executeConsume("next");
+                } else {
+                    console.error("function executeConsume() does not exist!");
+                }
             }
         };
 

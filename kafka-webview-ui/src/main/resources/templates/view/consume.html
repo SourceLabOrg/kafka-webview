@@ -78,8 +78,8 @@
                     var inputs = jQuery(rows).find('input');
 
                     if (inputs.length > 0) {
-                        // Hide icon
-                        jQuery(this).find('i').attr('class', '');
+                        // Check text to edit
+                        jQuery(this).val("Edit");
 
                         var partitionOffsetMap = {};
                         jQuery.each(inputs, function() {
@@ -94,8 +94,8 @@
                         // Call api
                         ApiClient.setConsumerState(ConsumerInfo.viewId, partitionOffsetMapJson, handleSeekResults);
                     } else {
-                        // Change Icon to Save
-                        jQuery(this).find('i').attr('class', 'icon-check');
+                        // Change Text to Save
+                        jQuery(this).val("Save");
 
                         jQuery.each(rows, function() {
                             var partitionCell = this.childNodes[0];
@@ -374,7 +374,7 @@
                             <h4 class="alert-heading">No Results Found</h4>
                             <p>Looks like we couldn't find any results!</p>
                             <p>
-                                You're current at the <strong><span id="noResultsFoundDirection"></span></strong> of the topic.
+                                You're currently at the <strong><span id="noResultsFoundDirection"></span></strong> of the topic.
                             </p>
                         </div>
 
@@ -495,9 +495,6 @@
                             <th>Partition</th>
                             <th>
                                 Offset
-                                <a href="#" id="toggleStateEditor">
-                                    <i class="icon-pencil"></i>
-                                </a>
                             </th>
                         </tr>
                         </thead>
@@ -506,6 +503,13 @@
                             <td colspan="2">Loading...</td>
                         </tr>
                         </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="2" style="text-align: left;">
+                                <input type="button" value="Edit" id="toggleStateEditor"/>
+                            </td>
+                        </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -548,12 +552,12 @@
 
             <!-- Partition Filter -->
             <div
-                th:replace="fragments/consumerSetting/partitionFilter :: partitionFilter">
+                th:replace="fragments/consumerSetting/partitionFilter :: partitionFilter(showApplyButton=true)">
             </div>
 
             <!-- Record Filters -->
             <div
-                th:replace="fragments/consumerSetting/recordFilter :: recordFilter (view=${view})">
+                th:replace="fragments/consumerSetting/recordFilter :: recordFilter (view=${view},showApplyButton=true)">
             </div>
         </div>
     </div>
