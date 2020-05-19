@@ -31,6 +31,7 @@ import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityManager;
 import java.sql.Timestamp;
 
 /**
@@ -47,15 +48,18 @@ public class ViewTestTools {
     private final ViewRepository viewRepository;
     private final ClusterTestTools clusterTestTools;
     private final MessageFormatTestTools messageFormatTestTools;
+    private final EntityManager entityManager;
 
     @Autowired
     public ViewTestTools(
         final ViewRepository viewRepository,
         final ClusterTestTools clusterTestTools,
-        final MessageFormatTestTools messageFormatTestTools) {
+        final MessageFormatTestTools messageFormatTestTools,
+        final EntityManager entityManager) {
         this.viewRepository = viewRepository;
         this.clusterTestTools = clusterTestTools;
         this.messageFormatTestTools = messageFormatTestTools;
+        this.entityManager = entityManager;
     }
 
     public View createView(final String name) {
@@ -118,4 +122,13 @@ public class ViewTestTools {
         viewRepository.save(view);
     }
 
+    /**
+     * Refresh/reload entity from Database.
+     * @param view View instance to reload.
+     * @return View instance.
+     */
+    public View reload(final View view) {
+        entityManager.refresh(view);
+        return view;
+    }
 }
