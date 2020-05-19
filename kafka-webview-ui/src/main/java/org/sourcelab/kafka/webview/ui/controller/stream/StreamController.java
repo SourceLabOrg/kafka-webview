@@ -44,13 +44,13 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -118,7 +118,7 @@ public class StreamController extends BaseController {
      * Serves websocket requests, requesting to start a stream on the given view.
      */
     @MessageMapping("/consume/{viewId}")
-    @Transactional
+    @Transactional(readOnly = true)
     public String newConsumer(
         @DestinationVariable final Long viewId,
         final ConsumeRequest consumeRequest,
@@ -153,7 +153,7 @@ public class StreamController extends BaseController {
      * Serves web socket requests, requesting to pause a consumer.
      */
     @MessageMapping("/pause/{viewId}")
-    @Transactional
+    @Transactional(readOnly = true)
     public String pauseConsumer(
         @DestinationVariable final Long viewId,
         final SimpMessageHeaderAccessor headerAccessor) {
@@ -169,7 +169,7 @@ public class StreamController extends BaseController {
      * Serves web socket requests, requesting to resume a consumer.
      */
     @MessageMapping("/resume/{viewId}")
-    @Transactional
+    @Transactional(readOnly = true)
     public String resumeConsumer(
         @DestinationVariable final Long viewId,
         final SimpMessageHeaderAccessor headerAccessor) {

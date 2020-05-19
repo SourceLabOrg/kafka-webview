@@ -5,6 +5,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 2.5.1 (05/19/2020)
 - [ISSUE-209](https://github.com/SourceLabOrg/kafka-webview/issues/209) Expose HealthCheck and App Info endpoints without requiring authentication.
 - [ISSUE-161](https://github.com/SourceLabOrg/kafka-webview/issues/161) Add dedicated 'Apply' and 'Reset' button to Partition and Record Filters.
+- [ISSUE-212](https://github.com/SourceLabOrg/kafka-webview/issues/212) Bugfix for partition filters being persisted when toggled on from `Stream` page.
 
 #### Internal Dependency Updates
 -[PR-198](https://github.com/SourceLabOrg/kafka-webview/pull/198) Upgrade from SpringBoot 2.1.9 to 2.1.14.
