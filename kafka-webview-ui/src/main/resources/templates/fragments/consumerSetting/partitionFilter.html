@@ -5,9 +5,9 @@
     <body>
 
     <!-- Partition Filter -->
-    <div th:fragment="partitionFilter">
+    <div th:fragment="partitionFilter(showApplyButton)">
         <hr class="mx-3 my-0">
-        <div class="callout callout-info m-0 py-3">
+        <div class="callout callout-info m-0 py-3" id="container-partitions">
             <div>
                 <div
                     style="cursor: pointer;"
@@ -26,6 +26,14 @@
                         </thead>
                         <tbody id="partitionSelectorTable">
                         </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="2" style="text-align: center;">
+                                <input th:if="${showApplyButton}" type="button" value="Apply" id="partition-apply"/>
+                                <input type="button" value="Reset" id="partition-reset"/>
+                            </td>
+                        </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -34,9 +42,37 @@
 
         <script type="application/javascript">
 
+            // On load register event listeners.
+            jQuery(document).ready(function() {
+                /**
+                 * Called when you click 'Reset' button to toggle all partitions on.
+                 */
+                jQuery('input#partition-reset').click(function() {
+                    var shouldReload = false;
+                    jQuery('input.partition-toggle').each(function(index, checkboxEl) {
+                        if (!jQuery(checkboxEl).prop("checked")) {
+                            jQuery(checkboxEl).prop("checked", true);
+                            shouldReload = true;
+                        }
+                    });
+
+                    if (shouldReload) {
+                        PartitionFilter.reload();
+                    }
+                });
+
+                /**
+                 * Called when you click 'Apply' button to reload current position, but
+                 * with partitions applied.
+                 */
+                jQuery('input#partition-apply').click(function() {
+                    PartitionFilter.reload();
+                });
+            });
+
             var PartitionFilter = {
                 /**
-                 * Hit API to determine which views are avialable
+                 * Hit API to determine which views are available.
                  */
                 loadPartitionsForView: function(viewId) {
                     ApiClient.getPartitionsForView(viewId, PartitionFilter.loadUi);
@@ -72,11 +108,47 @@
                  * @returns {Array}
                  */
                 getToggledPartitions: function() {
+                    PartitionFilter.updateContainerColor();
+
                     var enabledPartitions = [];
                     jQuery('input.partition-toggle:checked').each(function(index, checkboxEl) {
                         enabledPartitions.push(jQuery(checkboxEl).val());
                     });
                     return enabledPartitions;
+                },
+
+                /**
+                 * Updates container color from 'info' when all partitions are applied,
+                 * to 'warning' when one or more partitions are disabled.
+                 */
+                updateContainerColor: function() {
+                    var allSelected = true;
+                    jQuery('input.partition-toggle').each(function(index, checkboxEl) {
+                        if (!jQuery(checkboxEl).prop("checked")) {
+                            allSelected = false;
+                        }
+                    });
+
+                    if (allSelected) {
+                        // Move to info color
+                        jQuery("div#container-partitions").removeClass("callout-warning");
+                        jQuery("div#container-partitions").addClass("callout-info");
+                    } else {
+                        // Switch to warning color
+                        jQuery("div#container-partitions").removeClass("callout-info");
+                        jQuery("div#container-partitions").addClass("callout-warning");
+                    }
+                },
+
+                /**
+                 * Reload the current page of results.
+                 */
+                reload: function() {
+                    if (typeof window.executeConsume === "function") {
+                        executeConsume("next");
+                    } else {
+                        console.error("function executeConsume() does not exist!");
+                    }
                 }
             };
         </script>

@@ -137,6 +137,7 @@ public class StreamController extends BaseController {
         final SessionIdentifier sessionIdentifier = SessionIdentifier.newStreamIdentifier(userId, sessionId);
 
         // Override settings
+        // TODO View gets flushed and changes are persisted.
         final ViewCustomizer viewCustomizer = new ViewCustomizer(view, consumeRequest);
         viewCustomizer.overrideViewSettings();
         final List<FilterDefinition> configuredFilters = viewCustomizer.getFilterDefinitions();
