@@ -115,6 +115,7 @@ public class StreamControllerTest extends AbstractMvcTest {
 
     /**
      * Test starting a new websocket consumer.
+     * Verifies bug uncovered in ISSUE-212 https://github.com/SourceLabOrg/kafka-webview/issues/212
      */
     @Test
     public void shouldReceiveAMessageFromTheServer() throws Exception {
