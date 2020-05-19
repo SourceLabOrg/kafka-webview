@@ -32,8 +32,11 @@ RUN echo "${WEBVIEW_SHA1}  /tmp/kafka-webview-ui-bin.zip" | sha1sum -c - && \
 # Create volume to persist data
 VOLUME ${WEBVIEW_HOME}/data
 
-# Expose port
+# Expose WebUI Port
 EXPOSE 8080
+
+# Expose Acuator Port for health checks.
+EXPOSE 9090
 
 # What to run when the container starts
 ENTRYPOINT [ "/app/start.sh" ]

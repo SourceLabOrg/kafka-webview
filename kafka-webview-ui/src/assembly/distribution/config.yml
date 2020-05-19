@@ -6,6 +6,10 @@ server:
       ## User login session timeout after 1 hour (3600 seconds)
       timeout: 3600
 
+# Spring Actuator Port
+management:
+  server:
+    port: ${ACTUATOR_PORT:9090}
 
 ## Various App Configs
 app:

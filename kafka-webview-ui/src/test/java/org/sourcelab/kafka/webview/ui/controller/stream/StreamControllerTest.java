@@ -122,41 +122,41 @@ public class StreamControllerTest extends AbstractMvcTest {
         final String expectedSessionId = "MYSESSIONID";
         final String topicName = "TestTopic" + System.currentTimeMillis();
 
-        // Sanity test, no active consumers
-        Assert.assertEquals("Should have no active consumers", 0, webSocketConsumersManager.countActiveConsumers());
-
-        // Create a topic
-        sharedKafkaTestResource
-            .getKafkaTestUtils()
-            .createTopic(topicName, 2, (short) 1);
-
-        // Create cluster
-        final Cluster cluster = clusterTestTools
-            .createCluster("TestCluster", sharedKafkaTestResource.getKafkaConnectString());
-
-        // Create view
-        final View view = viewTestTools
-            .createViewWithCluster("TestView", cluster);
-
-        // Sanity test, no enforced partitions
-        assertEquals("Partitions Property should be empty string", "", view.getPartitions());
-
-        final ConsumeRequest consumeRequest = new ConsumeRequest();
-        consumeRequest.setAction("head");
-        consumeRequest.setPartitions("0,1");
-        consumeRequest.setFilters(new ArrayList<>());
-        consumeRequest.setResultsPerPartition(10);
-
-        final SimpMessageHeaderAccessor mockHeaderAccessor = mock(SimpMessageHeaderAccessor.class);
-        final Authentication mockPrincipal = mock(Authentication.class);
-        when(mockHeaderAccessor.getUser())
-            .thenReturn(mockPrincipal);
-        when(mockPrincipal.getPrincipal())
-            .thenReturn(nonAdminUserDetails);
-        when(mockHeaderAccessor.getSessionId())
-            .thenReturn(expectedSessionId);
-
         try {
+            // Sanity test, no active consumers
+            Assert.assertEquals("Should have no active consumers", 0, webSocketConsumersManager.countActiveConsumers());
+
+            // Create a topic
+            sharedKafkaTestResource
+                .getKafkaTestUtils()
+                .createTopic(topicName, 2, (short) 1);
+
+            // Create cluster
+            final Cluster cluster = clusterTestTools
+                .createCluster("TestCluster", sharedKafkaTestResource.getKafkaConnectString());
+
+            // Create view
+            final View view = viewTestTools
+                .createViewWithCluster("TestView", cluster);
+
+            // Sanity test, no enforced partitions
+            assertEquals("Partitions Property should be empty string", "", view.getPartitions());
+
+            final ConsumeRequest consumeRequest = new ConsumeRequest();
+            consumeRequest.setAction("head");
+            consumeRequest.setPartitions("0,1");
+            consumeRequest.setFilters(new ArrayList<>());
+            consumeRequest.setResultsPerPartition(10);
+
+            final SimpMessageHeaderAccessor mockHeaderAccessor = mock(SimpMessageHeaderAccessor.class);
+            final Authentication mockPrincipal = mock(Authentication.class);
+            when(mockHeaderAccessor.getUser())
+                .thenReturn(mockPrincipal);
+            when(mockPrincipal.getPrincipal())
+                .thenReturn(nonAdminUserDetails);
+            when(mockHeaderAccessor.getSessionId())
+                .thenReturn(expectedSessionId);
+
             final String result = streamController.newConsumer(
                 view.getId(),
                 consumeRequest,
@@ -174,6 +174,10 @@ public class StreamControllerTest extends AbstractMvcTest {
         } finally {
             // Cleanup, disconnect websocket consumers
             webSocketConsumersManager.removeConsumersForSessionId(expectedSessionId);
+
+            // Remove created data.
+            viewTestTools.deleteAllViews();
+            clusterTestTools.deleteAllClusters();
         }
     }
 }
