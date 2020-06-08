@@ -115,7 +115,9 @@ public class KafkaOperations implements AutoCloseable {
                 );
             }
             return new TopicList(topicListings);
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException e) {
             // TODO Handle
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -134,10 +136,7 @@ public class KafkaOperations implements AutoCloseable {
             }
             return new NodeList(nodeDetails);
         } catch (final ExecutionException e) {
-            if (e.getCause() != null && e.getCause() instanceof KafkaException) {
-                throw (KafkaException) e.getCause();
-            }
-            throw new RuntimeException(e.getMessage(), e);
+            throw handleExecutionException(e);
         } catch (final InterruptedException e)  {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -206,7 +205,9 @@ public class KafkaOperations implements AutoCloseable {
             }
             // Return it
             return results;
-        } catch (final InterruptedException | ExecutionException exception) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException exception) {
             // TODO Handle this
             throw new RuntimeException(exception.getMessage(), exception);
         }
@@ -257,7 +258,9 @@ public class KafkaOperations implements AutoCloseable {
 
             // return true?
             return true;
-        } catch (final InterruptedException | ExecutionException exception) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException exception) {
             // TODO Handle this
             throw new RuntimeException(exception.getMessage(), exception);
         }
@@ -292,7 +295,9 @@ public class KafkaOperations implements AutoCloseable {
 
             // Lets return updated topic details
             return getTopicConfig(topic);
-        } catch (final InterruptedException | ExecutionException exception) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException exception) {
             // TODO Handle this
             throw new RuntimeException(exception.getMessage(), exception);
         }
@@ -312,7 +317,9 @@ public class KafkaOperations implements AutoCloseable {
 
             // return true?
             return true;
-        } catch (final InterruptedException | ExecutionException exception) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException exception) {
             // TODO Handle this
             throw new RuntimeException(exception.getMessage(), exception);
         }
@@ -345,8 +352,9 @@ public class KafkaOperations implements AutoCloseable {
 
             // return immutable list.
             return Collections.unmodifiableList(consumerIds);
-
-        } catch (final InterruptedException | ExecutionException e) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -363,7 +371,9 @@ public class KafkaOperations implements AutoCloseable {
         try {
             request.all().get();
             return true;
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (InterruptedException e) {
             // TODO Handle this
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -449,7 +459,9 @@ public class KafkaOperations implements AutoCloseable {
 
             // Return immutable list.
             return Collections.unmodifiableList(consumerGroupDetails);
-        } catch (final InterruptedException | ExecutionException e) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -481,7 +493,9 @@ public class KafkaOperations implements AutoCloseable {
             }
 
             return builder.build();
-        } catch (final InterruptedException | ExecutionException e) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (final InterruptedException  e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -578,10 +592,19 @@ public class KafkaOperations implements AutoCloseable {
                 );
             }
             return configItems;
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (final ExecutionException e) {
+            throw handleExecutionException(e);
+        } catch (InterruptedException e) {
             // TODO Handle this
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    private RuntimeException handleExecutionException(final ExecutionException e) {
+        if (e.getCause() != null && e.getCause() instanceof RuntimeException) {
+            return (RuntimeException) e.getCause();
+        }
+        return new RuntimeException(e.getMessage(), e);
     }
 
     /**
