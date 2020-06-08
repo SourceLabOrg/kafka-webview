@@ -4,9 +4,20 @@
     <body>
 
         <!-- Handles showing Alerts -->
-        <div th:if="${FlashMessage != null}" class="alert alert-dismissable" th:fragment="alert (message)" th:classappend="'alert-' + ${message.getType()}">
+        <div th:if="${message != null}" class="alert alert-dismissable" th:fragment="alert (message)" th:classappend="'alert-' + ${message.getType()}">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <span th:text="${message.getMessage()}"></span>
+            <span th:text="${message.getMessage()}">
+            </span>
+            <span th:if="${message.hasDetails()}">
+                (<a data-toggle="collapse" href="#stackTrace" role="button" aria-expanded="false" aria-controls="stackTrace">show more</a>)
+            </span>
+            <div th:if="${message.hasDetails()}" class="collapse" id="stackTrace" >
+                <ol>
+                    <li th:each="detail : ${message.getDetails()}" th:text="${detail}">
+                    </li>
+                </ol>
+            </div>
+
         </div>
 
     </body>

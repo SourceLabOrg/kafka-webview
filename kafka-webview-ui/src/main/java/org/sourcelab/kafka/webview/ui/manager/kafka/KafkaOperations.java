@@ -41,6 +41,7 @@ import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
@@ -128,12 +129,16 @@ public class KafkaOperations implements AutoCloseable {
 
         try {
             final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
-            for (final Node node: nodes) {
+            for (final Node node : nodes) {
                 nodeDetails.add(new NodeDetails(node.id(), node.host(), node.port(), node.rack()));
             }
             return new NodeList(nodeDetails);
-        } catch (InterruptedException | ExecutionException e) {
-            // TODO Handle
+        } catch (final ExecutionException e) {
+            if (e.getCause() != null && e.getCause() instanceof KafkaException) {
+                throw (KafkaException) e.getCause();
+            }
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (final InterruptedException e)  {
             throw new RuntimeException(e.getMessage(), e);
         }
     }

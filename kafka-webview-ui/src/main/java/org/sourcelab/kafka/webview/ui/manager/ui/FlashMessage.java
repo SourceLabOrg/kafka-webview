@@ -24,16 +24,30 @@
 
 package org.sourcelab.kafka.webview.ui.manager.ui;
 
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorCause;
+import org.sourcelab.kafka.webview.ui.manager.kafka.dto.ApiErrorResponse;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
 /**
  * Represents an Alert Message.
  */
 public class FlashMessage {
     private final String type;
     private final String message;
+    private final List<String> details;
 
     private FlashMessage(final String type, final String message) {
-        this.type = type;
-        this.message = message;
+        this(type, message, Collections.emptyList());
+    }
+
+    private FlashMessage(final String type, final String message, final List<String> details) {
+        this.type = Objects.requireNonNull(type);
+        this.message = Objects.requireNonNull(message);
+        this.details = Objects.requireNonNull(Collections.unmodifiableList(new ArrayList<>(details)));
     }
 
     public String getType() {
@@ -60,6 +74,14 @@ public class FlashMessage {
         return "danger".equals(getType());
     }
 
+    public boolean hasDetails() {
+        return !details.isEmpty();
+    }
+
+    public List<String> getDetails() {
+        return details;
+    }
+
     public static FlashMessage newSuccess(final String message) {
         return new FlashMessage("success", message);
     }
@@ -74,6 +96,38 @@ public class FlashMessage {
 
     public static FlashMessage newDanger(final String message) {
         return new FlashMessage("danger", message);
+    }
+
+    /**
+     * Create a new Danger alert with stack trace.
+     * @param message Message to display.
+     * @param details Additional details about the error.
+     * @return FlashMessage instance.
+     */
+    public static FlashMessage newDanger(final String message, final List<String> details) {
+        return new FlashMessage("danger", message, details);
+    }
+
+    /**
+     * Create a new Danger alert with stack trace.
+     * @param message Message to display.
+     * @param cause Underlying exception.
+     * @return FlashMessage instance.
+     */
+    public static FlashMessage newDanger(final String message, final Throwable cause) {
+        final List<String> reasons = convertExceptionToDetails(cause);
+
+        return new FlashMessage("danger", message, reasons);
+    }
+
+    private static List<String> convertExceptionToDetails(final Throwable throwable) {
+        final ApiErrorCause[] causes = ApiErrorResponse.buildCauseList(throwable);
+        final List<String> reasons = new ArrayList<>();
+
+        for (final ApiErrorCause cause : causes) {
+            reasons.add(cause.getType() + " thrown at " + cause.getMethod() + " -> " + cause.getMessage());
+        }
+        return reasons;
     }
 
     @Override
