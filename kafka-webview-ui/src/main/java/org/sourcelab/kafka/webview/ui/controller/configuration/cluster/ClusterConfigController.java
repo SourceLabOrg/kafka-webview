@@ -24,7 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.cluster;
 
-import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
@@ -421,12 +420,14 @@ public class ClusterConfigController extends BaseController {
                 redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Cluster configuration is valid!"));
             }
         } catch (final Exception e) {
-            String reason = e.getMessage();
-            if (e instanceof KafkaException && e.getCause() != null) {
-                reason = e.getCause().getMessage();
-            }
+            // Collect all reasons.
+            final String reason = e.getMessage();
+
             // Set error msg
-            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newDanger("Error connecting to cluster: " + reason));
+            redirectAttributes.addFlashAttribute(
+                "FlashMessage",
+                FlashMessage.newDanger("Error connecting to cluster: " + reason, e)
+            );
 
             // Mark as invalid
             cluster.setValid(false);

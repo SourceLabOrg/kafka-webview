@@ -24,6 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
+import net.bytebuddy.implementation.bytecode.Throw;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -77,7 +79,7 @@ public class ApiErrorResponse {
      * @param exception exception.
      * @return Array of ApiErrorCauses.
      */
-    public static ApiErrorCause[] buildCauseList(final Exception exception) {
+    public static ApiErrorCause[] buildCauseList(final Throwable exception) {
         if (exception == null) {
             return new ApiErrorCause[0];
         }
