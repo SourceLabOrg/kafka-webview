@@ -22,6 +22,10 @@
                 var isSaslChecked = jQuery('#sasl').is(':checked');
                 jQuery('#ssl-keystore-options').toggle(!isSaslChecked);
             });
+            jQuery('#useTrustStore').click(function() {
+                var isChecked = jQuery('#useTrustStore').is(':checked');
+                jQuery('#ssl-truststore-options').toggle(isChecked);
+            });
             jQuery('#sasl').click(function() {
                 var isChecked = jQuery('#sasl').is(':checked');
 
@@ -114,37 +118,59 @@
 
                             <!-- SSL Options -->
                             <div id="ssl-options" th:styleappend="${clusterForm.getSsl()} ? 'display: block;' : 'display: none;'">
-                                <!-- Trust Store file -->
+                                <!-- Do you require upload of additional truststore? -->
                                 <div class="form-group row">
-                                    <label class="col-md-3 form-control-label" for="trustStoreFile">
-                                        Trust Store
-                                        <div
-                                            th:if="${clusterForm.getTrustStoreFilename()} != null"
-                                            th:text="'Current: ' + ${clusterForm.getTrustStoreFilename()}">
-                                        </div>
+                                    <label class="col-md-3 form-control-label" for="useTrustStore">
+                                        Upload truststore to validate cluster certificate?
                                     </label>
                                     <div class="col-md-9">
                                         <input
-                                            id="trustStoreFile" name="trustStoreFile" class="form-control" type="file"
-                                            placeholder="Select TrustStore JKS"
+                                            id="useTrustStore" name="useTrustStore" class="" type="checkbox"
                                             th:errorclass="is-invalid"
-                                            th:value="*{trustStoreFile}">
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('trustStoreFile')}" th:errors="*{trustStoreFile}"/>
+                                            th:field="*{useTrustStore}">
+
+                                        <small id="passwordHelpBlock" class="form-text text-muted">
+                                            Only required if the certificate served by your cluster is not registered with an accessible certificate authority (CA), or
+                                            if the cluster's certificate has already been registered with your JVM's global truststore.
+                                        </small>
                                     </div>
                                 </div>
 
-                                <!-- Trust Store Password -->
-                                <div class="form-group row">
-                                    <label class="col-md-3 form-control-label" for="trustStorePassword">
-                                        Trust Store Password
-                                    </label>
-                                    <div class="col-md-9">
-                                        <input
-                                            id="trustStorePassword" name="trustStorePassword" class="form-control" type="password"
-                                            placeholder="TrustStore password"
-                                            th:errorclass="is-invalid"
-                                            th:value="*{trustStorePassword}">
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('trustStorePassword')}" th:errors="*{trustStorePassword}"/>
+                                <!-- Only display if trust store is configured -->
+                                <div id="ssl-truststore-options" th:styleappend="${clusterForm.hasTrustStoreFilename()} ? 'display: block;' : 'display: none;'">
+
+                                    <!-- Trust Store file -->
+                                    <div class="form-group row">
+                                        <label class="col-md-3 form-control-label" for="trustStoreFile">
+                                            Trust Store
+                                            <div
+                                                th:if="${clusterForm.getTrustStoreFilename()} != null"
+                                                th:text="'Current: ' + ${clusterForm.getTrustStoreFilename()}">
+                                            </div>
+                                        </label>
+                                        <div class="col-md-9">
+                                            <input
+                                                id="trustStoreFile" name="trustStoreFile" class="form-control" type="file"
+                                                placeholder="Select TrustStore JKS"
+                                                th:errorclass="is-invalid"
+                                                th:value="*{trustStoreFile}">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('trustStoreFile')}" th:errors="*{trustStoreFile}"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- Trust Store Password -->
+                                    <div class="form-group row">
+                                        <label class="col-md-3 form-control-label" for="trustStorePassword">
+                                            Trust Store Password
+                                        </label>
+                                        <div class="col-md-9">
+                                            <input
+                                                id="trustStorePassword" name="trustStorePassword" class="form-control" type="password"
+                                                placeholder="TrustStore password"
+                                                th:errorclass="is-invalid"
+                                                th:value="*{trustStorePassword}">
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('trustStorePassword')}" th:errors="*{trustStorePassword}"/>
+                                        </div>
                                     </div>
                                 </div>
 
