@@ -600,11 +600,16 @@ public class KafkaOperations implements AutoCloseable {
         }
     }
 
-    private RuntimeException handleExecutionException(final ExecutionException e) {
-        if (e.getCause() != null && e.getCause() instanceof RuntimeException) {
-            return (RuntimeException) e.getCause();
+    /**
+     * Handle ExecutionException errors when raised.
+     * @param executionException The exception raised.
+     * @return Appropriate exception instance to throw.
+     */
+    private RuntimeException handleExecutionException(final ExecutionException executionException) {
+        if (executionException.getCause() != null && executionException.getCause() instanceof RuntimeException) {
+            return (RuntimeException) executionException.getCause();
         }
-        return new RuntimeException(e.getMessage(), e);
+        return new RuntimeException(executionException.getMessage(), executionException);
     }
 
     /**
