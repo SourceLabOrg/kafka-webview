@@ -25,8 +25,13 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * For interacting w/ the Cluster database table.
@@ -45,4 +50,6 @@ public interface ClusterRepository extends CrudRepository<Cluster, Long> {
      * @return all clusters ordered by name.
      */
     Iterable<Cluster> findAllByOrderByNameAsc();
+
+    Page<Cluster> findAll(final Pageable pageable);
 }

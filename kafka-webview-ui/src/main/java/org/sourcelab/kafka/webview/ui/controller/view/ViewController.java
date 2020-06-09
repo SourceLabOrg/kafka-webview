@@ -27,20 +27,30 @@ package org.sourcelab.kafka.webview.ui.controller.view;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.PageRequest;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
+import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,11 +60,20 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/view")
 public class ViewController extends BaseController {
-    @Autowired
-    private ViewRepository viewRepository;
 
+    private final ViewRepository viewRepository;
+    private final ClusterRepository clusterRepository;
+    private final MessageFormatRepository messageFormatRepository;
+
+    /**
+     * Constructor.
+     */
     @Autowired
-    private ClusterRepository clusterRepository;
+    public ViewController(final ViewRepository viewRepository, final ClusterRepository clusterRepository, final MessageFormatRepository messageFormatRepository) {
+        this.viewRepository = viewRepository;
+        this.clusterRepository = clusterRepository;
+        this.messageFormatRepository = messageFormatRepository;
+    }
 
     /**
      * GET views index.
@@ -108,10 +127,58 @@ public class ViewController extends BaseController {
     }
 
     /**
+     * GET views index.
+     */
+    @RequestMapping(path = "/datatable", method = RequestMethod.GET)
+    public String datatable(
+        final Model model,
+        @RequestParam(name = "clusterId", required = false) final Long clusterId,
+        final Pageable pageable,
+        final Sort sort
+    ) {
+        // Setup breadcrumbs
+        final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
+
+        // Retrieve all clusters and index by id
+        final Map<Long, Cluster> clustersById = new HashMap<>();
+        clusterRepository
+            .findAllByOrderByNameAsc()
+            .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
+
+        final Page<View> page;
+        // Retrieve all views order by name asc.
+        page = viewRepository.findAll(pageable);
+
+        // Set model Attributes
+        model.addAttribute("page", page);
+        model.addAttribute("clustersById", clustersById);
+
+        final String clusterName;
+        if (clusterId != null && clustersById.containsKey(clusterId)) {
+            // If filtered by a cluster
+            clusterName = clustersById.get(clusterId).getName();
+
+            // Add top level breadcrumb
+            breadCrumbManager
+                .addCrumb("View", "/view")
+                .addCrumb("Cluster: " + clusterName);
+        } else {
+            // If showing all views
+            clusterName = null;
+
+            // Add top level breadcrumb
+            breadCrumbManager.addCrumb("View", null);
+        }
+        model.addAttribute("clusterName", clusterName);
+
+        return "view/datatable";
+    }
+
+    /**
      * GET Displays view for specified view.
      */
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
-    public String index(
+    public String view(
         @PathVariable final Long id,
         final RedirectAttributes redirectAttributes,
         final Model model) {

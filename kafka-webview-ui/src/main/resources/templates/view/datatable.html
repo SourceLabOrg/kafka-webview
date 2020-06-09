@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Views</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+
+        <div th:replace="fragments/noKafkaClustersFound :: display(${clustersById})">
+            <!-- Display no kafka clusters found -->
+        </div>
+
+        <div class="row" th:if="${page.isEmpty()}">
+            <!-- No Views Found -->
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="alert alert-warning" role="alert">
+                        <h4 class="alert-heading"><strong>No Views Found</strong></h4>
+                        <p>
+                            It looks like you have no Views configured yet!<br/>
+                        </p>
+                        <p class="mb-0">
+                            <span sec:authorize="hasRole('ROLE_ADMIN')">
+                                Let's head over and set one up now!
+                                <a th:href="@{/configuration/view/create}">Setup new View</a>
+                            </span>
+                            <span sec:authorize="!hasRole('ROLE_ADMIN')">
+                                Ask an Administrator to configure a view.
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" th:if="${not page.isEmpty()}">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header" th:if="${clusterName == null}">
+                        <i class="fa fa-align-justify"></i>
+                        Views ([[${page.getTotalElements()}]]) ::: Page [[${page.getNumber()}]] of [[${page.getTotalPages()}]]
+
+                        <div class="float-right">
+                            Search <input th:type="text"/>
+                        </div>
+
+                        <div class="float-right">
+                            Cluster <select><option>All Clusters</option><option>Cluster A</option></select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th>
+                                    <a th:href="@{/view/datatable?sort=name,desc}">
+                                        View
+                                    </a></th>
+                                <th>
+                                    <a th:href="@{/view/datatable?sort=topic,desc}">
+                                        Topic
+                                    </a></th>
+                                </th>
+                                <th>
+                                    <a th:href="@{/view/datatable?sort=cluster.name,desc}">
+                                        Cluster
+                                    </a></th>
+                                </th>
+                                <th colspan="2"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="view : ${page.getContent()}">
+                                <td th:text="${view.name}"></td>
+                                <td th:text="${view.topic}"></td>
+                                <td>
+                                    <a th:href="@{/cluster/{id}(id=${view.cluster.id})}" th:text="${clustersById.get(view.cluster.id).name}"></a>
+                                </td>
+                                <td>
+                                    <a th:href="@{/view/{id}(id=${view.id})}">Browse</a>
+                                </td>
+                                <td>
+                                    <a th:href="@{/stream/{id}(id=${view.id})}">Stream</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Display Pager Controls -->
+                    <div class="card-footer" id="table-controls">
+                        <ul class="pagination">
+                            <li class="page-item">
+                                <a class="page-link" th:href="@{/view/datatable?page=0}" id="control-head" th:if="${not page.isFirst()}">
+                                    <i class="fa fa-fast-backward" aria-hidden="true"></i>
+                                    Head
+                                </a>
+                            </li>
+                            <li class="page-item" th:if="${page.hasPrevious()}">
+                                <a class="page-link" th:href="@{/view/datatable?page={page}(page=${page.getNumber() - 1})}" id="control-previous">
+                                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                                    Previous
+                                </a>
+                            </li>
+                            <li class="page-item" th:if="${page.hasNext()}">
+                                <a class="page-link" th:href="@{/view/datatable?page={page}(page=${page.getNumber() + 1})}" id="control-next">
+                                    Next
+                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            <li class="page-item" th:if="${not page.isLast()}">
+                                <a class="page-link" th:href="@{/view/datatable?page={page}(page=${page.getTotalPages() - 1})}" id="control-tail">
+                                    Tail
+                                    <i class="fa fa-fast-forward" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!--/.col-->
+        </div>
+    </div>
+</section>
+
+</body>
+</html>
