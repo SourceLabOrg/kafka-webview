@@ -474,5 +474,12 @@ public class ClusterConfigController extends BaseController {
         } else {
             manager.addCrumb("Clusters", null);
         }
+
+        // Add default trust store property.
+        String defaultTrustStore = System.getProperty("javax.net.ssl.trustStore", "<JRE_HOME>/lib/security/cacerts");
+        if (defaultTrustStore != null && defaultTrustStore.trim().isEmpty()) {
+            defaultTrustStore = "<JRE_HOME>/lib/security/cacerts";
+        }
+        model.addAttribute("defaultTrustStore", defaultTrustStore);
     }
 }

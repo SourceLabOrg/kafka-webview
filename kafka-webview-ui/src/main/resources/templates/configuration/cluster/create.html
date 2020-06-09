@@ -121,7 +121,7 @@
                                 <!-- Do you require upload of additional truststore? -->
                                 <div class="form-group row">
                                     <label class="col-md-3 form-control-label" for="useTrustStore">
-                                        Upload truststore to validate cluster certificate?
+                                        Upload truststore?
                                     </label>
                                     <div class="col-md-9">
                                         <input
@@ -129,9 +129,11 @@
                                             th:errorclass="is-invalid"
                                             th:field="*{useTrustStore}">
 
-                                        <small id="passwordHelpBlock" class="form-text text-muted">
+                                        <small class="form-text text-muted">
                                             Only required if the certificate served by your cluster is not registered with an accessible certificate authority (CA), or
-                                            if the cluster's certificate has already been registered with your JVM's global truststore.
+                                            if the cluster's certificate has not already been registered in your
+                                            JVM's default truststore<span th:if="${defaultTrustStore} == null">.</span>
+                                            <span th:if="${defaultTrustStore} != null"> at <i>[[${defaultTrustStore}]]</i></span>
                                         </small>
                                     </div>
                                 </div>
@@ -155,6 +157,9 @@
                                                 th:errorclass="is-invalid"
                                                 th:value="*{trustStoreFile}">
                                             <div class="invalid-feedback" th:if="${#fields.hasErrors('trustStoreFile')}" th:errors="*{trustStoreFile}"/>
+                                            <small class="form-text text-muted" th:if="${clusterForm.getTrustStoreFilename()} != null">
+                                                Leave empty to continue using previously uploaded TrustStore.
+                                            </small>
                                         </div>
                                     </div>
 
