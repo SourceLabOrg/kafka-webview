@@ -24,8 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.dto;
 
-import net.bytebuddy.implementation.bytecode.Throw;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

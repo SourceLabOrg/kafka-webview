@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.cluster;
 
+import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
@@ -136,6 +137,7 @@ public class ClusterConfigController extends BaseController {
         clusterForm.setSsl(cluster.isSslEnabled());
         clusterForm.setKeyStoreFilename(cluster.getKeyStoreFile());
         clusterForm.setTrustStoreFilename(cluster.getTrustStoreFile());
+        clusterForm.setUseTrustStore(clusterForm.hasTrustStoreFilename());
 
         // Set SASL options
         final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
@@ -181,11 +183,14 @@ public class ClusterConfigController extends BaseController {
         if (clusterForm.getSsl()) {
             // If we're creating a new cluster
             if (!clusterForm.exists()) {
-                // Ensure that we have files uploaded
-                if (clusterForm.getTrustStoreFile() == null || clusterForm.getTrustStoreFile().isEmpty()) {
-                    bindingResult.addError(new FieldError(
-                        "clusterForm", "trustStoreFile", null, true, null, null, "Select a TrustStore JKS to upload")
-                    );
+                // Ensure that we have files uploaded for the truststore,
+                // but only if they elected to upload a truststore at all.
+                if (clusterForm.getUseTrustStore()) {
+                    if (clusterForm.getTrustStoreFile() == null || clusterForm.getTrustStoreFile().isEmpty()) {
+                        bindingResult.addError(new FieldError(
+                            "clusterForm", "trustStoreFile", null, true, null, null, "Select a TrustStore JKS to upload")
+                        );
+                    }
                 }
 
                 // Only require KeyStore if NOT using SASL
@@ -233,8 +238,23 @@ public class ClusterConfigController extends BaseController {
             // Flip flag to true
             cluster.setSslEnabled(true);
 
-            // Determine if we should update keystores
-            if (!clusterForm.exists() || (clusterForm.getTrustStoreFile() != null && !clusterForm.getTrustStoreFile().isEmpty())) {
+            // If they've selected to NOT use a trust store.
+            if (!clusterForm.getUseTrustStore()) {
+                // Delete previous trust store if exists
+                if (cluster.getTrustStoreFile() != null) {
+                    uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
+                }
+                // Clear out properties
+                cluster.setTrustStoreFile(null);
+                cluster.setTrustStorePassword(null);
+            }
+
+            /*
+             * Determine if we should update truststore.  We Update it in the following scenarios:
+             * - If the cluster is being newly created.
+             * - If they uploaded a trust store, and there previously was a truststore.
+             */
+            else if (!clusterForm.exists() || (clusterForm.getTrustStoreFile() != null && !clusterForm.getTrustStoreFile().isEmpty())) {
                 // Delete previous trust store if updating
                 if (cluster.getTrustStoreFile() != null) {
                     uploadManager.deleteKeyStore(cluster.getTrustStoreFile());
@@ -262,6 +282,7 @@ public class ClusterConfigController extends BaseController {
                 }
             }
 
+            // Determine if we should update keystores
             if (!clusterForm.exists() || (clusterForm.getKeyStoreFile() != null && !clusterForm.getKeyStoreFile().isEmpty())) {
                 // Delete previous key store if updating, or if SASL is enabled.
                 if (clusterForm.getSasl() || cluster.getKeyStoreFile() != null) {
@@ -421,7 +442,10 @@ public class ClusterConfigController extends BaseController {
             }
         } catch (final Exception e) {
             // Collect all reasons.
-            final String reason = e.getMessage();
+            String reason = e.getMessage();
+            if (e instanceof TimeoutException) {
+                reason = reason + " (This may indicate an authentication or connection problem)";
+            }
 
             // Set error msg
             redirectAttributes.addFlashAttribute(
@@ -450,5 +474,12 @@ public class ClusterConfigController extends BaseController {
         } else {
             manager.addCrumb("Clusters", null);
         }
+
+        // Add default trust store property.
+        String defaultTrustStore = System.getProperty("javax.net.ssl.trustStore", "<JRE_HOME>/lib/security/cacerts");
+        if (defaultTrustStore != null && defaultTrustStore.trim().isEmpty()) {
+            defaultTrustStore = "<JRE_HOME>/lib/security/cacerts";
+        }
+        model.addAttribute("defaultTrustStore", defaultTrustStore);
     }
 }
