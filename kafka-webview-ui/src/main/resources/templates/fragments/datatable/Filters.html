@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+    <html
+        xmlns:th="http://www.thymeleaf.org">
+    <head/>
+    <body>
+
+    <!-- All Filters -->
+    <div th:fragment="displayFilters(filters)">
+        <th:block th:each="filter : ${filters}">
+            <div th:replace="fragments/datatable/Filters :: displayFilter(${filter})">
+            </div>
+        </th:block>
+    </div>
+
+    <!-- Single Filter -->
+    <div th:fragment="displayFilter(filter)" class="float-right" th:if="${!filter.getOptions().isEmpty()}">
+        [[${filter.getLabel()}]]
+        <select>
+            <option value=""></option>
+            <option th:each="option : ${filter.getOptions()}" th:value="${option.getValue()}" th:text="${option.getLabel()}">
+            </option>
+        </select>
+    </div>
+
+    <div th:fragment="displaySearch(search)" class="float-right" th:if="${search != null}">
+        [[${search.getLabel()}]]
+        <input th:type="text" name="search"/>
+    </div>
+
+    </body>
+</html>

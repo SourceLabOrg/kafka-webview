@@ -45,33 +45,18 @@
                 <div class="card">
                     <div class="card-header" th:if="${clusterName == null}">
                         <i class="fa fa-align-justify"></i>
-                        Views ([[${page.getTotalElements()}]]) ::: Page [[${page.getNumber()}]] of [[${page.getTotalPages()}]]
+                        [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]]) ::: Page [[${datatable.getNumber()}]] of [[${datatable.getTotalPages()}]]
 
                         <!-- Show Search -->
-                        <div th:replace="fragments/datatable/DatatableFilters :: displaySearch(${search})"></div>
+                        <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable.getSearch()})"></div>
 
                         <!-- Show filters -->
-                        <div th:replace="fragments/datatable/DatatableFilters :: displayFilters(${filters})"></div>
+                        <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable.getFilters()})"></div>
                     </div>
                     <div class="card-body">
                         <table class="table table-bordered table-striped table-sm">
-                            <thead>
-                            <tr>
-                                <th>
-                                    <a th:href="@{/view/datatable?sort=name,desc}">
-                                        View
-                                    </a></th>
-                                <th>
-                                    <a th:href="@{/view/datatable?sort=topic,desc}">
-                                        Topic
-                                    </a></th>
-                                </th>
-                                <th>
-                                    <a th:href="@{/view/datatable?sort=cluster.name,desc}">
-                                        Cluster
-                                    </a></th>
-                                </th>
-                                <th colspan="2"></th>
+                            <!-- Column Headers -->
+                            <thead th:replace="fragments/datatable/Columns :: displayColumns(${datatable})"></thead>
                             </tr>
                             </thead>
                             <tbody>
@@ -92,33 +77,7 @@
                         </table>
                     </div>
                     <!-- Display Pager Controls -->
-                    <div class="card-footer" id="table-controls">
-                        <ul class="pagination">
-                            <li class="page-item">
-                                <a class="page-link" th:href="@{/view/datatable?page=0}" id="control-head" th:if="${not page.isFirst()}">
-                                    <i class="fa fa-fast-backward" aria-hidden="true"></i>
-                                    Head
-                                </a>
-                            </li>
-                            <li class="page-item" th:if="${page.hasPrevious()}">
-                                <a class="page-link" th:href="@{/view/datatable?page={page}(page=${page.getNumber() - 1})}" id="control-previous">
-                                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
-                                    Previous
-                                </a>
-                            </li>
-                            <li class="page-item" th:if="${page.hasNext()}">
-                                <a class="page-link" th:href="@{/view/datatable?page={page}(page=${page.getNumber() + 1})}" id="control-next">
-                                    Next
-                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                </a>
-                            </li>
-                            <li class="page-item" th:if="${not page.isLast()}">
-                                <a class="page-link" th:href="@{/view/datatable?page={page}(page=${page.getTotalPages() - 1})}" id="control-tail">
-                                    Tail
-                                    <i class="fa fa-fast-forward" aria-hidden="true"></i>
-                                </a>
-                            </li>
-                        </ul>
+                    <div th:replace="fragments/datatable/pager :: display(${datatable})">
                     </div>
                 </div>
             </div>

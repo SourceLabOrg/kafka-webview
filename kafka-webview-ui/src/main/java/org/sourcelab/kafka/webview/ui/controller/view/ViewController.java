@@ -25,6 +25,10 @@
 package org.sourcelab.kafka.webview.ui.controller.view;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
+import org.sourcelab.kafka.webview.ui.manager.datatable.Datatable;
+import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableColumn;
+import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableFilter;
+import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableSearch;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.PageRequest;
@@ -49,7 +53,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -171,7 +177,31 @@ public class ViewController extends BaseController {
         }
         model.addAttribute("clusterName", clusterName);
 
-        return "view/datatable";
+        // Create a filter
+        final List<DatatableFilter.FilterOption> filterOptions = new ArrayList<>();
+        filterOptions.add(new DatatableFilter.FilterOption("1", "Cluster A"));
+        filterOptions.add(new DatatableFilter.FilterOption("2", "Cluster B"));
+        final DatatableFilter filter = new DatatableFilter("Cluster", "clusterId", filterOptions);
+        model.addAttribute("filters", new DatatableFilter[] { filter });
+
+        // Create search
+        final DatatableSearch search = new DatatableSearch("Search", "name");
+        model.addAttribute("search", search);
+
+        final Datatable.Builder<View> builder = Datatable.newBuilder(View.class)
+            .withLabel("Views")
+            .withPage(page)
+            .withColumn(new DatatableColumn("name", "View", 1, true))
+            .withColumn(new DatatableColumn("topic", "Topic", 1, true))
+            .withColumn(new DatatableColumn("cluster.name", "Cluster", 1, true))
+            .withColumn(new DatatableColumn("", "", 2, false))
+            .withFilter(new DatatableFilter("Cluster", "clusterId", filterOptions))
+            .withSearch("Search", "name");
+
+        model.addAttribute("datatable", builder.build());
+
+
+        return "view/datatable2";
     }
 
     /**

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- All Columns -->
+<thead th:fragment="displayColumns(datatable)">
+    <tr>
+        <th:block th:each="column : ${datatable.getColumns()}">
+            <th th:replace="fragments/datatable/Columns :: displayColumn(${datatable}, ${column})"></th>
+        </th:block>
+    </tr>
+</thead>
+
+<!-- Single Column -->
+<th th:fragment="displayColumn(datatable, column)" th:colspan="${column.getColSpan()}">
+    <a th:if="${column.isSortable()}"
+        th:text="${column.getLabel()}"
+        th:href="@{/view/datatable?sort={field},desc(field=${column.getField()})}">
+    </a>
+    <span th:if="${! column.isSortable()}" th:text="${column.getLabel()}"></span>
+</th>
+
+
+</body>
+</html>

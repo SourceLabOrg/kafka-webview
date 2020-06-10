@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Display Footer Pager  -->
+<div th:fragment="display(datatable)" class="card-footer" id="table-controls">
+    <!-- Display Pager Controls -->
+    <ul class="pagination">
+        <li class="page-item">
+            <a class="page-link" th:href="@{/view/datatable?page=0}" id="control-head" th:if="${not datatable.isFirstPage()}">
+                <i class="fa fa-fast-backward" aria-hidden="true"></i>
+                Head
+            </a>
+        </li>
+        <li class="page-item" th:if="${datatable.hasPreviousPage()}">
+            <a class="page-link" th:href="@{/view/datatable?page={page}(page=${datatable.getNumber() - 1})}" id="control-previous">
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                Previous
+            </a>
+        </li>
+        <li class="page-item" th:if="${datatable.hasNextPage()}">
+            <a class="page-link" th:href="@{/view/datatable?page={page}(page=${datatable.getNumber() + 1})}" id="control-next">
+                Next
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+            </a>
+        </li>
+        <li class="page-item" th:if="${not datatable.isLastPage()}">
+            <a class="page-link" th:href="@{/view/datatable?page={page}(page=${datatable.getTotalPages() - 1})}" id="control-tail">
+                Tail
+                <i class="fa fa-fast-forward" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>
