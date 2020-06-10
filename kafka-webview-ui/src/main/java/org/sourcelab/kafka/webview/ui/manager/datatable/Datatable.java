@@ -58,6 +58,10 @@ public class Datatable<T> {
         return page.isFirst();
     }
 
+    public List<T> getRecords() {
+        return page.getContent();
+    }
+
     public List<DatatableColumn> getColumns() {
         return columns;
     }

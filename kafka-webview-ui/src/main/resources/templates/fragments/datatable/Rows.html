@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Display Footer Pager  -->
+<tbody th:fragment="display(datatable)">
+    <tr th:each="record : ${datatable.getRecords()}">
+        <th:block th:each="column : ${datatable.getColumns()}">
+            <td th:text="${column.render(record)}"></td>
+        </th:block>
+    </tr>
+</tbody>
+
+</body>
+</html>

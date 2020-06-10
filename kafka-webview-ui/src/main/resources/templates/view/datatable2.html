@@ -57,23 +57,7 @@
                         <table class="table table-bordered table-striped table-sm">
                             <!-- Column Headers -->
                             <thead th:replace="fragments/datatable/Columns :: displayColumns(${datatable})"></thead>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="view : ${page.getContent()}">
-                                <td th:text="${view.name}"></td>
-                                <td th:text="${view.topic}"></td>
-                                <td>
-                                    <a th:href="@{/cluster/{id}(id=${view.cluster.id})}" th:text="${clustersById.get(view.cluster.id).name}"></a>
-                                </td>
-                                <td>
-                                    <a th:href="@{/view/{id}(id=${view.id})}">Browse</a>
-                                </td>
-                                <td>
-                                    <a th:href="@{/stream/{id}(id=${view.id})}">Stream</a>
-                                </td>
-                            </tr>
-                            </tbody>
+                            <tbody th:replace="fragments/datatable/Rows :: display(${datatable})"></tbody>
                         </table>
                     </div>
                     <!-- Display Pager Controls -->
