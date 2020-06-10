@@ -29,6 +29,7 @@ import org.sourcelab.kafka.webview.ui.manager.datatable.Datatable;
 import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableColumn;
 import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableFilter;
 import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableSearch;
+import org.sourcelab.kafka.webview.ui.manager.datatable.LinkTemplate;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.PageRequest;
@@ -156,7 +157,6 @@ public class ViewController extends BaseController {
         page = viewRepository.findAll(pageable);
 
         // Set model Attributes
-        model.addAttribute("page", page);
         model.addAttribute("clustersById", clustersById);
 
         final String clusterName;
@@ -179,8 +179,8 @@ public class ViewController extends BaseController {
 
         // Create a filter
         final List<DatatableFilter.FilterOption> filterOptions = new ArrayList<>();
-        filterOptions.add(new DatatableFilter.FilterOption("1", "Cluster A"));
-        filterOptions.add(new DatatableFilter.FilterOption("2", "Cluster B"));
+        clustersById
+            .forEach((id, cluster) -> filterOptions.add(new DatatableFilter.FilterOption(String.valueOf(id), cluster.getName())));
         final DatatableFilter filter = new DatatableFilter("Cluster", "clusterId", filterOptions);
         model.addAttribute("filters", new DatatableFilter[] { filter });
 
@@ -204,14 +204,28 @@ public class ViewController extends BaseController {
             .withColumn(DatatableColumn.newBuilder(View.class)
                 .withFieldName("cluster.name")
                 .withLabel("Cluster")
-                .withRenderFunction(view -> view.getCluster().getName())
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/cluster/" + record.getId(),
+                    (record) -> record.getCluster().getName()
+                ))
                 .build())
             .withColumn(DatatableColumn.newBuilder(View.class)
                 .withLabel("")
                 .withFieldName("")
-                .withColSpan(2)
                 .withIsSortable(false)
-                .withRenderFunction((view) -> "<a th:href=\"@{/cluster/{id}(id=${view.cluster.id})}\" th:text=\"${clustersById.get(view.cluster.id).name}\"></a>")
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/view/" + record.getId(),
+                    (record) -> "Browse"
+                ))
+                .build())
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withLabel("")
+                .withFieldName("")
+                .withIsSortable(false)
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/stream/" + record.getId(),
+                    (record) -> "Stream"
+                ))
                 .build())
             .withFilter(new DatatableFilter("Cluster", "clusterId", filterOptions))
             .withSearch("Search", "name");

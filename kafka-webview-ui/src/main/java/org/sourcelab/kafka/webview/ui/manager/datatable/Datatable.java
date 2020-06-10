@@ -58,6 +58,10 @@ public class Datatable<T> {
         return page.isFirst();
     }
 
+    public boolean isEmpty() {
+        return page.isEmpty();
+    }
+
     public List<T> getRecords() {
         return page.getContent();
     }

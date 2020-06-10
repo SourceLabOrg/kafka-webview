@@ -2,6 +2,9 @@ package org.sourcelab.kafka.webview.ui.manager.datatable;
 
 import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -15,16 +18,31 @@ public class DatatableColumn<T> {
     private final int colSpan;
     private final boolean isSortable;
     private Function<T, String> renderFunction;
+    private final RenderTemplate renderTemplate;
 
     public DatatableColumn(
         final String fieldName, final String label, final int colSpan, final boolean isSortable,
-        final Function<T, String> renderFunction
+        final Function<T, String> renderFunction,
+        final RenderTemplate renderTemplate
     ) {
         this.fieldName = fieldName;
         this.label = label;
         this.colSpan = colSpan;
         this.isSortable = isSortable;
         this.renderFunction = renderFunction;
+        this.renderTemplate = renderTemplate;
+    }
+
+    public RenderTemplate getRenderTemplate() {
+        if (renderTemplate == null) {
+            return new RenderTemplate<T>("fragments/datatable/fields/TextValue", "display") {
+                @Override
+                List<Object> getParameters(final T record) {
+                    return Collections.singletonList(render(record));
+                }
+            };
+        }
+        return renderTemplate;
     }
 
     public String render(final T record) {
@@ -65,7 +83,8 @@ public class DatatableColumn<T> {
         private String label;
         private int colSpan = 1;
         private boolean isSortable = true;
-        private Function<T, String> renderFunction;
+        private Function<T, String> renderFunction = null;
+        private RenderTemplate<T> renderTemplate = null;
 
         private Builder() {
         }
@@ -95,8 +114,13 @@ public class DatatableColumn<T> {
             return this;
         }
 
+        public Builder<T> withRenderTemplate(final RenderTemplate<T> renderTemplate) {
+            this.renderTemplate = renderTemplate;
+            return this;
+        }
+
         public DatatableColumn<T> build() {
-            return new DatatableColumn<T>(fieldName, label, colSpan, isSortable, renderFunction);
+            return new DatatableColumn<T>(fieldName, label, colSpan, isSortable, renderFunction, renderTemplate);
         }
     }
 }

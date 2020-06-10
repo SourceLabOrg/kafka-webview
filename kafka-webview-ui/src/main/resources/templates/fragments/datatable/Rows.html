@@ -8,7 +8,7 @@
 <tbody th:fragment="display(datatable)">
     <tr th:each="record : ${datatable.getRecords()}">
         <th:block th:each="column : ${datatable.getColumns()}">
-            <td th:text="${column.render(record)}"></td>
+            <td th:replace="__${column.getRenderTemplate().getTemplateCall(record)}__"></td>
         </th:block>
     </tr>
 </tbody>

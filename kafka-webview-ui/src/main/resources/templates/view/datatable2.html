@@ -17,7 +17,7 @@
             <!-- Display no kafka clusters found -->
         </div>
 
-        <div class="row" th:if="${page.isEmpty()}">
+        <div class="row" th:if="${datatable.isEmpty()}">
             <!-- No Views Found -->
             <div class="col-lg-12">
                 <div class="card">
@@ -40,10 +40,10 @@
             </div>
         </div>
 
-        <div class="row" th:if="${not page.isEmpty()}">
+        <div class="row" th:if="${not datatable.isEmpty()}">
             <div class="col-lg-12">
                 <div class="card">
-                    <div class="card-header" th:if="${clusterName == null}">
+                    <div class="card-header">
                         <i class="fa fa-align-justify"></i>
                         [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]]) ::: Page [[${datatable.getNumber()}]] of [[${datatable.getTotalPages()}]]
 
