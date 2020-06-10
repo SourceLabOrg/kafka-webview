@@ -45,6 +45,7 @@ public class ClusterForm {
 
     // SSL Options
     private Boolean ssl = false;
+    private Boolean useTrustStore = false;
 
     private MultipartFile trustStoreFile;
     private String trustStoreFilename;
@@ -139,6 +140,22 @@ public class ClusterForm {
         } else {
             return trustStoreFilename;
         }
+    }
+
+    public Boolean getUseTrustStore() {
+        return useTrustStore;
+    }
+
+    public void setUseTrustStore(final Boolean useTrustStore) {
+        this.useTrustStore = useTrustStore;
+    }
+
+    /**
+     * Is there a configured TrustStore file?
+     * @return true if so, false if not.
+     */
+    public boolean hasTrustStoreFilename() {
+        return trustStoreFilename != null && !trustStoreFilename.isEmpty();
     }
 
     public void setTrustStoreFilename(final String trustStoreFilename) {

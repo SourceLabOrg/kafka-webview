@@ -82,10 +82,10 @@ public class KafkaClientConfigUtilTest {
     }
 
     /**
-     * Basic smoke test with SSL, without SASL options.
+     * Basic smoke test with SSL and TrustStore, without SASL options.
      */
     @Test
-    public void testApplyCommonSettings_withSsl_noSasl() {
+    public void testApplyCommonSettings_withSsl_noSasl_withTrustStore() {
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(expectedBrokerHosts)
             .withUseSsl(true)
@@ -100,7 +100,30 @@ public class KafkaClientConfigUtilTest {
 
         // Validate
         validateDefaultKeys(config);
-        validateSsl(config, "SSL", true);
+        validateSsl(config, "SSL", true, true);
+        validateNoSasl(config);
+    }
+
+    /**
+     * Basic smoke test with SSL and NO TrustStore, without SASL options.
+     */
+    @Test
+    public void testApplyCommonSettings_withSsl_noSasl_withNoTrustStore() {
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(expectedBrokerHosts)
+            .withUseSsl(true)
+            .withKeyStoreFile(expectedKeyStoreFile)
+            .withKeyStorePassword(expectedKeyStorePassword)
+            .withTrustStoreFile(null)
+            .withTrustStorePassword(null)
+            .withUseSasl(false)
+            .build();
+
+        final Map<String, Object> config = util.applyCommonSettings(clusterConfig, consumerId);
+
+        // Validate
+        validateDefaultKeys(config);
+        validateSsl(config, "SSL", true, false);
         validateNoSasl(config);
     }
 
@@ -149,10 +172,10 @@ public class KafkaClientConfigUtilTest {
     }
 
     /**
-     * Basic smoke test with SSL, with SASL plain mechanism options.
+     * Basic smoke test with SSL and trust store, with SASL plain mechanism options.
      */
     @Test
-    public void testApplyCommonSettings_withSsl_withSasl() {
+    public void testApplyCommonSettings_withSsl_withSasl_withTrustStore() {
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
             .withBrokerHosts(expectedBrokerHosts)
             .withUseSsl(true)
@@ -171,19 +194,52 @@ public class KafkaClientConfigUtilTest {
 
         // Validate
         validateDefaultKeys(config);
-        validateSsl(config, "SASL_SSL", false);
+        validateSsl(config, "SASL_SSL", false, true);
+        validateSaslPlainMechanism(config, "SASL_SSL");
+    }
+
+    /**
+     * Basic smoke test with SSL and NO truststore, with SASL plain mechanism options.
+     */
+    @Test
+    public void testApplyCommonSettings_withSsl_withSasl_withNoTrustStore() {
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(expectedBrokerHosts)
+            .withUseSsl(true)
+            .withKeyStoreFile(expectedKeyStoreFile)
+            .withKeyStorePassword(expectedKeyStorePassword)
+            .withTrustStoreFile(null)
+            .withTrustStorePassword(null)
+            .withUseSasl(true)
+            .withSaslMechanism(expectedSaslPlainMechanism)
+            .withSaslPlaintextUsername(expectedSaslUsername)
+            .withSaslPlaintextPassword(expectedSaslPassword)
+            .withSaslJaas(expectedSaslJaas)
+            .build();
+
+        final Map<String, Object> config = util.applyCommonSettings(clusterConfig, consumerId);
+
+        // Validate
+        validateDefaultKeys(config);
+        validateSsl(config, "SASL_SSL", false, false);
         validateSaslPlainMechanism(config, "SASL_SSL");
     }
 
     private void validateSsl(
         final Map<String, Object> config,
         final String expectedSecurityProtocol,
-        final boolean shouldHaveKeyStoreConfiguration
+        final boolean shouldHaveKeyStoreConfiguration,
+        final boolean shouldHaveTrustStoreConfiguration
     ) {
         assertNotNull(config);
         validateKey(config, CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, expectedSecurityProtocol);
-        validateKey(config, SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/tmp/" + expectedTrustStoreFile);
-        validateKey(config, SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, expectedTrustStorePassword);
+        if (shouldHaveTrustStoreConfiguration) {
+            validateKey(config, SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/tmp/" + expectedTrustStoreFile);
+            validateKey(config, SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, expectedTrustStorePassword);
+        } else {
+            validateNoKey(config, SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG);
+            validateNoKey(config, SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG);
+        }
 
         if (shouldHaveKeyStoreConfiguration) {
             validateKey(config, SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/tmp/" + expectedKeyStoreFile);

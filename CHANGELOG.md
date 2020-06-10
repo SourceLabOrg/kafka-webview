@@ -2,6 +2,10 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.6.0 (UNRELEASED)
+- [ISSUE-144](https://github.com/SourceLabOrg/kafka-webview/issues/144) Make providing a TrustStore file when setting up a SSL enabled cluster optional.  You might not want/need this option if your JVM is already configured to accept the SSL certificate served by the cluster, or if the cluster's certificate can be validated by a publically accessible CA.
+- [PR-215](https://github.com/SourceLabOrg/kafka-webview/pull/215) Improve errors displayed when using the `test cluster` functionality.
+
 ## 2.5.1 (05/19/2020)
 - [ISSUE-209](https://github.com/SourceLabOrg/kafka-webview/issues/209) Expose HealthCheck and App Info endpoints without requiring authentication.
   - Docker image now exposes port 9090 for Actuator end points.
