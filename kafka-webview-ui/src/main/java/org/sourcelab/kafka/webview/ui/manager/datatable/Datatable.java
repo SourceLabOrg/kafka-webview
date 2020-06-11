@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
  *
  */
 public class Datatable<T> {
+    private final Map<String, String> requestParams;
     private final String url;
     private final String label;
     private final Page<T> page;
@@ -21,7 +23,8 @@ public class Datatable<T> {
     private final List<DatatableFilter> filters;
     private final DatatableSearch datatableSearch;
 
-    public Datatable(final String url, final String label, final Page<T> page, final List<DatatableColumn> columns, final List<DatatableFilter> filters, final DatatableSearch datatableSearch) {
+    public Datatable(final Map<String, String> requestParams, final String url, final String label, final Page<T> page, final List<DatatableColumn> columns, final List<DatatableFilter> filters, final DatatableSearch datatableSearch) {
+        this.requestParams = Collections.unmodifiableMap(new HashMap<>(requestParams));
         this.url = url;
         this.label = label;
         this.page = page;
@@ -47,9 +50,13 @@ public class Datatable<T> {
 
         final Map<String, String> params = new LinkedHashMap<>();
 
+        // Add search
         if (getSearch() != null) {
             params.put("search", getSearch().getCurrentSearchTerm());
         }
+
+        // Add filters
+        getFilters().forEach((filter) -> params.put(filter.getField(), getCurrentFilterValueFor(filter)));
 
         if (page.getSort().isSorted()) {
             final List<String> sortValues = new ArrayList<>();
@@ -77,6 +84,14 @@ public class Datatable<T> {
         }
 
         return getUrl() + "?" + String.join("&", paramStr);
+    }
+
+    public String getCurrentFilterValueFor(final DatatableFilter filter) {
+        final String param = filter.getField();
+        if (requestParams.containsKey(param)) {
+            return requestParams.get(param);
+        }
+        return "";
     }
 
     public String getLabel() {
@@ -181,6 +196,7 @@ public class Datatable<T> {
     }
 
     public static final class Builder<T> {
+        private Map<String, String> requestParams = new HashMap<>();
         private String url;
         private String label;
         private Page<T> page;
@@ -189,6 +205,12 @@ public class Datatable<T> {
         private DatatableSearch datatableSearch;
 
         private Builder() {
+        }
+
+        public Builder<T> withRequestParams(final Map<String, String> requestParams) {
+            this.requestParams.clear();
+            this.requestParams.putAll(requestParams);
+            return this;
         }
 
         public Builder<T> withLabel(String label) {
@@ -236,7 +258,18 @@ public class Datatable<T> {
         }
 
         public Datatable<T> build() {
-            return new Datatable<>(url, label, page, columns, filters, datatableSearch);
+            // Inject current search term from request parameters if available and not already set.
+            if (datatableSearch != null && datatableSearch.getField() != null && datatableSearch.getCurrentSearchTerm() == null) {
+                if (requestParams.containsKey("search")) {
+                    datatableSearch = new DatatableSearch(
+                        datatableSearch.getLabel(),
+                        datatableSearch.getField(),
+                        requestParams.get("search")
+                    );
+                }
+            }
+
+            return new Datatable<>(requestParams, url, label, page, columns, filters, datatableSearch);
         }
     }
 }

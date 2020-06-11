@@ -11,7 +11,7 @@
         <li class="page-item">
             <a class="page-link" th:href="@{__${datatable.getUrlWithParams('page', '0')}__}" id="control-head" th:if="${not datatable.isFirstPage()}">
                 <i class="fa fa-fast-backward" aria-hidden="true"></i>
-                Head
+                First
             </a>
         </li>
         <li class="page-item" th:if="${datatable.hasPreviousPage()}">
@@ -28,7 +28,7 @@
         </li>
         <li class="page-item" th:if="${not datatable.isLastPage()}">
             <a class="page-link" th:href="@{__${datatable.getUrlWithParams('page', '{page}')}__(page=${datatable.getTotalPages() - 1})}" id="control-tail">
-                Tail
+                Last
                 <i class="fa fa-fast-forward" aria-hidden="true"></i>
             </a>
         </li>

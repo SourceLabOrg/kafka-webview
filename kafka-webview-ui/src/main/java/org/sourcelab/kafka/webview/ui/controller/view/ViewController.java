@@ -133,6 +133,7 @@ public class ViewController extends BaseController {
         final Model model,
         @RequestParam(name = "clusterId", required = false) final Long clusterId,
         final Pageable pageable,
+        @RequestParam Map<String,String> allParams,
         @RequestParam(name = "search", required = false) final String searchStr
     ) {
         // Setup breadcrumbs
@@ -144,12 +145,17 @@ public class ViewController extends BaseController {
             .findAllByOrderByNameAsc()
             .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
 
+        final boolean hasSearchStr = searchStr != null && !searchStr.isEmpty();
         final Page<View> page;
-        // Retrieve all views order by name asc.
-        if (searchStr == null || searchStr.trim().isEmpty()) {
+        // wtf
+        if (!hasSearchStr && clusterId == null) {
             page = viewRepository.findAll(pageable);
-        } else {
+        } else if (!hasSearchStr && clusterId != null) {
+            page = viewRepository.findAllByClusterId(clusterId, pageable);
+        } else if (hasSearchStr && clusterId == null) {
             page = viewRepository.findByNameContainingIgnoreCase(searchStr, pageable);
+        } else {
+            page = viewRepository.findByClusterIdAndNameContainingIgnoreCase(clusterId, searchStr, pageable);
         }
 
         // Set model Attributes
@@ -181,6 +187,7 @@ public class ViewController extends BaseController {
         model.addAttribute("filters", new DatatableFilter[] { filter });
 
         final Datatable.Builder<View> builder = Datatable.newBuilder(View.class)
+            .withRequestParams(allParams)
             .withUrl("/view/datatable")
             .withLabel("Views")
             .withPage(page)

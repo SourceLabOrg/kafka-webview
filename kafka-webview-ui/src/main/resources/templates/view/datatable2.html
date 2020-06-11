@@ -51,7 +51,7 @@
                         <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable})"></div>
 
                         <!-- Show filters -->
-                        <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable.getFilters()})"></div>
+                        <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable})"></div>
                     </div>
                     <div class="card-body">
                         <table class="table table-bordered table-striped table-sm">

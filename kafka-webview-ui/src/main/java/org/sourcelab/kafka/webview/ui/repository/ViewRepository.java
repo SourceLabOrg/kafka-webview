@@ -76,5 +76,10 @@ public interface ViewRepository extends CrudRepository<View, Long> {
 
     Page<View> findAll(final Pageable pageable);
 
+    Page<View> findAllByClusterId(final long clusterId, final Pageable pageable);
+
     Page<View> findByNameContainingIgnoreCase(final String name, final Pageable pageable);
+
+    Page<View> findByClusterIdAndNameContainingIgnoreCase(final long clusterId, final String name, final Pageable pageable);
+
 }

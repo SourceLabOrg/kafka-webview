@@ -5,26 +5,32 @@
     <body>
 
     <!-- All Filters -->
-    <div th:fragment="displayFilters(filters)">
-        <th:block th:each="filter : ${filters}">
-            <div th:replace="fragments/datatable/Filters :: displayFilter(${filter})">
+    <div th:fragment="displayFilters(datatable)">
+        <th:block th:each="filter : ${datatable.getFilters()}">
+            <div th:replace="fragments/datatable/Filters :: displayFilter(${datatable}, ${filter})">
             </div>
         </th:block>
     </div>
 
     <!-- Single Filter -->
-    <div th:fragment="displayFilter(filter)" class="float-right" th:if="${!filter.getOptions().isEmpty()}">
-        [[${filter.getLabel()}]]
-        <select>
-            <option value=""></option>
-            <option th:each="option : ${filter.getOptions()}" th:value="${option.getValue()}" th:text="${option.getLabel()}">
-            </option>
-        </select>
+    <div th:fragment="displayFilter(datatable, filter)" class="float-right" th:if="${!filter.getOptions().isEmpty()}">
+        <form class="form-inline" method="get" th:action="${datatable.getUrl()}">
+            [[${filter.getLabel()}]]
+            <select th:name="${filter.getField()}" onchange="jQuery(this).parent().submit();">
+                <option value=""></option>
+                <option
+                    th:each="option : ${filter.getOptions()}"
+                    th:value="${option.getValue()}"
+                    th:text="${option.getLabel()}"
+                    th:selected="${option.getValue().equals(datatable.getCurrentFilterValueFor(filter))}">
+                </option>
+            </select>
+        </form>
     </div>
 
     <div th:fragment="displaySearch(datatable)" class="float-right" th:if="${datatable.getSearch() != null}">
         [[${datatable.getSearch().getLabel()}]]
-        <form id=id="datatable-search-form" class="form-inline" method="get" th:action="${datatable.getUrl()}">
+        <form class="form-inline" method="get" th:action="${datatable.getUrl()}">
         <input th:type="text" id="datatable-search" name="search" th:value="${datatable.getSearch().getCurrentSearchTerm()}"/>
         </form>
     </div>
