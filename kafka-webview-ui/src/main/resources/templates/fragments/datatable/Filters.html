@@ -22,9 +22,11 @@
         </select>
     </div>
 
-    <div th:fragment="displaySearch(search)" class="float-right" th:if="${search != null}">
-        [[${search.getLabel()}]]
-        <input th:type="text" name="search"/>
+    <div th:fragment="displaySearch(datatable)" class="float-right" th:if="${datatable.getSearch() != null}">
+        [[${datatable.getSearch().getLabel()}]]
+        <form id=id="datatable-search-form" class="form-inline" method="get" th:action="${datatable.getUrl()}">
+        <input th:type="text" id="datatable-search" name="search" th:value="${datatable.getSearch().getCurrentSearchTerm()}"/>
+        </form>
     </div>
 
     </body>

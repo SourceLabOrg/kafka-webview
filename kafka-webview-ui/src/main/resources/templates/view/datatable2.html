@@ -48,7 +48,7 @@
                         [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]]) ::: Page [[${datatable.getNumber()}]] of [[${datatable.getTotalPages()}]]
 
                         <!-- Show Search -->
-                        <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable.getSearch()})"></div>
+                        <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable})"></div>
 
                         <!-- Show filters -->
                         <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable.getFilters()})"></div>
@@ -68,6 +68,12 @@
             <!--/.col-->
         </div>
     </div>
+
+    <script type="application/javascript">
+        jQuery(document).ready(function() {
+
+        });
+    </script>
 </section>
 
 </body>

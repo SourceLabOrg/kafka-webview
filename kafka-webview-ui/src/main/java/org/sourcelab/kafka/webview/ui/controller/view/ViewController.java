@@ -28,13 +28,10 @@ import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.datatable.Datatable;
 import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableColumn;
 import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableFilter;
-import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableSearch;
 import org.sourcelab.kafka.webview.ui.manager.datatable.LinkTemplate;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
-import org.sourcelab.kafka.webview.ui.manager.ui.datatable.PageRequest;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
-import org.sourcelab.kafka.webview.ui.model.MessageFormat;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
@@ -42,21 +39,16 @@ import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -141,7 +133,7 @@ public class ViewController extends BaseController {
         final Model model,
         @RequestParam(name = "clusterId", required = false) final Long clusterId,
         final Pageable pageable,
-        final Sort sort
+        @RequestParam(name = "search", required = false) final String searchStr
     ) {
         // Setup breadcrumbs
         final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
@@ -154,7 +146,11 @@ public class ViewController extends BaseController {
 
         final Page<View> page;
         // Retrieve all views order by name asc.
-        page = viewRepository.findAll(pageable);
+        if (searchStr == null || searchStr.trim().isEmpty()) {
+            page = viewRepository.findAll(pageable);
+        } else {
+            page = viewRepository.findByNameContainingIgnoreCase(searchStr, pageable);
+        }
 
         // Set model Attributes
         model.addAttribute("clustersById", clustersById);
@@ -183,10 +179,6 @@ public class ViewController extends BaseController {
             .forEach((id, cluster) -> filterOptions.add(new DatatableFilter.FilterOption(String.valueOf(id), cluster.getName())));
         final DatatableFilter filter = new DatatableFilter("Cluster", "clusterId", filterOptions);
         model.addAttribute("filters", new DatatableFilter[] { filter });
-
-        // Create search
-        final DatatableSearch search = new DatatableSearch("Search", "name");
-        model.addAttribute("search", search);
 
         final Datatable.Builder<View> builder = Datatable.newBuilder(View.class)
             .withUrl("/view/datatable")
@@ -229,7 +221,7 @@ public class ViewController extends BaseController {
                 ))
                 .build())
             .withFilter(new DatatableFilter("Cluster", "clusterId", filterOptions))
-            .withSearch("Search", "name");
+            .withSearch("Search", "name", searchStr);
 
         model.addAttribute("datatable", builder.build());
 

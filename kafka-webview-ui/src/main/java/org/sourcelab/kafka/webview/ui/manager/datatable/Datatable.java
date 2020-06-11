@@ -47,6 +47,10 @@ public class Datatable<T> {
 
         final Map<String, String> params = new LinkedHashMap<>();
 
+        if (getSearch() != null) {
+            params.put("search", getSearch().getCurrentSearchTerm());
+        }
+
         if (page.getSort().isSorted()) {
             final List<String> sortValues = new ArrayList<>();
             page.getSort().get().forEachOrdered((sort) -> {
@@ -222,8 +226,8 @@ public class Datatable<T> {
             return this;
         }
 
-        public Builder<T> withSearch(final String search, final String name) {
-            return withSearch(new DatatableSearch(search, name));
+        public Builder<T> withSearch(final String search, final String name, final String currentSearchTerm) {
+            return withSearch(new DatatableSearch(search, name, currentSearchTerm));
         }
 
         public Builder<T> withPage(final Page<T> page) {

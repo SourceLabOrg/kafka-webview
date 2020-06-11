@@ -75,4 +75,6 @@ public interface ViewRepository extends CrudRepository<View, Long> {
     );
 
     Page<View> findAll(final Pageable pageable);
+
+    Page<View> findByNameContainingIgnoreCase(final String name, final Pageable pageable);
 }
