@@ -17,7 +17,7 @@
 <th th:fragment="displayColumn(datatable, column)" th:colspan="${column.getColSpan()}">
     <a th:if="${column.isSortable()}"
         th:text="${column.getLabel()}"
-        th:href="@{/view/datatable?sort={field},desc(field=${column.getField()})}">
+        th:href="@{__${datatable.getUrlWithParams('page', '', 'sort', '{field},{inverseOrder}')}__ (field=${column.getField()}, inverseOrder=${datatable.getInverseSortOrderFor(column)})}">
     </a>
     <span th:if="${! column.isSortable()}" th:text="${column.getLabel()}"></span>
 </th>

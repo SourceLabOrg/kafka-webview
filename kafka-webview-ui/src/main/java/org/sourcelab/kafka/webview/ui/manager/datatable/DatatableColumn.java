@@ -1,12 +1,7 @@
 package org.sourcelab.kafka.webview.ui.manager.datatable;
 
-import org.springframework.data.domain.Sort;
-
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**

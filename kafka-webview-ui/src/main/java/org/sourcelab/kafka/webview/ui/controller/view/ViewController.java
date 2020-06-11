@@ -189,6 +189,7 @@ public class ViewController extends BaseController {
         model.addAttribute("search", search);
 
         final Datatable.Builder<View> builder = Datatable.newBuilder(View.class)
+            .withUrl("/view/datatable")
             .withLabel("Views")
             .withPage(page)
             .withColumn(DatatableColumn.newBuilder(View.class)

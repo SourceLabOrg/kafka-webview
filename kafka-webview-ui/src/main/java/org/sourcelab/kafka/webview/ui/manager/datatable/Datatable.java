@@ -1,29 +1,78 @@
 package org.sourcelab.kafka.webview.ui.manager.datatable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sourcelab.kafka.webview.ui.model.View;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 public class Datatable<T> {
+    private final String url;
     private final String label;
     private final Page<T> page;
     private final List<DatatableColumn> columns;
     private final List<DatatableFilter> filters;
     private final DatatableSearch datatableSearch;
 
-    public Datatable(final String label, final Page<T> page, final List<DatatableColumn> columns, final List<DatatableFilter> filters, final DatatableSearch datatableSearch) {
+    public Datatable(final String url, final String label, final Page<T> page, final List<DatatableColumn> columns, final List<DatatableFilter> filters, final DatatableSearch datatableSearch) {
+        this.url = url;
         this.label = label;
         this.page = page;
         this.columns = columns;
         this.filters = filters;
         this.datatableSearch = datatableSearch;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getUrlWithParams(final String ... overrides) {
+        final Map<String, String> overrideParams = new HashMap<>();
+        for (int index = 0; index < overrides.length; index = index + 2) {
+            final String key = overrides[index];
+            String value = "";
+            if (index + 1 < overrides.length) {
+                value = overrides[index + 1];
+            }
+            overrideParams.put(key, value);
+        }
+
+        final Map<String, String> params = new LinkedHashMap<>();
+
+        if (page.getSort().isSorted()) {
+            final List<String> sortValues = new ArrayList<>();
+            page.getSort().get().forEachOrdered((sort) -> {
+                sortValues.add(sort.getProperty() + "," + sort.getDirection());
+            });
+            params.put("sort", String.join(",", sortValues));
+        }
+        params.put("page", Integer.toString(getNumber()));
+
+        final List<String> paramStr = new ArrayList<>();
+        for (final Map.Entry<String, String> entry : params.entrySet()) {
+            // Allow for injecting/overriding specific params.
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (overrideParams.containsKey(key)) {
+                value = overrideParams.get(key);
+            }
+            // Skip if empty
+            if (value == null || value.isEmpty()) {
+                continue;
+            }
+            // TODO URL Encode params
+            paramStr.add(key + "=" + value);
+        }
+
+        return getUrl() + "?" + String.join("&", paramStr);
     }
 
     public String getLabel() {
@@ -86,11 +135,49 @@ public class Datatable<T> {
         return datatableSearch;
     }
 
+    public String getCurrentSortOrderFor(final DatatableColumn column) {
+        final String defaultOrder = "desc";
+        if (!column.isSortable()) {
+            return defaultOrder;
+        }
+        final Sort.Order order = page.getSort().getOrderFor(column.getField());
+        if (order == null || order.isDescending()) {
+            return defaultOrder;
+        }
+        return "asc";
+    }
+
+    public boolean isSortedBy(final DatatableColumn column) {
+        if (!column.isSortable()) {
+            return false;
+        }
+        final Sort.Order order = page.getSort().getOrderFor(column.getField());
+        if (order == null) {
+            return false;
+        }
+        return true;
+    }
+
+    public String getInverseSortOrderFor(final DatatableColumn column) {
+        // If not currently sorted by this column.
+        if (!isSortedBy(column)) {
+            // Default to descending.
+            return "desc";
+        }
+        // Otherwise invert the value.
+        final String order = getCurrentSortOrderFor(column);
+        if ("desc".equalsIgnoreCase(order)) {
+            return "asc";
+        }
+        return "desc";
+    }
+
     public static <T> Builder<T> newBuilder(Class<T> type) {
         return new Builder<T>();
     }
 
     public static final class Builder<T> {
+        private String url;
         private String label;
         private Page<T> page;
         private List<DatatableColumn> columns = new ArrayList<>();
@@ -102,6 +189,11 @@ public class Datatable<T> {
 
         public Builder<T> withLabel(String label) {
             this.label = label;
+            return this;
+        }
+
+        public Builder<T> withUrl(String url) {
+            this.url = url;
             return this;
         }
 
@@ -140,7 +232,7 @@ public class Datatable<T> {
         }
 
         public Datatable<T> build() {
-            return new Datatable<>(label, page, columns, filters, datatableSearch);
+            return new Datatable<>(url, label, page, columns, filters, datatableSearch);
         }
     }
 }
