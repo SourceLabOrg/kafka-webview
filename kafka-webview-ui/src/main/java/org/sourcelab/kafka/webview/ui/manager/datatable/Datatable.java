@@ -1,33 +1,43 @@
 package org.sourcelab.kafka.webview.ui.manager.datatable;
 
+import org.sourcelab.kafka.webview.ui.model.View;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import javax.persistence.criteria.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
  *
  */
 public class Datatable<T> {
+    private final JpaSpecificationExecutor<T> repository;
+    private final Pageable pageable;
     private final Map<String, String> requestParams;
     private final String url;
     private final String label;
-    private final Page<T> page;
     private final List<DatatableColumn> columns;
     private final List<DatatableFilter> filters;
     private final DatatableSearch datatableSearch;
 
-    public Datatable(final Map<String, String> requestParams, final String url, final String label, final Page<T> page, final List<DatatableColumn> columns, final List<DatatableFilter> filters, final DatatableSearch datatableSearch) {
+    // Generated properties
+    private Page<T> page = null;
+
+    public Datatable(final JpaSpecificationExecutor<T> repository, final Pageable pageable, final Map<String, String> requestParams, final String url, final String label, final List<DatatableColumn> columns, final List<DatatableFilter> filters, final DatatableSearch datatableSearch) {
+        this.repository = Objects.requireNonNull(repository);
+        this.pageable = Objects.requireNonNull(pageable);
         this.requestParams = Collections.unmodifiableMap(new HashMap<>(requestParams));
         this.url = url;
         this.label = label;
-        this.page = page;
         this.columns = columns;
         this.filters = filters;
         this.datatableSearch = datatableSearch;
@@ -51,16 +61,16 @@ public class Datatable<T> {
         final Map<String, String> params = new LinkedHashMap<>();
 
         // Add search
-        if (getSearch() != null) {
+        if (hasSearch()) {
             params.put("search", getSearch().getCurrentSearchTerm());
         }
 
         // Add filters
         getFilters().forEach((filter) -> params.put(filter.getField(), getCurrentFilterValueFor(filter)));
 
-        if (page.getSort().isSorted()) {
+        if (getPage().getSort().isSorted()) {
             final List<String> sortValues = new ArrayList<>();
-            page.getSort().get().forEachOrdered((sort) -> {
+            getPage().getSort().get().forEachOrdered((sort) -> {
                 sortValues.add(sort.getProperty() + "," + sort.getDirection());
             });
             params.put("sort", String.join(",", sortValues));
@@ -99,39 +109,39 @@ public class Datatable<T> {
     }
 
     public long getTotalElements() {
-        return page.getTotalElements();
+        return getPage().getTotalElements();
     }
 
     public int getTotalPages() {
-        return page.getTotalPages();
+        return getPage().getTotalPages();
     }
 
     public int getNumber() {
-        return page.getNumber();
+        return getPage().getNumber();
     }
 
     public boolean isLastPage() {
-        return page.isLast();
+        return getPage().isLast();
     }
 
     public boolean hasNextPage() {
-        return page.hasNext();
+        return getPage().hasNext();
     }
 
     public boolean hasPreviousPage() {
-        return page.hasPrevious();
+        return getPage().hasPrevious();
     }
 
     public boolean isFirstPage() {
-        return page.isFirst();
+        return getPage().isFirst();
     }
 
     public boolean isEmpty() {
-        return page.isEmpty();
+        return getPage().isEmpty();
     }
 
     public List<T> getRecords() {
-        return page.getContent();
+        return getPage().getContent();
     }
 
     public List<DatatableColumn> getColumns() {
@@ -152,6 +162,50 @@ public class Datatable<T> {
 
     public DatatableSearch getSearch() {
         return datatableSearch;
+    }
+
+    public Page<T> getPage() {
+        if (this.page != null) {
+            return this.page;
+        }
+
+        // Add search criteria
+        String searchValue = null;
+        if (hasSearch()) {
+            searchValue = getSearch().getCurrentSearchTerm();
+            if (searchValue != null && searchValue.isEmpty()) {
+                searchValue = null;
+            }
+        }
+        Specification<T> specification = Specification.where(
+            searchValue == null ? null : (root, query, builder) -> builder.like(
+                root.get(getSearch().getField()), "%" + getSearch().getCurrentSearchTerm() + "%"
+            )
+        );
+
+
+        // Add filter criterias
+        for (final DatatableFilter filter : getFilters()) {
+            // Skip non-provided filters.
+            if (getCurrentFilterValueFor(filter).isEmpty()) {
+                continue;
+            }
+
+            specification = specification.and(
+                (root, query, builder) -> {
+                    final String[] fieldBits = filter.getField().split("\\.");
+                    Path<Object> queryPath = root.get(fieldBits[0]);
+                    for (int index = 1; index < fieldBits.length; index++) {
+                        queryPath = queryPath.get(fieldBits[index]);
+                    }
+                    return builder.equal(queryPath, getCurrentFilterValueFor(filter));
+                }
+            );
+        }
+
+        // Execute
+        page = repository.findAll(specification, pageable);
+        return page;
     }
 
     public String getCurrentSortOrderFor(final DatatableColumn column) {
@@ -196,15 +250,21 @@ public class Datatable<T> {
     }
 
     public static final class Builder<T> {
+        private JpaSpecificationExecutor<T> repository;
         private Map<String, String> requestParams = new HashMap<>();
+        private Pageable pageable;
         private String url;
         private String label;
-        private Page<T> page;
         private List<DatatableColumn> columns = new ArrayList<>();
         private List<DatatableFilter> filters = new ArrayList<>();
         private DatatableSearch datatableSearch;
 
         private Builder() {
+        }
+
+        public Builder<T> withRepository(final JpaSpecificationExecutor<T> repository) {
+            this.repository = repository;
+            return this;
         }
 
         public Builder<T> withRequestParams(final Map<String, String> requestParams) {
@@ -215,6 +275,11 @@ public class Datatable<T> {
 
         public Builder<T> withLabel(String label) {
             this.label = label;
+            return this;
+        }
+
+        public Builder<T> withPageable(final Pageable pageable) {
+            this.pageable = pageable;
             return this;
         }
 
@@ -248,13 +313,12 @@ public class Datatable<T> {
             return this;
         }
 
-        public Builder<T> withSearch(final String search, final String name, final String currentSearchTerm) {
-            return withSearch(new DatatableSearch(search, name, currentSearchTerm));
+        public Builder<T> withSearch(final String search, final String name) {
+            return withSearch(search, name, null);
         }
 
-        public Builder<T> withPage(final Page<T> page) {
-            this.page = page;
-            return this;
+        public Builder<T> withSearch(final String search, final String name, final String currentSearchTerm) {
+            return withSearch(new DatatableSearch(search, name, currentSearchTerm));
         }
 
         public Datatable<T> build() {
@@ -269,7 +333,7 @@ public class Datatable<T> {
                 }
             }
 
-            return new Datatable<>(requestParams, url, label, page, columns, filters, datatableSearch);
+            return new Datatable<>(repository, pageable, requestParams, url, label, columns, filters, datatableSearch);
         }
     }
 }

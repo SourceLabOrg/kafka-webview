@@ -24,10 +24,11 @@
 
 package org.sourcelab.kafka.webview.ui.repository;
 
-import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -35,7 +36,7 @@ import org.springframework.stereotype.Repository;
  * For interacting w/ the View database table.
  */
 @Repository
-public interface ViewRepository extends CrudRepository<View, Long> {
+public interface ViewRepository extends CrudRepository<View, Long>, JpaSpecificationExecutor<View> {
     /**
      * Retrieve a view by its name.
      * @param name Name of view to retrieve.
@@ -82,4 +83,5 @@ public interface ViewRepository extends CrudRepository<View, Long> {
 
     Page<View> findByClusterIdAndNameContainingIgnoreCase(final long clusterId, final String name, final Pageable pageable);
 
+    Page<View> findAll(Example<View> example, final Pageable pageable);
 }

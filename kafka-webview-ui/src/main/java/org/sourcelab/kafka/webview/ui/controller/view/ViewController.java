@@ -37,8 +37,10 @@ import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -133,8 +135,7 @@ public class ViewController extends BaseController {
         final Model model,
         @RequestParam(name = "clusterId", required = false) final Long clusterId,
         final Pageable pageable,
-        @RequestParam Map<String,String> allParams,
-        @RequestParam(name = "search", required = false) final String searchStr
+        @RequestParam Map<String,String> allParams
     ) {
         // Setup breadcrumbs
         final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
@@ -144,19 +145,6 @@ public class ViewController extends BaseController {
         clusterRepository
             .findAllByOrderByNameAsc()
             .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
-
-        final boolean hasSearchStr = searchStr != null && !searchStr.isEmpty();
-        final Page<View> page;
-        // wtf
-        if (!hasSearchStr && clusterId == null) {
-            page = viewRepository.findAll(pageable);
-        } else if (!hasSearchStr && clusterId != null) {
-            page = viewRepository.findAllByClusterId(clusterId, pageable);
-        } else if (hasSearchStr && clusterId == null) {
-            page = viewRepository.findByNameContainingIgnoreCase(searchStr, pageable);
-        } else {
-            page = viewRepository.findByClusterIdAndNameContainingIgnoreCase(clusterId, searchStr, pageable);
-        }
 
         // Set model Attributes
         model.addAttribute("clustersById", clustersById);
@@ -187,10 +175,11 @@ public class ViewController extends BaseController {
         model.addAttribute("filters", new DatatableFilter[] { filter });
 
         final Datatable.Builder<View> builder = Datatable.newBuilder(View.class)
+            .withRepository(viewRepository)
+            .withPageable(pageable)
             .withRequestParams(allParams)
             .withUrl("/view/datatable")
             .withLabel("Views")
-            .withPage(page)
             .withColumn(DatatableColumn.newBuilder(View.class)
                 .withFieldName("name")
                 .withLabel("View")
@@ -227,8 +216,8 @@ public class ViewController extends BaseController {
                     (record) -> "Stream"
                 ))
                 .build())
-            .withFilter(new DatatableFilter("Cluster", "clusterId", filterOptions))
-            .withSearch("Search", "name", searchStr);
+            .withFilter(new DatatableFilter("Cluster", "cluster.id", filterOptions))
+            .withSearch("Search", "name");
 
         model.addAttribute("datatable", builder.build());
 
