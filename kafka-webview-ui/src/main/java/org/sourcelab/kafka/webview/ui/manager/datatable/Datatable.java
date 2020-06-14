@@ -11,10 +11,12 @@ import javax.persistence.criteria.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -47,7 +49,7 @@ public class Datatable<T> {
         return url;
     }
 
-    public String getUrlWithParams(final String ... overrides) {
+    public Map<String, String> getUrlParams(final String ... overrides) {
         final Map<String, String> overrideParams = new HashMap<>();
         for (int index = 0; index < overrides.length; index = index + 2) {
             final String key = overrides[index];
@@ -68,6 +70,7 @@ public class Datatable<T> {
         // Add filters
         getFilters().forEach((filter) -> params.put(filter.getField(), getCurrentFilterValueFor(filter)));
 
+        params.put("sort", "");
         if (getPage().getSort().isSorted()) {
             final List<String> sortValues = new ArrayList<>();
             getPage().getSort().get().forEachOrdered((sort) -> {
@@ -77,14 +80,37 @@ public class Datatable<T> {
         }
         params.put("page", Integer.toString(getNumber()));
 
+        // Override params
+        for (final Map.Entry<String, String> overrideEntry : overrideParams.entrySet()) {
+            // Allow for injecting/overriding specific params.
+            String key = overrideEntry.getKey();
+            String value = overrideEntry.getValue();
+
+            // override values
+            params.put(key, value);
+        }
+
+        // Remove any empty params.
+        final Set<String> removeKeys = new HashSet<>();
+        for (final Map.Entry<String, String> entry : params.entrySet()) {
+            if (entry.getValue() == null || entry.getValue().trim().isEmpty()) {
+                removeKeys.add(entry.getKey());
+            }
+        }
+        removeKeys.forEach(params::remove);
+
+        return params;
+    }
+
+    public String getUrlWithParams(final String ... overrides) {
+        final Map<String, String> params = getUrlParams(overrides);
+
         final List<String> paramStr = new ArrayList<>();
         for (final Map.Entry<String, String> entry : params.entrySet()) {
             // Allow for injecting/overriding specific params.
             String key = entry.getKey();
             String value = entry.getValue();
-            if (overrideParams.containsKey(key)) {
-                value = overrideParams.get(key);
-            }
+
             // Skip if empty
             if (value == null || value.isEmpty()) {
                 continue;
@@ -179,7 +205,7 @@ public class Datatable<T> {
         }
         Specification<T> specification = Specification.where(
             searchValue == null ? null : (root, query, builder) -> builder.like(
-                root.get(getSearch().getField()), "%" + getSearch().getCurrentSearchTerm() + "%"
+                builder.lower(root.get(getSearch().getField())), "%" + getSearch().getCurrentSearchTerm().toLowerCase() + "%"
             )
         );
 

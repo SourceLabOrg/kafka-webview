@@ -9,25 +9,25 @@
     <!-- Display Pager Controls -->
     <ul class="pagination">
         <li class="page-item">
-            <a class="page-link" th:href="@{__${datatable.getUrlWithParams('page', '0')}__}" id="control-head" th:if="${not datatable.isFirstPage()}">
+            <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '0')}}" id="control-head" th:if="${not datatable.isFirstPage()}">
                 <i class="fa fa-fast-backward" aria-hidden="true"></i>
                 First
             </a>
         </li>
         <li class="page-item" th:if="${datatable.hasPreviousPage()}">
-            <a class="page-link" th:href="@{__${datatable.getUrlWithParams('page', '{page}')}__(page=${datatable.getNumber() - 1})}" id="control-previous">
+            <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() - 1))}}" id="control-previous">
                 <i class="fa fa-chevron-left" aria-hidden="true"></i>
                 Previous
             </a>
         </li>
         <li class="page-item" th:if="${datatable.hasNextPage()}">
-            <a class="page-link" th:href="@{__${datatable.getUrlWithParams('page', '{page}')}__(page=${datatable.getNumber() + 1})}" id="control-next">
+            <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() + 1))}}" id="control-next">
                 Next
                 <i class="fa fa-chevron-right" aria-hidden="true"></i>
             </a>
         </li>
         <li class="page-item" th:if="${not datatable.isLastPage()}">
-            <a class="page-link" th:href="@{__${datatable.getUrlWithParams('page', '{page}')}__(page=${datatable.getTotalPages() - 1})}" id="control-tail">
+            <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '' + datatable.getTotalPages() - 1)}}" id="control-tail">
                 Last
                 <i class="fa fa-fast-forward" aria-hidden="true"></i>
             </a>
