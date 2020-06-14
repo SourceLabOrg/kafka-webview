@@ -17,56 +17,8 @@
             <!-- Display no kafka clusters found -->
         </div>
 
-        <div class="row" th:if="${datatable.isEmpty()}">
-            <!-- No Views Found -->
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="alert alert-warning" role="alert">
-                        <h4 class="alert-heading"><strong>No Views Found</strong></h4>
-                        <p>
-                            It looks like you have no Views configured yet!<br/>
-                        </p>
-                        <p class="mb-0">
-                            <span sec:authorize="hasRole('ROLE_ADMIN')">
-                                Let's head over and set one up now!
-                                <a th:href="@{/configuration/view/create}">Setup new View</a>
-                            </span>
-                            <span sec:authorize="!hasRole('ROLE_ADMIN')">
-                                Ask an Administrator to configure a view.
-                            </span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row" th:if="${not datatable.isEmpty()}">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fa fa-align-justify"></i>
-                        [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]]) ::: Page [[${datatable.getNumber()}]] of [[${datatable.getTotalPages()}]]
-
-                        <!-- Show Search -->
-                        <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable})"></div>
-
-                        <!-- Show filters -->
-                        <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable})"></div>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-bordered table-striped table-sm">
-                            <!-- Column Headers -->
-                            <thead th:replace="fragments/datatable/Columns :: displayColumns(${datatable})"></thead>
-                            <tbody th:replace="fragments/datatable/Rows :: display(${datatable})"></tbody>
-                        </table>
-                    </div>
-                    <!-- Display Pager Controls -->
-                    <div th:replace="fragments/datatable/pager :: display(${datatable})">
-                    </div>
-                </div>
-            </div>
-            <!--/.col-->
-        </div>
+        <!-- Render datatable -->
+        <div th:replace="fragments/datatable/Datatable :: display(${datatable})"></div>
     </div>
 
     <script type="application/javascript">

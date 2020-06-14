@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    layout:decorate="~{layout}">
+
+<body>
+
+<!-- Render Datatable -->
+<div class="row" th:fragment="display(datatable)">
+
+    <!-- render the datatable -->
+    <!-- <div th:if="${not datatable.isEmpty()}">-->
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-align-justify"></i>
+                [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]]) ::: Page [[${datatable.getNumber()}]] of [[${datatable.getTotalPages()}]]
+
+                <!-- Show Search -->
+                <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable})"></div>
+
+                <!-- Show filters -->
+                <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable})"></div>
+            </div>
+            <div class="card-body">
+
+                <!-- Show Headers and rows if not empty -->
+                <table class="table table-bordered table-striped table-sm" th:if="${not datatable.isEmpty()}">
+                    <!-- Column Headers -->
+                    <thead th:replace="fragments/datatable/Columns :: displayColumns(${datatable})"></thead>
+                    <tbody th:replace="fragments/datatable/Rows :: display(${datatable})"></tbody>
+                </table>
+
+                <!-- Show Emtpy if no records found -->
+                <div class="alert alert-warning" role="alert" th:if="${datatable.isEmpty()}">
+                    <h4 class="alert-heading"><strong>No Views Found</strong></h4>
+                    <p>
+                        It looks like you have no Views configured yet!<br/>
+                    </p>
+                    <p class="mb-0">
+                        <span sec:authorize="hasRole('ROLE_ADMIN')">
+                            Let's head over and set one up now!
+                            <a th:href="@{/configuration/view/create}">Setup new View</a>
+                        </span>
+                        <span sec:authorize="!hasRole('ROLE_ADMIN')">
+                            Ask an Administrator to configure a view.
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <!-- Display Pager Controls -->
+            <div th:replace="fragments/datatable/pager :: display(${datatable})">
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
