@@ -1,6 +1,5 @@
 package org.sourcelab.kafka.webview.ui.manager.datatable;
 
-import org.sourcelab.kafka.webview.ui.model.View;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -8,6 +7,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import javax.persistence.criteria.Path;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,7 +21,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- *
+ * Aims to be a re-usable datatable UI component backed by a JPA Repository.
  */
 public class Datatable<T> {
     private final JpaSpecificationExecutor<T> repository;
@@ -51,6 +53,18 @@ public class Datatable<T> {
     // Generated properties
     private Page<T> page = null;
 
+    /**
+     * Constructor.  See Builder instance.
+     * @param repository Underlying JPA repository instance.
+     * @param pageable Pageable instance.
+     * @param requestParams All request parameters available.
+     * @param url URL the datatable lives at.
+     * @param label Display label for the datatable.
+     * @param columns One or more columns in the datatable.
+     * @param filters Zero or more filters for the table.
+     * @param datatableSearch Zero or one search.
+     * @param noRecordsFoundTemplatePath What template to load if no records are found.
+     */
     public Datatable(
         final JpaSpecificationExecutor<T> repository,
         final Pageable pageable,
@@ -73,10 +87,19 @@ public class Datatable<T> {
         this.noRecordsFoundTemplatePath = Objects.requireNonNull(noRecordsFoundTemplatePath);
     }
 
+    /**
+     * The base URL the datatable lives at.
+     * @return base URL the datatable lives at.
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * Map of all table parameters as currently defined.
+     * @param overrides Allows for specifying key and value overrides for parameters.
+     * @return Map of all table parameters as currently defined.
+     */
     public Map<String, String> getUrlParams(final String ... overrides) {
         final Map<String, String> overrideParams = new HashMap<>();
         for (int index = 0; index < overrides.length; index = index + 2) {
@@ -130,6 +153,11 @@ public class Datatable<T> {
         return params;
     }
 
+    /**
+     * Generates the URL for the current page in the datatable with all applicable parameters appended.
+     * @param overrides Key/values to override parameters for.
+     * @return String representing the URL.
+     */
     public String getUrlWithParams(final String ... overrides) {
         final Map<String, String> params = getUrlParams(overrides);
 
@@ -143,13 +171,26 @@ public class Datatable<T> {
             if (value == null || value.isEmpty()) {
                 continue;
             }
-            // TODO URL Encode params
-            paramStr.add(key + "=" + value);
-        }
 
+            // Add and URL Encode params.
+            try {
+                paramStr.add(
+                    URLEncoder.encode(key, StandardCharsets.UTF_8.name())
+                    + "="
+                    + URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+                );
+            } catch (final UnsupportedEncodingException exception) {
+                throw new RuntimeException(exception.getMessage(), exception);
+            }
+        }
         return getUrl() + "?" + String.join("&", paramStr);
     }
 
+    /**
+     * Gets the current filter value for a given filter.
+     * @param filter The filter to get the current value for.
+     * @return The current value of the supplied filter, or empty string if none currently set.
+     */
     public String getCurrentFilterValueFor(final DatatableFilter filter) {
         final String param = filter.getField();
         if (requestParams.containsKey(param)) {
@@ -158,6 +199,10 @@ public class Datatable<T> {
         return "";
     }
 
+    /**
+     * Top level label for the datatable.
+     * @return Top level label for the datatable.
+     */
     public String getLabel() {
         return label;
     }
