@@ -11,25 +11,39 @@
             <!-- Display Pager Controls -->
             <div class="pagination row">
                 <div class="page-item col-3">
-                    <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '0')}}" id="control-head" th:if="${not datatable.isFirstPage()}">
+                    <a
+                        class="page-link" id="control-head"
+                        th:href="@{${datatable.getUrlWithParams('page', '0')}}"
+                        th:if="${not datatable.isFirstPage()}">
+
                         <i class="fa fa-fast-backward" aria-hidden="true"></i>
                         First
                     </a>
                 </div>
-                <div class="page-item col-3" th:if="${datatable.hasPreviousPage()}">
-                    <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() - 1))}}" id="control-previous">
+                <div class="page-item col-3">
+                    <a
+                        class="page-link" id="control-previous"
+                        th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() - 1))}}"
+                        th:if="${datatable.hasPreviousPage()}">
+
                         <i class="fa fa-chevron-left" aria-hidden="true"></i>
                         Previous
                     </a>
                 </div>
-                <div class="page-item col-3" th:if="${datatable.hasNextPage()}">
-                    <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() + 1))}}" id="control-next">
+                <div class="page-item col-3">
+                    <a
+                        class="page-link" id="control-next"
+                        th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() + 1))}}"
+                        th:if="${datatable.hasNextPage()}">
                         Next
                         <i class="fa fa-chevron-right" aria-hidden="true"></i>
                     </a>
                 </div>
-                <div class="page-item col-3" th:if="${not datatable.isLastPage()}">
-                    <a class="page-link" th:href="@{${datatable.getUrlWithParams('page', '' + datatable.getTotalPages() - 1)}}" id="control-tail">
+                <div class="page-item col-3">
+                    <a
+                        class="page-link" id="control-tail"
+                        th:href="@{${datatable.getUrlWithParams('page', '' + datatable.getTotalPages() - 1)}}"
+                        th:if="${not datatable.isLastPage()}">
                         Last
                         <i class="fa fa-fast-forward" aria-hidden="true"></i>
                     </a>
