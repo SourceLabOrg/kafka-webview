@@ -1,14 +1,12 @@
 package org.sourcelab.kafka.webview.ui.manager.datatable;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Defines a filter for a datatable.
  */
 public class DatatableFilter {
     private final String label;
@@ -20,7 +18,7 @@ public class DatatableFilter {
         this.field = Objects.requireNonNull(field);
 
         // Sort options
-        this.options = options.stream()
+        this.options = Objects.requireNonNull(options).stream()
             .sorted(Comparator.comparing(option -> option.getLabel().toLowerCase()))
             .collect(Collectors.toList());
     }
@@ -46,10 +44,18 @@ public class DatatableFilter {
             + '}';
     }
 
+    /**
+     * Defines an option within a filter.
+     */
     public static class FilterOption {
         private final String value;
         private final String label;
 
+        /**
+         * Constructor.
+         * @param value Unique identifier for value.
+         * @param label Display value.
+         */
         public FilterOption(final String value, final String label) {
             this.value = value;
             this.label = label;

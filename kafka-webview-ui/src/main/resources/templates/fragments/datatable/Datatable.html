@@ -16,7 +16,7 @@
         <div class="card">
             <div class="card-header">
                 <i class="fa fa-align-justify"></i>
-                [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]]) ::: Page [[${datatable.getNumber()}]] of [[${datatable.getTotalPages()}]]
+                [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]])
 
                 <!-- Show Search -->
                 <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable})"></div>
