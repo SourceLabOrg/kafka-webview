@@ -80,60 +80,9 @@ public class ViewController extends BaseController {
      * GET views index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index(
-        final Model model,
-        @RequestParam(name = "clusterId", required = false) final Long clusterId
-    ) {
-        // Setup breadcrumbs
-        final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
-
-        // Retrieve all clusters and index by id
-        final Map<Long, Cluster> clustersById = new HashMap<>();
-        clusterRepository
-            .findAllByOrderByNameAsc()
-            .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
-
-        final Iterable<View> views;
-        if (clusterId == null) {
-            // Retrieve all views order by name asc.
-            views = viewRepository.findAllByOrderByNameAsc();
-        } else {
-            // Retrieve only views for the cluster
-            views = viewRepository.findAllByClusterIdOrderByNameAsc(clusterId);
-        }
-
-        // Set model Attributes
-        model.addAttribute("viewList", views);
-        model.addAttribute("clustersById", clustersById);
-
-        final String clusterName;
-        if (clusterId != null && clustersById.containsKey(clusterId)) {
-            // If filtered by a cluster
-            clusterName = clustersById.get(clusterId).getName();
-
-            // Add top level breadcrumb
-            breadCrumbManager
-                .addCrumb("View", "/view")
-                .addCrumb("Cluster: " + clusterName);
-        } else {
-            // If showing all views
-            clusterName = null;
-
-            // Add top level breadcrumb
-            breadCrumbManager.addCrumb("View", null);
-        }
-        model.addAttribute("clusterName", clusterName);
-
-        return "view/index";
-    }
-
-    /**
-     * GET views index.
-     */
-    @RequestMapping(path = "/datatable", method = RequestMethod.GET)
     public String datatable(
         final Model model,
-        @RequestParam(name = "clusterId", required = false) final Long clusterId,
+        @RequestParam(name = "cluster.id", required = false) final Long clusterId,
         final Pageable pageable,
         @RequestParam Map<String,String> allParams
     ) {
@@ -176,7 +125,7 @@ public class ViewController extends BaseController {
             .withRepository(viewRepository)
             .withPageable(pageable)
             .withRequestParams(allParams)
-            .withUrl("/view/datatable")
+            .withUrl("/view")
             .withLabel("Views")
             .withColumn(DatatableColumn.newBuilder(View.class)
                 .withFieldName("name")
@@ -225,7 +174,7 @@ public class ViewController extends BaseController {
         model.addAttribute("hasNoClusters", clustersById.isEmpty());
         model.addAttribute("hasViews", viewRepository.count() > 0);
 
-        return "view/datatable2";
+        return "view/index";
     }
 
     /**
