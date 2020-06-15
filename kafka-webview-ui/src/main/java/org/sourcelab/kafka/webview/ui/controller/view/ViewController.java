@@ -140,14 +140,12 @@ public class ViewController extends BaseController {
         // Setup breadcrumbs
         final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
 
+        // Determine if we actually have any clusters setup
         // Retrieve all clusters and index by id
         final Map<Long, Cluster> clustersById = new HashMap<>();
         clusterRepository
             .findAllByOrderByNameAsc()
             .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
-
-        // Set model Attributes
-        model.addAttribute("clustersById", clustersById);
 
         final String clusterName;
         if (clusterId != null && clustersById.containsKey(clusterId)) {
@@ -219,8 +217,13 @@ public class ViewController extends BaseController {
             .withFilter(new DatatableFilter("Cluster", "cluster.id", filterOptions))
             .withSearch("Search", "name");
 
+        // Add datatable attribute
         model.addAttribute("datatable", builder.build());
 
+        // Determine if we have no clusters setup so we can show appropriate inline help.
+        model.addAttribute("hasClusters", !clustersById.isEmpty());
+        model.addAttribute("hasNoClusters", clustersById.isEmpty());
+        model.addAttribute("hasViews", viewRepository.count() > 0);
 
         return "view/datatable2";
     }

@@ -33,22 +33,8 @@
                     <tbody th:replace="fragments/datatable/Rows :: display(${datatable})"></tbody>
                 </table>
 
-                <!-- Show Emtpy if no records found -->
-                <div class="alert alert-warning" role="alert" th:if="${datatable.isEmpty()}">
-                    <h4 class="alert-heading"><strong>No Views Found</strong></h4>
-                    <p>
-                        It looks like you have no Views configured yet!<br/>
-                    </p>
-                    <p class="mb-0">
-                        <span sec:authorize="hasRole('ROLE_ADMIN')">
-                            Let's head over and set one up now!
-                            <a th:href="@{/configuration/view/create}">Setup new View</a>
-                        </span>
-                        <span sec:authorize="!hasRole('ROLE_ADMIN')">
-                            Ask an Administrator to configure a view.
-                        </span>
-                    </p>
-                </div>
+                <!-- Show Empty if no records found -->
+                <div th:replace="fragments/datatable/DefaultNoRecordsFound :: display(${datatable})"></div>
             </div>
             <!-- Display Pager Controls -->
             <div th:replace="fragments/datatable/pager :: display(${datatable})">

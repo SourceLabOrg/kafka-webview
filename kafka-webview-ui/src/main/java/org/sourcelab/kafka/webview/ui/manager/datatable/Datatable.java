@@ -27,14 +27,41 @@ public class Datatable<T> {
     private final Map<String, String> requestParams;
     private final String url;
     private final String label;
+
+    /**
+     * Columns to display in the table.
+     */
     private final List<DatatableColumn> columns;
+
+    /**
+     * Zero or more filters to render on the table.
+     */
     private final List<DatatableFilter> filters;
+
+    /**
+     * Search Field.
+     */
     private final DatatableSearch datatableSearch;
+
+    /**
+     * Defines which template to render for when no records are found.
+     */
+    private final String noRecordsFoundTemplatePath;
 
     // Generated properties
     private Page<T> page = null;
 
-    public Datatable(final JpaSpecificationExecutor<T> repository, final Pageable pageable, final Map<String, String> requestParams, final String url, final String label, final List<DatatableColumn> columns, final List<DatatableFilter> filters, final DatatableSearch datatableSearch) {
+    public Datatable(
+        final JpaSpecificationExecutor<T> repository,
+        final Pageable pageable,
+        final Map<String, String> requestParams,
+        final String url,
+        final String label,
+        final List<DatatableColumn> columns,
+        final List<DatatableFilter> filters,
+        final DatatableSearch datatableSearch,
+        final String noRecordsFoundTemplatePath
+    ) {
         this.repository = Objects.requireNonNull(repository);
         this.pageable = Objects.requireNonNull(pageable);
         this.requestParams = Collections.unmodifiableMap(new HashMap<>(requestParams));
@@ -43,6 +70,7 @@ public class Datatable<T> {
         this.columns = columns;
         this.filters = filters;
         this.datatableSearch = datatableSearch;
+        this.noRecordsFoundTemplatePath = Objects.requireNonNull(noRecordsFoundTemplatePath);
     }
 
     public String getUrl() {
@@ -190,7 +218,11 @@ public class Datatable<T> {
         return datatableSearch;
     }
 
-    public Page<T> getPage() {
+    public String getNoRecordsFoundTemplatePath() {
+        return noRecordsFoundTemplatePath;
+    }
+
+    private Page<T> getPage() {
         if (this.page != null) {
             return this.page;
         }
@@ -285,6 +317,9 @@ public class Datatable<T> {
         private List<DatatableFilter> filters = new ArrayList<>();
         private DatatableSearch datatableSearch;
 
+        // Default no records found template.
+        private String noRecordsFoundTemplatePath = "fragments/datatable/DefaultNoRecordsFound";
+
         private Builder() {
         }
 
@@ -347,6 +382,11 @@ public class Datatable<T> {
             return withSearch(new DatatableSearch(search, name, currentSearchTerm));
         }
 
+        public Builder<T> withNoRecordsFoundTemplate(final String templatePath) {
+            this.noRecordsFoundTemplatePath = templatePath;
+            return this;
+        }
+
         public Datatable<T> build() {
             // Inject current search term from request parameters if available and not already set.
             if (datatableSearch != null && datatableSearch.getField() != null && datatableSearch.getCurrentSearchTerm() == null) {
@@ -359,7 +399,17 @@ public class Datatable<T> {
                 }
             }
 
-            return new Datatable<>(repository, pageable, requestParams, url, label, columns, filters, datatableSearch);
+            return new Datatable<>(
+                repository,
+                pageable,
+                requestParams,
+                url,
+                label,
+                columns,
+                filters,
+                datatableSearch,
+                noRecordsFoundTemplatePath
+            );
         }
     }
 }

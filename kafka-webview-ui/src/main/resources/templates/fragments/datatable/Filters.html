@@ -5,18 +5,18 @@
     <body>
 
     <!-- All Filters -->
-    <div th:fragment="displayFilters(datatable)">
+    <th:block th:fragment="displayFilters(datatable)">
         <th:block th:each="filter : ${datatable.getFilters()}">
             <div th:replace="fragments/datatable/Filters :: displayFilter(${datatable}, ${filter})">
             </div>
         </th:block>
-    </div>
+    </th:block>
 
     <!-- Single Filter -->
     <div th:fragment="displayFilter(datatable, filter)" class="float-right" th:if="${!filter.getOptions().isEmpty()}">
         <form class="form-inline" method="get" th:action="${datatable.getUrl()}">
-            [[${filter.getLabel()}]]
-            <select th:name="${filter.getField()}" onchange="jQuery(this).parent().submit();">
+            <label class="my-1 mr-2" th:for="${filter.getField()}">[[${filter.getLabel()}]]</label>
+            <select class="form-control mb-1 mr-sm-1" th:name="${filter.getField()}" onchange="jQuery(this).parent().submit();">
                 <option value=""></option>
                 <option
                     th:each="option : ${filter.getOptions()}"
@@ -34,10 +34,19 @@
     </div>
 
     <div th:fragment="displaySearch(datatable)" class="float-right" th:if="${datatable.getSearch() != null}">
-        [[${datatable.getSearch().getLabel()}]]
         <form class="form-inline" method="get" th:action="${datatable.getUrl()}">
+            <label class="sr-only" for="datatable-search">
+                [[${datatable.getSearch().getLabel()}]]
+            </label>
+
             <!-- Search Field -->
-            <input th:type="text" id="datatable-search" name="search" th:value="${datatable.getSearch().getCurrentSearchTerm()}"/>
+            <input
+                class="form-control mb-1 mr-sm-1"
+                type="text"
+                id="datatable-search"
+                name="search"
+                th:placeholder="${datatable.getSearch().getLabel()}"
+                th:value="${datatable.getSearch().getCurrentSearchTerm()}"/>
 
             <!-- Other datatable params -->
             <th:block th:each="paramEntry : ${datatable.getUrlParams('search', '', 'page', '').entrySet()}">
