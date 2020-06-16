@@ -1,4 +1,4 @@
-package org.sourcelab.kafka.webview.ui.manager.datatable;
+package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
 import java.util.Comparator;
 import java.util.List;
@@ -13,6 +13,12 @@ public class DatatableFilter {
     private final String field;
     private final List<FilterOption> options;
 
+    /**
+     * Constructor.
+     * @param label Human readable display label for the filter.
+     * @param field The underlying field being filtered over.
+     * @param options Options to display in the filter.
+     */
     public DatatableFilter(final String label, final String field, final List<FilterOption> options) {
         this.label = Objects.requireNonNull(label);
         this.field = Objects.requireNonNull(field);

@@ -25,10 +25,10 @@
 package org.sourcelab.kafka.webview.ui.controller.view;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
-import org.sourcelab.kafka.webview.ui.manager.datatable.Datatable;
-import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableColumn;
-import org.sourcelab.kafka.webview.ui.manager.datatable.DatatableFilter;
-import org.sourcelab.kafka.webview.ui.manager.datatable.LinkTemplate;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
@@ -37,10 +37,7 @@ import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;

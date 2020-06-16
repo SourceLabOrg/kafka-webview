@@ -1,4 +1,4 @@
-package org.sourcelab.kafka.webview.ui.manager.datatable;
+package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +22,7 @@ import java.util.Set;
 
 /**
  * Aims to be a re-usable datatable UI component backed by a JPA Repository.
+ * @param <T> Type of object being rendered in the datatable.
  */
 public class Datatable<T> {
     private final JpaSpecificationExecutor<T> repository;
@@ -268,6 +269,7 @@ public class Datatable<T> {
     }
 
     private Page<T> getPage() {
+        // Return calculated value if already set.
         if (this.page != null) {
             return this.page;
         }
@@ -280,12 +282,16 @@ public class Datatable<T> {
                 searchValue = null;
             }
         }
-        Specification<T> specification = Specification.where(
-            searchValue == null ? null : (root, query, builder) -> builder.like(
-                builder.lower(root.get(getSearch().getField())), "%" + getSearch().getCurrentSearchTerm().toLowerCase() + "%"
-            )
-        );
-
+        Specification<T> specification;
+        if (searchValue == null) {
+            specification = Specification.where(null);
+        } else {
+            specification = Specification.where((root, query, builder) ->
+                builder.like(
+                    builder.lower(root.get(getSearch().getField())), "%" + getSearch().getCurrentSearchTerm().toLowerCase() + "%"
+                )
+            );
+        }
 
         // Add filter criterias
         for (final DatatableFilter filter : getFilters()) {
@@ -311,7 +317,13 @@ public class Datatable<T> {
         return page;
     }
 
+    /**
+     * Get the current sort order for the given column.
+     * @param column The column to get the current sort order for.
+     * @return "desc" or "asc"
+     */
     public String getCurrentSortOrderFor(final DatatableColumn column) {
+        Objects.requireNonNull(column);
         final String defaultOrder = "desc";
         if (!column.isSortable()) {
             return defaultOrder;
@@ -323,7 +335,13 @@ public class Datatable<T> {
         return "asc";
     }
 
+    /**
+     * Determine if the datatable is currently sorted by the given column.
+     * @param column The column to determine if it's currently sorted by.
+     * @return true if yes, false if not.
+     */
     public boolean isSortedBy(final DatatableColumn column) {
+        Objects.requireNonNull(column);
         if (!column.isSortable()) {
             return false;
         }
@@ -334,7 +352,15 @@ public class Datatable<T> {
         return true;
     }
 
+    /**
+     * For the current column, get the inverse of the current sort order.
+     * IE, if the column is currently sorted ASC, this will return DESC.
+     * @param column The column to get the sort order for.
+     * @return inverted sort order.
+     */
     public String getInverseSortOrderFor(final DatatableColumn column) {
+        Objects.requireNonNull(column);
+
         // If not currently sorted by this column.
         if (!isSortedBy(column)) {
             // Default to descending.
@@ -348,10 +374,20 @@ public class Datatable<T> {
         return "desc";
     }
 
+    /**
+     * Create a new builder instance.
+     * @param type The type of object being rendered in the datatable.
+     * @param <T> The type of object being rendered in the datatable.
+     * @return new Builder instance.
+     */
     public static <T> Builder<T> newBuilder(Class<T> type) {
         return new Builder<T>();
     }
 
+    /**
+     * Builder instance for Datatable.
+     * @param <T> Type of object being rendered in the datatable.
+     */
     public static final class Builder<T> {
         private JpaSpecificationExecutor<T> repository;
         private Map<String, String> requestParams = new HashMap<>();
@@ -373,7 +409,16 @@ public class Datatable<T> {
             return this;
         }
 
+        /**
+         * Add the RequestParameters assocated with the current request.
+         * Used to pull current values for various filters/searches/etc..
+         *
+         * @param requestParams Hashmap of Request parameters and values.
+         * @return Builder instance.
+         */
         public Builder<T> withRequestParams(final Map<String, String> requestParams) {
+            Objects.requireNonNull(requestParams);
+
             this.requestParams.clear();
             this.requestParams.putAll(requestParams);
             return this;
@@ -432,6 +477,10 @@ public class Datatable<T> {
             return this;
         }
 
+        /**
+         * Create new Datatable instance from builder.
+         * @return New datatable instance.
+         */
         public Datatable<T> build() {
             // Inject current search term from request parameters if available and not already set.
             if (datatableSearch != null && datatableSearch.getField() != null && datatableSearch.getCurrentSearchTerm() == null) {
