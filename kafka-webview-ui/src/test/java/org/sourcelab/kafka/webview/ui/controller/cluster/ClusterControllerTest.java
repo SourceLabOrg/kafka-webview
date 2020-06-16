@@ -142,8 +142,8 @@ public class ClusterControllerTest extends AbstractMvcTest {
             .andExpect(content().string(containsString(cluster2Name)))
             .andExpect(content().string(containsString("\"/cluster/" + cluster1.getId() + "\"")))
             .andExpect(content().string(containsString("\"/cluster/" + cluster2.getId() + "\"")))
-            .andExpect(content().string(containsString("\"/view?clusterId=" + cluster1.getId() + "\"")))
-            .andExpect(content().string(containsString("\"/view?clusterId=" + cluster2.getId() + "\"")))
+            .andExpect(content().string(containsString("\"/view?cluster.id=" + cluster1.getId() + "\"")))
+            .andExpect(content().string(containsString("\"/view?cluster.id=" + cluster2.getId() + "\"")))
             // But not this
             .andExpect(content().string(not(containsString(ClusterTestTools.NO_CLUSTERS_SETUP_TEXT))));
     }

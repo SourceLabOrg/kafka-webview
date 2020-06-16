@@ -11,9 +11,12 @@
 <body>
 <section layout:fragment="content">
     <div class="container">
-        <div th:replace="fragments/noKafkaClustersFound :: display(${clusterList})">
-            <!-- Display no kafka clusters found -->
-        </div>
+        <!-- If we have no clusters at all, render inline help -->
+        <th:block th:if="${clusterList.isEmpty()}">
+            <div th:replace="fragments/noKafkaClustersFound :: display()">
+                <!-- Display no kafka clusters found -->
+            </div>
+        </th:block>
 
         <div class="row" th:if="${not clusterList.isEmpty()}">
             <!-- Clusters found -->
