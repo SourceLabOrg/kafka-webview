@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -67,10 +68,14 @@ public class ViewController extends BaseController {
      * Constructor.
      */
     @Autowired
-    public ViewController(final ViewRepository viewRepository, final ClusterRepository clusterRepository, final MessageFormatRepository messageFormatRepository) {
-        this.viewRepository = viewRepository;
-        this.clusterRepository = clusterRepository;
-        this.messageFormatRepository = messageFormatRepository;
+    public ViewController(
+        final ViewRepository viewRepository,
+        final ClusterRepository clusterRepository,
+        final MessageFormatRepository messageFormatRepository
+    ) {
+        this.viewRepository = Objects.requireNonNull(viewRepository);
+        this.clusterRepository = Objects.requireNonNull(clusterRepository);
+        this.messageFormatRepository = Objects.requireNonNull(messageFormatRepository);
     }
 
     /**
@@ -140,8 +145,7 @@ public class ViewController extends BaseController {
                 .withRenderTemplate(new LinkTemplate<>(
                     (record) -> "/cluster/" + record.getId(),
                     (record) -> record.getCluster().getName()
-                ))
-                .build())
+                )).build())
             .withColumn(DatatableColumn.newBuilder(View.class)
                 .withLabel("")
                 .withFieldName("")
@@ -149,8 +153,7 @@ public class ViewController extends BaseController {
                 .withRenderTemplate(new LinkTemplate<>(
                     (record) -> "/view/" + record.getId(),
                     (record) -> "Browse"
-                ))
-                .build())
+                )).build())
             .withColumn(DatatableColumn.newBuilder(View.class)
                 .withLabel("")
                 .withFieldName("")
@@ -158,8 +161,7 @@ public class ViewController extends BaseController {
                 .withRenderTemplate(new LinkTemplate<>(
                     (record) -> "/stream/" + record.getId(),
                     (record) -> "Stream"
-                ))
-                .build())
+                )).build())
             .withFilter(new DatatableFilter("Cluster", "cluster.id", filterOptions))
             .withSearch("Search", "name");
 

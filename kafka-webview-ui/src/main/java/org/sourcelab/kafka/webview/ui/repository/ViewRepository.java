@@ -25,9 +25,6 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.View;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -74,14 +71,4 @@ public interface ViewRepository extends CrudRepository<View, Long>, JpaSpecifica
         final long keyMessageFormatId,
         final long messageMessageFormatId
     );
-
-    Page<View> findAll(final Pageable pageable);
-
-    Page<View> findAllByClusterId(final long clusterId, final Pageable pageable);
-
-    Page<View> findByNameContainingIgnoreCase(final String name, final Pageable pageable);
-
-    Page<View> findByClusterIdAndNameContainingIgnoreCase(final long clusterId, final String name, final Pageable pageable);
-
-    Page<View> findAll(Example<View> example, final Pageable pageable);
 }
