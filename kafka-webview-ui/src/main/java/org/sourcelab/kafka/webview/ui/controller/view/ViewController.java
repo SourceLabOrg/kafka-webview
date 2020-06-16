@@ -25,12 +25,12 @@
 package org.sourcelab.kafka.webview.ui.controller.view;
 
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
+import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
+import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
-import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
-import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
@@ -62,7 +62,6 @@ public class ViewController extends BaseController {
 
     private final ViewRepository viewRepository;
     private final ClusterRepository clusterRepository;
-    private final MessageFormatRepository messageFormatRepository;
 
     /**
      * Constructor.
@@ -70,12 +69,10 @@ public class ViewController extends BaseController {
     @Autowired
     public ViewController(
         final ViewRepository viewRepository,
-        final ClusterRepository clusterRepository,
-        final MessageFormatRepository messageFormatRepository
+        final ClusterRepository clusterRepository
     ) {
         this.viewRepository = Objects.requireNonNull(viewRepository);
         this.clusterRepository = Objects.requireNonNull(clusterRepository);
-        this.messageFormatRepository = Objects.requireNonNull(messageFormatRepository);
     }
 
     /**
@@ -143,7 +140,7 @@ public class ViewController extends BaseController {
                 .withFieldName("cluster.name")
                 .withLabel("Cluster")
                 .withRenderTemplate(new LinkTemplate<>(
-                    (record) -> "/cluster/" + record.getId(),
+                    (record) -> "/cluster/" + record.getCluster().getId(),
                     (record) -> record.getCluster().getName()
                 )).build())
             .withColumn(DatatableColumn.newBuilder(View.class)
