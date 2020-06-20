@@ -113,7 +113,7 @@ public class LoginController extends BaseController {
         redirectAttributes.addFlashAttribute("FlashMessage", flashMessage);
 
         // Retrieve User by Email
-        final User user = userRepository.findByEmail(lostPasswordForm.getEmail());
+        final User user = userRepository.findByEmailIgnoreCase(lostPasswordForm.getEmail());
         if (user != null) {
             // Do email reset request.
             //resetUserPasswordManager.requestPasswordReset(user);
@@ -158,7 +158,7 @@ public class LoginController extends BaseController {
         }
 
         // Retrieve User by Email
-        final User user = userRepository.findByEmail(resetPasswordForm.getEmail());
+        final User user = userRepository.findByEmailIgnoreCase(resetPasswordForm.getEmail());
         boolean result = false;
         if (user != null) {
             // Attempt reset
