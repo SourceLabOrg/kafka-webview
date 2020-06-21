@@ -31,6 +31,7 @@ import java.util.function.Function;
 
 /**
  * For rendering YES/NO Badges in a column for boolean values.
+ * @param <T> The type of object being rendered on the datatable.
  */
 public class YesNoBadgeTemplate<T> extends RenderTemplate<T> {
 

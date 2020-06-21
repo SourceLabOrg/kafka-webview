@@ -112,7 +112,7 @@ public class ClusterController extends BaseController {
                 .withLabel("Views")
                 .withRenderTemplate(new LinkTemplate<>(
                     (record) -> "/view?cluster.id=" + record.getId(),
-                    (record) -> viewsByClusterId.computeIfAbsent(record.getId(), (k) -> 0L) + " Views"
+                    (record) -> viewsByClusterId.computeIfAbsent(record.getId(), (key) -> 0L) + " Views"
                 ))
                 .withIsSortable(false)
                 .build())
