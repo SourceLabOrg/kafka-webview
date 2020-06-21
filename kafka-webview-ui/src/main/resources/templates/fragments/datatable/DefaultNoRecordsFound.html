@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<body>
+
+<!-- Render Datatable -->
+<div class="alert alert-warning" role="alert" th:fragment="display(datatable)" th:if="${datatable.isEmpty()}">
+    <!-- Show Empty if no records found -->
+    <h4 class="alert-heading"><strong>No [[${datatable.getLabel()}]] Found.</strong></h4>
+    <p>
+        It looks like no [[${datatable.getLabel()}]] could be found.<br/>
+        <a th:href="@{${datatable.getUrl()}}">Reset filters</a>.
+    </p>
+</div>
+
+</body>
+</html>

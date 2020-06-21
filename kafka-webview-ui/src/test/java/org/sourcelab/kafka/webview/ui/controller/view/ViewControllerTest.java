@@ -198,17 +198,25 @@ public class ViewControllerTest extends AbstractMvcTest {
             //.andDo(print())
             .andExpect(status().isOk())
             // Should contain this text
+
+            // Check for cluster 1
             .andExpect(content().string(containsString(cluster1Name)))
             .andExpect(content().string(containsString("a href=\"/cluster/" + cluster1.getId() + "\"")))
+
+            // Check for cluster 2
             .andExpect(content().string(containsString(cluster2Name)))
             .andExpect(content().string(containsString("a href=\"/cluster/" + cluster2.getId() + "\"")))
+
+            // Check for view 1
             .andExpect(content().string(containsString(view1Name)))
             .andExpect(content().string(containsString("a href=\"/view/" + view1.getId() + "\"")))
             .andExpect(content().string(containsString("a href=\"/stream/" + view1.getId() + "\"")))
+            .andExpect(content().string(containsString(view1Topic)))
+
+            // Check for view 2
             .andExpect(content().string(containsString(view2Name)))
             .andExpect(content().string(containsString("a href=\"/view/" + view2.getId() + "\"")))
             .andExpect(content().string(containsString("a href=\"/stream/" + view2.getId() + "\"")))
-            .andExpect(content().string(containsString(view1Topic)))
             .andExpect(content().string(containsString(view2Topic)))
 
             // But not this

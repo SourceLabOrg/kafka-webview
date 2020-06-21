@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Render Link  -->
+<td th:fragment="display(url, text)">
+    <a th:href="@{${url}}" th:text="${text}"></a>
+</td>
+
+</body>
+</html>

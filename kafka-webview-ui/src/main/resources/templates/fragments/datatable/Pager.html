@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Display Footer Pager  -->
+<div th:fragment="display(datatable)" class="card-footer" id="table-controls">
+    <div class="row">
+        <div class="col-10">
+            <!-- Display Pager Controls -->
+            <div class="pagination row">
+                <div class="page-item col-3">
+                    <a
+                        class="page-link" id="control-head"
+                        th:href="@{${datatable.getUrlWithParams('page', '0')}}"
+                        th:if="${not datatable.isFirstPage()}">
+
+                        <i class="fa fa-fast-backward" aria-hidden="true"></i>
+                        First
+                    </a>
+                </div>
+                <div class="page-item col-3">
+                    <a
+                        class="page-link" id="control-previous"
+                        th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() - 1))}}"
+                        th:if="${datatable.hasPreviousPage()}">
+
+                        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                        Previous
+                    </a>
+                </div>
+                <div class="page-item col-3">
+                    <a
+                        class="page-link" id="control-next"
+                        th:href="@{${datatable.getUrlWithParams('page', '' + (datatable.getNumber() + 1))}}"
+                        th:if="${datatable.hasNextPage()}">
+                        Next
+                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="page-item col-3">
+                    <a
+                        class="page-link" id="control-tail"
+                        th:href="@{${datatable.getUrlWithParams('page', '' + datatable.getTotalPages() - 1)}}"
+                        th:if="${not datatable.isLastPage()}">
+                        Last
+                        <i class="fa fa-fast-forward" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-2">
+            <form class="form-inline float-right">
+                <label class="mr-2" for="page">Page</label>
+                <select name="page" id="page" class="form-control" onchange="jQuery(this).parent().submit();">
+                    <option
+                        th:each="currentValue : ${#numbers.sequence(0, datatable.getTotalPages() - 1)}"
+                        th:value="${currentValue}"
+                        th:text="${currentValue + 1}"
+                        th:selected="${currentValue == datatable.getNumber()}">
+                    </option>
+                </select>
+                <label class="ml-2">
+                    of [[${datatable.getTotalPages()}]]
+                </label>
+                <!-- Other datatable params -->
+                <th:block th:each="paramEntry : ${datatable.getUrlParams('page', '').entrySet()}">
+                    <input type="hidden" th:name="${paramEntry.getKey()}" th:value="${paramEntry.getValue()}"/>
+                </th:block>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

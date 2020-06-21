@@ -22,31 +22,37 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.repository;
+package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
-import org.sourcelab.kafka.webview.ui.model.Cluster;
-import org.sourcelab.kafka.webview.ui.model.View;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 /**
- * For interacting w/ the Cluster database table.
+ * Render template for rendering links.
+ * @param <T> The type of object being rendered on the datatable.
  */
-@Repository
-public interface ClusterRepository extends CrudRepository<Cluster, Long>, JpaSpecificationExecutor<Cluster> {
-    /**
-     * Find cluster by name.
-     * @param name Name of cluster to retrieve.
-     * @return the Cluster instance, or null if none found.
-     */
-    Cluster findByName(final String name);
+public class LinkTemplate<T> extends RenderTemplate<T> {
+
+    private final Function<T, String> urlFunction;
+    private final Function<T, String> textFunction;
 
     /**
-     * Retrieve all clusters ordered by name.
-     * @return all clusters ordered by name.
+     * Constructor.
+     * @param urlFunction Function to render the URL for the link.
+     * @param textFunction Function to render the text for the link.
      */
-    Iterable<Cluster> findAllByOrderByNameAsc();
+    public LinkTemplate(Function<T, String> urlFunction, Function<T, String> textFunction) {
+        super("fragments/datatable/fields/Link", "display");
+        this.urlFunction = urlFunction;
+        this.textFunction = textFunction;
+    }
+
+    @Override
+    List<Object> getParameters(T record) {
+        final List<Object> params = new ArrayList<>();
+        params.add(urlFunction.apply(record));
+        params.add(textFunction.apply(record));
+        return params;
+    }
 }

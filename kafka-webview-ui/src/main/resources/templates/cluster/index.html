@@ -2,6 +2,7 @@
 <html
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
     layout:decorate="~{layout}">
 
 <head>
@@ -11,53 +12,18 @@
 <body>
 <section layout:fragment="content">
     <div class="container">
-        <div th:replace="fragments/noKafkaClustersFound :: display(${clusterList})">
-            <!-- Display no kafka clusters found -->
-        </div>
 
-        <div class="row" th:if="${not clusterList.isEmpty()}">
-            <!-- Clusters found -->
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fa fa-align-justify"></i>
-                        Kafka Clusters
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-bordered table-striped table-sm">
-                            <thead>
-                            <tr>
-                                <th>Cluster</th>
-                                <th>Views</th>
-                                <th>SSL</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="cluster : ${clusterList}">
-                                <td>
-                                    <a th:href="@{/cluster/{id}(id=${cluster.id})}" th:text="${cluster.name}"></a>
-                                </td>
-                                <td>
-                                    <a th:href="@{/view?clusterId={id}(id=${cluster.id})}" th:text="${viewsByClusterId.get(cluster.getId())} + ' Views'"></a>
-                                </td>
-                                <td>
-                                    <span
-                                        th:if="${cluster.isSslEnabled()}"
-                                        class="badge badge-success">Yes
-                                    </span>
-                                    <span
-                                        th:if="!${cluster.isSslEnabled()}"
-                                        class="badge badge-danger">No
-                                    </span>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <!-- If we have no clusters at all, render inline help -->
+        <th:block th:if="${hasNoClusters}">
+            <div th:replace="fragments/noKafkaClustersFound :: display()">
+                <!-- Display no kafka clusters found -->
             </div>
-            <!--/.col-->
-        </div>
+        </th:block>
+
+        <!-- Render datatable if we have one or more clusters. -->
+        <th:block th:if="${hasClusters}">
+            <div th:replace="fragments/datatable/Datatable :: display(${datatable})"></div>
+        </th:block>
     </div>
 </section>
 

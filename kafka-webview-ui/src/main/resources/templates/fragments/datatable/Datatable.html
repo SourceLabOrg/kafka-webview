@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<body>
+
+<!-- Render Datatable -->
+<div class="row" th:fragment="display(datatable)">
+
+    <!-- render the datatable -->
+    <!-- <div th:if="${not datatable.isEmpty()}">-->
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-align-justify"></i>
+                [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]])
+
+                <!-- Show Search -->
+                <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable})"></div>
+
+                <!-- Show filters -->
+                <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable})"></div>
+            </div>
+            <div class="card-body">
+
+                <!-- Show Headers and rows if not empty -->
+                <table class="table table-bordered table-striped table-sm" th:if="${not datatable.isEmpty()}">
+                    <!-- Column Headers -->
+                    <thead th:replace="fragments/datatable/Columns :: displayColumns(${datatable})"></thead>
+                    <tbody th:replace="fragments/datatable/Rows :: display(${datatable})"></tbody>
+                </table>
+
+                <!-- Show Empty if no records found -->
+                <div th:replace="fragments/datatable/DefaultNoRecordsFound :: display(${datatable})"></div>
+            </div>
+            <!-- Display Pager Controls -->
+            <div th:replace="fragments/datatable/Pager :: display(${datatable})">
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

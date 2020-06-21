@@ -22,31 +22,45 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.repository;
-
-import org.sourcelab.kafka.webview.ui.model.Cluster;
-import org.sourcelab.kafka.webview.ui.model.View;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
 /**
- * For interacting w/ the Cluster database table.
+ * Represents a searchable field on a datatable.
  */
-@Repository
-public interface ClusterRepository extends CrudRepository<Cluster, Long>, JpaSpecificationExecutor<Cluster> {
-    /**
-     * Find cluster by name.
-     * @param name Name of cluster to retrieve.
-     * @return the Cluster instance, or null if none found.
-     */
-    Cluster findByName(final String name);
+public class DatatableSearch {
+    private final String label;
+    private final String field;
+    private final String currentSearchTerm;
 
     /**
-     * Retrieve all clusters ordered by name.
-     * @return all clusters ordered by name.
+     * Constructor.
+     * @param label Human readable display label.
+     * @param field The underlying field to search over.
+     * @param currentSearchTerm The current search term if defined in a request.
      */
-    Iterable<Cluster> findAllByOrderByNameAsc();
+    public DatatableSearch(final String label, final String field, final String currentSearchTerm) {
+        this.label = label;
+        this.field = field;
+        this.currentSearchTerm = currentSearchTerm;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public String getField() {
+        return field;
+    }
+
+    public String getCurrentSearchTerm() {
+        return currentSearchTerm;
+    }
+
+    @Override
+    public String toString() {
+        return "DatatableSearch{"
+            + "label='" + label + '\''
+            + ", field='" + field + '\''
+            + '}';
+    }
 }

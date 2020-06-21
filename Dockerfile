@@ -5,8 +5,8 @@ FROM openjdk:8-jre-alpine
 MAINTAINER SourceLab.org <stephen.powis@gmail.com>
 
 ## Define what version of Kafka Webview to build the image using.
-ENV WEBVIEW_VER="2.5.0" \
-    WEBVIEW_SHA1="00a8db474ba2c584c5a473c8ca9acbd0259c01de" \
+ENV WEBVIEW_VER="2.5.1" \
+    WEBVIEW_SHA1="f36027aa489ae08975b84882641e3fcd6f8102f6" \
     WEBVIEW_HOME="/app"
 
 # Create app and data directories

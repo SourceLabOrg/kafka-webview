@@ -27,11 +27,17 @@ package org.sourcelab.kafka.webview.ui.controller.view;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
+import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,8 +46,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -50,41 +59,41 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/view")
 public class ViewController extends BaseController {
-    @Autowired
-    private ViewRepository viewRepository;
 
+    private final ViewRepository viewRepository;
+    private final ClusterRepository clusterRepository;
+
+    /**
+     * Constructor.
+     */
     @Autowired
-    private ClusterRepository clusterRepository;
+    public ViewController(
+        final ViewRepository viewRepository,
+        final ClusterRepository clusterRepository
+    ) {
+        this.viewRepository = Objects.requireNonNull(viewRepository);
+        this.clusterRepository = Objects.requireNonNull(clusterRepository);
+    }
 
     /**
      * GET views index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index(
+    public String datatable(
         final Model model,
-        @RequestParam(name = "clusterId", required = false) final Long clusterId
+        @RequestParam(name = "cluster.id", required = false) final Long clusterId,
+        final Pageable pageable,
+        @RequestParam Map<String,String> allParams
     ) {
         // Setup breadcrumbs
         final BreadCrumbManager breadCrumbManager = new BreadCrumbManager(model);
 
+        // Determine if we actually have any clusters setup
         // Retrieve all clusters and index by id
         final Map<Long, Cluster> clustersById = new HashMap<>();
         clusterRepository
             .findAllByOrderByNameAsc()
             .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
-
-        final Iterable<View> views;
-        if (clusterId == null) {
-            // Retrieve all views order by name asc.
-            views = viewRepository.findAllByOrderByNameAsc();
-        } else {
-            // Retrieve only views for the cluster
-            views = viewRepository.findAllByClusterIdOrderByNameAsc(clusterId);
-        }
-
-        // Set model Attributes
-        model.addAttribute("viewList", views);
-        model.addAttribute("clustersById", clustersById);
 
         final String clusterName;
         if (clusterId != null && clustersById.containsKey(clusterId)) {
@@ -104,6 +113,63 @@ public class ViewController extends BaseController {
         }
         model.addAttribute("clusterName", clusterName);
 
+        // Create a filter
+        final List<DatatableFilter.FilterOption> filterOptions = new ArrayList<>();
+        clustersById
+            .forEach((id, cluster) -> filterOptions.add(new DatatableFilter.FilterOption(String.valueOf(id), cluster.getName())));
+        final DatatableFilter filter = new DatatableFilter("Cluster", "clusterId", filterOptions);
+        model.addAttribute("filters", new DatatableFilter[] { filter });
+
+        final Datatable.Builder<View> builder = Datatable.newBuilder(View.class)
+            .withRepository(viewRepository)
+            .withPageable(pageable)
+            .withRequestParams(allParams)
+            .withUrl("/view")
+            .withLabel("Views")
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("name")
+                .withLabel("View")
+                .withRenderFunction((View::getName))
+                .build())
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("topic")
+                .withLabel("Topic")
+                .withRenderFunction(View::getTopic)
+                .build())
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("cluster.name")
+                .withLabel("Cluster")
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/cluster/" + record.getCluster().getId(),
+                    (record) -> record.getCluster().getName()
+                )).build())
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withLabel("")
+                .withFieldName("")
+                .withIsSortable(false)
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/view/" + record.getId(),
+                    (record) -> "Browse"
+                )).build())
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withLabel("")
+                .withFieldName("")
+                .withIsSortable(false)
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/stream/" + record.getId(),
+                    (record) -> "Stream"
+                )).build())
+            .withFilter(new DatatableFilter("Cluster", "cluster.id", filterOptions))
+            .withSearch("name");
+
+        // Add datatable attribute
+        model.addAttribute("datatable", builder.build());
+
+        // Determine if we have no clusters setup so we can show appropriate inline help.
+        model.addAttribute("hasClusters", !clustersById.isEmpty());
+        model.addAttribute("hasNoClusters", clustersById.isEmpty());
+        model.addAttribute("hasViews", viewRepository.count() > 0);
+
         return "view/index";
     }
 
@@ -111,7 +177,7 @@ public class ViewController extends BaseController {
      * GET Displays view for specified view.
      */
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
-    public String index(
+    public String view(
         @PathVariable final Long id,
         final RedirectAttributes redirectAttributes,
         final Model model) {
