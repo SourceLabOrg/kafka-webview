@@ -195,7 +195,7 @@ public class UserController extends BaseController {
         model.addAttribute("isAdmin", isAdmin);
 
         // Validate email doesn't already exist!
-        final User existingUser = userRepository.findByEmail(userForm.getEmail());
+        final User existingUser = userRepository.findByEmailIgnoreCase(userForm.getEmail());
         if ((userForm.exists() && existingUser != null && existingUser.getId() != userForm.getId())
             || (!userForm.exists() && existingUser != null)) {
             bindingResult.addError(new FieldError(
