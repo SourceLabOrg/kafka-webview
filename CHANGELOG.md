@@ -2,11 +2,11 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.6.0 (UNRELEASED)
+## 2.6.0 (06/21/2020)
 - [ISSUE-144](https://github.com/SourceLabOrg/kafka-webview/issues/144) Make providing a TrustStore file when setting up a SSL enabled cluster optional.  You might not want/need this option if your JVM is already configured to accept the SSL certificate served by the cluster, or if the cluster's certificate can be validated by a publically accessible CA.
 - [PR-215](https://github.com/SourceLabOrg/kafka-webview/pull/215) Improve errors displayed when using the `test cluster` functionality.
 - [PR-219](https://github.com/SourceLabOrg/kafka-webview/pull/219) Improve datatables for /cluster and /view to include paging, sorting, and filtering.
-- [PR-220](https://github.com/SourceLabOrg/kafka-webview/pull/220) Usernames/email addresses for locally defined users are no longer case-insensitive.
+- [PR-220](https://github.com/SourceLabOrg/kafka-webview/pull/220) Usernames/email addresses for locally defined users while logging in are no longer case-sensitive.
 
 ## 2.5.1 (05/19/2020)
 - [ISSUE-209](https://github.com/SourceLabOrg/kafka-webview/issues/209) Expose HealthCheck and App Info endpoints without requiring authentication.
