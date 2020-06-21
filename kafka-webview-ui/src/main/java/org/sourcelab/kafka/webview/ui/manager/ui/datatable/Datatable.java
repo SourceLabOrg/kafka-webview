@@ -488,6 +488,10 @@ public class Datatable<T> {
             return this;
         }
 
+        public Builder<T> withSearch(final String name) {
+            return withSearch("Search...", name, null);
+        }
+
         public Builder<T> withSearch(final String search, final String name) {
             return withSearch(search, name, null);
         }

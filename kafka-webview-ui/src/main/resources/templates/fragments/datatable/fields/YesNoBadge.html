@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Render Function  -->
+<td th:fragment="display(value)">
+     <span
+         th:if="${value}"
+         class="badge badge-success">
+         Yes
+    </span>
+    <span
+        th:if="!${value}"
+        class="badge badge-danger">
+        No
+    </span>
+</td>
+
+</body>
+</html>

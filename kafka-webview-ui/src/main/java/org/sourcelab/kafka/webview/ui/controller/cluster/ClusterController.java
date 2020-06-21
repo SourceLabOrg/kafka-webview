@@ -27,15 +27,23 @@ package org.sourcelab.kafka.webview.ui.controller.cluster;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.YesNoBadgeTemplate;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
+import org.sourcelab.kafka.webview.ui.model.View;
 import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
@@ -59,23 +67,65 @@ public class ClusterController extends BaseController {
      * GET Displays cluster list.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String clusterIndex(final Model model, final RedirectAttributes redirectAttributes) {
+    public String datatable(
+        final Model model,
+        final Pageable pageable,
+        @RequestParam Map<String,String> allParams
+    ) {
         // Setup breadcrumbs
         final BreadCrumbManager manager = new BreadCrumbManager(model);
         manager.addCrumb("Cluster Explorer", null);
 
-        // Retrieve all clusters
-        final Iterable<Cluster> clusterList = clusterRepository.findAllByOrderByNameAsc();
-        model.addAttribute("clusterList", clusterList);
+        // Global flag if we have no clusters at all.
+        model.addAttribute("hasNoClusters", false);
+        model.addAttribute("hasClusters", true);
+        if (clusterRepository.count() == 0) {
+            model.addAttribute("hasNoClusters", true);
+            model.addAttribute("hasClusters", false);
+        }
 
         // Retrieve how many views for each cluster
         final Map<Long, Long> viewsByClusterId = new HashMap<>();
-        for (final Cluster cluster: clusterList) {
+        for (final Cluster cluster: clusterRepository.findAll()) {
             final Long clusterId = cluster.getId();
             final Long count = viewRepository.countByClusterId(cluster.getId());
             viewsByClusterId.put(clusterId, count);
         }
-        model.addAttribute("viewsByClusterId", viewsByClusterId);
+
+        final Datatable.Builder<Cluster> builder = Datatable.newBuilder(Cluster.class)
+            .withRepository(clusterRepository)
+            .withPageable(pageable)
+            .withRequestParams(allParams)
+            .withUrl("/cluster")
+            .withLabel("Kafka Clusters")
+            .withColumn(DatatableColumn.newBuilder(Cluster.class)
+                .withFieldName("name")
+                .withLabel("Cluster")
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/cluster/" + record.getId(),
+                    Cluster::getName
+                ))
+                .withIsSortable(true)
+                .build())
+            .withColumn(DatatableColumn.newBuilder(Cluster.class)
+                .withFieldName("id")
+                .withLabel("Views")
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/view?cluster.id=" + record.getId(),
+                    (record) -> viewsByClusterId.computeIfAbsent(record.getId(), (k) -> 0L) + " Views"
+                ))
+                .withIsSortable(false)
+                .build())
+            .withColumn(DatatableColumn.newBuilder(Cluster.class)
+                .withFieldName("isSslEnabled")
+                .withLabel("SSL")
+                .withRenderTemplate(new YesNoBadgeTemplate<>(Cluster::isSslEnabled))
+                .withIsSortable(true)
+                .build())
+            .withSearch("name");
+
+        // Add datatable attribute
+        model.addAttribute("datatable", builder.build());
 
         // Display template
         return "cluster/index";

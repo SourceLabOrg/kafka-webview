@@ -160,7 +160,7 @@ public class ViewController extends BaseController {
                     (record) -> "Stream"
                 )).build())
             .withFilter(new DatatableFilter("Cluster", "cluster.id", filterOptions))
-            .withSearch("Search", "name");
+            .withSearch("name");
 
         // Add datatable attribute
         model.addAttribute("datatable", builder.build());

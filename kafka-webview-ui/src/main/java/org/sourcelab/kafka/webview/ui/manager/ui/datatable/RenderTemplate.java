@@ -77,7 +77,12 @@ abstract class RenderTemplate<T> {
             return "";
         }
         return params.stream()
-            .map((param) -> "'" + param + "'")
+            .map((param) -> {
+                if (param instanceof Boolean || param instanceof Number) {
+                    return "" + param;
+                }
+                return "'" + param + "'";
+            })
             .collect(Collectors.joining(", "));
     }
 
