@@ -43,8 +43,18 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     /**
      * Find user by email address.
+     * NOTE: Case sensitive!
+     * @param email Email to lookup user by
+     * @return User or null if none found.
+     * @deprecated probably want to use findByEmailIgnoreCase()
+     */
+    User findByEmail(String email);
+
+    /**
+     * Find user by email address.
+     * NOTE: Case insensitive!
      * @param email Email to lookup user by
      * @return User or null if none found.
      */
-    User findByEmail(String email);
+    User findByEmailIgnoreCase(String email);
 }
