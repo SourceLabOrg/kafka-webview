@@ -80,6 +80,15 @@ abstract class RenderTemplate<T> {
             .map((param) -> {
                 if (param instanceof Boolean || param instanceof Number) {
                     return "" + param;
+                } else if (param instanceof String && "_column_".equals(param)) {
+                    // include reference of column. eh. hacky.
+                    return "${column}";
+                } else if (param instanceof String && "_this_".equals(param)) {
+                    return "${column.getRenderTemplate()}";
+                } else if (param instanceof String && "_record_".equals(param)) {
+                    return "${record}";
+                } else if (param instanceof String && "_datatable_".equals(param)) {
+                    return "${datatable}";
                 }
                 return "'" + param + "'";
             })

@@ -98,6 +98,7 @@ public class ClusterController extends BaseController {
             .withRequestParams(allParams)
             .withUrl("/cluster")
             .withLabel("Kafka Clusters")
+            // Name Column
             .withColumn(DatatableColumn.newBuilder(Cluster.class)
                 .withFieldName("name")
                 .withLabel("Cluster")
@@ -107,6 +108,7 @@ public class ClusterController extends BaseController {
                 ))
                 .withIsSortable(true)
                 .build())
+            // Views Column
             .withColumn(DatatableColumn.newBuilder(Cluster.class)
                 .withFieldName("id")
                 .withLabel("Views")
@@ -116,10 +118,18 @@ public class ClusterController extends BaseController {
                 ))
                 .withIsSortable(false)
                 .build())
+            // SSL Column
             .withColumn(DatatableColumn.newBuilder(Cluster.class)
                 .withFieldName("isSslEnabled")
-                .withLabel("SSL")
+                .withLabel("SSL Enabled")
                 .withRenderTemplate(new YesNoBadgeTemplate<>(Cluster::isSslEnabled))
+                .withIsSortable(true)
+                .build())
+            // SASL Column
+            .withColumn(DatatableColumn.newBuilder(Cluster.class)
+                .withFieldName("isSaslEnabled")
+                .withLabel("SASL Enabled")
+                .withRenderTemplate(new YesNoBadgeTemplate<>(Cluster::isSaslEnabled))
                 .withIsSortable(true)
                 .build())
             .withSearch("name");

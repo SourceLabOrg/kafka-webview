@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>User Configuration</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <!-- Render datatable -->
+        <div th:replace="fragments/datatable/Datatable :: display(${datatable})"></div>
+    </div>
+</section>
+
+</body>
+</html>

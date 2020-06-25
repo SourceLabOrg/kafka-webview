@@ -25,6 +25,8 @@
 package org.sourcelab.kafka.webview.ui.repository;
 
 import org.sourcelab.kafka.webview.ui.model.User;
+import org.sourcelab.kafka.webview.ui.model.View;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -32,7 +34,7 @@ import org.springframework.stereotype.Repository;
  * For interacting w/ the User database table.
  */
 @Repository
-public interface UserRepository extends CrudRepository<User, Long> {
+public interface UserRepository extends CrudRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     /**
      * Find all users, ordered by email, where isActive = parameter

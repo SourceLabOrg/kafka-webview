@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+
+<!-- Render Link  -->
+<td th:fragment="display(record, renderTemplate)" class="text-right">
+    <div class="dropdown">
+        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Actions
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <th:block th:each="action : ${renderTemplate.getLinks()}">
+                <a  th:if="${not action.isPost()}"
+                    th:href="@{${action.getUrl(record)}}"
+                    class="dropdown-item">
+                    <i
+                        th:if="${action.hasIcon()}"
+                        th:class="'fa ' + ${action.getIcon()}"></i>
+                    <th:block th:text="${action.getLabel(record)}"></th:block>
+                </a>
+
+                <form
+                    th:if="${action.isPost()}"
+                    th:action="@{${action.getUrl(record)}}"
+                    method="post">
+                    <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
+                        <i  th:if="${action.hasIcon()}"
+                            th:class="'fa ' + ${action.getIcon()}"></i>
+                        <th:block th:text="${action.getLabel(record)}"></th:block>
+                    </button>
+                </form>
+            </th:block>
+        </div>
+    </div>
+</td>
+
+</body>
+</html>

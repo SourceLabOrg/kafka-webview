@@ -46,7 +46,7 @@
                                 <div class="col-md-9">
                                     <input
                                         id="displayName" name="displayName" class="form-control" type="text"
-                                        placeholder="User's name"
+                                        placeholder="User's display name"
                                         th:errorclass="is-invalid"
                                         th:value="*{displayName}">
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}"/>

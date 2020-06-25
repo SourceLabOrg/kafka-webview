@@ -29,11 +29,20 @@ import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.user.forms.UserForm;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.ActionTemplate;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.ConstraintOperator;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.YesNoBadgeTemplate;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
+import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -41,11 +50,13 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -68,7 +79,7 @@ public class UserController extends BaseController {
      * GET Displays main user index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index(final UserForm userForm, final Model model, final RedirectAttributes redirectAttributes) {
+    public String index(final Model model, final RedirectAttributes redirectAttributes) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
 
@@ -82,6 +93,107 @@ public class UserController extends BaseController {
         model.addAttribute("users", usersList);
 
         return "configuration/user/index";
+    }
+
+    /**
+     * GET Displays main user index.
+     */
+    @RequestMapping(path = "/datatable", method = RequestMethod.GET)
+    public String datatable(
+        final Model model,
+        final Pageable pageable,
+        @RequestParam Map<String,String> allParams,
+        final RedirectAttributes redirectAttributes
+    ) {
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, null, null);
+
+        // Check for LDAP auth method and restrict access.
+        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
+            return "redirect:/";
+        }
+
+        // TODO verify add create link
+        // TODO verify add action button and DRY
+        // TODO fix enum filter for role
+        final Datatable.Builder<User> builder = Datatable.newBuilder(User.class)
+            .withRepository(userRepository)
+            .withPageable(pageable)
+            .withRequestParams(allParams)
+            .withUrl("/configuration/user/datatable")
+            .withLabel("Users")
+            // Only show active users.
+            .withConstraint("isActive", true, ConstraintOperator.EQUALS)
+            // With Create Link
+            .withLink("/configuration/user/create", "Create user")
+            // Email Column
+            .withColumn(DatatableColumn.newBuilder(User.class)
+                .withFieldName("email")
+                .withLabel("Email")
+                .withRenderFunction(User::getEmail)
+                .withIsSortable(true)
+                .build())
+            // Name Column
+            .withColumn(DatatableColumn.newBuilder(User.class)
+                .withFieldName("displayName")
+                .withLabel("Name")
+                .withRenderFunction(User::getDisplayName)
+                .withIsSortable(true)
+                .build())
+            // Role Column
+            .withColumn(DatatableColumn.newBuilder(User.class)
+                .withFieldName("role")
+                .withLabel("Role")
+                .withRenderFunction((user) -> {
+                    switch (user.getRole()) {
+                        case ROLE_ADMIN:
+                            return "Admin";
+                        case ROLE_USER:
+                            return "User";
+                        default:
+                            return "Unknown";
+                    }
+                })
+                .withIsSortable(true)
+                .build())
+            // Action Column
+            .withColumn(DatatableColumn.newBuilder(User.class)
+                .withLabel("Action")
+                .withFieldName("id")
+                .withIsSortable(false)
+                .withRenderTemplate(ActionTemplate.newBuilder(User.class)
+                    // Edit Link
+                    .withLink(ActionTemplate.ActionLink.newBuilder(User.class)
+                        .withLabelFunction((record) -> "Edit")
+                        .withUrlFunction((record) -> "/configuration/user/edit/" + record.getId())
+                        .withIcon("fa-edit")
+                        .build())
+                    // Delete Link
+                    .withLink(ActionTemplate.ActionLink.newBuilder(User.class)
+                        .withLabelFunction((record) -> "Delete")
+                        .withUrlFunction((record) -> "/configuration/user/delete/" + record.getId())
+                        .withIcon("fa-remove")
+                        .withIsPost(true)
+                        .build())
+                    .build())
+                .build())
+            .withSearch("email")
+            .withFilter(DatatableFilter.newBuilder()
+                .withField("role")
+                .withLabel("Role")
+                .withOption(UserRole.ROLE_ADMIN.name(), "Admin")
+                .withOption(UserRole.ROLE_USER.name(), "User")
+                .build()
+            );
+
+        // Add datatable attribute
+        model.addAttribute("datatable", builder.build());
+
+        // Retrieve all users
+        final Iterable<User> usersList = userRepository.findAllByIsActiveOrderByEmailAsc(true);
+        model.addAttribute("users", usersList);
+
+        return "configuration/user/datatable";
     }
 
     /**

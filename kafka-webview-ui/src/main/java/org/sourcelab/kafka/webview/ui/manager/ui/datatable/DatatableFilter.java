@@ -24,6 +24,7 @@
 
 package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -105,6 +106,64 @@ public class DatatableFilter {
                 + "value='" + value + '\''
                 + ", label='" + label + '\''
                 + '}';
+        }
+    }
+
+    /**
+     * New Builder instance.
+     * @return Builder instance.
+     */
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
+     * Builder instance.
+     */
+    public static final class Builder {
+        private String label;
+        private String field;
+        private List<FilterOption> options = new ArrayList<>();
+
+        private Builder() {
+        }
+
+
+        public Builder withLabel(String label) {
+            this.label = label;
+            return this;
+        }
+
+        public Builder withField(String field) {
+            this.field = field;
+            return this;
+        }
+
+        public Builder withOptions(List<FilterOption> options) {
+            this.options.clear();
+            this.options.addAll(options);
+            return this;
+        }
+
+        public Builder withOption(final String value, final String label) {
+            return withOption(new DatatableFilter.FilterOption(value, label));
+        }
+
+        public Builder withOption(final Number value, final String label) {
+            return withOption(value.toString(), label);
+        }
+
+        public Builder withOption(final DatatableFilter.FilterOption option) {
+            this.options.add(option);
+            return this;
+        }
+
+        /**
+         * Create new DatatableFilter.
+         * @return DatatableFilter instance.
+         */
+        public DatatableFilter build() {
+            return new DatatableFilter(label, field, options);
         }
     }
 }

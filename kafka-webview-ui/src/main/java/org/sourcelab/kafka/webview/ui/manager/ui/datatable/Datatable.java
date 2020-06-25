@@ -44,6 +44,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static org.sourcelab.kafka.webview.ui.manager.ui.datatable.ConstraintOperator.EQUALS;
+
 /**
  * Aims to be a re-usable datatable UI component backed by a JPA Repository.
  * @param <T> Type of object being rendered in the datatable.
@@ -56,6 +58,11 @@ public class Datatable<T> {
     private final String label;
 
     /**
+     * Defines query constraints.
+     */
+    private final List<DatatableConstraint> constraints;
+
+    /**
      * Columns to display in the table.
      */
     private final List<DatatableColumn> columns;
@@ -64,6 +71,11 @@ public class Datatable<T> {
      * Zero or more filters to render on the table.
      */
     private final List<DatatableFilter> filters;
+
+    /**
+     * Zero or more links at the top of the table.
+     */
+    private final List<DatatableLink> links;
 
     /**
      * Search Field.
@@ -93,22 +105,26 @@ public class Datatable<T> {
     public Datatable(
         final JpaSpecificationExecutor<T> repository,
         final Pageable pageable,
+        final List<DatatableConstraint> constraints,
         final Map<String, String> requestParams,
         final String url,
         final String label,
         final List<DatatableColumn> columns,
         final List<DatatableFilter> filters,
+        final List<DatatableLink> links,
         final DatatableSearch datatableSearch,
         final String noRecordsFoundTemplatePath
     ) {
         this.repository = Objects.requireNonNull(repository);
         this.pageable = Objects.requireNonNull(pageable);
+        this.constraints = Objects.requireNonNull(constraints);
         this.requestParams = Collections.unmodifiableMap(new HashMap<>(requestParams));
         this.url = url;
         this.label = label;
-        this.columns = columns;
-        this.filters = filters;
+        this.columns = Collections.unmodifiableList(new ArrayList<>(columns));
+        this.filters = Collections.unmodifiableList(new ArrayList<>(filters));
         this.datatableSearch = datatableSearch;
+        this.links = Collections.unmodifiableList(new ArrayList<>(links));
         this.noRecordsFoundTemplatePath = Objects.requireNonNull(noRecordsFoundTemplatePath);
     }
 
@@ -276,6 +292,10 @@ public class Datatable<T> {
         return filters;
     }
 
+    public List<DatatableLink> getLinks() {
+        return links;
+    }
+
     public boolean hasFilters() {
         return filters != null && !filters.isEmpty();
     }
@@ -335,6 +355,23 @@ public class Datatable<T> {
                 }
             );
         }
+
+        // Add enforced constraints
+        for (final DatatableConstraint constraint : constraints) {
+            specification = specification.and(
+                (root, query, builder) -> {
+                    final Path<Object> queryPath = root.get(constraint.getField());
+
+                    switch (constraint.getOperator()) {
+                        case EQUALS:
+                            return builder.equal(queryPath, constraint.getValue());
+                        default:
+                            throw new RuntimeException("Unhandle operator");
+                    }
+                }
+            );
+        };
+
 
         // Execute
         page = repository.findAll(specification, pageable);
@@ -421,6 +458,8 @@ public class Datatable<T> {
         private List<DatatableColumn> columns = new ArrayList<>();
         private List<DatatableFilter> filters = new ArrayList<>();
         private DatatableSearch datatableSearch;
+        private List<DatatableConstraint> constraints = new ArrayList<>();
+        private List<DatatableLink> links = new ArrayList<>();
 
         // Default no records found template.
         private String noRecordsFoundTemplatePath = "fragments/datatable/DefaultNoRecordsFound";
@@ -500,8 +539,26 @@ public class Datatable<T> {
             return withSearch(new DatatableSearch(search, name, currentSearchTerm));
         }
 
+        public Builder<T> withLink(final String url, final String label) {
+            return withLink(new DatatableLink(url, label));
+        }
+
+        public Builder<T> withLink(final DatatableLink link) {
+            links.add(link);
+            return this;
+        }
+
         public Builder<T> withNoRecordsFoundTemplate(final String templatePath) {
             this.noRecordsFoundTemplatePath = templatePath;
+            return this;
+        }
+
+        public Builder<T> withConstraint(final String field, final Object value, final ConstraintOperator operator) {
+            return this.withConstraint(new DatatableConstraint(field, value, operator));
+        }
+
+        public Builder<T> withConstraint(final DatatableConstraint constraint) {
+            this.constraints.add(constraint);
             return this;
         }
 
@@ -524,11 +581,13 @@ public class Datatable<T> {
             return new Datatable<>(
                 repository,
                 pageable,
+                constraints,
                 requestParams,
                 url,
                 label,
                 columns,
                 filters,
+                links,
                 datatableSearch,
                 noRecordsFoundTemplatePath
             );
