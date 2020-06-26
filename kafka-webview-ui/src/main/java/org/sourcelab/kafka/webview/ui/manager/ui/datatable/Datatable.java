@@ -362,20 +362,17 @@ public class Datatable<T> {
 
         // Add enforced constraints
         for (final DatatableConstraint constraint : constraints) {
-            specification = specification.and(
-                (root, query, builder) -> {
-                    final Path<Object> queryPath = root.get(constraint.getField());
+            specification = specification.and((root, query, builder) -> {
+                final Path<Object> queryPath = root.get(constraint.getField());
 
-                    switch (constraint.getOperator()) {
-                        case EQUALS:
-                            return builder.equal(queryPath, constraint.getValue());
-                        default:
-                            throw new RuntimeException("Unhandle operator");
-                    }
+                switch (constraint.getOperator()) {
+                    case EQUALS:
+                        return builder.equal(queryPath, constraint.getValue());
+                    default:
+                        throw new RuntimeException("Unhandled operator");
                 }
-            );
-        };
-
+            });
+        }
 
         // Execute
         page = repository.findAll(specification, pageable);

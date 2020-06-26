@@ -139,7 +139,13 @@ public class DatatableFilter {
             return this;
         }
 
-        public Builder withOptions(List<FilterOption> options) {
+        /**
+         * Add multiple options for the filter.
+         * @param options Defined options to add.
+         * @return Builder instance.
+         */
+        public Builder withOptions(final List<FilterOption> options) {
+            Objects.requireNonNull(options);
             this.options.clear();
             this.options.addAll(options);
             return this;
