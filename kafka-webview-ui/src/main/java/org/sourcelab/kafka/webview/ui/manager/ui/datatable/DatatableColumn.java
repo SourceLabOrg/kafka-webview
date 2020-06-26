@@ -24,10 +24,12 @@
 
 package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Defines a column within a datatable.
@@ -38,6 +40,7 @@ public class DatatableColumn<T> {
     private final String label;
     private final int colSpan;
     private final boolean isSortable;
+    private final List<String> headerCssClasses;
     private Function<T, String> renderFunction;
     private final RenderTemplate renderTemplate;
 
@@ -54,6 +57,7 @@ public class DatatableColumn<T> {
      */
     public DatatableColumn(
         final String fieldName, final String label, final int colSpan, final boolean isSortable,
+        final List<String> headerCssClasses,
         final Function<T, String> renderFunction,
         final RenderTemplate renderTemplate
     ) {
@@ -61,6 +65,7 @@ public class DatatableColumn<T> {
         this.label = Objects.requireNonNull(label);
         this.colSpan = colSpan;
         this.isSortable = isSortable;
+        this.headerCssClasses = Collections.unmodifiableList(new ArrayList<>(headerCssClasses));
 
         // One of these may not be null.
         this.renderFunction = renderFunction;
@@ -111,6 +116,10 @@ public class DatatableColumn<T> {
         return isSortable;
     }
 
+    public String getHeaderCssClasses() {
+        return String.join(" ", headerCssClasses).trim();
+    }
+
     /**
      * Create a new Builder instance.
      * @param type The type of record being rendered.
@@ -140,6 +149,7 @@ public class DatatableColumn<T> {
         private boolean isSortable = true;
         private Function<T, String> renderFunction = null;
         private RenderTemplate<T> renderTemplate = null;
+        private List<String> headerCssClasses = new ArrayList<>();
 
         private Builder() {
         }
@@ -164,6 +174,11 @@ public class DatatableColumn<T> {
             return this;
         }
 
+        public Builder<T> withHeaderAlignRight() {
+            this.headerCssClasses.add("text-right");
+            return this;
+        }
+
         public Builder<T> withRenderFunction(Function<T, String> renderFunction) {
             this.renderFunction = renderFunction;
             return this;
@@ -179,7 +194,7 @@ public class DatatableColumn<T> {
          * @return new DatatableColumn.
          */
         public DatatableColumn<T> build() {
-            return new DatatableColumn<T>(fieldName, label, colSpan, isSortable, renderFunction, renderTemplate);
+            return new DatatableColumn<T>(fieldName, label, colSpan, isSortable, headerCssClasses, renderFunction, renderTemplate);
         }
     }
 }

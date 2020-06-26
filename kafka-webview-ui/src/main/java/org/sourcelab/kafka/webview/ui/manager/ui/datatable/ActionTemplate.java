@@ -1,5 +1,7 @@
 package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
+import org.sourcelab.kafka.webview.ui.model.User;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -92,6 +94,33 @@ public class ActionTemplate<T> extends RenderTemplate<T> {
         public Builder<T> withLink(final ActionLink<T> link) {
             this.links.add(link);
             return this;
+        }
+
+        public Builder<T> withEditLink(
+            final Class<T> type,
+            final Function<T, String> urlFunction
+        ) {
+            return withLink(
+                ActionTemplate.ActionLink.newBuilder(type)
+                    .withLabelFunction((record) -> "Edit")
+                    .withUrlFunction(urlFunction)
+                    .withIcon("fa-edit")
+                    .build()
+            );
+        }
+
+        public Builder<T> withDeleteLink(
+            final Class<T> type,
+            final Function<T, String> urlFunction
+        ) {
+            return withLink(
+                ActionTemplate.ActionLink.newBuilder(type)
+                    .withLabelFunction((record) -> "Delete")
+                    .withUrlFunction(urlFunction)
+                    .withIcon("fa-remove")
+                    .withIsPost(true)
+                    .build()
+            );
         }
 
         public ActionTemplate<T> build() {

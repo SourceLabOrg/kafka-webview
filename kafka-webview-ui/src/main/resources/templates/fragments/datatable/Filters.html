@@ -33,6 +33,7 @@
         </form>
     </div>
 
+    <!-- Display top level search on datatable -->
     <div th:fragment="displaySearch(datatable)" class="float-right" th:if="${datatable.getSearch() != null}">
         <form class="form-inline" method="get" th:action="${datatable.getUrl()}">
             <label class="sr-only" for="datatable-search">
@@ -52,6 +53,21 @@
             <th:block th:each="paramEntry : ${datatable.getUrlParams('search', '', 'page', '').entrySet()}">
                 <input type="hidden" th:name="${paramEntry.getKey()}" th:value="${paramEntry.getValue()}"/>
             </th:block>
+        </form>
+    </div>
+
+    <!-- Display top level links on datatable -->
+    <div th:fragment="displayLinks(datatable)" class="btn-group float-right" role="group" aria-label="Button group" th:if="${datatable.hasLinks()}">
+        <form class="form-inline" th:each="link : ${datatable.getLinks()}">
+            <label class="my-1">
+                <a class="btn" th:href="${link.getUrl()}" style="padding-bottom: 0;">
+                    <i th:if="${link.hasIcon()}"
+                       th:class="${link.getIcon()}">
+                    </i>
+                    &nbsp;
+                    <span th:text="${link.getLabel()}"></span>
+                </a>
+            </label>
         </form>
     </div>
 

@@ -304,6 +304,10 @@ public class Datatable<T> {
         return datatableSearch != null;
     }
 
+    public boolean hasLinks() {
+        return links != null && !links.isEmpty();
+    }
+
     public DatatableSearch getSearch() {
         return datatableSearch;
     }
@@ -539,8 +543,12 @@ public class Datatable<T> {
             return withSearch(new DatatableSearch(search, name, currentSearchTerm));
         }
 
-        public Builder<T> withLink(final String url, final String label) {
-            return withLink(new DatatableLink(url, label));
+        public Builder<T> withCreateLink(final String url) {
+            return withLink(new DatatableLink(url, "Create new", "icon-settings"));
+        }
+
+        public Builder<T> withLink(final String url, final String label, final String icon) {
+            return withLink(new DatatableLink(url, label, icon));
         }
 
         public Builder<T> withLink(final DatatableLink link) {

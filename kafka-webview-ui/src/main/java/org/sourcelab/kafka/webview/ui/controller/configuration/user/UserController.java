@@ -113,8 +113,6 @@ public class UserController extends BaseController {
             return "redirect:/";
         }
 
-        // TODO verify add create link
-        // TODO verify add action button and DRY
         // TODO fix enum filter for role
         final Datatable.Builder<User> builder = Datatable.newBuilder(User.class)
             .withRepository(userRepository)
@@ -125,7 +123,7 @@ public class UserController extends BaseController {
             // Only show active users.
             .withConstraint("isActive", true, ConstraintOperator.EQUALS)
             // With Create Link
-            .withLink("/configuration/user/create", "Create user")
+            .withCreateLink("/configuration/user/create")
             // Email Column
             .withColumn(DatatableColumn.newBuilder(User.class)
                 .withFieldName("email")
@@ -161,30 +159,22 @@ public class UserController extends BaseController {
                 .withLabel("Action")
                 .withFieldName("id")
                 .withIsSortable(false)
+                .withHeaderAlignRight()
                 .withRenderTemplate(ActionTemplate.newBuilder(User.class)
                     // Edit Link
-                    .withLink(ActionTemplate.ActionLink.newBuilder(User.class)
-                        .withLabelFunction((record) -> "Edit")
-                        .withUrlFunction((record) -> "/configuration/user/edit/" + record.getId())
-                        .withIcon("fa-edit")
-                        .build())
+                    .withEditLink(User.class, (record) -> "/configuration/user/edit/" + record.getId())
                     // Delete Link
-                    .withLink(ActionTemplate.ActionLink.newBuilder(User.class)
-                        .withLabelFunction((record) -> "Delete")
-                        .withUrlFunction((record) -> "/configuration/user/delete/" + record.getId())
-                        .withIcon("fa-remove")
-                        .withIsPost(true)
-                        .build())
+                    .withDeleteLink(User.class, (record) -> "/configuration/user/delete/" + record.getId())
                     .build())
                 .build())
-            .withSearch("email")
-            .withFilter(DatatableFilter.newBuilder()
-                .withField("role")
-                .withLabel("Role")
-                .withOption(UserRole.ROLE_ADMIN.name(), "Admin")
-                .withOption(UserRole.ROLE_USER.name(), "User")
-                .build()
-            );
+            .withSearch("email");
+//            .withFilter(DatatableFilter.newBuilder()
+//                .withField("role")
+//                .withLabel("Role")
+//                .withOption(UserRole.ROLE_ADMIN.name(), "Admin")
+//                .withOption(UserRole.ROLE_USER.name(), "User")
+//                .build()
+//            );
 
         // Add datatable attribute
         model.addAttribute("datatable", builder.build());

@@ -6,15 +6,17 @@ package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 public class DatatableLink {
     private final String url;
     private final String label;
+    private final String icon;
 
     /**
      * Constructor.
      * @param url Url to link to.
      * @param label Label for the link.
      */
-    public DatatableLink(final String url, final String label) {
+    public DatatableLink(final String url, final String label, final String icon) {
         this.url = url;
         this.label = label;
+        this.icon = icon;
     }
 
     public String getUrl() {
@@ -23,5 +25,16 @@ public class DatatableLink {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public boolean hasIcon() {
+        if (icon == null || icon.isEmpty()) {
+            return false;
+        }
+        return true;
     }
 }
