@@ -75,27 +75,7 @@ public class UserController extends BaseController {
      * GET Displays main user index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index(final Model model, final RedirectAttributes redirectAttributes) {
-        // Setup breadcrumbs
-        setupBreadCrumbs(model, null, null);
-
-        // Check for LDAP auth method and restrict access.
-        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
-            return "redirect:/";
-        }
-
-        // Retrieve all users
-        final Iterable<User> usersList = userRepository.findAllByIsActiveOrderByEmailAsc(true);
-        model.addAttribute("users", usersList);
-
-        return "configuration/user/index";
-    }
-
-    /**
-     * GET Displays main user index.
-     */
-    @RequestMapping(path = "/datatable", method = RequestMethod.GET)
-    public String datatable(
+    public String index(
         final Model model,
         final Pageable pageable,
         @RequestParam Map<String,String> allParams,
@@ -109,12 +89,11 @@ public class UserController extends BaseController {
             return "redirect:/";
         }
 
-        // TODO fix enum filter for role
         final Datatable.Builder<User> builder = Datatable.newBuilder(User.class)
             .withRepository(userRepository)
             .withPageable(pageable)
             .withRequestParams(allParams)
-            .withUrl("/configuration/user/datatable")
+            .withUrl("/configuration/user")
             .withLabel("Users")
             // Only show active users.
             .withConstraint("isActive", true, ConstraintOperator.EQUALS)
@@ -163,7 +142,8 @@ public class UserController extends BaseController {
                     .withDeleteLink(User.class, (record) -> "/configuration/user/delete/" + record.getId())
                     .build())
                 .build())
-            .withSearch("email");
+            .withSearch("email", "displayName");
+            // TODO fix filters with enums
 //            .withFilter(DatatableFilter.newBuilder()
 //                .withField("role")
 //                .withLabel("Role")
@@ -174,12 +154,7 @@ public class UserController extends BaseController {
 
         // Add datatable attribute
         model.addAttribute("datatable", builder.build());
-
-        // Retrieve all users
-        final Iterable<User> usersList = userRepository.findAllByIsActiveOrderByEmailAsc(true);
-        model.addAttribute("users", usersList);
-
-        return "configuration/user/datatable";
+        return "configuration/user/index";
     }
 
     /**

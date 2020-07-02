@@ -24,12 +24,17 @@
 
 package org.sourcelab.kafka.webview.ui.manager.ui.datatable;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
 /**
  * Represents a searchable field on a datatable.
  */
 public class DatatableSearch {
     private final String label;
-    private final String field;
+    private final List<String> fields;
     private final String currentSearchTerm;
 
     /**
@@ -39,8 +44,14 @@ public class DatatableSearch {
      * @param currentSearchTerm The current search term if defined in a request.
      */
     public DatatableSearch(final String label, final String field, final String currentSearchTerm) {
-        this.label = label;
-        this.field = field;
+        this(label, Collections.singletonList(field), currentSearchTerm);
+    }
+
+    public DatatableSearch(final String label, final List<String> fields, final String currentSearchTerm) {
+        Objects.requireNonNull(fields);
+
+        this.label = Objects.requireNonNull(label);
+        this.fields = Collections.unmodifiableList(new ArrayList<>(fields));
         this.currentSearchTerm = currentSearchTerm;
     }
 
@@ -48,8 +59,8 @@ public class DatatableSearch {
         return label;
     }
 
-    public String getField() {
-        return field;
+    public List<String> getFields() {
+        return fields;
     }
 
     public String getCurrentSearchTerm() {
@@ -60,7 +71,8 @@ public class DatatableSearch {
     public String toString() {
         return "DatatableSearch{"
             + "label='" + label + '\''
-            + ", field='" + field + '\''
+            + ", fields=" + fields
+            + ", currentSearchTerm='" + currentSearchTerm + '\''
             + '}';
     }
 }

@@ -31,10 +31,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -330,18 +332,19 @@ public class Datatable<T> {
                 searchValue = null;
             }
         }
-        Specification<T> specification;
-        if (searchValue == null) {
-            specification = Specification.where(null);
-        } else {
-            specification = Specification.where((root, query, builder) ->
-                builder.like(
-                    builder.lower(root.get(getSearch().getField())), "%" + getSearch().getCurrentSearchTerm().toLowerCase() + "%"
-                )
-            );
+        Specification<T> specification = Specification.where(null);
+        if (searchValue != null) {
+            // OR all of the search fields
+            for (final String field : getSearch().getFields()) {
+                specification = specification.or((root, query, builder) ->
+                    builder.like(
+                        builder.lower(root.get(field)), "%" + getSearch().getCurrentSearchTerm().toLowerCase() + "%"
+                    )
+                );
+            }
         }
 
-        // Add filter criterias
+        // Add filter criteria
         for (final DatatableFilter filter : getFilters()) {
             // Skip non-provided filters.
             if (getCurrentFilterValueFor(filter).isEmpty()) {
@@ -528,16 +531,16 @@ public class Datatable<T> {
             return this;
         }
 
-        public Builder<T> withSearch(final String name) {
-            return withSearch("Search...", name, null);
+        public Builder<T> withSearch(final String ... fields) {
+            return withSearch("Search...", Arrays.asList(fields));
         }
 
-        public Builder<T> withSearch(final String search, final String name) {
-            return withSearch(search, name, null);
+        public Builder<T> withSearch(final String label, final List<String> fields) {
+            return withSearch(label, fields, null);
         }
 
-        public Builder<T> withSearch(final String search, final String name, final String currentSearchTerm) {
-            return withSearch(new DatatableSearch(search, name, currentSearchTerm));
+        public Builder<T> withSearch(final String search, final List<String> fields, final String currentSearchTerm) {
+            return withSearch(new DatatableSearch(search, fields, currentSearchTerm));
         }
 
         public Builder<T> withCreateLink(final String url) {
@@ -573,11 +576,11 @@ public class Datatable<T> {
          */
         public Datatable<T> build() {
             // Inject current search term from request parameters if available and not already set.
-            if (datatableSearch != null && datatableSearch.getField() != null && datatableSearch.getCurrentSearchTerm() == null) {
+            if (datatableSearch != null && datatableSearch.getCurrentSearchTerm() == null) {
                 if (requestParams.containsKey("search")) {
                     datatableSearch = new DatatableSearch(
                         datatableSearch.getLabel(),
-                        datatableSearch.getField(),
+                        datatableSearch.getFields(),
                         requestParams.get("search")
                     );
                 }
