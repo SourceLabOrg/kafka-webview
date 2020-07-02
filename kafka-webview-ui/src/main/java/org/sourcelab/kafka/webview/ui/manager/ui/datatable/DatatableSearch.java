@@ -39,14 +39,10 @@ public class DatatableSearch {
 
     /**
      * Constructor.
-     * @param label Human readable display label.
-     * @param field The underlying field to search over.
+     * @param label Display label.
+     * @param fields One or more fields to search across.
      * @param currentSearchTerm The current search term if defined in a request.
      */
-    public DatatableSearch(final String label, final String field, final String currentSearchTerm) {
-        this(label, Collections.singletonList(field), currentSearchTerm);
-    }
-
     public DatatableSearch(final String label, final List<String> fields, final String currentSearchTerm) {
         Objects.requireNonNull(fields);
 
