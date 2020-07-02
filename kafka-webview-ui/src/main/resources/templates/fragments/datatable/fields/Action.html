@@ -24,7 +24,8 @@
                 <form
                     th:if="${action.isPost()}"
                     th:action="@{${action.getUrl(record)}}"
-                    method="post">
+                    method="post"
+                    style="border-bottom: 1px solid #c2cfd6;">
                     <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
                         <i  th:if="${action.hasIcon()}"
                             th:class="'fa ' + ${action.getIcon()}"></i>
