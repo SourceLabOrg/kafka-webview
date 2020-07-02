@@ -196,6 +196,26 @@ public class ActionTemplate<T> extends RenderTemplate<T> {
         }
 
         /**
+         * Add a standard Copy link.
+         * @param type Record type.
+         * @param urlFunction The url to link to.
+         * @return Builder instance.
+         */
+        public Builder<T> withCopyLink(
+            final Class<T> type,
+            final Function<T, String> urlFunction
+        ) {
+            return withLink(
+                ActionTemplate.ActionLink.newBuilder(type)
+                    .withLabelFunction((record) -> "Copy")
+                    .withUrlFunction(urlFunction)
+                    .withIcon("fa-copy")
+                    .withIsPost(true)
+                    .build()
+            );
+        }
+
+        /**
          * Create new ActionTemplate instance from Builder.
          * @return ActionType instance.
          */

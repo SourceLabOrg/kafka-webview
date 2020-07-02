@@ -26,6 +26,7 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.view;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.common.errors.TimeoutException;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.view.forms.ViewForm;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
@@ -35,6 +36,11 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.dto.TopicList;
 import org.sourcelab.kafka.webview.ui.manager.model.view.ViewCopyManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.ActionTemplate;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
+import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.Filter;
 import org.sourcelab.kafka.webview.ui.model.MessageFormat;
@@ -47,6 +53,7 @@ import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewToFilterOptionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -64,6 +71,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -94,17 +102,122 @@ public class ViewConfigController extends BaseController {
     @Autowired
     private KafkaOperationsFactory kafkaOperationsFactory;
 
+
     /**
-     * GET Displays main configuration index.
+     * GET views index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index(final Model model) {
+    public String datatable(
+        final Model model,
+        @RequestParam(name = "cluster.id", required = false) final Long clusterId,
+        final Pageable pageable,
+        @RequestParam Map<String,String> allParams
+    ) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
 
-        // Retrieve all message formats
-        final Iterable<View> viewList = viewRepository.findAllByOrderByNameAsc();
-        model.addAttribute("views", viewList);
+        // Determine if we actually have any clusters setup
+        // Retrieve all clusters and index by id
+        final Map<Long, Cluster> clustersById = new HashMap<>();
+        clusterRepository
+            .findAllByOrderByNameAsc()
+            .forEach((cluster) -> clustersById.put(cluster.getId(), cluster));
+
+        // Create a filter
+        final List<DatatableFilter.FilterOption> filterOptions = new ArrayList<>();
+        clustersById
+            .forEach((id, cluster) -> filterOptions.add(new DatatableFilter.FilterOption(String.valueOf(id), cluster.getName())));
+        final DatatableFilter filter = new DatatableFilter("Cluster", "clusterId", filterOptions);
+        model.addAttribute("filters", new DatatableFilter[] { filter });
+
+        final Datatable.Builder<View> builder = Datatable.newBuilder(View.class)
+            .withRepository(viewRepository)
+            .withPageable(pageable)
+            .withRequestParams(allParams)
+            .withUrl("/configuration/view")
+            .withLabel("Views")
+            .withCreateLink("/configuration/view/create")
+
+            // Name Column
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("name")
+                .withLabel("Name")
+                .withIsSortable(true)
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/view/" + record.getId(),
+                    View::getName
+                )).build())
+
+            // Cluster Column
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("cluster.name")
+                .withLabel("Cluster")
+                .withRenderTemplate(new LinkTemplate<>(
+                    (record) -> "/cluster/" + record.getCluster().getId(),
+                    (record) -> record.getCluster().getName()
+                ))
+                .withIsSortable(true)
+                .build())
+
+            // Topic Column
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("topic")
+                .withLabel("Topic")
+                .withRenderFunction(View::getTopic)
+                .withIsSortable(true)
+                .build())
+
+            // Partitions Column
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("partitions")
+                .withLabel("Partitions")
+                .withRenderFunction(View::displayPartitions)
+                .withIsSortable(false)
+                .build())
+
+            // Key Format Column
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("keyMessageFormat.name")
+                .withLabel("Key Format")
+                .withRenderFunction((view) -> view.getKeyMessageFormat().getName())
+                .withIsSortable(true)
+                .build())
+
+            // Value Format Column
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withFieldName("valueMessageFormat.name")
+                .withLabel("Value Format")
+                .withRenderFunction((view) -> view.getValueMessageFormat().getName())
+                .withIsSortable(true)
+                .build())
+
+            // Action Column
+            .withColumn(DatatableColumn.newBuilder(View.class)
+                .withLabel("Action")
+                .withFieldName("id")
+                .withIsSortable(false)
+                .withHeaderAlignRight()
+                .withRenderTemplate(ActionTemplate.newBuilder(View.class)
+                    // Edit Link
+                    .withEditLink(View.class, (record) -> "/configuration/view/edit/" + record.getId())
+                    // Copy Link
+                    .withCopyLink(View.class, (record) -> "/configuration/view/copy/" + record.getId())
+                    // Delete Link
+                    .withDeleteLink(View.class, (record) -> "/configuration/view/delete/" + record.getId())
+                    .build())
+                .build())
+
+            // Filters
+            .withFilter(new DatatableFilter("Cluster", "cluster.id", filterOptions))
+            .withSearch("name");
+
+        // Add datatable attribute
+        model.addAttribute("datatable", builder.build());
+
+        // Determine if we have no clusters setup so we can show appropriate inline help.
+        model.addAttribute("hasClusters", !clustersById.isEmpty());
+        model.addAttribute("hasNoClusters", clustersById.isEmpty());
+        model.addAttribute("hasViews", viewRepository.count() > 0);
 
         return "configuration/view/index";
     }
@@ -113,7 +226,7 @@ public class ViewConfigController extends BaseController {
      * GET Displays create view form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
-    public String createViewForm(final ViewForm viewForm, final Model model) {
+    public String createViewForm(final ViewForm viewForm, final Model model, final RedirectAttributes redirectAttributes) {
         // Setup breadcrumbs
         if (!model.containsAttribute("BreadCrumbs")) {
             setupBreadCrumbs(model, "Create", null);
@@ -147,8 +260,26 @@ public class ViewConfigController extends BaseController {
                         final TopicDetails topicDetails = operations.getTopicDetails(viewForm.getTopic());
                         model.addAttribute("partitions", topicDetails.getPartitions());
                     }
+                    redirectAttributes.getFlashAttributes().remove("ClusterError");
+                } catch (final TimeoutException timeoutException) {
+                    final String reason = timeoutException.getMessage() + " (This may indicate an authentication or connection problem)";
+                    // Set error msg
+                    redirectAttributes.addFlashAttribute("ClusterError", true);
+                    redirectAttributes.addFlashAttribute(
+                        "FlashMessage",
+                        FlashMessage.newDanger(
+                            "Error connecting to cluster '" + cluster.getName() + "': " + reason,
+                            timeoutException
+                        )
+                    );
                 }
             });
+        }
+
+        // If we had an error.
+        if (redirectAttributes.getFlashAttributes().containsKey("ClusterError")) {
+            // Redirect instead.
+            return "redirect:/configuration/view";
         }
 
         return "configuration/view/create";
@@ -215,7 +346,7 @@ public class ViewConfigController extends BaseController {
         }
         viewForm.setOptionalFilters(optionalFilterIds);
 
-        return createViewForm(viewForm, model);
+        return createViewForm(viewForm, model, redirectAttributes);
     }
 
     /**
@@ -246,7 +377,7 @@ public class ViewConfigController extends BaseController {
 
         // If we have errors
         if (bindingResult.hasErrors()) {
-            return createViewForm(viewForm, model);
+            return createViewForm(viewForm, model, redirectAttributes);
         }
 
         // If we're updating
@@ -484,9 +615,13 @@ public class ViewConfigController extends BaseController {
             viewRepository.findById(id).ifPresent((view) -> {
                 // Create Copy manager
                 final ViewCopyManager copyManager = new ViewCopyManager(viewRepository);
-                copyManager.copy(view, "Copy of " + view.getName());
+                final String newName = "Copy of " + view.getName();
+                copyManager.copy(view, newName);
 
-                redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newSuccess("Copied view!"));
+                redirectAttributes.addFlashAttribute(
+                    "FlashMessage",
+                    FlashMessage.newSuccess("Copied view using name '" + newName + "'!")
+                );
             });
         }
 
