@@ -33,7 +33,9 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Utility class to DRY out common Kafka client configuration options that apply to multiple client types.
@@ -72,6 +74,16 @@ public class KafkaClientConfigUtil {
      */
     public Map<String, Object> applyCommonSettings(final ClusterConfig clusterConfig, final String consumerId) {
         return applyCommonSettings(clusterConfig, consumerId, new HashMap<>());
+    }
+
+    /**
+     * Get all defined Kafka Consumer properties.
+     * @return Sorted list of property names.
+     */
+    public static List<String> getAllKafkaConsumerProperties() {
+        return ConsumerConfig.configNames().stream()
+            .sorted()
+            .collect(Collectors.toList());
     }
 
     /**

@@ -310,6 +310,75 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <h6>
+                                Custom Client Properties
+                                <small class="form-text text-muted">
+                                    Use with care. Setting improper values may interfere with Kafka WebViews ability
+                                    to correctly communicate with your cluster.
+                                </small>
+                            </h6>
+                            <hr>
+
+                            <!-- Defined Options -->
+                            <div id="optionsContainer">
+                                <!-- Loop over each option -->
+                                <div class="form-group row custom-option" th:each="optionEntry : ${clusterForm.getCustomOptionsAsMap().entrySet()}">
+                                    <label class="col-md-3 form-control-label">
+                                        <i th:text="${optionEntry.getKey()}"></i>
+                                    </label>
+                                    <div class="col-md-8">
+                                        <input
+                                            th:value="${optionEntry.getValue()}"
+                                            type="text" name="customOptionValues" class="form-control"
+                                            placeholder="Set property value">
+                                        <input
+                                            th:value="${optionEntry.getKey()}"
+                                            type="hidden" name="customOptionNames">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-sm removeOption" type="button" onclick="removeOption(this);">
+                                            <i class="fa fa-minus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Dynamic Properties -->
+                            <div class="form-group row">
+                                <label class="col-md-3 form-control-label" for="newOption">
+                                    Add new property
+                                </label>
+                                <div class="col-md-8">
+                                    <select name="kafka-property-select" id="kafka-property-select" class="form-control">
+                                        <option value=""></option>
+                                        <optgroup label="Custom">
+                                            <option value="-1">Other...</option>
+                                        </optgroup>
+                                        <optgroup label="Standard Properties">
+                                            <option
+                                                th:each="property : ${kafkaProperties}"
+                                                th:value="${property}"
+                                                th:text="${property}">
+                                            </option>
+                                        </optgroup>
+                                    </select>
+                                    <input
+                                        autocomplete="off" class="form-control d-none" id="newOption" name="newOption" type="text"
+                                        placeholder="Enter property name"/>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button id="addOption" class="btn btn-sm add-more" type="button">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                        <button id="resetOption" class="btn btn-sm add-more d-none" type="button">
+                                            <i class="fa fa-reply"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="card-footer">
@@ -328,6 +397,106 @@
             </div>
         </div>
     </div>
+
+    <script type="application/javascript">
+        jQuery().ready(function() {
+            jQuery('#kafka-property-select').change(function(e) {
+                var val = jQuery('#kafka-property-select').val();
+                console.log("Value: " + val);
+                if (val == -1) {
+                    console.log("Showing input");
+                    // Show input box
+                    jQuery('#newOption').toggleClass('d-none');
+                    jQuery('#kafka-property-select').toggleClass('d-none');
+                    jQuery('#resetOption').toggleClass('d-none');
+                } else {
+                    // Hide Input box?
+                    console.log("Showing select");
+                }
+            })
+
+            jQuery('#resetOption').click(function(e) {
+                // Reset
+                resetOptions();
+            });
+
+            jQuery('#addOption').click(function(e) {
+                e.preventDefault();
+
+                // Get and compile template
+                var source   = jQuery('#options-template').html();
+                var template = Handlebars.compile(source);
+
+                // Determine which input to select from
+                var optionName = null;
+                if (jQuery('#kafka-property-select').val() == -1) {
+                    // Get name from input
+                    optionName = jQuery('#newOption').val();
+                } else if (jQuery('#kafka-property-select').val() !== "") {
+                    optionName = jQuery('#kafka-property-select').val();
+                }
+
+                if (optionName == null || optionName.trim().length == 0) {
+                    alert('Must enter a name for property');
+                    return;
+                }
+
+                // Generate html from template
+                var properties = {
+                    optionName: optionName,
+                    optionValueFieldName: "",
+                    optionNameFieldName: "customOptionNames"
+                };
+                var optionsHtml = template(properties);
+
+                // Append it to our div
+                jQuery('#optionsContainer').append(optionsHtml);
+
+                // Reset
+                resetOptions();
+            });
+        });
+
+        function resetOptions() {
+            // Reset visibility.
+            jQuery('#newOption').addClass('d-none');
+            jQuery('#kafka-property-select').removeClass('d-none');
+            jQuery('#resetOption').addClass('d-none');
+
+            // Reset inputs
+            jQuery('#newOption').val('');
+            jQuery('#kafka-property-select').val('');
+        }
+
+        // Handle removing custom options
+        function removeOption(element) {
+            if (confirm('Are you sure you want to remove this property?')) {
+                jQuery(element).closest('.custom-option').remove();
+            }
+        }
+    </script>
+
+    <!-- Options Template -->
+    <script id="options-template" type="text/x-handlebars-template">
+        <!-- User Defined Option -->
+        <div class="form-group row custom-option">
+            <label class="col-md-3 form-control-label">
+                <i>{{optionName}}</i>
+            </label>
+            <div class="col-md-8">
+                <input
+                    type="text" name="customOptionValues" class="form-control"
+                    placeholder="Set property value">
+                <input
+                    type="hidden" name="customOptionNames" value="{{optionName}}">
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-sm removeOption" type="button" onclick="removeOption(this);">
+                    <i class="fa fa-minus"></i>
+                </button>
+            </div>
+        </div>
+    </script>
 </section>
 
 </body>
