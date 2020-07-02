@@ -33,11 +33,7 @@ import org.sourcelab.kafka.webview.ui.manager.ui.datatable.ActionTemplate;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.ConstraintOperator;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
-import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
-import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
-import org.sourcelab.kafka.webview.ui.manager.ui.datatable.YesNoBadgeTemplate;
 import org.sourcelab.kafka.webview.ui.manager.user.UserManager;
-import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 import org.sourcelab.kafka.webview.ui.repository.UserRepository;
@@ -79,27 +75,7 @@ public class UserController extends BaseController {
      * GET Displays main user index.
      */
     @RequestMapping(path = "", method = RequestMethod.GET)
-    public String index(final Model model, final RedirectAttributes redirectAttributes) {
-        // Setup breadcrumbs
-        setupBreadCrumbs(model, null, null);
-
-        // Check for LDAP auth method and restrict access.
-        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
-            return "redirect:/";
-        }
-
-        // Retrieve all users
-        final Iterable<User> usersList = userRepository.findAllByIsActiveOrderByEmailAsc(true);
-        model.addAttribute("users", usersList);
-
-        return "configuration/user/index";
-    }
-
-    /**
-     * GET Displays main user index.
-     */
-    @RequestMapping(path = "/datatable", method = RequestMethod.GET)
-    public String datatable(
+    public String index(
         final Model model,
         final Pageable pageable,
         @RequestParam Map<String,String> allParams,
@@ -113,19 +89,16 @@ public class UserController extends BaseController {
             return "redirect:/";
         }
 
-        // TODO verify add create link
-        // TODO verify add action button and DRY
-        // TODO fix enum filter for role
         final Datatable.Builder<User> builder = Datatable.newBuilder(User.class)
             .withRepository(userRepository)
             .withPageable(pageable)
             .withRequestParams(allParams)
-            .withUrl("/configuration/user/datatable")
+            .withUrl("/configuration/user")
             .withLabel("Users")
             // Only show active users.
             .withConstraint("isActive", true, ConstraintOperator.EQUALS)
             // With Create Link
-            .withLink("/configuration/user/create", "Create user")
+            .withCreateLink("/configuration/user/create")
             // Email Column
             .withColumn(DatatableColumn.newBuilder(User.class)
                 .withFieldName("email")
@@ -161,39 +134,27 @@ public class UserController extends BaseController {
                 .withLabel("Action")
                 .withFieldName("id")
                 .withIsSortable(false)
+                .withHeaderAlignRight()
                 .withRenderTemplate(ActionTemplate.newBuilder(User.class)
                     // Edit Link
-                    .withLink(ActionTemplate.ActionLink.newBuilder(User.class)
-                        .withLabelFunction((record) -> "Edit")
-                        .withUrlFunction((record) -> "/configuration/user/edit/" + record.getId())
-                        .withIcon("fa-edit")
-                        .build())
+                    .withEditLink(User.class, (record) -> "/configuration/user/edit/" + record.getId())
                     // Delete Link
-                    .withLink(ActionTemplate.ActionLink.newBuilder(User.class)
-                        .withLabelFunction((record) -> "Delete")
-                        .withUrlFunction((record) -> "/configuration/user/delete/" + record.getId())
-                        .withIcon("fa-remove")
-                        .withIsPost(true)
-                        .build())
+                    .withDeleteLink(User.class, (record) -> "/configuration/user/delete/" + record.getId())
                     .build())
                 .build())
-            .withSearch("email")
-            .withFilter(DatatableFilter.newBuilder()
-                .withField("role")
-                .withLabel("Role")
-                .withOption(UserRole.ROLE_ADMIN.name(), "Admin")
-                .withOption(UserRole.ROLE_USER.name(), "User")
-                .build()
-            );
+            .withSearch("email", "displayName");
+            // TODO fix filters with enums
+//            .withFilter(DatatableFilter.newBuilder()
+//                .withField("role")
+//                .withLabel("Role")
+//                .withOption(UserRole.ROLE_ADMIN.name(), "Admin")
+//                .withOption(UserRole.ROLE_USER.name(), "User")
+//                .build()
+//            );
 
         // Add datatable attribute
         model.addAttribute("datatable", builder.build());
-
-        // Retrieve all users
-        final Iterable<User> usersList = userRepository.findAllByIsActiveOrderByEmailAsc(true);
-        model.addAttribute("users", usersList);
-
-        return "configuration/user/datatable";
+        return "configuration/user/index";
     }
 
     /**

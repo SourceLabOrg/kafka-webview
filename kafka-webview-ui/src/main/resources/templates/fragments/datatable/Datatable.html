@@ -17,11 +17,15 @@
                 <i class="fa fa-align-justify"></i>
                 [[${datatable.getLabel()}]] ([[${datatable.getTotalElements()}]])
 
+                <!-- Show links -->
+                <div th:if="${datatable.hasLinks()}" th:replace="fragments/datatable/Filters :: displayLinks(${datatable})"></div>
+
                 <!-- Show Search -->
                 <div th:if="${datatable.hasSearch()}" th:replace="fragments/datatable/Filters :: displaySearch(${datatable})"></div>
 
                 <!-- Show filters -->
                 <div th:if="${datatable.hasFilters()}" th:replace="fragments/datatable/Filters :: displayFilters(${datatable})"></div>
+
             </div>
             <div class="card-body">
 

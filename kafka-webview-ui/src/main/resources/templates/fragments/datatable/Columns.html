@@ -14,7 +14,10 @@
 </thead>
 
 <!-- Single Column -->
-<th th:fragment="displayColumn(datatable, column)" th:colspan="${column.getColSpan()}">
+<th
+    th:fragment="displayColumn(datatable, column)"
+    th:colspan="${column.getColSpan()}"
+    th:class="${column.getHeaderCssClasses()}">
     <a th:if="${column.isSortable()}"
         th:text="${column.getLabel()}"
         th:href="@{${datatable.getUrlWithParams('page', '', 'sort', column.getField() + ',' + datatable.getInverseSortOrderFor(column))}}">
