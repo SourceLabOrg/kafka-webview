@@ -69,6 +69,12 @@ public class KafkaOperationsFactory {
         return new KafkaOperations(adminClient, kafkaConsumer);
     }
 
+    /**
+     * Build the configuration for the underlying consumer client.
+     * @param cluster What cluster to connect to.
+     * @param userId What userId to associate the connection with.
+     * @return Map of kafka client properties.
+     */
     public Map<String, Object> getConsumerConfig(final Cluster cluster, final long userId) {
         final String clientId = getClientId(userId);
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
