@@ -320,11 +320,18 @@ public class ClusterForm {
     }
 
     public Boolean getCustomOptionsEnabled() {
+        if (customOptionsEnabled == null) {
+            return customOptionsEnabled = false;
+        }
         return customOptionsEnabled;
     }
 
     public void setCustomOptionsEnabled(final Boolean customOptionsEnabled) {
-        this.customOptionsEnabled = customOptionsEnabled;
+        if (customOptionsEnabled == null) {
+            this.customOptionsEnabled = false;
+        } else {
+            this.customOptionsEnabled = customOptionsEnabled;
+        }
     }
 
     @Override
