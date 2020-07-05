@@ -30,6 +30,7 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sourcelab.kafka.webview.ui.manager.SensitiveConfigScrubber;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
@@ -201,5 +202,15 @@ public class PluginConfig {
     @Bean
     public SaslUtility getSaslUtility(final SecretManager secretManager) {
         return new SaslUtility(secretManager);
+    }
+
+    /**
+     * For scrubbing sensitive values from client configs.
+     * @param saslUtility instance.
+     * @return instance.
+     */
+    @Bean
+    public SensitiveConfigScrubber getSensitiveConfigScrubber(final SaslUtility saslUtility) {
+        return new SensitiveConfigScrubber(saslUtility);
     }
 }

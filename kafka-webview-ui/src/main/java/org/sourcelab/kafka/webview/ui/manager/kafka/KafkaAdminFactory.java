@@ -73,6 +73,20 @@ public class KafkaAdminFactory {
      * @return KafkaConsumer instance.
      */
     public KafkaConsumer<String, String> createConsumer(final ClusterConfig clusterConfig, final String clientId) {
+        // Create config
+        final Map<String, Object> config = getConsumerConfig(clusterConfig, clientId);
+
+        // Create consumer
+        return new KafkaConsumer<>(config);
+    }
+
+    /**
+     * Build the configuration for the underlying consumer client.
+     * @param clusterConfig What cluster to connect to.
+     * @param clientId What clientId to associate the connection with.
+     * @return Map of kafka client properties.
+     */
+    public Map<String, Object> getConsumerConfig(final ClusterConfig clusterConfig, final String clientId) {
         // Create a map
         final Map<String, Object> config = configUtil.applyCommonSettings(clusterConfig, clientId);
 
@@ -80,7 +94,6 @@ public class KafkaAdminFactory {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
-        // Create consumer
-        return new KafkaConsumer<>(config);
+        return config;
     }
 }

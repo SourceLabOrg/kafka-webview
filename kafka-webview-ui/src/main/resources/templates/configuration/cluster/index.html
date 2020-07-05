@@ -84,13 +84,17 @@
                                                 Actions
                                             </button>
                                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                <a class="dropdown-item" th:href="@{/configuration/cluster/edit/{id}(id=${cluster.id})}">
+                                                    <i class="fa fa-edit"></i>
+                                                    Edit
+                                                </a>
                                                 <a class="dropdown-item" th:href="@{/configuration/cluster/test/{id}(id=${cluster.id})}">
                                                     <i class="fa fa-edit"></i>
                                                     Test
                                                 </a>
-                                                <a class="dropdown-item" th:href="@{/configuration/cluster/edit/{id}(id=${cluster.id})}">
-                                                    <i class="fa fa-edit"></i>
-                                                    Edit
+                                                <a class="dropdown-item" th:href="@{/configuration/cluster/config/{id}(id=${cluster.id})}">
+                                                    <i class="fa fa-list"></i>
+                                                    Client configs
                                                 </a>
                                                 <form th:action="@{/configuration/cluster/delete/{id}(id=${cluster.id})}" method="post">
                                                     <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">

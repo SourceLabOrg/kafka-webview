@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org"
+    layout:decorate="~{layout}">
+
+<head>
+    <title>Cluster Client Configuration</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa fa-align-justify"></i>
+                        kafka Consumer Configuration for <strong>[[${cluster.getName()}]]</strong>
+
+                        <div class="btn-group float-right" role="group" aria-label="Button group">
+                            <a class="btn" th:href="@{/help#deserializers}" style="padding-bottom: 0;">
+                                <i class="icon-question" data-toggle="tooltip" data-placement="top"
+                                   title="This shows the generated kafka consumer configuration properties Kafka WebView will use to connect to this cluster."></i>
+                            </a>
+                        </div>
+
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped table-sm">
+                            <thead>
+                            <tr>
+                                <th>Config</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${configs.isEmpty()}" align="center">
+                                    <td colspan="6">
+                                        No configuration found!
+                                    </td>
+                                </tr>
+                                <tr th:each="entry : ${configs.entrySet()}">
+                                    <td th:text="${entry.getKey()}"></td>
+                                    <td th:text="${entry.getValue()}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--/.col-->
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

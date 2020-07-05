@@ -24,18 +24,18 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
-import com.google.common.collect.Streams;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
+import org.sourcelab.kafka.webview.ui.model.Cluster;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;

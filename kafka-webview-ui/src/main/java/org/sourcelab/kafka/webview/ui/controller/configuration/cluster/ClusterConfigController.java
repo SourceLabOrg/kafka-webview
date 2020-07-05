@@ -26,13 +26,16 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.cluster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.cluster.forms.ClusterForm;
 import org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
+import org.sourcelab.kafka.webview.ui.manager.SensitiveConfigScrubber;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
+import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
@@ -55,9 +58,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Controller for Cluster CRUD operations.
@@ -81,6 +87,9 @@ public class ClusterConfigController extends BaseController {
 
     @Autowired
     private SaslUtility saslUtility;
+
+    @Autowired
+    private SensitiveConfigScrubber sensitiveConfigScrubber;
 
     /**
      * GET Displays main configuration index.
@@ -525,6 +534,47 @@ public class ClusterConfigController extends BaseController {
 
         // redirect to cluster index
         return "redirect:/configuration/cluster";
+    }
+
+    /**
+     * GET for getting client configuration.
+     */
+    @RequestMapping(path = "/config/{id}", method = RequestMethod.GET)
+    public String getClientConfig(
+        @PathVariable final Long id,
+        final RedirectAttributes redirectAttributes,
+        final Model model
+    ) {
+        // Retrieve it
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if (!clusterOptional.isPresent()) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
+
+            // redirect to cluster index
+            return "redirect:/configuration/cluster";
+        }
+        final Cluster cluster = clusterOptional.get();
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Client Config: " + cluster.getName(), null);
+
+        // Generate configs with sensitive fields scrubbed.
+        final Map<String, Object> configs = sensitiveConfigScrubber.filterSensitiveOptions(
+            kafkaOperationsFactory.getConsumerConfig(cluster, getLoggedInUserId()),
+            cluster
+        )
+            // Sort by key
+            .entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+        // Render
+        model.addAttribute("configs", configs);
+        model.addAttribute("cluster", cluster);
+
+        // redirect to cluster index
+        return "configuration/cluster/config";
     }
 
     private void setupBreadCrumbs(final Model model, final String name, final String url) {
