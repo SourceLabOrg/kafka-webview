@@ -111,7 +111,7 @@ public class ClusterConfigController extends BaseController {
 
     private void setupCreateForm(final Model model) {
         // Load all available properties
-        model.addAttribute("kafkaProperties", KafkaClientConfigUtil.getAllKafkaConsumerProperties());
+        model.addAttribute("kafkaSettings", KafkaClientConfigUtil.getAllKafkaConsumerProperties());
     }
 
     /**

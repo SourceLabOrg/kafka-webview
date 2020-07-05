@@ -34,7 +34,7 @@
         <!-- Dependency versions -->
         <avro.version>1.8.2</avro.version>
         <bootstrap.version>4.0.0-beta</bootstrap.version>
-        <kafka.version>2.0.1</kafka.version>
+        <kafka.version>2.2.2</kafka.version>
         <protobuf.version>3.6.1</protobuf.version>
         <thymeleaf.version>3.0.11.RELEASE</thymeleaf.version>
     </properties>

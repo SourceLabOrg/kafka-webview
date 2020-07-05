@@ -356,11 +356,13 @@
                                         <optgroup label="Custom">
                                             <option value="-1">Other...</option>
                                         </optgroup>
-                                        <optgroup label="Standard Properties">
+                                        <optgroup
+                                            th:each="kafkaSetting : ${kafkaSettings}"
+                                            th:label="${kafkaSetting.getGroup()}">
                                             <option
-                                                th:each="property : ${kafkaProperties}"
-                                                th:value="${property}"
-                                                th:text="${property}">
+                                                th:each="kafkaKey : ${kafkaSetting.getKeys()}"
+                                                th:value="${kafkaKey}"
+                                                th:text="${kafkaKey}">
                                             </option>
                                         </optgroup>
                                     </select>

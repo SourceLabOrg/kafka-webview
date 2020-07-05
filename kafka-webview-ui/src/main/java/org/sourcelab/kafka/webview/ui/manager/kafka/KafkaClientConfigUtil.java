@@ -24,17 +24,24 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka;
 
+import com.google.common.collect.Streams;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -74,16 +81,6 @@ public class KafkaClientConfigUtil {
      */
     public Map<String, Object> applyCommonSettings(final ClusterConfig clusterConfig, final String consumerId) {
         return applyCommonSettings(clusterConfig, consumerId, new HashMap<>());
-    }
-
-    /**
-     * Get all defined Kafka Consumer properties.
-     * @return Sorted list of property names.
-     */
-    public static List<String> getAllKafkaConsumerProperties() {
-        return ConsumerConfig.configNames().stream()
-            .sorted()
-            .collect(Collectors.toList());
     }
 
     /**
@@ -175,5 +172,88 @@ public class KafkaClientConfigUtil {
         }
         config.put(SaslConfigs.SASL_MECHANISM, clusterConfig.getSaslMechanism());
         config.put(SaslConfigs.SASL_JAAS_CONFIG, clusterConfig.getSaslJaas());
+    }
+
+    /**
+     * Utility method to get all defined Kafka Consumer properties from the upstream Kafka library.
+     * @return Sorted list of property names.
+     */
+    public static List<KafkaSettings> getAllKafkaConsumerProperties() {
+        // Likely not the most graceful way to group these properties...
+
+        // Our return value
+        final List<KafkaSettings> kafkaSettings = new ArrayList<>();
+
+        // Keep a running set of all the keys we've collected so far.
+        final Set<String> allPreviousKeys = new HashSet<>();
+
+        // Add SSL Settings
+        ConfigDef configDef = new ConfigDef();
+        SslConfigs.addClientSslSupport(configDef);
+        kafkaSettings.add(new KafkaSettings(
+            "SSL", configDef.names()
+        ));
+
+        // Add SASL Settings
+        configDef = new ConfigDef();
+        SaslConfigs.addClientSaslSupport(configDef);
+        kafkaSettings.add(new KafkaSettings(
+            "SASL", configDef.names()
+        ));
+
+        // Collect all keys.
+        kafkaSettings
+            .forEach((entry) -> allPreviousKeys.addAll(entry.getKeys()));
+
+        // Add basic consumer properties, removing entries from the previous categories
+        kafkaSettings.add(new KafkaSettings(
+            "Consumer",
+            ConsumerConfig.configNames().stream()
+                .filter((entry) -> !allPreviousKeys.contains(entry))
+                .collect(Collectors.toSet())
+        ));
+
+        // Sort our list and return
+        return kafkaSettings.stream()
+            .sorted(Comparator.comparing(KafkaSettings::getGroup))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Abstracted list of Kafka keys categorized.
+     */
+    public static class KafkaSettings {
+        private final String group;
+        private final List<String> keys;
+
+        /**
+         * Constructor.
+         * @param group Category name.
+         * @param keys Available keys.
+         */
+        private KafkaSettings(final String group, final Set<String> keys) {
+            this.group = group;
+
+            // Sort the list of keys
+            this.keys = keys.stream()
+                .sorted()
+                .collect(Collectors.toList());
+        }
+
+        public String getGroup() {
+            return group;
+        }
+
+        public List<String> getKeys() {
+            return keys;
+        }
+
+        @Override
+        public String toString() {
+            return "KafkaSettings{"
+                + "group='" + group + '\''
+                + ", keys=" + keys
+                + '}';
+        }
     }
 }
