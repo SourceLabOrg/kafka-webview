@@ -96,6 +96,9 @@ public class ClusterForm {
      */
     private String saslCustomJaas;
 
+    // Custom Client Properties
+    private Boolean customOptionsEnabled;
+
     /**
      * Names of custom options.
      */
@@ -314,6 +317,14 @@ public class ClusterForm {
 
     public void setCustomOptionValues(final List<String> customOptionValues) {
         this.customOptionValues = customOptionValues;
+    }
+
+    public Boolean getCustomOptionsEnabled() {
+        return customOptionsEnabled;
+    }
+
+    public void setCustomOptionsEnabled(final Boolean customOptionsEnabled) {
+        this.customOptionsEnabled = customOptionsEnabled;
     }
 
     @Override

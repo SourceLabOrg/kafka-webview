@@ -182,6 +182,7 @@ public class ClusterConfigController extends BaseController {
             clusterForm.getCustomOptionNames().add(entry.getKey());
             clusterForm.getCustomOptionValues().add(entry.getValue());
         }
+        clusterForm.setCustomOptionsEnabled(!customOptions.entrySet().isEmpty());
 
         // Display template
         return "configuration/cluster/create";
@@ -426,6 +427,11 @@ public class ClusterConfigController extends BaseController {
      * @param clusterForm The submitted form.
      */
     private String handleCustomOptions(final ClusterForm clusterForm) {
+        // If the checkbox is unselected, then just return "{}"
+        if (!clusterForm.getCustomOptionsEnabled()) {
+            return "{}";
+        }
+
         // Build a map of Name => Value
         final Map<String, String> mappedOptions = clusterForm.getCustomOptionsAsMap();
 
