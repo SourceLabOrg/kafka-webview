@@ -31,6 +31,7 @@ import org.apache.kafka.common.config.SslConfigs;
 import org.junit.Test;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -79,6 +80,43 @@ public class KafkaClientConfigUtilTest {
 
         // Validate this is not set.
         validateNoKey(config, CommonClientConfigs.SECURITY_PROTOCOL_CONFIG);
+    }
+
+    /**
+     * Basic smoke test, without SSL or SASL options, but has cluster properties.
+     */
+    @Test
+    public void testApplyCommonSettings_noSsl_noSasl_withClientProperties() {
+        final Map<String, String> customProperties = new HashMap<>();
+        customProperties.put("key3", "value3");
+        customProperties.put("key4", "value4");
+
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder()
+            .withBrokerHosts(expectedBrokerHosts)
+            .withUseSsl(false)
+            .withUseSasl(false)
+            // Use both setters
+            .withClusterClientConfig("key1", "value1")
+            .withClusterClientConfig("key2", "value2")
+            .withClusterClientConfig(customProperties)
+            // Build it.
+            .build();
+
+        final Map<String, Object> config = util.applyCommonSettings(clusterConfig, consumerId);
+
+        // Validate
+        validateDefaultKeys(config);
+        validateNoSsl(config);
+        validateNoSasl(config);
+
+        // Validate this is not set.
+        validateNoKey(config, CommonClientConfigs.SECURITY_PROTOCOL_CONFIG);
+
+        // Validate custom properties applied
+        validateKey(config, "key1", "value1");
+        validateKey(config, "key2", "value2");
+        validateKey(config, "key3", "value3");
+        validateKey(config, "key4", "value4");
     }
 
     /**

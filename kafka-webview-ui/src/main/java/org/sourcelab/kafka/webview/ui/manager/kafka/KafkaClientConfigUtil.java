@@ -31,6 +31,8 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
 import java.util.ArrayList;
@@ -46,6 +48,8 @@ import java.util.stream.Collectors;
  * Utility class to DRY out common Kafka client configuration options that apply to multiple client types.
  */
 public class KafkaClientConfigUtil {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaClientConfigUtil.class);
+
     /**
      * Path on filesystem where keystores are persisted.
      */
@@ -116,7 +120,36 @@ public class KafkaClientConfigUtil {
         // Optionally configure SASL
         applySaslSettings(clusterConfig, config);
 
+        // Apply cluster client properties if defined.
+        // Note: This should always be applied last.
+        applyClusterClientProperties(clusterConfig, config);
+
         return config;
+    }
+
+    /**
+     * If client properties are defined on the cluster, they get applied last ontop of everything else.
+     * @param clusterConfig configuration properties.
+     * @param config config to be applied to.
+     */
+    private void applyClusterClientProperties(final ClusterConfig clusterConfig, final Map<String, Object> config) {
+        if (clusterConfig.getClusterClientProperties().isEmpty()) {
+            return;
+        }
+
+        for (final Map.Entry<String, String> entry : clusterConfig.getClusterClientProperties().entrySet()) {
+            if (config.containsKey(entry.getKey())) {
+                // Log a warning as behavior may be altered in a way that causes Kafka WebView to no longer function.
+                logger.warn(
+                    "Client property defined on the cluster replaced property '{}'. "
+                    + "The original value of '{}' was replaced with with '{}'. "
+                    + "Overriding of configuration properties in this way may cause Kafka Webview to not function correctly.",
+                    entry.getKey(), config.get(entry.getKey()), entry.getValue()
+                );
+            }
+            // Set value.
+            config.put(entry.getKey(), entry.getValue());
+        }
     }
 
     /**

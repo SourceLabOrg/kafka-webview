@@ -24,13 +24,18 @@
 
 package org.sourcelab.kafka.webview.ui.manager.kafka.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslProperties;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,6 +64,11 @@ public class ClusterConfig {
     private final String saslJaas;
 
     /**
+     * Client Properties defined on the Cluster configuration.
+     */
+    private final Map<String, String> clusterClientProperties;
+
+    /**
      * Private constructor for connecting to SSL brokers.
      */
     private ClusterConfig(
@@ -72,7 +82,9 @@ public class ClusterConfig {
         final String saslPlaintextUsername,
         final String saslPlaintextPassword,
         final String saslMechanism,
-        final String saslJaas) {
+        final String saslJaas,
+        final Map<String, String> clusterClientProperties
+    ) {
 
         this.brokerHosts = brokerHosts;
 
@@ -89,6 +101,11 @@ public class ClusterConfig {
         this.saslPlaintextPassword = saslPlaintextPassword;
         this.saslMechanism = saslMechanism;
         this.saslJaas = saslJaas;
+
+        // Shallow copy the cluster client properties.
+        this.clusterClientProperties = Collections.unmodifiableMap(
+            new HashMap<>(clusterClientProperties)
+        );
     }
 
     public Set<String> getBrokerHosts() {
@@ -137,6 +154,10 @@ public class ClusterConfig {
 
     public String getSaslJaas() {
         return saslJaas;
+    }
+
+    public Map<String, String> getClusterClientProperties() {
+        return clusterClientProperties;
     }
 
     @Override
@@ -196,6 +217,19 @@ public class ClusterConfig {
             builder.withUseSasl(false);
         }
 
+        // If we have defined cluster client options, decode and set them.
+        if (cluster.getOptionParameters() != null) {
+            final ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> customOptions;
+            try {
+                customOptions = objectMapper.readValue(cluster.getOptionParameters(), Map.class);
+            } catch (final IOException e) {
+                // Fail safe?
+                customOptions = new HashMap<>();
+            }
+            builder.withClusterClientConfig(customOptions);
+        }
+
         return builder;
     }
 
@@ -222,6 +256,12 @@ public class ClusterConfig {
         private String saslPlaintextPassword;
         private String saslMechanism;
         private String saslJaas;
+
+        /**
+         * Override properties defined from the cluster.option_parameters field.
+         * These should be applied LAST ontop of all the other config options.
+         */
+        private Map<String, String> clusterOverrideProperties = new HashMap<>();
 
         private Builder() {
         }
@@ -324,6 +364,22 @@ public class ClusterConfig {
         }
 
         /**
+         * Declare Override Properties defined on the cluster.
+         */
+        public Builder withClusterClientConfig(final Map<String, String> clusterClientConfig) {
+            this.clusterOverrideProperties.putAll(clusterClientConfig);
+            return this;
+        }
+
+        /**
+         * Declare Override Properties defined on the cluster.
+         */
+        public Builder withClusterClientConfig(final String key, final String value) {
+            this.clusterOverrideProperties.put(key, value);
+            return this;
+        }
+
+        /**
          * Create ClusterConfig instance from builder values.
          */
         public ClusterConfig build() {
@@ -340,7 +396,9 @@ public class ClusterConfig {
                 saslPlaintextUsername,
                 saslPlaintextPassword,
                 saslMechanism,
-                saslJaas
+                saslJaas,
+                // Cluster client properties
+                clusterOverrideProperties
             );
         }
     }
