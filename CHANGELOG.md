@@ -2,6 +2,15 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.7.0 (UNRELEASED)
+#### New Features
+- [PR-225](https://github.com/SourceLabOrg/kafka-webview/pull/225)
+  - Adds the ability to set custom kafka client properties when defining a cluster.
+  - Adds a new debugging tool under `/configuration/cluster` to see the generated kafka client properties.
+
+#### Internal Dependency Updates
+- Updated Kafka Client library version from 2.0.1 to 2.2.2.
+
 ## 2.6.0 (06/21/2020)
 - [ISSUE-144](https://github.com/SourceLabOrg/kafka-webview/issues/144) Make providing a TrustStore file when setting up a SSL enabled cluster optional.  You might not want/need this option if your JVM is already configured to accept the SSL certificate served by the cluster, or if the cluster's certificate can be validated by a publically accessible CA.
 - [PR-215](https://github.com/SourceLabOrg/kafka-webview/pull/215) Improve errors displayed when using the `test cluster` functionality.

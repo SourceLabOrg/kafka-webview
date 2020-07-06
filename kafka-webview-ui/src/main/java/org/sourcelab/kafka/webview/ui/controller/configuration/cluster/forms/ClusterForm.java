@@ -28,6 +28,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents the form for creating/updating the Cluster entity.
@@ -90,6 +95,20 @@ public class ClusterForm {
      * this is the value of that.
      */
     private String saslCustomJaas;
+
+    // Custom Client Properties
+    private Boolean customOptionsEnabled;
+
+    /**
+     * Names of custom options.
+     */
+    private List<String> customOptionNames = new ArrayList<>();
+
+    /**
+     * Values of custom options.
+     */
+    private List<String> customOptionValues = new ArrayList<>();
+
 
     public Long getId() {
         return id;
@@ -259,6 +278,66 @@ public class ClusterForm {
 
     public boolean isPlainSaslMechanism() {
         return "PLAIN".equals(saslMechanism);
+    }
+
+    /**
+     * Utility method to return custom options as a map.
+     */
+    public Map<String, String> getCustomOptionsAsMap() {
+        // Build a map of Name => Value
+        final Map<String, String> mappedOptions = new HashMap<>();
+
+        final Iterator<String> names = getCustomOptionNames().iterator();
+        final Iterator<String> values = getCustomOptionValues().iterator();
+
+        while (names.hasNext()) {
+            final String name = names.next();
+            final String value;
+            if (values.hasNext()) {
+                value = values.next();
+            } else {
+                value = "";
+            }
+            mappedOptions.put(name, value);
+        }
+        return mappedOptions;
+    }
+
+    public List<String> getCustomOptionNames() {
+        return customOptionNames;
+    }
+
+    public void setCustomOptionNames(final List<String> customOptionNames) {
+        this.customOptionNames = customOptionNames;
+    }
+
+    public List<String> getCustomOptionValues() {
+        return customOptionValues;
+    }
+
+    public void setCustomOptionValues(final List<String> customOptionValues) {
+        this.customOptionValues = customOptionValues;
+    }
+
+    /**
+     * Enable/Disable flag for custom client options.
+     */
+    public Boolean getCustomOptionsEnabled() {
+        if (customOptionsEnabled == null) {
+            return customOptionsEnabled = false;
+        }
+        return customOptionsEnabled;
+    }
+
+    /**
+     * Enable/Disable flag for custom client options.
+     */
+    public void setCustomOptionsEnabled(final Boolean customOptionsEnabled) {
+        if (customOptionsEnabled == null) {
+            this.customOptionsEnabled = false;
+        } else {
+            this.customOptionsEnabled = customOptionsEnabled;
+        }
     }
 
     @Override

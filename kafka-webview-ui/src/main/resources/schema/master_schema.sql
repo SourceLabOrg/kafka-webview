@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `cluster` (
   id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) UNIQUE NOT NULL,
   broker_hosts TEXT NOT NULL,
+  option_parameters TEXT NOT NULL DEFAULT '{}',
   is_ssl_enabled BOOLEAN DEFAULT FALSE NOT NULL,
   trust_store_file TEXT DEFAULT NULL,
   trust_store_password TEXT DEFAULT NULL,

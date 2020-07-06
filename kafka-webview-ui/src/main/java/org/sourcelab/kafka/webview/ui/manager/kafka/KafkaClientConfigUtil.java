@@ -27,18 +27,29 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Utility class to DRY out common Kafka client configuration options that apply to multiple client types.
  */
 public class KafkaClientConfigUtil {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaClientConfigUtil.class);
+
     /**
      * Path on filesystem where keystores are persisted.
      */
@@ -109,7 +120,36 @@ public class KafkaClientConfigUtil {
         // Optionally configure SASL
         applySaslSettings(clusterConfig, config);
 
+        // Apply cluster client properties if defined.
+        // Note: This should always be applied last.
+        applyClusterClientProperties(clusterConfig, config);
+
         return config;
+    }
+
+    /**
+     * If client properties are defined on the cluster, they get applied last ontop of everything else.
+     * @param clusterConfig configuration properties.
+     * @param config config to be applied to.
+     */
+    private void applyClusterClientProperties(final ClusterConfig clusterConfig, final Map<String, Object> config) {
+        if (clusterConfig.getClusterClientProperties().isEmpty()) {
+            return;
+        }
+
+        for (final Map.Entry<String, String> entry : clusterConfig.getClusterClientProperties().entrySet()) {
+            if (config.containsKey(entry.getKey())) {
+                // Log a warning as behavior may be altered in a way that causes Kafka WebView to no longer function.
+                logger.warn(
+                    "Client property defined on the cluster replaced property '{}'. "
+                    + "The original value of '{}' was replaced with with '{}'. "
+                    + "Overriding of configuration properties in this way may cause Kafka Webview to not function correctly.",
+                    entry.getKey(), config.get(entry.getKey()), entry.getValue()
+                );
+            }
+            // Set value.
+            config.put(entry.getKey(), entry.getValue());
+        }
     }
 
     /**
@@ -163,5 +203,88 @@ public class KafkaClientConfigUtil {
         }
         config.put(SaslConfigs.SASL_MECHANISM, clusterConfig.getSaslMechanism());
         config.put(SaslConfigs.SASL_JAAS_CONFIG, clusterConfig.getSaslJaas());
+    }
+
+    /**
+     * Utility method to get all defined Kafka Consumer properties from the upstream Kafka library.
+     * @return Sorted list of property names.
+     */
+    public static List<KafkaSettings> getAllKafkaConsumerProperties() {
+        // Likely not the most graceful way to group these properties...
+
+        // Our return value
+        final List<KafkaSettings> kafkaSettings = new ArrayList<>();
+
+        // Keep a running set of all the keys we've collected so far.
+        final Set<String> allPreviousKeys = new HashSet<>();
+
+        // Add SSL Settings
+        ConfigDef configDef = new ConfigDef();
+        SslConfigs.addClientSslSupport(configDef);
+        kafkaSettings.add(new KafkaSettings(
+            "SSL", configDef.names()
+        ));
+
+        // Add SASL Settings
+        configDef = new ConfigDef();
+        SaslConfigs.addClientSaslSupport(configDef);
+        kafkaSettings.add(new KafkaSettings(
+            "SASL", configDef.names()
+        ));
+
+        // Collect all keys.
+        kafkaSettings
+            .forEach((entry) -> allPreviousKeys.addAll(entry.getKeys()));
+
+        // Add basic consumer properties, removing entries from the previous categories
+        kafkaSettings.add(new KafkaSettings(
+            "Consumer",
+            ConsumerConfig.configNames().stream()
+                .filter((entry) -> !allPreviousKeys.contains(entry))
+                .collect(Collectors.toSet())
+        ));
+
+        // Sort our list and return
+        return kafkaSettings.stream()
+            .sorted(Comparator.comparing(KafkaSettings::getGroup))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Abstracted list of Kafka keys categorized.
+     */
+    public static class KafkaSettings {
+        private final String group;
+        private final List<String> keys;
+
+        /**
+         * Constructor.
+         * @param group Category name.
+         * @param keys Available keys.
+         */
+        private KafkaSettings(final String group, final Set<String> keys) {
+            this.group = group;
+
+            // Sort the list of keys
+            this.keys = keys.stream()
+                .sorted()
+                .collect(Collectors.toList());
+        }
+
+        public String getGroup() {
+            return group;
+        }
+
+        public List<String> getKeys() {
+            return keys;
+        }
+
+        @Override
+        public String toString() {
+            return "KafkaSettings{"
+                + "group='" + group + '\''
+                + ", keys=" + keys
+                + '}';
+        }
     }
 }

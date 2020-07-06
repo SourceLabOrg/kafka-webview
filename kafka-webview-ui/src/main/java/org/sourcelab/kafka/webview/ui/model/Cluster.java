@@ -46,6 +46,9 @@ public class Cluster {
     private String brokerHosts;
 
     @Column(nullable = false)
+    private String optionParameters = "{}";
+
+    @Column(nullable = false)
     private boolean isSslEnabled;
 
     private String trustStoreFile;
@@ -104,6 +107,14 @@ public class Cluster {
 
     public void setBrokerHosts(final String brokerHosts) {
         this.brokerHosts = brokerHosts;
+    }
+
+    public String getOptionParameters() {
+        return optionParameters;
+    }
+
+    public void setOptionParameters(final String optionParameters) {
+        this.optionParameters = optionParameters;
     }
 
     public boolean isSslEnabled() {

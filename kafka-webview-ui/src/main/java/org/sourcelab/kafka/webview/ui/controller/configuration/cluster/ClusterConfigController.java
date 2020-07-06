@@ -24,12 +24,16 @@
 
 package org.sourcelab.kafka.webview.ui.controller.configuration.cluster;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.cluster.forms.ClusterForm;
+import org.sourcelab.kafka.webview.ui.manager.SensitiveConfigScrubber;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
+import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
@@ -51,7 +55,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Controller for Cluster CRUD operations.
@@ -76,6 +84,9 @@ public class ClusterConfigController extends BaseController {
     @Autowired
     private SaslUtility saslUtility;
 
+    @Autowired
+    private SensitiveConfigScrubber sensitiveConfigScrubber;
+
     /**
      * GET Displays main configuration index.
      */
@@ -98,8 +109,14 @@ public class ClusterConfigController extends BaseController {
     public String createClusterForm(final ClusterForm clusterForm, final Model model) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", "/configuration/cluster/create");
+        setupCreateForm(model);
 
         return "configuration/cluster/create";
+    }
+
+    private void setupCreateForm(final Model model) {
+        // Load all available properties
+        model.addAttribute("kafkaSettings", KafkaClientConfigUtil.getAllKafkaConsumerProperties());
     }
 
     /**
@@ -111,6 +128,9 @@ public class ClusterConfigController extends BaseController {
         final ClusterForm clusterForm,
         final RedirectAttributes redirectAttributes,
         final Model model) {
+
+        // Initial setup
+        setupCreateForm(model);
 
         // Retrieve by id
         final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
@@ -152,6 +172,23 @@ public class ClusterConfigController extends BaseController {
         clusterForm.setSaslPassword(saslProperties.getPlainPassword());
         clusterForm.setSaslCustomJaas(saslProperties.getJaas());
 
+        // Deserialize message parameters json string into a map
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, String> customOptions;
+        try {
+            customOptions = objectMapper.readValue(cluster.getOptionParameters(), Map.class);
+        } catch (final IOException e) {
+            // Fail safe?
+            customOptions = new HashMap<>();
+        }
+
+        // Update form object with properties.
+        for (final Map.Entry<String, String> entry : customOptions.entrySet()) {
+            clusterForm.getCustomOptionNames().add(entry.getKey());
+            clusterForm.getCustomOptionValues().add(entry.getValue());
+        }
+        clusterForm.setCustomOptionsEnabled(!customOptions.entrySet().isEmpty());
+
         // Display template
         return "configuration/cluster/create";
     }
@@ -163,7 +200,11 @@ public class ClusterConfigController extends BaseController {
     public String clusterUpdate(
         @Valid final ClusterForm clusterForm,
         final BindingResult bindingResult,
-        final RedirectAttributes redirectAttributes) {
+        final RedirectAttributes redirectAttributes,
+        final Model model) {
+
+        // Initial Setup.
+        setupCreateForm(model);
 
         final boolean updateExisting = clusterForm.exists();
 
@@ -368,9 +409,13 @@ public class ClusterConfigController extends BaseController {
             cluster.setSaslConfig("");
         }
 
+        // Handle custom options, convert into a JSON string.
+        final String jsonStr = handleCustomOptions(clusterForm);
+
         // Update properties
         cluster.setName(clusterForm.getName());
         cluster.setBrokerHosts(clusterForm.getBrokerHosts());
+        cluster.setOptionParameters(jsonStr);
         cluster.setValid(false);
         clusterRepository.save(cluster);
 
@@ -380,6 +425,30 @@ public class ClusterConfigController extends BaseController {
 
         // redirect to cluster index
         return "redirect:/configuration/cluster";
+    }
+
+    /**
+     * Handles getting custom defined options and values.
+     * @param clusterForm The submitted form.
+     */
+    private String handleCustomOptions(final ClusterForm clusterForm) {
+        // If the checkbox is unselected, then just return "{}"
+        if (!clusterForm.getCustomOptionsEnabled()) {
+            return "{}";
+        }
+
+        // Build a map of Name => Value
+        final Map<String, String> mappedOptions = clusterForm.getCustomOptionsAsMap();
+
+        // For converting map to json string
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            return objectMapper.writeValueAsString(mappedOptions);
+        } catch (final JsonProcessingException e) {
+            // Fail safe?
+            return "{}";
+        }
     }
 
     /**
@@ -461,6 +530,47 @@ public class ClusterConfigController extends BaseController {
 
         // redirect to cluster index
         return "redirect:/configuration/cluster";
+    }
+
+    /**
+     * GET for getting client configuration.
+     */
+    @RequestMapping(path = "/config/{id}", method = RequestMethod.GET)
+    public String getClientConfig(
+        @PathVariable final Long id,
+        final RedirectAttributes redirectAttributes,
+        final Model model
+    ) {
+        // Retrieve it
+        final Optional<Cluster> clusterOptional = clusterRepository.findById(id);
+        if (!clusterOptional.isPresent()) {
+            // Set flash message & redirect
+            redirectAttributes.addFlashAttribute("FlashMessage", FlashMessage.newWarning("Unable to find cluster!"));
+
+            // redirect to cluster index
+            return "redirect:/configuration/cluster";
+        }
+        final Cluster cluster = clusterOptional.get();
+
+        // Setup breadcrumbs
+        setupBreadCrumbs(model, "Client Config: " + cluster.getName(), null);
+
+        // Generate configs with sensitive fields scrubbed.
+        final Map<String, Object> configs = sensitiveConfigScrubber.filterSensitiveOptions(
+            kafkaOperationsFactory.getConsumerConfig(cluster, getLoggedInUserId()),
+            cluster
+        )
+            // Sort by key for easier display.
+            .entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+        // Render
+        model.addAttribute("configs", configs);
+        model.addAttribute("cluster", cluster);
+
+        // Render cluster config template
+        return "configuration/cluster/config";
     }
 
     private void setupBreadCrumbs(final Model model, final String name, final String url) {

@@ -30,6 +30,8 @@ import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClusterConfig;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 
+import java.util.Map;
+
 /**
  * Factory for creating an AdminClient and wrapping it with KafkaOperations.
  */
@@ -57,7 +59,7 @@ public class KafkaOperationsFactory {
      * @return KafkaOperations client.
      */
     public KafkaOperations create(final Cluster cluster, final long userId) {
-        final String clientId = consumerIdPrefix + userId;
+        final String clientId = getClientId(userId);
 
         // Create new Operational Client
         final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
@@ -65,5 +67,21 @@ public class KafkaOperationsFactory {
         final KafkaConsumer<String, String> kafkaConsumer = kafkaAdminFactory.createConsumer(clusterConfig, clientId);
 
         return new KafkaOperations(adminClient, kafkaConsumer);
+    }
+
+    /**
+     * Build the configuration for the underlying consumer client.
+     * @param cluster What cluster to connect to.
+     * @param userId What userId to associate the connection with.
+     * @return Map of kafka client properties.
+     */
+    public Map<String, Object> getConsumerConfig(final Cluster cluster, final long userId) {
+        final String clientId = getClientId(userId);
+        final ClusterConfig clusterConfig = ClusterConfig.newBuilder(cluster, secretManager).build();
+        return kafkaAdminFactory.getConsumerConfig(clusterConfig, clientId);
+    }
+
+    private String getClientId(final long userId) {
+        return consumerIdPrefix + userId;
     }
 }

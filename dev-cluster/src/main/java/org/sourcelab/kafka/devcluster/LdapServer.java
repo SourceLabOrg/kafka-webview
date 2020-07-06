@@ -28,7 +28,6 @@ import com.unboundid.ldap.listener.InMemoryDirectoryServer;
 import com.unboundid.ldap.listener.InMemoryDirectoryServerConfig;
 import com.unboundid.ldap.listener.InMemoryListenerConfig;
 import com.unboundid.ldap.sdk.LDAPException;
-import com.unboundid.ldap.sdk.OperationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
