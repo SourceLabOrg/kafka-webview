@@ -1128,6 +1128,133 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     }
 
     /**
+     * Test updating existing cluster that already has custom client options,
+     * and updates them setting new values, removing one entry, and adding a new entry.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_existingCluster_updateCustomOptions() throws Exception {
+        // Define expected custom options
+        final Map<String, String> expectedCustomOptions = new HashMap<>();
+        expectedCustomOptions.put("test.config.param1", "new value1");
+        expectedCustomOptions.put("test.config.param3", "new value3");
+        expectedCustomOptions.put("test.config.param4", "");
+
+        final String originalJson = "{\"test.config.param1\":\"value1\",\"test.config.param2\":\"value2\",\"test.config.param3\":\"\"}";
+        final String originalName = "My New Cluster " + System.currentTimeMillis();
+        final String originalBrokerHosts = "updatedHost:9092";
+
+        // Create an existing cluster
+        final Cluster originalCluster = clusterTestTools.createCluster(originalName);
+        originalCluster.setBrokerHosts(originalBrokerHosts);
+        originalCluster.setValid(true);
+        originalCluster.setSslEnabled(false);
+        originalCluster.setOptionParameters(originalJson);
+        clusterRepository.save(originalCluster);
+
+        // Only update custom option fields.
+        // Hit create page.
+        mockMvc
+            .perform(multipart("/configuration/cluster/update")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", String.valueOf(originalCluster.getId()))
+                .param("name", originalName)
+                .param("brokerHosts", originalBrokerHosts)
+                // Enable custom options
+                .param("customOptionsEnabled", "1")
+                .param("customOptionNames", "test.config.param1")
+                .param("customOptionValues", "new value1")
+                .param("customOptionNames", "test.config.param3")
+                .param("customOptionValues", "new value3")
+                .param("customOptionNames", "test.config.param4")
+                .param("customOptionValues", "")
+            )
+            //.andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
+        assertNotNull("Should have new cluster", cluster);
+        assertEquals("Has correct name", originalName, cluster.getName());
+        assertEquals("Has correct brokerHosts", originalBrokerHosts, cluster.getBrokerHosts());
+        assertFalse("Should be ssl disabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
+        assertNull("Password should be null", cluster.getTrustStorePassword());
+        assertNull("Password should be null", cluster.getKeyStorePassword());
+        assertNull("File reference should be null", cluster.getTrustStoreFile());
+        assertNull("File reference should be null", cluster.getKeyStorePassword());
+        validateNonSaslCluster(cluster);
+        validateCustomClientOptions(cluster, expectedCustomOptions);
+    }
+
+    /**
+     * Test updating existing cluster that already has custom client options,
+     * and removes them by unchecking the option (but still submits the old options).
+     *
+     * They should be removed.
+     */
+    @Test
+    @Transactional
+    public void testPostUpdate_existingCluster_removeCustomOptions() throws Exception {
+// Define expected custom options
+        final Map<String, String> expectedCustomOptions = new HashMap<>();
+        expectedCustomOptions.put("test.config.param1", "new value1");
+        expectedCustomOptions.put("test.config.param3", "new value3");
+        expectedCustomOptions.put("test.config.param4", "");
+
+        final String originalJson = "{\"test.config.param1\":\"value1\",\"test.config.param2\":\"value2\",\"test.config.param3\":\"\"}";
+        final String originalName = "My New Cluster " + System.currentTimeMillis();
+        final String originalBrokerHosts = "updatedHost:9092";
+
+        // Create an existing cluster
+        final Cluster originalCluster = clusterTestTools.createCluster(originalName);
+        originalCluster.setBrokerHosts(originalBrokerHosts);
+        originalCluster.setValid(true);
+        originalCluster.setSslEnabled(false);
+        originalCluster.setOptionParameters(originalJson);
+        clusterRepository.save(originalCluster);
+
+        // Only update custom option fields.
+        // Hit create page.
+        mockMvc
+            .perform(multipart("/configuration/cluster/update")
+                .with(user(adminUserDetails))
+                .with(csrf())
+                .param("id", String.valueOf(originalCluster.getId()))
+                .param("name", originalName)
+                .param("brokerHosts", originalBrokerHosts)
+                // Disable flag, but we still submit the custom options
+                // No values should be persisted tho.
+                .param("customOptionsEnabled", "0")
+                .param("customOptionNames", "test.config.param1")
+                .param("customOptionValues", "new value1")
+                .param("customOptionNames", "test.config.param3")
+                .param("customOptionValues", "new value3")
+                .param("customOptionNames", "test.config.param4")
+                .param("customOptionValues", "")
+            )
+            //.andDo(print())
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/configuration/cluster"));
+
+        // Lookup Cluster
+        final Cluster cluster = clusterRepository.findById(originalCluster.getId()).get();
+        assertNotNull("Should have new cluster", cluster);
+        assertEquals("Has correct name", originalName, cluster.getName());
+        assertEquals("Has correct brokerHosts", originalBrokerHosts, cluster.getBrokerHosts());
+        assertFalse("Should be ssl disabled", cluster.isSslEnabled());
+        assertFalse("Should not be valid by default", cluster.isValid());
+        assertNull("Password should be null", cluster.getTrustStorePassword());
+        assertNull("Password should be null", cluster.getKeyStorePassword());
+        assertNull("File reference should be null", cluster.getTrustStoreFile());
+        assertNull("File reference should be null", cluster.getKeyStorePassword());
+        validateNonSaslCluster(cluster);
+        validateNoCustomClientOptions(cluster);
+    }
+
+    /**
      * Utility method for validating a cluster is not configured with SASL.
      * @param cluster cluster to validate.
      */
