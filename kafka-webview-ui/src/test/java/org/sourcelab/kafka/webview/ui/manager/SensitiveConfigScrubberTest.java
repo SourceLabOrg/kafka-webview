@@ -75,8 +75,8 @@ public class SensitiveConfigScrubberTest {
         final Cluster cluster = new Cluster();
         cluster.setName("My Test Cluster");
         cluster.setSaslConfig(saslUtility.encryptProperties(saslProperties));
-
-
+        cluster.setSaslEnabled(true);
+        
         // Create a mock config
         final Map<String, Object> mockConfig = new HashMap<>();
         mockConfig.put("Key1", "Value1");
