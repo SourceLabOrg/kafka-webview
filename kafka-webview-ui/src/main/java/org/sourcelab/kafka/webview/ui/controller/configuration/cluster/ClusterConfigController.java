@@ -560,7 +560,7 @@ public class ClusterConfigController extends BaseController {
             kafkaOperationsFactory.getConsumerConfig(cluster, getLoggedInUserId()),
             cluster
         )
-            // Sort by key
+            // Sort by key for easier display.
             .entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));

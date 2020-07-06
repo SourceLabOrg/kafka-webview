@@ -319,6 +319,9 @@ public class ClusterForm {
         this.customOptionValues = customOptionValues;
     }
 
+    /**
+     * Enable/Disable flag for custom client options.
+     */
     public Boolean getCustomOptionsEnabled() {
         if (customOptionsEnabled == null) {
             return customOptionsEnabled = false;
@@ -326,6 +329,9 @@ public class ClusterForm {
         return customOptionsEnabled;
     }
 
+    /**
+     * Enable/Disable flag for custom client options.
+     */
     public void setCustomOptionsEnabled(final Boolean customOptionsEnabled) {
         if (customOptionsEnabled == null) {
             this.customOptionsEnabled = false;
