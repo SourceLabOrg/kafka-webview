@@ -26,8 +26,6 @@ package org.sourcelab.kafka.webview.ui.manager;
 
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslProperties;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
@@ -36,30 +34,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Utility class for removing sensitive values from generated kafka client configuration.
  */
 public class SensitiveConfigScrubber {
-    private static final Logger logger = LoggerFactory.getLogger(SensitiveConfigScrubber.class);
 
     private final SaslUtility saslUtility;
 
     @Autowired
     public SensitiveConfigScrubber(final SaslUtility saslUtility) {
-        this.saslUtility = saslUtility;
+        this.saslUtility = Objects.requireNonNull(saslUtility);
     }
-
 
     /**
      * Given a Kafka Client Config, scrub any sensentivie fields from the config and return a copy.
      * @param config The config to scrub.
-     * @param cluster The cluster associated with the config.
+     * @param cluster (optional) The cluster associated with the config.
      * @return Copy of scrubbed configuration.
      */
-    public Map<String, Object> filterSensitiveOptions(
-        final Map<String, Object> config, final Cluster cluster
-    ) {
+    public Map<String, Object> filterSensitiveOptions(final Map<String, Object> config, final Cluster cluster) {
+        Objects.requireNonNull(config);
+
         // Create a copy of the map
         final Map<String, Object> copy = new HashMap<>(config);
 
@@ -75,9 +72,12 @@ public class SensitiveConfigScrubber {
         if (copy.containsKey(SaslConfigs.SASL_JAAS_CONFIG) && cluster != null) {
             final SaslProperties saslProperties = saslUtility.decodeProperties(cluster);
 
-            String jaasConfig = (String) copy.get(SaslConfigs.SASL_JAAS_CONFIG);
-            jaasConfig = jaasConfig.replaceAll(saslProperties.getPlainPassword(), "**HIDDEN**");
-            copy.put(SaslConfigs.SASL_JAAS_CONFIG, jaasConfig);
+            // Only replace if plainPassword field set and non-empty.
+            if (saslProperties.getPlainPassword() != null && !saslProperties.getPlainPassword().isEmpty()) {
+                String jaasConfig = (String) copy.get(SaslConfigs.SASL_JAAS_CONFIG);
+                jaasConfig = jaasConfig.replaceAll(saslProperties.getPlainPassword(), "**HIDDEN**");
+                copy.put(SaslConfigs.SASL_JAAS_CONFIG, jaasConfig);
+            }
         }
 
         // Return copy of the map.

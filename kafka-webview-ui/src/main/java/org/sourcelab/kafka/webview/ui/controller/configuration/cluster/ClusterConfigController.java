@@ -26,16 +26,13 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.cluster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.controller.configuration.cluster.forms.ClusterForm;
-import org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
 import org.sourcelab.kafka.webview.ui.manager.SensitiveConfigScrubber;
 import org.sourcelab.kafka.webview.ui.manager.encryption.SecretManager;
-import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaAdminFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaClientConfigUtil;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperations;
 import org.sourcelab.kafka.webview.ui.manager.kafka.KafkaOperationsFactory;
@@ -58,7 +55,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -573,7 +569,7 @@ public class ClusterConfigController extends BaseController {
         model.addAttribute("configs", configs);
         model.addAttribute("cluster", cluster);
 
-        // redirect to cluster index
+        // Render cluster config template
         return "configuration/cluster/config";
     }
 

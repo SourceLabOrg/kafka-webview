@@ -101,10 +101,11 @@ public class ClusterConfigControllerTest extends AbstractMvcTest {
     @Transactional
     public void test_withoutAdminRole() throws Exception {
         testUrlWithOutAdminRole("/configuration/cluster", false);
-        testUrlWithOutAdminRole("/configuration/filter/create", false);
-        testUrlWithOutAdminRole("/configuration/filter/edit/1", false);
-        testUrlWithOutAdminRole("/configuration/filter/update", true);
-        testUrlWithOutAdminRole("/configuration/filter/delete/1", true);
+        testUrlWithOutAdminRole("/configuration/cluster/create", false);
+        testUrlWithOutAdminRole("/configuration/cluster/edit/1", false);
+        testUrlWithOutAdminRole("/configuration/cluster/update", true);
+        testUrlWithOutAdminRole("/configuration/cluster/delete/1", true);
+        testUrlWithOutAdminRole("/configuration/cluster/config/1", false);
     }
 
     /**

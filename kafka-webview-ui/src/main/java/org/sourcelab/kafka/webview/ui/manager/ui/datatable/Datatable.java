@@ -31,7 +31,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -45,8 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import static org.sourcelab.kafka.webview.ui.manager.ui.datatable.ConstraintOperator.EQUALS;
 
 /**
  * Aims to be a re-usable datatable UI component backed by a JPA Repository.
