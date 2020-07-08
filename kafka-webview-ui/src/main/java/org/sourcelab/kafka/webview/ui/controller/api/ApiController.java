@@ -75,6 +75,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -636,7 +638,7 @@ public class ApiController extends BaseController {
      */
     @Override
     @ModelAttribute
-    public void addAttributes(final Model model) {
+    public void addAttributes(final Model model, final HttpServletRequest request, final HttpServletResponse response) {
         // Do nothing.
     }
 

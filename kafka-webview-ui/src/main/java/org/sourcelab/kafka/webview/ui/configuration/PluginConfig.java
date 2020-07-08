@@ -40,7 +40,10 @@ import org.sourcelab.kafka.webview.ui.manager.kafka.WebKafkaConsumerFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
+import org.sourcelab.kafka.webview.ui.manager.ui.recentasset.RecentAssetManager;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
+import org.sourcelab.kafka.webview.ui.repository.ClusterRepository;
+import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -212,5 +215,10 @@ public class PluginConfig {
     @Bean
     public SensitiveConfigScrubber getSensitiveConfigScrubber(final SaslUtility saslUtility) {
         return new SensitiveConfigScrubber(saslUtility);
+    }
+
+    @Bean
+    public RecentAssetManager recentAssetManager(final ClusterRepository clusterRepository, final ViewRepository viewRepository) {
+        return new RecentAssetManager(clusterRepository, viewRepository);
     }
 }

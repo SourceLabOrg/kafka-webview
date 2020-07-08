@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller.view;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.ui.recentasset.RecentAssetType;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableFilter;
@@ -45,6 +46,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -179,7 +182,10 @@ public class ViewController extends BaseController {
     public String view(
         @PathVariable final Long id,
         final RedirectAttributes redirectAttributes,
-        final Model model) {
+        final Model model,
+        final HttpServletRequest request,
+        final HttpServletResponse response
+    ) {
 
         // Retrieve the view
         final Optional<View> viewOptional = viewRepository.findById(id);
@@ -191,6 +197,10 @@ public class ViewController extends BaseController {
             return "redirect:/";
         }
         final View view = viewOptional.get();
+
+        // Add most recently used asset
+        getMostRecentAssetStorage(request, response)
+            .addMostRecentAssetId(RecentAssetType.VIEW, view.getId());
 
         // Setup breadcrumbs
         new BreadCrumbManager(model)

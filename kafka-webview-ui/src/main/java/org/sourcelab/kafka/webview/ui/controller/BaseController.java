@@ -25,6 +25,10 @@
 package org.sourcelab.kafka.webview.ui.controller;
 
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
+import org.sourcelab.kafka.webview.ui.manager.ui.recentasset.RecentAsset;
+import org.sourcelab.kafka.webview.ui.manager.ui.recentasset.RecentAssetManager;
+import org.sourcelab.kafka.webview.ui.manager.ui.recentasset.RecentAssetStorage;
+import org.sourcelab.kafka.webview.ui.manager.ui.recentasset.RecentAssetType;
 import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetails;
 import org.sourcelab.kafka.webview.ui.model.Cluster;
 import org.sourcelab.kafka.webview.ui.model.View;
@@ -39,7 +43,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Base Controller w/ common code.
@@ -54,6 +61,9 @@ public abstract class BaseController {
 
     @Autowired
     private AppProperties appProperties;
+
+    @Autowired
+    private RecentAssetManager recentAssetManager;
 
     /**
      * Determine if the current user is logged in or not.
@@ -99,15 +109,25 @@ public abstract class BaseController {
      * This gets executed for all requests.
      */
     @ModelAttribute
-    public void addAttributes(Model model) {
+    public void addAttributes(final Model model, final HttpServletRequest request, final HttpServletResponse response) {
         // But only if logged in
         if (!isLoggedIn()) {
             return;
         }
 
-        // TODO put a limit on these
-        final Iterable<Cluster> clusters = clusterRepository.findAllByOrderByNameAsc();
-        final Iterable<View> views = viewRepository.findAllByOrderByNameAsc();
+        // TODO
+        // If we have less than 11 Clusters
+        // Just list them ordered by name desc.
+        // Otherwise show 10 most recent clusters accessed.
+        // Same for views
+
+        final RecentAssetStorage storage = getMostRecentAssetStorage(request, response);
+        final List<RecentAsset> clusters = recentAssetManager.getRecentAssets(RecentAssetType.CLUSTER, storage.getMostRecentAssetIds(RecentAssetType.CLUSTER));
+        final List<RecentAsset> views = recentAssetManager.getRecentAssets(RecentAssetType.VIEW, storage.getMostRecentAssetIds(RecentAssetType.VIEW));
+
+        // TODO removethese
+//        final Iterable<Cluster> clusters = clusterRepository.findAllByOrderByNameAsc();
+//        final Iterable<View> views = viewRepository.findAllByOrderByNameAsc();
 
         model.addAttribute("MenuClusters", clusters);
         model.addAttribute("MenuViews", views);
@@ -136,5 +156,15 @@ public abstract class BaseController {
             }
         }
         return false;
+    }
+
+    /**
+     * New instance of RecentAssetManager.
+     * @param request The current request.
+     * @param response The current response.
+     * @return RecentAssetManager instance.
+     */
+    protected RecentAssetStorage getMostRecentAssetStorage(final HttpServletRequest request, final HttpServletResponse response) {
+        return new RecentAssetStorage(request, response);
     }
 }
