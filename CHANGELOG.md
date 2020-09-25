@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.7.0 (UNRELEASED)
+## 2.7.0 (09/26/2020)
 #### New Features
 - [PR-225](https://github.com/SourceLabOrg/kafka-webview/pull/225)
   - Adds the ability to set custom kafka client properties when defining a cluster.
