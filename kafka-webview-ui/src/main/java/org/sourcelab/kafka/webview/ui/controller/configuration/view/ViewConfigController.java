@@ -236,8 +236,8 @@ public class ViewConfigController extends BaseController {
         model.addAttribute("clusters", clusterRepository.findAllByOrderByNameAsc());
 
         // Retrieve all message formats
-        model.addAttribute("defaultMessageFormats", messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(true));
-        model.addAttribute("customMessageFormats", messageFormatRepository.findByIsDefaultFormatOrderByNameAsc(false));
+        model.addAttribute("defaultMessageFormats", messageFormatRepository.findByIsDefaultOrderByNameAsc(true));
+        model.addAttribute("customMessageFormats", messageFormatRepository.findByIsDefaultOrderByNameAsc(false));
 
         // If we have a cluster Id
         model.addAttribute("topics", new ArrayList<>());

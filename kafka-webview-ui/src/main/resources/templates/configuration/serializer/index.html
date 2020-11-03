@@ -5,27 +5,27 @@
     layout:decorate="~{layout}">
 
 <head>
-    <title>Message Format Configuration</title>
+    <title>Serializer Configuration</title>
 </head>
 
 <body>
 <section layout:fragment="content">
     <div class="container">
 
-        <!-- Custom Message Formats -->
+        <!-- Custom Serializers -->
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Custom Message Formats
+                        Custom Serializer Formats
                         <div class="btn-group float-right" role="group" aria-label="Button group">
-                            <a class="btn" th:href="@{/help#deserializers}" style="padding-bottom: 0;">
+                            <a class="btn" href="/help#serializerFormats" style="padding-bottom: 0;">
                                 <i class="icon-question"></i>
                                 &nbsp; Help
                             </a>
 
-                            <a class="btn" th:href="@{/configuration/messageFormat/create}" style="padding-bottom: 0;">
+                            <a class="btn" href="/configuration/serializer/create" style="padding-bottom: 0;">
                                 <i class="icon-settings"></i>
                                 &nbsp;Create new
                             </a>
@@ -44,24 +44,24 @@
                             <tbody>
                             <tr th:if="${customEntries.isEmpty()}">
                                 <td colspan="4" align="center">
-                                    No Custom Message Formats Found.
+                                    No Custom Serializer Formats Found.
                                 </td>
                             </tr>
-                            <tr th:unless="${customEntries.isEmpty()}" th:each="entry : ${customEntries}">
-                                <td th:text="${entry.name}"></td>
-                                <td th:text="${entry.classpath}"></td>
-                                <td th:text="${entry.isDefault()} ? 'Default' : 'Custom'"></td>
+                            <tr th:unless="${customEntries.isEmpty()}" th:each="customEntry : ${customEntries}">
+                                <td th:text="${customEntry.name}"></td>
+                                <td th:text="${customEntry.classpath}"></td>
+                                <td th:text="${customEntry.isDefault()} ? 'Default' : 'Custom'"></td>
                                 <td class="text-right">
                                     <div class="dropdown">
                                         <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Actions
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <a class="dropdown-item" th:href="@{/configuration/messageFormat/edit/{id}(id=${entry.id})}">
+                                            <a class="dropdown-item" th:href="@{/configuration/serializer/edit/{id}(id=${customEntry.id})}">
                                                 <i class="fa fa-edit"></i>
                                                 Edit
                                             </a>
-                                            <form th:action="@{/configuration/messageFormat/delete/{id}(id=${entry.id})}" method="post">
+                                            <form th:action="@{/configuration/serializer/delete/{id}(id=${customEntry.id})}" method="post">
                                                 <button class="dropdown-item" onclick="return confirm('Are you sure?');" type="submit">
                                                     <i class="fa fa-remove"></i>
                                                     Delete
@@ -79,13 +79,13 @@
             <!--/.col-->
         </div>
 
-        <!-- Default Message Formats -->
+        <!-- Default Serializer Strategies -->
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header">
                         <i class="fa fa-align-justify"></i>
-                        Default Message Formats
+                        Default Serializers
                     </div>
                     <div class="card-body">
                         <table class="table table-bordered table-striped table-sm">
@@ -100,7 +100,7 @@
                             <tr th:each="entry : ${defaultEntries}">
                                 <td th:text="${entry.name}"></td>
                                 <td th:text="${entry.classpath}"></td>
-                                <td th:text="${entry.isDefaultFormat()} ? 'Default' : 'Custom'"></td>
+                                <td th:text="${entry.isDefault()} ? 'Default' : 'Custom'"></td>
                             </tr>
                             </tbody>
                         </table>

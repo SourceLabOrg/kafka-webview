@@ -31,13 +31,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Transient;
 
 /**
- * Represents a record in the message_format table.
+ * Represents a partitioning strategy.
  */
 @Entity
-public class MessageFormat implements UploadableJarEntity {
+public class PartitioningStrategy implements UploadableJarEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -52,7 +51,7 @@ public class MessageFormat implements UploadableJarEntity {
     private String jar;
 
     @Column(nullable = false)
-    private boolean isDefaultFormat = false;
+    private boolean isDefault = false;
 
     @Column(nullable = false)
     private String optionParameters = "{}";
@@ -89,24 +88,12 @@ public class MessageFormat implements UploadableJarEntity {
         this.jar = jar;
     }
 
-    @Transient
-    @Override
     public boolean isDefault() {
-        return isDefaultFormat();
+        return isDefault;
     }
 
-    @Transient
-    @Override
-    public void setDefault(final boolean defaultFormat) {
-        setDefaultFormat(defaultFormat);
-    }
-
-    public boolean isDefaultFormat() {
-        return isDefaultFormat;
-    }
-
-    public void setDefaultFormat(final boolean defaultFormat) {
-        isDefaultFormat = defaultFormat;
+    public void setDefault(final boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     public String getOptionParameters() {
@@ -119,17 +106,17 @@ public class MessageFormat implements UploadableJarEntity {
 
     @Override
     public UploadManager.UploadType getUploadType() {
-        return UploadManager.UploadType.DESERIALIZER;
+        return UploadManager.UploadType.PARTITIONING_STRATEGY;
     }
 
     @Override
     public String toString() {
-        return "MessageFormat{"
+        return "PartitioningStrategy{"
             + "id=" + id
             + ", name='" + name + '\''
             + ", classpath='" + classpath + '\''
             + ", jar='" + jar + '\''
-            + ", isDefaultFormat=" + isDefaultFormat
+            + ", isDefault=" + isDefault
             + ", optionParameters='" + optionParameters + '\''
             + '}';
     }

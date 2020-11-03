@@ -22,24 +22,41 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.repository;
+package org.sourcelab.kafka.webview.ui.manager.kafka.producer;
 
-import org.sourcelab.kafka.webview.ui.model.MessageFormat;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * For access records on the message_format table.
+ * Represents records to be published via WebKafkaProducer.
  */
-@Repository
-public interface MessageFormatRepository extends UploadableJarRepository<MessageFormat> {
+public class WebProducerRecord {
+    /**
+     * Map of fieldName to values for key.
+     */
+    private final Map<String, String> keyValues;
 
     /**
-     * Find all partitioning strategies by type, ordered by name.
-     * @param isDefault Only return items that match the is_default field being true or false.
-     * @return all message formats ordered by name.
+     * Map of fieldName to values for value.
      */
-    @Override
-    @Query("SELECT f FROM MessageFormat f WHERE f.isDefaultFormat = :isDefault order by name asc")
-    Iterable<MessageFormat> findByIsDefaultOrderByNameAsc(final boolean isDefault);
+    private final Map<String, String> valueValues;
+
+    /**
+     * Constructor.
+     * @param keyValues Map of fieldName to values for key.
+     * @param valueValues Map of fieldName to values for value.
+     */
+    public WebProducerRecord(final Map<String, String> keyValues, final Map<String, String> valueValues) {
+        this.keyValues = Collections.unmodifiableMap(new HashMap<>(keyValues));
+        this.valueValues = Collections.unmodifiableMap(new HashMap<>(valueValues));
+    }
+
+    public Map<String, String> getKeyValues() {
+        return keyValues;
+    }
+
+    public Map<String, String> getValueValues() {
+        return valueValues;
+    }
 }

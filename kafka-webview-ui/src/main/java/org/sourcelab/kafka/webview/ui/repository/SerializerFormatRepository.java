@@ -24,22 +24,13 @@
 
 package org.sourcelab.kafka.webview.ui.repository;
 
-import org.sourcelab.kafka.webview.ui.model.MessageFormat;
-import org.springframework.data.jpa.repository.Query;
+import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
 import org.springframework.stereotype.Repository;
 
 /**
  * For access records on the message_format table.
  */
 @Repository
-public interface MessageFormatRepository extends UploadableJarRepository<MessageFormat> {
+public interface SerializerFormatRepository extends UploadableJarRepository<SerializerFormat> {
 
-    /**
-     * Find all partitioning strategies by type, ordered by name.
-     * @param isDefault Only return items that match the is_default field being true or false.
-     * @return all message formats ordered by name.
-     */
-    @Override
-    @Query("SELECT f FROM MessageFormat f WHERE f.isDefaultFormat = :isDefault order by name asc")
-    Iterable<MessageFormat> findByIsDefaultOrderByNameAsc(final boolean isDefault);
 }

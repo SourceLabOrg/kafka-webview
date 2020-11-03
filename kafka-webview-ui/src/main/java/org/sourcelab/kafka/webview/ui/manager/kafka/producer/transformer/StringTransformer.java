@@ -22,24 +22,25 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.repository;
+package org.sourcelab.kafka.webview.ui.manager.kafka.producer.transformer;
 
-import org.sourcelab.kafka.webview.ui.model.MessageFormat;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+
+import javax.validation.constraints.NotNull;
 
 /**
- * For access records on the message_format table.
+ * For transforming single string input to a Long for the StringSerializer.
  */
-@Repository
-public interface MessageFormatRepository extends UploadableJarRepository<MessageFormat> {
+public class StringTransformer extends DefaultTransformer<String> {
 
-    /**
-     * Find all partitioning strategies by type, ordered by name.
-     * @param isDefault Only return items that match the is_default field being true or false.
-     * @return all message formats ordered by name.
-     */
     @Override
-    @Query("SELECT f FROM MessageFormat f WHERE f.isDefaultFormat = :isDefault order by name asc")
-    Iterable<MessageFormat> findByIsDefaultOrderByNameAsc(final boolean isDefault);
+    public String transformField(@NotNull final String value) {
+        return value;
+    }
+
+    @Override
+    public Class<? extends Serializer> getSerializerClass() {
+        return StringSerializer.class;
+    }
 }

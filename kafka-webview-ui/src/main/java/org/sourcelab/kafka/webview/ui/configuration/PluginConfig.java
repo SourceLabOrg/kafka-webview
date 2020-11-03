@@ -27,7 +27,9 @@ package org.sourcelab.kafka.webview.ui.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.SensitiveConfigScrubber;
@@ -41,6 +43,7 @@ import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
 import org.sourcelab.kafka.webview.ui.manager.sasl.SaslUtility;
 import org.sourcelab.kafka.webview.ui.plugin.filter.RecordFilter;
+import org.sourcelab.kafka.webview.ui.plugin.serializer.SerializerTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -86,6 +89,39 @@ public class PluginConfig {
     public PluginFactory<RecordFilter> getRecordFilterPluginFactory(final AppProperties appProperties) {
         final String jarDirectory = appProperties.getUploadPath() + "/filters";
         return new PluginFactory<>(jarDirectory, RecordFilter.class);
+    }
+
+    /**
+     * PluginFactory for creating instances of Partitioners.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Partitioners.
+     */
+    @Bean
+    public PluginFactory<Partitioner> getPartitionerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getUploadPath() + "/partitioners";
+        return new PluginFactory<>(jarDirectory, Partitioner.class);
+    }
+
+    /**
+     * PluginFactory for creating instances of Serializers.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Serializers.
+     */
+    @Bean
+    public PluginFactory<Serializer> getSerializerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getUploadPath() + "/serializers";
+        return new PluginFactory<>(jarDirectory, Serializer.class);
+    }
+
+    /**
+     * PluginFactory for creating instances of Serializer Transformers.
+     * @param appProperties Definition of app properties.
+     * @return PluginFactory for Serializer Transformers.
+     */
+    @Bean
+    public PluginFactory<SerializerTransformer> getSerializerTransformerPluginFactory(final AppProperties appProperties) {
+        final String jarDirectory = appProperties.getUploadPath() + "/serializers";
+        return new PluginFactory<>(jarDirectory, SerializerTransformer.class);
     }
 
     /**

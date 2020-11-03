@@ -57,6 +57,11 @@ public class UploadManager {
     private final String keyStoreUploadPath;
 
     /**
+     * Where to upload JARs associated with partitioning strategies.
+     */
+    private final String partitioningStrategyUploadPath;
+
+    /**
      * Constructor.
      * @param uploadPath Parent upload directory.
      */
@@ -64,10 +69,15 @@ public class UploadManager {
         this.deserializerUploadPath = uploadPath + "/deserializers";
         this.filterUploadPath = uploadPath + "/filters";
         this.keyStoreUploadPath = uploadPath + "/keyStores";
+        this.partitioningStrategyUploadPath = uploadPath + "/partitioners";
     }
 
     String getDeserializerUploadPath() {
         return deserializerUploadPath;
+    }
+
+    String getPartitioningStrategyUploadPath() {
+        return partitioningStrategyUploadPath;
     }
 
     String getFilterUploadPath() {
@@ -86,6 +96,16 @@ public class UploadManager {
      */
     public String handleDeserializerUpload(final MultipartFile file, final String outFileName) throws IOException {
         return handleFileUpload(file, outFileName, getDeserializerUploadPath());
+    }
+
+    /**
+     * Handle uploading a Deserializer Jar.
+     * @param file The Uploaded MultiPart file.
+     * @param outFileName What we want to name the output file.
+     * @return Path to uploaded file.
+     */
+    public String handlePartitioningStrategyUpload(final MultipartFile file, final String outFileName) throws IOException {
+        return handleFileUpload(file, outFileName, getPartitioningStrategyUploadPath());
     }
 
     /**
@@ -109,6 +129,29 @@ public class UploadManager {
     }
 
     /**
+     * Handle upload for a given upload type.
+     * @param file The Uploaded MultiPart file.
+     * @param outFileName What we want to name the output file.
+     * @param uploadType the type of upload.
+     * @return Path to uploaded file.
+     */
+    public String handleUpload(final MultipartFile file, final String outFileName, final UploadType uploadType) throws IOException {
+        switch (uploadType) {
+            case DESERIALIZER:
+                return handleDeserializerUpload(file, outFileName);
+            case FILTER:
+                return handleFilterUpload(file, outFileName);
+            case KEYSTORE:
+                return handleKeystoreUpload(file, outFileName);
+            case PARTITIONING_STRATEGY:
+                return handlePartitioningStrategyUpload(file, outFileName);
+            case SERIALIZER:
+            default:
+                throw new IllegalArgumentException("Unknown upload type: " + uploadType);
+        }
+    }
+
+    /**
      * Enables the ability to delete a keystore file.
      * @param keyStoreFile Filename of keystore file to be removed.
      * @return True if successful, false if not.
@@ -117,6 +160,12 @@ public class UploadManager {
         return deleteFile(keyStoreFile, keyStoreUploadPath);
     }
 
+    /**
+     * Removes a file if it exists.
+     * @param filename filename to remove
+     * @param rootPath the directory in which the file should exist.
+     * @return true if removed, false on errors.
+     */
     private boolean deleteFile(final String filename, final String rootPath) {
         // Handle nulls gracefully.
         if (filename == null || filename.trim().isEmpty()) {
@@ -162,5 +211,16 @@ public class UploadManager {
         }
 
         return fullOutputPath.toString();
+    }
+
+    /**
+     * Enum describing the different upload types.
+     */
+    public enum UploadType {
+        DESERIALIZER,
+        FILTER,
+        KEYSTORE,
+        PARTITIONING_STRATEGY,
+        SERIALIZER;
     }
 }

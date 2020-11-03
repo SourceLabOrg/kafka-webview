@@ -22,19 +22,17 @@
  * SOFTWARE.
  */
 
-package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat;
+package org.sourcelab.kafka.webview.ui.controller.configuration.serializer;
 
-import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
-import org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.forms.MessageFormatForm;
-import org.sourcelab.kafka.webview.ui.manager.controller.EntityUsageManager;
+import org.sourcelab.kafka.webview.ui.controller.configuration.serializer.forms.SerializerForm;
 import org.sourcelab.kafka.webview.ui.manager.controller.UploadableJarControllerHelper;
 import org.sourcelab.kafka.webview.ui.manager.plugin.PluginFactory;
 import org.sourcelab.kafka.webview.ui.manager.plugin.UploadManager;
-import org.sourcelab.kafka.webview.ui.model.MessageFormat;
-import org.sourcelab.kafka.webview.ui.model.View;
-import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
-import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
+import org.sourcelab.kafka.webview.ui.model.SerializerFormat;
+import org.sourcelab.kafka.webview.ui.plugin.serializer.SerializerTransformer;
+import org.sourcelab.kafka.webview.ui.repository.SerializerFormatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -46,26 +44,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.util.Collections;
 import java.util.Map;
 
 /**
- * Controller for MessageFormat CRUD operations.
+ * Controller for Serializer CRUD operations.
  */
 @Controller
-@RequestMapping("/configuration/messageFormat")
-public class MessageFormatController extends BaseController {
+@RequestMapping("/configuration/serializer")
+public class SerializerController extends BaseController {
 
     @Autowired
     private UploadManager uploadManager;
 
     @Autowired
-    private PluginFactory<Deserializer> deserializerLoader;
+    private PluginFactory<SerializerTransformer> serializerPluginFactory;
 
     @Autowired
-    private MessageFormatRepository messageFormatRepository;
-
-    @Autowired
-    private ViewRepository viewRepository;
+    private SerializerFormatRepository serializerFormatRepository;
 
     /**
      * GET Displays main message format index.
@@ -76,33 +72,34 @@ public class MessageFormatController extends BaseController {
     }
 
     /**
-     * GET Displays create message format form.
+     * GET Displays create serializer format form.
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
-    public String createMessageFormat(final MessageFormatForm form, final Model model) {
+    public String create(final SerializerForm form, final Model model) {
         return getHelper().buildCreate(model);
     }
 
     /**
-     * GET Displays edit message format form.
+     * GET Displays edit serializer form.
      */
     @RequestMapping(path = "/edit/{id}", method = RequestMethod.GET)
-    public String editMessageFormat(
+    public String edit(
         @PathVariable final Long id,
-        final MessageFormatForm form,
+        final SerializerForm form,
         final Model model,
         final RedirectAttributes redirectAttributes) {
 
-        return getHelper().buildEdit(id, form, model, redirectAttributes);
+        return getHelper()
+            .buildEdit(id, form, model, redirectAttributes);
     }
 
     /**
-     * POST create or edit existing MessageFormat.
+     * POST create or edit existing Partitioning Strategy.
      *
-     * If the message format does NOT yet exist:
+     * If the partitioning strategy does NOT yet exist:
      *   - Require a valid JAR + Classpath to be uploaded
      *
-     * If the message format DOES exist
+     * If the partitioning strategy DOES exist
      *   - If no jar is uploaded, only allow updating the name + options
      *   - If jar is uploaded, validate JAR + Classpath
      *     - If valid, replace existing Jar
@@ -110,43 +107,33 @@ public class MessageFormatController extends BaseController {
      *
      */
     @RequestMapping(path = "/update", method = RequestMethod.POST)
-    public String create(
-        @Valid final MessageFormatForm form,
+    public String update(
+        @Valid final SerializerForm form,
         final BindingResult bindingResult,
         final RedirectAttributes redirectAttributes,
-        @RequestParam final Map<String, String> allRequestParams) {
-
-        return getHelper()
-            .handleUpdate(form, bindingResult, redirectAttributes);
+        @RequestParam final Map<String, String> allRequestParams
+    ) {
+        return getHelper().handleUpdate(form, bindingResult, redirectAttributes);
     }
 
     /**
-     * POST deletes the selected message format.
+     * POST deletes the selected partitioning strategy.
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
-    public String deleteCluster(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
-
-        return getHelper().processDelete(id, redirectAttributes, entityId -> {
-            final Iterable<View> views =
-                viewRepository.findAllByKeyMessageFormatIdOrValueMessageFormatIdOrderByNameAsc(entityId, entityId);
-
-            final EntityUsageManager.UsageBuilder builder = EntityUsageManager.Usage.newBuilder();
-            for (final View view: views) {
-                builder.withInstance("View", view.getName(), view.getId());
-            }
-            return builder.build();
-        });
+    public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
+        return getHelper()
+            .processDelete(id, redirectAttributes, entityId -> Collections.emptyList());
     }
 
-    private UploadableJarControllerHelper<MessageFormat> getHelper() {
+    private UploadableJarControllerHelper<SerializerFormat> getHelper() {
         return new UploadableJarControllerHelper<>(
-            "Message Format",
-            "Message Formats",
-            "configuration/messageFormat",
-            MessageFormat.class,
+            "Serialization Format",
+            "Serialization Formats",
+            "configuration/serializer",
+            SerializerFormat.class,
             uploadManager,
-            deserializerLoader,
-            messageFormatRepository
+            serializerPluginFactory,
+            serializerFormatRepository
         );
     }
 }
