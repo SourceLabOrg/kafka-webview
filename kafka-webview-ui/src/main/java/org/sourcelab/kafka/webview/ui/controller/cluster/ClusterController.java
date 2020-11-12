@@ -27,6 +27,7 @@ package org.sourcelab.kafka.webview.ui.controller.cluster;
 import org.sourcelab.kafka.webview.ui.controller.BaseController;
 import org.sourcelab.kafka.webview.ui.manager.ui.BreadCrumbManager;
 import org.sourcelab.kafka.webview.ui.manager.ui.FlashMessage;
+import org.sourcelab.kafka.webview.ui.manager.ui.recentasset.RecentAssetType;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.Datatable;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.DatatableColumn;
 import org.sourcelab.kafka.webview.ui.manager.ui.datatable.LinkTemplate;
@@ -44,6 +45,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -140,13 +143,16 @@ public class ClusterController extends BaseController {
     }
 
     /**
-     * GET Displays edit cluster form.
+     * GET Displays read cluster page.
      */
     @RequestMapping(path = "/{clusterId}", method = RequestMethod.GET)
     public String readCluster(
         @PathVariable final Long clusterId,
         final Model model,
-        final RedirectAttributes redirectAttributes) {
+        final RedirectAttributes redirectAttributes,
+        final HttpServletRequest request,
+        final HttpServletResponse response
+    ) {
 
         // Retrieve by id
         final Cluster cluster = retrieveCluster(clusterId, redirectAttributes);
@@ -154,6 +160,10 @@ public class ClusterController extends BaseController {
             // redirect
             return "redirect:/";
         }
+
+        // Add most recently used asset
+        getMostRecentAssetStorage(request, response)
+            .addMostRecentAssetId(RecentAssetType.CLUSTER, cluster.getId());
 
         // Set view attribute
         model.addAttribute("cluster", cluster);
