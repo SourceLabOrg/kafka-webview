@@ -28,6 +28,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.ClientConfig;
 import org.sourcelab.kafka.webview.ui.manager.kafka.config.RecordFilterDefinition;
 import org.sourcelab.kafka.webview.ui.manager.kafka.filter.RecordFilterInterceptor;
@@ -41,6 +43,8 @@ import java.util.Map;
  * Factory class for creating new KafkaConsumers.
  */
 public class KafkaConsumerFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerFactory.class);
     /**
      * Utility class for setting up common kafka client properties.
      */
@@ -137,6 +141,7 @@ public class KafkaConsumerFactory {
             if (configMap.containsKey(entry.getKey())) {
                 continue;
             }
+            logger.warn("Setting property {} value to {}", entry.getKey(), entry.getValue());
             configMap.put(entry.getKey(), entry.getValue());
         }
 

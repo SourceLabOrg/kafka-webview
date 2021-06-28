@@ -25,6 +25,8 @@
 package org.sourcelab.kafka.webview.ui.manager.kafka.config;
 
 import org.apache.kafka.common.serialization.Deserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +36,9 @@ import java.util.Map;
  * Configuration defining how to Deserialize values from Kafka.
  */
 public class DeserializerConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(DeserializerConfig.class);
+
     private final Class<? extends Deserializer> keyDeserializerClass;
     private final Map<String, String> keyDeserializerOptions;
 
@@ -89,6 +94,7 @@ public class DeserializerConfig {
         final Map<String, String> mergedOptions = new HashMap<>();
         mergedOptions.putAll(getKeyDeserializerOptions());
         mergedOptions.putAll(getValueDeserializerOptions());
+        logger.warn("Merged options are {}", mergedOptions);
         return mergedOptions;
     }
 
