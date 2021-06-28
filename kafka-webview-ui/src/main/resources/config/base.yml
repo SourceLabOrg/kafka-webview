@@ -16,11 +16,15 @@ spring:
   application:
     name: Kafka Webview
   datasource:
-    url: "jdbc:h2:file:./data/db"
-    username: sa
+    url: "jdbc:mysql://localhost:3306/kafka_webview"
+    username: root
     password:
-    driver-class-name: org.h2.Driver
-
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  #  datasource:
+  #    url: "jdbc:h2:file:./data/db"
+  #    username: sa
+  #    password:
+  #    driver-class-name: org.h2.Driver
   flyway:
     locations: "classpath:schema/migration/{vendor}"
     baselineOnMigrate: true
