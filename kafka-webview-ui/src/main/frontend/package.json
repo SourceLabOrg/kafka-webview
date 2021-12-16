@@ -33,7 +33,7 @@
     "gulp-sass": "^3.2.1",
     "gulp-search": "^1.0.0",
     "gulp-uglify": "^3.0.0",
-    "gulp-web-dependencies": "^1.1.2",
+    "gulp-web-dependencies": "^1.2.0",
     "main-bower-files": "^2.13.1",
     "require-dir": "^0.3.2",
     "run-sequence": "^2.1.0"
