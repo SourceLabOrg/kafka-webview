@@ -2,6 +2,20 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.8.0 (UNRELEASED)
+
+#### Internal Development Changes
+- Migrated CI solution from TravisCI to GithubActions.
+- Resolved issue with JRE18 generated dummy/development SSL certs on running application on JRE8 not working correctly.
+
+#### Internal Dependency Updates
+- Updated SpringBoot from 2.1.14.RELEASE to 2.1.18.RELEASE.
+- Updated Kafka Client library version from 2.2.2 to 2.8.1.
+- Updated org.apache.avro from 1.8.2 to 1.11.0.
+- Updated thymeleaf from 3.0.11.RELEASE to 3.0.14.RELEASE.
+- Updated commons-cli from 1.4 to 1.5.0.
+- Updated commons-compress from 1.19 to 1.21.
+
 ## 2.7.0 (09/26/2020)
 #### New Features
 - [PR-225](https://github.com/SourceLabOrg/kafka-webview/pull/225)
