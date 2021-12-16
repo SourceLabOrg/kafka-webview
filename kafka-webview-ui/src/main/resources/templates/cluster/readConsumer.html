@@ -99,6 +99,12 @@
                             var resultHtml = selectorTemplate(properties);
                             jQuery('#topicSelector').append(resultHtml);
                         });
+
+                        // Handle changing.
+                        jQuery('#topicSelector').change(function() {
+                            // Force refresh now.. but we have an issue where if an existing update is in progress... we'll have issues.
+                            //ConsumerInfo.refreshConsumerOffsets();
+                        });
                     }
 
                     // Generate html from template
@@ -192,6 +198,9 @@
 
                     // Reset title
                     graphInstance.graphOptions.title.text = graphInstance.graphOptions.title.srcText.replace('{{topic}}', topicName);
+                    if (graphInstance.chart !== null) {
+                        graphInstance.chart.options = graphInstance.graphOptions;
+                    }
                 },
 
                 // Handle ConsumerOffsets Results
@@ -637,7 +646,7 @@
                         }
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // ConsumerRate Graph
@@ -680,7 +689,7 @@
                         intersect: true
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // TailRate Graph
@@ -723,7 +732,7 @@
                         intersect: true
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // Lag Graph
@@ -766,7 +775,7 @@
                         intersect: true
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // On load, fire off ajax request to load results.
