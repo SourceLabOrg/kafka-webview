@@ -366,8 +366,22 @@ var ApiClient = {
     },
     defaultErrorHandler: function(jqXHR, textStatus, errorThrown) {
         // convert response to json
-        var response = jQuery.parseJSON(jqXHR.responseText);
-        UITools.showApiErrorWithStack(response);
+        try {
+            UITools.showApiErrorWithStack(jQuery.parseJSON(jqXHR.responseText));
+        } catch(exception) {
+            // Define default message.
+            var message = "[" + exception.name + ":" +  exception.message + "] " + jqXHR.responseText;
+            if (jqXHR.responseText === undefined) {
+                message = "Request aborted prematurely."
+            }
+            // Mock entry
+            var error = {
+                message: message,
+                causes: []
+            };
+            console.error(error);
+            UITools.showApiErrorWithStack(error);
+        }
     }
 };
 

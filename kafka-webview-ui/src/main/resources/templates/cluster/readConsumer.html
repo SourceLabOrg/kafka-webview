@@ -469,7 +469,7 @@
                     ConsumerPositionsGraph.graphData.datasets[1].data = consumerPositions;
 
                     // Update graph
-                    if (ConsumerPositionsGraph.graph == null) {
+                    if (ConsumerPositionsGraph.chart == null) {
                         var ctx = document.getElementById("ConsumerPositionsChart").getContext('2d');
                         ConsumerPositionsGraph.chart = new Chart(ctx, {
                             type: 'horizontalBar',
@@ -544,7 +544,7 @@
                     });
 
                     // Update graph
-                    if (graphInstance.graph == null) {
+                    if (graphInstance.chart == null) {
                         var ctx = document.getElementById(htmlElementId).getContext('2d');
                         graphInstance.chart = new Chart(ctx, {
                             type: 'line',
