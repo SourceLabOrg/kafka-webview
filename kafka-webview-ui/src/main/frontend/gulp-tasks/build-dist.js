@@ -2,7 +2,7 @@
 
 var gulp = require('gulp');
 var uglify = require('gulp-uglify');
-var cssmin = require('gulp-cssmin')
+var cleanCSS = require('gulp-clean-css')
 var rename = require('gulp-rename');
 var del = require('del');
 var runSequence = require('run-sequence');
@@ -76,9 +76,9 @@ gulp.task('copy:vendorImages', function() {
 
 gulp.task('minify:vendorsCSS', function() {
   return gulp.src([paths.vendors + '/css/*.css', '!' + paths.vendors + '/css/*.min.css'])
-  .pipe(cssmin())
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest(paths.vendors + '/css/'));
+    .pipe(cleanCSS({compatibility: 'ie8'}))
+    .pipe(rename({suffix: '.min'}))
+    .pipe(gulp.dest(paths.vendors + '/css/'));
 });
 
 gulp.task('clean:vendorsCSS', function () {
