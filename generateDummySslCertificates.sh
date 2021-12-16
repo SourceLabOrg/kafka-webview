@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 set -e
 
-KEYTOOL_COMMAND="keytool"
+KEYTOOL_COMMAND="keytool -J-Dkeystore.pkcs12.legacy "
 KEYSTORE_FILENAME="kafka.keystore.jks"
 VALIDITY_IN_DAYS=3650
 DEFAULT_TRUSTSTORE_FILENAME="kafka.truststore.jks"
@@ -30,7 +30,7 @@ trust_store_private_key_file="$TRUSTSTORE_WORKING_DIRECTORY/ca-key"
 
 ${KEYTOOL_COMMAND} -keystore $TRUSTSTORE_WORKING_DIRECTORY/$DEFAULT_TRUSTSTORE_FILENAME \
     -alias CARoot -import -file $TRUSTSTORE_WORKING_DIRECTORY/ca-cert \
-    -storepass password -trustcacerts -noprompt -J-Dkeystore.pkcs12.legacy
+    -storepass password -trustcacerts -noprompt
 trust_store_file="$TRUSTSTORE_WORKING_DIRECTORY/$DEFAULT_TRUSTSTORE_FILENAME"
 
 rm $TRUSTSTORE_WORKING_DIRECTORY/$CA_CERT_FILE
@@ -38,15 +38,15 @@ rm $TRUSTSTORE_WORKING_DIRECTORY/$CA_CERT_FILE
 mkdir $KEYSTORE_WORKING_DIRECTORY
 ${KEYTOOL_COMMAND} -keystore $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME \
   -alias localhost -validity $VALIDITY_IN_DAYS -genkey -keyalg RSA -sigalg SHA256withRSA\
-  -storepass password -keypass password -J-Dkeystore.pkcs12.legacy \
+  -storepass password -keypass password \
   -dname "CN=localhost, OU=localhost, O=localhost, L=localhost, ST=localhost, C=localhost"
 
 ${KEYTOOL_COMMAND} -keystore $trust_store_file -export -alias CARoot -rfc -file $CA_CERT_FILE \
-  -storepass password -keypass password -J-Dkeystore.pkcs12.legacy
+  -storepass password -keypass password
 
 ${KEYTOOL_COMMAND} -keystore $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME -alias localhost \
   -certreq -file $KEYSTORE_SIGN_REQUEST \
-  -keypass password -storepass password -J-Dkeystore.pkcs12.legacy
+  -keypass password -storepass password
 
 openssl x509 -req -CA $CA_CERT_FILE -CAkey $trust_store_private_key_file -sha256 \
   -in $KEYSTORE_SIGN_REQUEST -out $KEYSTORE_SIGNED_CERT \
@@ -54,11 +54,11 @@ openssl x509 -req -CA $CA_CERT_FILE -CAkey $trust_store_private_key_file -sha256
 
 ${KEYTOOL_COMMAND} -keystore $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME -alias CARoot \
   -import -file $CA_CERT_FILE \
-  -keypass password -storepass password -noprompt -J-Dkeystore.pkcs12.legacy
+  -keypass password -storepass password -noprompt
 rm $CA_CERT_FILE
 
 ${KEYTOOL_COMMAND} -keystore $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME -alias localhost -import \
-  -file $KEYSTORE_SIGNED_CERT -storepass password -keypass password -J-Dkeystore.pkcs12.legacy
+  -file $KEYSTORE_SIGNED_CERT -storepass password -keypass password
 
 rm $KEYSTORE_SIGN_REQUEST_SRL
 rm $KEYSTORE_SIGN_REQUEST
