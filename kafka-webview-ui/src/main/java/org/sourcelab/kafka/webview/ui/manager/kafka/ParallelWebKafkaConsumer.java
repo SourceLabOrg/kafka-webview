@@ -160,6 +160,11 @@ public class ParallelWebKafkaConsumer implements WebKafkaConsumer {
         // Build map of partition => offset
         final Map<Integer, Long> partitionOffsetMap = new HashMap<>();
         for (Map.Entry<TopicPartition, OffsetAndTimestamp> entry : offsetMap.entrySet()) {
+            // If no entry found
+            if (entry.getValue() == null) {
+                // skip the partition.
+                continue;
+            }
             partitionOffsetMap.put(entry.getKey().partition(), entry.getValue().offset());
         }
 

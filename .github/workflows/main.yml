@@ -53,4 +53,17 @@ jobs:
 
       ## Run test suite
       - name: Run test suite
-        run: mvn test -B -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-webview-ui/src/test/resources/jaas.conf
+        run: mvn test -B -DskipCheckStyle=true -Dmaven.javadoc.skip=true -Djava.security.auth.login.config=${PWD}/kafka-webview-ui/src/test/resources/jaas.conf
+
+      ## Package
+      - name: Package
+        run: mvn package -DskipCheckStyle=true -DskipTests=true -Dmaven.javadoc.skip=true
+
+      ## Upload Artifact
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v2
+        with:
+          name: package.zip
+          path: kafka-webview-ui/target/kafka-webview-ui-*-bin.zip
+          retention-days: 3
+

@@ -4,6 +4,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.8.0 (UNRELEASED)
 
+#### Bug Fixes
+- Resolves javascript errors/warnings for graphs on Consumer Read page.
+- Resolves title not updating to reflect the current topic being displayed on graphs on Consumer Read page.
+- Resolves NullPointerException error if you attempt to seek to a timestamp on a partition past the tail of the topic.
+
 #### Internal Development Changes
 - Migrated CI solution from TravisCI to GithubActions.
 - Resolved issue with JRE18 generated dummy/development SSL certs on running application on JRE8 not working correctly.

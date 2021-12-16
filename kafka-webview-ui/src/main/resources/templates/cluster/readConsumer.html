@@ -99,6 +99,12 @@
                             var resultHtml = selectorTemplate(properties);
                             jQuery('#topicSelector').append(resultHtml);
                         });
+
+                        // Handle changing.
+                        jQuery('#topicSelector').change(function() {
+                            // Force refresh now.. but we have an issue where if an existing update is in progress... we'll have issues.
+                            //ConsumerInfo.refreshConsumerOffsets();
+                        });
                     }
 
                     // Generate html from template
@@ -192,6 +198,9 @@
 
                     // Reset title
                     graphInstance.graphOptions.title.text = graphInstance.graphOptions.title.srcText.replace('{{topic}}', topicName);
+                    if (graphInstance.chart !== null) {
+                        graphInstance.chart.options = graphInstance.graphOptions;
+                    }
                 },
 
                 // Handle ConsumerOffsets Results
@@ -469,7 +478,7 @@
                     ConsumerPositionsGraph.graphData.datasets[1].data = consumerPositions;
 
                     // Update graph
-                    if (ConsumerPositionsGraph.graph == null) {
+                    if (ConsumerPositionsGraph.chart == null) {
                         var ctx = document.getElementById("ConsumerPositionsChart").getContext('2d');
                         ConsumerPositionsGraph.chart = new Chart(ctx, {
                             type: 'horizontalBar',
@@ -544,7 +553,7 @@
                     });
 
                     // Update graph
-                    if (graphInstance.graph == null) {
+                    if (graphInstance.chart == null) {
                         var ctx = document.getElementById(htmlElementId).getContext('2d');
                         graphInstance.chart = new Chart(ctx, {
                             type: 'line',
@@ -637,7 +646,7 @@
                         }
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // ConsumerRate Graph
@@ -680,7 +689,7 @@
                         intersect: true
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // TailRate Graph
@@ -723,7 +732,7 @@
                         intersect: true
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // Lag Graph
@@ -766,7 +775,7 @@
                         intersect: true
                     }
                 },
-                graph: null
+                chart: null
             };
 
             // On load, fire off ajax request to load results.
