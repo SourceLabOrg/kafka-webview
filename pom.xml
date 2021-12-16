@@ -59,7 +59,13 @@
 
         <!-- Override logback version for security fix -->
         <!-- https://github.com/spring-projects/spring-boot/issues/8635 -->
-        <logback.version>1.2.3</logback.version>
+        <logback.version>1.2.8</logback.version>
+
+        <!-- Override versions for security fixes -->
+        <!-- To be removed when upgrading to newer springboot releases -->
+        <jackson.version>2.13.0</jackson.version>
+        <hibernate.version>5.3.24.Final</hibernate.version>
+        <tomcat.version>9.0.56</tomcat.version>
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
@@ -68,6 +74,7 @@
     </properties>
 
     <!-- Use Spring Boot Starter as Parent -->
+    <!-- https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.18.RELEASE/spring-boot-dependencies-2.1.18.RELEASE.pom -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
