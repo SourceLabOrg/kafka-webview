@@ -57,7 +57,7 @@ jobs:
 
       ## Package
       - name: Package
-        run: mvn package -DskipCheckStyle=true -DskipTests=false -Dmaven.javadoc.skip=true
+        run: mvn package -DskipCheckStyle=true -DskipTests=true -Dmaven.javadoc.skip=true
 
       ## Upload Artifact
       - name: 'Upload Artifact'
