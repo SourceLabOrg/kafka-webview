@@ -1,0 +1,56 @@
+name: CI Test Suite
+
+# Triggers the workflow on pull requests, manually, or pushes to master
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      ## Run tests against Open JDK8
+      - uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 8
+
+      ## Cache maven dependencies
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      ## Run CheckStyle and License Header checks, compile, and install locally
+      - name: Run checkstyle, license check, compile and install locally
+        run: mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V
+
+      ## Ensure data directory exists
+      - name: Ensure data directory exists
+        run: mkdir -p ./data/uploads
+
+      ## Generate dummy SSL certificates
+      - name: Generate dummy SSL certificates
+        run: ./generateDummySslCertificates.sh
+
+      ## Run CheckStyle and License Header checks, compile, and install locally
+      - name: Run CheckStyle and License Header checks, compile, and install locally
+        run: ./generateDummySslCertificates.sh
+
+      ## Run test suite
+      - name: Run test suite
+        run: mvn test -B -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-webview-ui/src/test/resources/jaas.conf
