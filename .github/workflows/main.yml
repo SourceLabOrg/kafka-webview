@@ -64,6 +64,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: package.zip
-          path: target/*.zip
+          path: kafka-webview-ui/target/kafka-webview-ui-*-bin.zip
           retention-days: 3
 
