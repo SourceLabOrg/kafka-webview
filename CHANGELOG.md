@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Updated thymeleaf from 3.0.11.RELEASE to 3.0.14.RELEASE.
 - Updated commons-cli from 1.4 to 1.5.0.
 - Updated commons-compress from 1.19 to 1.21.
+- Updated Google Guava from 29.0-jre to 31.0.1-jre.
 
 ## 2.7.0 (09/26/2020)
 #### New Features
