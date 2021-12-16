@@ -8,7 +8,7 @@
     "chart.js": "^2.9.4",
     "font-awesome": "^4.7.0",
     "handlebars": "^4.0.14",
-    "jquery": "^3.2.1",
+    "jquery": "^3.6.0",
     "jquery-ui-dist": "^1.12.1",
     "jquery-ui-timepicker-addon": "^1.6.3",
     "multiselect-two-sides": "^2.4.0",
