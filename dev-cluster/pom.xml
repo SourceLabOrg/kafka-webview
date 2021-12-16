@@ -52,33 +52,33 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit-core</artifactId>
-            <version>3.1.2</version>
+            <version>3.2.3</version>
         </dependency>
 
-        <!-- Include Kafka 1.1.x -->
+        <!-- Include Kafka 2.8.x -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
-            <version>1.1.1</version>
+            <artifactId>kafka_2.12</artifactId>
+            <version>2.8.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>1.1.1</version>
+            <version>2.8.1</version>
         </dependency>
 
         <!-- Command line argument parsing -->
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
-            <version>1.4</version>
+            <version>1.5.0</version>
         </dependency>
 
         <!-- LDAP Server -->
         <dependency>
             <groupId>com.unboundid</groupId>
             <artifactId>unboundid-ldapsdk</artifactId>
-            <version>4.0.11</version>
+            <version>4.0.14</version>
         </dependency>
 
         <!-- Logging -->

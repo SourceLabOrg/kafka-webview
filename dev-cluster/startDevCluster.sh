@@ -4,7 +4,7 @@ set -e
 
 TRUST_STORE_FILE="src/main/resources/kafka.truststore.jks"
 KEY_STORE_FILE="src/main/resources/kafka.keystore.jks"
-JAR_FILE="target/dev-cluster-2.1.0.jar"
+JAR_FILE="target/dev-cluster-2.8.0-SNAPSHOT.jar"
 JAAS_FILE="src/main/resources/jaas.conf"
 
 ## Change to local directory
