@@ -66,6 +66,8 @@
         <jackson.version>2.13.0</jackson.version>
         <hibernate.version>5.3.24.Final</hibernate.version>
         <tomcat.version>9.0.56</tomcat.version>
+        <snakeyaml.version>1.29</snakeyaml.version>
+        <groovy.version>2.5.15</groovy.version>
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
