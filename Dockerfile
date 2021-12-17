@@ -6,7 +6,7 @@ MAINTAINER SourceLab.org <stephen.powis@gmail.com>
 
 ## Define what version of Kafka Webview to build the image using.
 ENV WEBVIEW_VER="2.8.0" \
-    WEBVIEW_SHA1="435bb872b46093d1e4edc09370438146d0c774ae" \
+    WEBVIEW_SHA1="ec9d1b1fba703b22c3da076560e6789ed96148f9" \
     WEBVIEW_HOME="/app"
 
 # Create app and data directories
