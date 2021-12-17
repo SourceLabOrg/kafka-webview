@@ -2,12 +2,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.8.0 (UNRELEASED)
+## 2.8.0 (12/17/2021)
 
 #### Bug Fixes
 - Resolves javascript errors/warnings for graphs on Consumer Read page.
 - Resolves title not updating to reflect the current topic being displayed on graphs on Consumer Read page.
 - Resolves NullPointerException error if you attempt to seek to a timestamp on a partition past the tail of the topic.
+- Fix start.sh script when running with JDK 16+.
 
 #### Internal Development Changes
 - Migrated CI solution from TravisCI to GithubActions.
