@@ -1,7 +1,5 @@
 # Kafka WebView
 
-[![Build Status](https://travis-ci.org/SourceLabOrg/kafka-webview.svg?branch=master)](https://travis-ci.org/SourceLabOrg/kafka-webview)
-
 This project aims to be a full-featured web-based [Apache Kafka](https://kafka.apache.org/) consumer.  **Kafka WebView** presents an easy-to-use web based interface for reading data out of kafka topics and providing basic filtering and searching capabilities.
 
 ### Features

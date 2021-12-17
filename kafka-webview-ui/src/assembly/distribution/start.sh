@@ -13,9 +13,12 @@ if [[ -z "$LOG_OPTS" ]]; then
     export LOG_OPTS=""
 fi
 
-## For JVM > 1.8 add exports.
+## For JVM >= 16 add exports.
 if [[ -z "$EXPORT_OPTS" ]]; then
-    export EXPORT_OPTS="--add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED"
+    export JAVA_VER=`java -version 2>&1 | head -1 | cut -d'"' -f2 | sed '/^1\./s///' | cut -d'.' -f1`
+    if [[ $JAVA_VER -ge 16 ]]; then
+      export EXPORT_OPTS="--add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED"
+    fi
 fi
 
 ## Define configuration
