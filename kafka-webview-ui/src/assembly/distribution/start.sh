@@ -13,11 +13,16 @@ if [[ -z "$LOG_OPTS" ]]; then
     export LOG_OPTS=""
 fi
 
+## For JVM > 1.8 add exports.
+if [[ -z "$EXPORT_OPTS" ]]; then
+    export EXPORT_OPTS="--add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED"
+fi
+
 ## Define configuration
 export SPRING_CONFIG_LOCATION=classpath:/config/base.yml,config.yml
 
 ## launch webapp
-exec java -jar kafka-webview-ui-*.jar $HEAP_OPTS $LOG_OPTS
+exec java $EXPORT_OPTS -jar kafka-webview-ui-*.jar $HEAP_OPTS $LOG_OPTS
 
 ## Change back to previous directory
 cd $CWD
