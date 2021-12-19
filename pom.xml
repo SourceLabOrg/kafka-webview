@@ -57,17 +57,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
 
-        <!-- Override logback version for security fix -->
-        <!-- https://github.com/spring-projects/spring-boot/issues/8635 -->
-<!--        <logback.version>1.2.8</logback.version>-->
-
         <!-- Override versions for security fixes -->
-        <!-- To be removed when upgrading to newer springboot releases -->
-<!--        <jackson.version>2.13.0</jackson.version>-->
-<!--        <hibernate.version>5.3.24.Final</hibernate.version>-->
-<!--        <tomcat.version>9.0.56</tomcat.version>-->
-<!--        <snakeyaml.version>1.29</snakeyaml.version>-->
-<!--        <groovy.version>2.5.15</groovy.version>-->
+        <!-- https://github.com/spring-projects/spring-boot/issues/8635 -->
+        <logback.version>1.2.8</logback.version>
+        <tomcat.version>9.0.56</tomcat.version>
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
