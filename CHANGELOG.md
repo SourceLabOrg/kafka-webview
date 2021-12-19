@@ -2,6 +2,10 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.8.2 (12/19/2021)
+#### Bug Fixes
+- Disable flyway migration validation due to botched update of existing migration file, which prevented startup when updating from older versions.
+
 ## 2.8.1 (12/17/2021)
 
 #### Bug Fixes
