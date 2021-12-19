@@ -104,7 +104,11 @@ public class PluginConfig {
      * @return Web Kafka Consumer Factory instance.
      */
     @Bean
-    public WebKafkaConsumerFactory getWebKafkaConsumerFactory(final AppProperties appProperties, final KafkaClientConfigUtil configUtil) {
+    public WebKafkaConsumerFactory getWebKafkaConsumerFactory(
+        final AppProperties appProperties,
+        final KafkaClientConfigUtil configUtil,
+        final SecretManager secretManager
+    ) {
         final ExecutorService executorService;
 
         // If we have multi-threaded consumer option enabled
@@ -126,7 +130,7 @@ public class PluginConfig {
         return new WebKafkaConsumerFactory(
             getDeserializerPluginFactory(appProperties),
             getRecordFilterPluginFactory(appProperties),
-            getSecretManager(appProperties),
+            secretManager,
             getKafkaConsumerFactory(configUtil),
             executorService
         );
@@ -134,14 +138,14 @@ public class PluginConfig {
 
     /**
      * For creating Kafka operational consumers.
-     * @param appProperties Definition of app properties.
      * @param configUtil Utility for configuring kafka clients.
+     * @param secretManager For managing secrets.
      * @return Web Kafka Operations Client Factory instance.
      */
     @Bean
-    public KafkaOperationsFactory getKafkaOperationsFactory(final AppProperties appProperties, final KafkaClientConfigUtil configUtil) {
+    public KafkaOperationsFactory getKafkaOperationsFactory(final KafkaClientConfigUtil configUtil, final SecretManager secretManager) {
         return new KafkaOperationsFactory(
-            getSecretManager(appProperties),
+            secretManager,
             getKafkaAdminFactory(configUtil)
         );
     }
@@ -158,11 +162,6 @@ public class PluginConfig {
         };
     }
 
-    @Autowired(required = true)
-    public void configureJackson(ObjectMapper jackson2ObjectMapper) {
-        jackson2ObjectMapper.registerModule(new ProtobufModule());
-    }
-    
     /**
      * For creating instances of AdminClient.
      */
