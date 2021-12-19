@@ -60,8 +60,12 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-  ## Disable LDAP by default
   health:
+    ## Enable probes to get liveness and readiness checks for kubernetes
+    ## See https://spring.io/blog/2020/03/25/liveness-and-readiness-probes-with-spring-boot
+    probes:
+      enabled: false
+    ## Disable LDAP by default
     ldap:
       enabled: false
 
@@ -81,8 +85,10 @@ app:
   consumerIdPrefix: "KafkaWebViewConsumer"
   requireSsl: true
   user:
+    ## By default, require user authentication.
     enabled: true
-    ## Ldap auth settings
+
+    ## Example Ldap auth settings, disabled by default.
     ldap:
       enabled: false
       userDnPattern: "uid={0},ou=people"

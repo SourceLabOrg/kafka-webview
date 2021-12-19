@@ -59,15 +59,15 @@
 
         <!-- Override logback version for security fix -->
         <!-- https://github.com/spring-projects/spring-boot/issues/8635 -->
-        <logback.version>1.2.8</logback.version>
+<!--        <logback.version>1.2.8</logback.version>-->
 
         <!-- Override versions for security fixes -->
         <!-- To be removed when upgrading to newer springboot releases -->
-        <jackson.version>2.13.0</jackson.version>
-        <hibernate.version>5.3.24.Final</hibernate.version>
-        <tomcat.version>9.0.56</tomcat.version>
-        <snakeyaml.version>1.29</snakeyaml.version>
-        <groovy.version>2.5.15</groovy.version>
+<!--        <jackson.version>2.13.0</jackson.version>-->
+<!--        <hibernate.version>5.3.24.Final</hibernate.version>-->
+<!--        <tomcat.version>9.0.56</tomcat.version>-->
+<!--        <snakeyaml.version>1.29</snakeyaml.version>-->
+<!--        <groovy.version>2.5.15</groovy.version>-->
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
@@ -80,7 +80,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.18.RELEASE</version>
+        <version>2.3.12.RELEASE</version>
     </parent>
 
     <dependencies>
