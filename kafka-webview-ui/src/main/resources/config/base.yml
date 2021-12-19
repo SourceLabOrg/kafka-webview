@@ -24,6 +24,7 @@ spring:
   flyway:
     locations: "classpath:schema/migration/{vendor}"
     baselineOnMigrate: true
+    validate-on-migrate: false
 
   servlet:
     multipart:
