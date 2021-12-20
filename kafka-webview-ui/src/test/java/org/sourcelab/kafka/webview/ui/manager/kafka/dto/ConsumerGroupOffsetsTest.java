@@ -92,11 +92,16 @@ public class ConsumerGroupOffsetsTest {
 
     /**
      * Validates the object serializes to json correctly.
+     *
+     * NOTE: Not exactly the best test, it appears as tho the serialization order of the properties isn't exactly
+     * deterministic... so we jump thru some hoops here for the validation assertion.
      */
     @Test
     public void testSerialization() throws JsonProcessingException {
         // Define our expected output.
-        final String expectedResult = "{\"consumerId\":\"MyConsumerId\",\"topics\":[{\"topic\":\"topic-a\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":0},{\"partition\":1,\"offset\":1}]},{\"topic\":\"topic-b\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":2},{\"partition\":1,\"offset\":3}]}],\"topicNames\":[\"topic-a\",\"topic-b\"]}";
+        // Looks like the order of properties is undetermined... so to avoid flapping test lets check each possible variation... :/
+        final String expectedResult1 = "{\"consumerId\":\"MyConsumerId\",\"topics\":[{\"topic\":\"topic-a\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":0},{\"partition\":1,\"offset\":1}]},{\"topic\":\"topic-b\",\"partitions\":[0,1],\"offsets\":[{\"partition\":0,\"offset\":2},{\"partition\":1,\"offset\":3}]}],\"topicNames\":[\"topic-a\",\"topic-b\"]}";
+        final String expectedResult2 = "{\"consumerId\":\"MyConsumerId\",\"topics\":[{\"topic\":\"topic-a\",\"offsets\":[{\"partition\":0,\"offset\":0},{\"partition\":1,\"offset\":1}],\"partitions\":[0,1]},{\"topic\":\"topic-b\",\"offsets\":[{\"partition\":0,\"offset\":2},{\"partition\":1,\"offset\":3}],\"partitions\":[0,1]}],\"topicNames\":[\"topic-a\",\"topic-b\"]}";
 
         final ConsumerGroupOffsets offsets = ConsumerGroupOffsets.newBuilder()
             .withConsumerId("MyConsumerId")
@@ -113,6 +118,14 @@ public class ConsumerGroupOffsetsTest {
         final String result = objectMapper.writeValueAsString(offsets);
 
         // Validate
-        assertEquals("Should have expected serialized value", expectedResult, result);
+        if (expectedResult1.equals(result)) {
+            assertEquals("Should have expected serialized value", expectedResult1, result);
+        } else if (expectedResult2.equals(result)) {
+            assertEquals("Should have expected serialized value", expectedResult2, result);
+        } else {
+            // This will fail.....
+            System.out.println("Got:" + result);
+            assertEquals("Should have expected serialized value", expectedResult1, result);
+        }
     }
 }
