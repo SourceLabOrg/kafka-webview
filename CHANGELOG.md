@@ -4,7 +4,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.9.0 (UNRELEASED)
 #### Internal Dependency Updates
-- Upgrade from SpringBoot 2.1.18 to 2.6.1.
+- Upgrade from SpringBoot 2.1.18 to 2.6.6.
 
 ## 2.8.2 (12/19/2021)
 #### Bug Fixes
