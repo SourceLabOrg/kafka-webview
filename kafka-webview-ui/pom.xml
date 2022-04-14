@@ -73,7 +73,7 @@
         <dependency>
             <groupId>nz.net.ultraq.thymeleaf</groupId>
             <artifactId>thymeleaf-layout-dialect</artifactId>
-            <version>3.1.0</version>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
