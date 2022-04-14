@@ -7,7 +7,7 @@
     <groupId>org.sourcelab</groupId>
     <artifactId>kafka-webview</artifactId>
     <packaging>pom</packaging>
-    <version>2.9.0-SNAPSHOT</version>
+    <version>2.9,0</version>
 
     <!-- Define submodules -->
     <modules>
@@ -58,9 +58,7 @@
         <java.version>1.8</java.version>
 
         <!-- Override versions for security fixes -->
-        <!-- https://github.com/spring-projects/spring-boot/issues/8635 -->
-        <logback.version>1.2.8</logback.version>
-        <tomcat.version>9.0.56</tomcat.version>
+        <tomcat.version>9.0.62</tomcat.version>
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
@@ -73,7 +71,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.6.1</version>
+        <version>2.6.6</version>
     </parent>
 
     <dependencies>

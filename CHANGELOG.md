@@ -2,9 +2,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.9.0 (UNRELEASED)
+## 2.9.0 (04/14/2022)
+SpringBoot framework and internal dependencies update for various security concerns.
+
 #### Internal Dependency Updates
-- Upgrade from SpringBoot 2.1.18 to 2.6.1.
+- Upgrade from SpringBoot 2.1.18 to 2.6.6.
+- Protobuf from 3.16.1 to 3.20.0.
+- Google Guava from 31.0.1 to 31.1.
 
 ## 2.8.2 (12/19/2021)
 #### Bug Fixes
