@@ -5,8 +5,8 @@ FROM openjdk:8-jre-alpine
 MAINTAINER SourceLab.org <stephen.powis@gmail.com>
 
 ## Define what version of Kafka Webview to build the image using.
-ENV WEBVIEW_VER="2.8.2" \
-    WEBVIEW_SHA1="eff3487fe5efdd1dd18e5b96d28df650d1701b07" \
+ENV WEBVIEW_VER="2.9.0" \
+    WEBVIEW_SHA1="c3ba9db0fb4baaa5dea04a9cfe53dfdea13faf58" \
     WEBVIEW_HOME="/app"
 
 # Create app and data directories
@@ -24,6 +24,8 @@ RUN curl -fSL -o /tmp/kafka-webview-ui-bin.zip https://github.com/SourceLabOrg/k
 # Verify SHA1 hash and extract.
 RUN echo "${WEBVIEW_SHA1}  /tmp/kafka-webview-ui-bin.zip" | sha1sum -c - && \
     unzip -d ${WEBVIEW_HOME} /tmp/kafka-webview-ui-bin.zip && \
+    ls -l ${WEBVIEW_HOME} && \
+    ls -l ${WEBVIEW_HOME}/kafka-webview-ui-${WEBVIEW_VER}/* && \
     mv ${WEBVIEW_HOME}/kafka-webview-ui-${WEBVIEW_VER}/* ${WEBVIEW_HOME} && \
     rm -rf ${WEBVIEW_HOME}/kafka-webview-ui-${WEBVIEW_VER}/ && \
     rm -rf ${WEBVIEW_HOME}/src && \
