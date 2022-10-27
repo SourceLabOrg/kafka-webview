@@ -2,6 +2,17 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.9.1 ()
+
+## Bug Fixes
+- Fixed Environment variable for Acuator Port [Issue-235](https://github.com/SourceLabOrg/kafka-webview/issues/235) Thanks [renjanmenon](https://github.com/renjanmenon)!
+
+#### Internal Dependency Updates
+- Protobuf from 3.20.0 to 3.21.9.
+- thymeleaf-layout-dialect from 3.0.0 to 3.1.0.
+- com.hubspot.jackson.jackson-datatype-protobuf 0.9.12 to 0.9.13.
+- Apache Avro from 1.11.0 to 1.11.1.
+
 ## 2.9.0 (04/14/2022)
 SpringBoot framework and internal dependencies update for various security concerns.
 
