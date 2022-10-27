@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 #### Internal Dependency Updates
 - Upgrade from SpringBoot 2.6.6 to 2.6.13.
+- Updated Kafka Client library version from 2.8.1 to 2.8.2.
 - Protobuf from 3.20.0 to 3.21.9.
 - thymeleaf-layout-dialect from 3.0.0 to 3.1.0.
 - com.hubspot.jackson.jackson-datatype-protobuf 0.9.12 to 0.9.13.
