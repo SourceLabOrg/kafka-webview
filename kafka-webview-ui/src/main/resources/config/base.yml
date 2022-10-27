@@ -49,7 +49,7 @@ spring:
 # Spring Actuator - global
 management:
   server:
-    port: ${ACUATOR_PORT:9090}
+    port: ${ACTUATOR_PORT:9090}
   endpoints:
     web:
       exposure:
