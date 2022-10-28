@@ -172,7 +172,8 @@ public class WebKafkaConsumerFactory {
             .withTopicConfig(topicConfig)
             .withConsumerId(consumerId)
             .withPartitions(view.getPartitionsAsSet())
-            .withMaxResultsPerPartition(view.getResultsPerPartition());
+            .withMaxResultsPerPartition(view.getResultsPerPartition())
+            .withPollTimeoutMs(view.getPollTimeoutMs());
 
         final List<RecordFilterDefinition> recordFilterDefinitions = new ArrayList<>();
 
