@@ -321,7 +321,8 @@ public class ClientConfig {
          */
         public ClientConfig build() {
             return new ClientConfig(
-                topicConfig, filterConfig, consumerId, startingPosition, limitPartitions, maxResultsPerPartition, autoCommit, pollTimeoutMs);
+                topicConfig, filterConfig, consumerId, startingPosition, limitPartitions, maxResultsPerPartition,
+                    autoCommit, pollTimeoutMs);
         }
     }
 }
