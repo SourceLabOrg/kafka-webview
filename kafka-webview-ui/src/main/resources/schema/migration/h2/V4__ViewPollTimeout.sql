@@ -1,0 +1,1 @@
+ALTER TABLE `view` ADD COLUMN IF NOT EXISTS poll_timeout_ms INT NOT NULL DEFAULT 5000 AFTER partitions;
