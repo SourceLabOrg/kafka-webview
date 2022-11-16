@@ -73,6 +73,9 @@ public class View {
     @Column(nullable = false)
     private Integer resultsPerPartition = 10;
 
+    @Column(nullable = false)
+    private long pollTimeoutMs = 5000;
+
     @OneToMany(
         fetch = FetchType.LAZY,
         cascade = { CascadeType.PERSIST, CascadeType.MERGE },
@@ -157,6 +160,14 @@ public class View {
 
     public void setResultsPerPartition(final Integer resultsPerPartition) {
         this.resultsPerPartition = resultsPerPartition;
+    }
+
+    public long getPollTimeoutMs() {
+        return pollTimeoutMs;
+    }
+
+    public void setPollTimeoutMs(long pollTimeoutMs) {
+        this.pollTimeoutMs = pollTimeoutMs;
     }
 
     /**
