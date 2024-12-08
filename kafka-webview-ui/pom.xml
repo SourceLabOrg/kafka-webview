@@ -161,7 +161,7 @@
         <dependency>
             <groupId>com.hubspot.jackson</groupId>
             <artifactId>jackson-datatype-protobuf</artifactId>
-            <version>0.9.13</version>
+            <version>0.9.17</version>
             <exclusions>
                 <!-- exclude out-dated dependency -->
                 <exclusion>
