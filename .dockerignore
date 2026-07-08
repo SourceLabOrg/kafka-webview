@@ -1,0 +1,16 @@
+.git
+.github
+.idea
+*.iml
+data/
+logs/
+target/
+kafka-webview-ui/target/
+kafka-webview-ui/data/
+kafka-webview-ui/logs/
+kafka-webview-plugin/target/
+kafka-webview-ui/src/main/frontend/node_modules/
+kafka-webview-ui/src/main/frontend/dist/
+kafka-webview-ui/src/main/resources/static/
+Dockerfile
+docker-compose.yml

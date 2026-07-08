@@ -83,12 +83,12 @@ public abstract class AbstractLoginTest {
 
             final MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
             assertNotNull(session);
-            assertNull("Should have no security context", session.getValue("SPRING_SECURITY_CONTEXT"));
+            assertNull("Should have no security context", session.getAttribute("SPRING_SECURITY_CONTEXT"));
         }
     }
 
     /**
-     * Attempt to authenticate using embedded LDAP server as an administrator user.
+     * Attempt to authenticate with valid credentials.
      */
     @Test
     public void test_validLoginAuthenticate() throws Exception {
@@ -128,7 +128,7 @@ public abstract class AbstractLoginTest {
         assertFalse("sesison should be valid", session.isInvalid());
 
         // Pull out context
-        final SecurityContext securityContext = (SecurityContext) session.getValue("SPRING_SECURITY_CONTEXT");
+        final SecurityContext securityContext = (SecurityContext) session.getAttribute("SPRING_SECURITY_CONTEXT");
         assertNotNull("Should be authenticated", securityContext);
         final UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) securityContext.getAuthentication();
         assertNotNull("Should be authenticated", authenticationToken);
@@ -145,7 +145,7 @@ public abstract class AbstractLoginTest {
         });
         assertEquals("Should have no extra roles", expectedRoles.size(), customUserDetails.getAuthorities().size());
 
-        assertEquals("LDAP Users should have userId", expectedUserId, customUserDetails.getUserId());
+        assertEquals("Users should have userId", expectedUserId, customUserDetails.getUserId());
         assertEquals("Should have username", expectedUsername, customUserDetails.getUsername());
     }
 
@@ -161,7 +161,7 @@ public abstract class AbstractLoginTest {
 
         final MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
         assertNotNull(session);
-        assertNull("Should have no security context", session.getValue("SPRING_SECURITY_CONTEXT"));
+        assertNull("Should have no security context", session.getAttribute("SPRING_SECURITY_CONTEXT"));
     }
 
     protected static class ValidCredentialsTestCase {

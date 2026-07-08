@@ -26,11 +26,11 @@ package org.sourcelab.kafka.webview.ui.controller;
 
 import org.junit.Before;
 import org.sourcelab.kafka.webview.ui.configuration.AppProperties;
-import org.sourcelab.kafka.webview.ui.manager.user.CustomUserDetailsService;
 import org.sourcelab.kafka.webview.ui.model.User;
 import org.sourcelab.kafka.webview.ui.tools.UserTestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -49,7 +49,7 @@ public abstract class AbstractMvcTest {
     protected UserTestTools userTestTools;
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private UserDetailsService customUserDetailsService;
 
     @Autowired
     protected AppProperties appProperties;

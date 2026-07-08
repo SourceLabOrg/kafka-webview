@@ -11,7 +11,6 @@ This project aims to be a full-featured web-based [Apache Kafka](https://kafka.a
 - Supports both customizable and enforced filtering over topics.
 - Supports multiple user management and access control options:
   - Use in app defined users (default).
-  - Use LDAP server for authentication and authorization.
   - Disable user authorization entirely (open anonymous access).
 - Web Based Consumer Supports:
   - Seeking to offsets.
@@ -77,19 +76,11 @@ app:
   ## Sets upper limit on the number of concurrent web socket consumers supported.
   maxConcurrentWebSocketConsumers: 64
 
-  ## Require SSL
-  requireSsl: false
-
   ## User authentication options
   user:
     ## Require user authentication
     ## Setting to false will disable login requirement.
     enabled: true
-    
-    ## Optional: if you want to use LDAP for user authentication instead of locally defined users.
-    ldap:
-      ## Disabled by default.  See below for more details on how to configure.
-      enabled: false
 ```
 
 ### Starting the service
@@ -97,23 +88,37 @@ app:
 The Kafka WebView UI can be started by running the **start.sh** script from root of the extracted package.
 This should start a webserver running on the port you configured.  Point your browser at `http://your.host.name:8080` or the port that you configured and follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
 
-## Running from docker image
+## Running with Docker
 
-Docker images can be found on [Docker Hub](https://hub.docker.com/r/sourcelaborg/kafka-webview).
+The Docker image builds from source and runs on Java 21.
 
-Start up the latest docker image by running `docker run -it -p 8080:8080 -v kafkawebview_data:/app/data sourcelaborg/kafka-webview:latest`
+Build and run the image directly:
+
+```bash
+docker build -t kafka-webview:local .
+docker run -it -p 8080:8080 -p 9090:9090 -v kafkawebview_data:/app/data kafka-webview:local
+```
+
+Or use docker compose to start the app together with a local single-node Kafka broker:
+
+```bash
+docker compose up --build
+```
+
+When registering the compose cluster inside the WebView UI, use broker host `kafka:19092`.
+From your host machine (e.g. `kafka-console-producer`), the broker is reachable at `localhost:9092`.
 
 Point your browser at `http://localhost:8080` and follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
 
 ## Building from source
 
-To build and run from the latest source code requires JDK 1.8 and Maven 3.3.9+.  Clone this project and run the [buildAndRun.sh](https://github.com/SourceLabOrg/kafka-webview/blob/master/buildAndRun.sh) script to compile the project and start the service.
+To build and run from the latest source code requires JDK 21 and Maven 3.6+.  Clone this project and run the [buildAndRun.sh](https://github.com/SourceLabOrg/kafka-webview/blob/master/buildAndRun.sh) script to compile the project and start the service.
 
 Point your browser at `http://localhost:8080` follow the [Logging in for the first time](#logging-in-for-the-first-time) instructions below.
 
 ## Configure user authentication method
 
-Kafka WebView supports three different methods for authenticating and authorizing users for access control.
+Kafka WebView supports two different methods for authenticating and authorizing users for access control.
 
 #### Locally defined users
 
@@ -129,64 +134,6 @@ app:
   user:
     ## Ensure user authentication is ENABLED
     enabled: true
-    
-    ## Ensure that LDAP authentication is DISABLED
-    ldap:
-      enabled: false
-```
-
-#### LDAP Authenticated users
-
-Kafka WebView can be configured to authenticate users via an LDAP service. When LDAP authentication is enabled, you will 
-no longer be able to manage users from within the application.
-
-Your application yml file should be configured with the following options:
-    
-```yml
-## App Configs
-app:
-  ## User authentication options
-  user:
-    ## Ensure user authentication is ENABLED
-    enabled: true
-    
-    ## Ensure that LDAP authentication is ENABLED
-    ldap:
-      enabled: true
-      
-      ## Example values defined below, adjust as needed.
-      ## How to find user records
-      userDnPattern: "uid={0},ou=people"
-      
-      ## The attribute in which the password is stored.
-      passwordAttribute: "userPassword"
-      
-      ## Where to find user group membership
-      groupSearchBase: "ou=groups"
-      groupRoleAttribute: "cn"
-      groupSearchfilter = "(uniqueMember={0})"
-
-      ## How passwords are validated, must implement PasswordEncoder interface
-      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
-
-      ## Comma separated list of groups. A user which is a member of this group will be granted
-      ## administrator access to Kafka WebView.
-      adminGroups: "ADMINGROUP1,ADMINGROUP2"
-
-      ## Comma separated list of groups. A user which is a member of this group will be granted
-      ## standard user level access to Kafka WebView.
-      userGroups: "USERGROUP1,USERGROUP2"
-
-      ## Any user who is not a member of at least one of the above groups will be denied access
-      ## to Kafka WebView.
-
-      ## URL/Hostname for your LDAP server
-      url: "ldap://localhost:8389/dc=example,dc=org"
-
-      ## If LDAP does not allow anonymous access, define the user/password to connect using.
-      ## If not required, leave both fields empty
-      bindUser: "cn=ManagementUser"
-      bindUserPassword: "password-here"
 ```
 
 #### Anonymous / Open access
@@ -211,9 +158,6 @@ Kafka WebView can be configured to run behind a reverse proxy. See [docs/httpdRe
 ## Logging in for the first time
 
 **NOTE** If you've **disabled user authentication** in your configuration, no login will be required. Skip directly to **Step 2**.
-
-**NOTE** If you've **enabled LDAP user authentication** in your configuration, you will instead login with a user defined in
-your LDAP service that is a member of a group you've configured with admin user access. After successfully authenticating, skip directly to **Step 2**.
 
 On first start up a default Administrator user will be created for you.  Login using `admin@example.com` with password `admin`
 
@@ -296,16 +240,8 @@ Steps for performing a release:
 2. Validate and then commit version: `mvn versions:commit`
 3. Update CHANGELOG and README files.
 4. Merge to master.
-5. Deploy to Maven Central: mvn clean deploy -P release-kafka-webview
-6. Build and upload new Docker images:
-    - Edit Dockerfile and update version and sha1 hash.
-    - `docker build -t kafka-webview .`
-    - `docker tag kafka-webview sourcelaborg/kafka-webview:latest`
-    - `docker push sourcelaborg/kafka-webview:latest`
-    - `docker tag kafka-webview sourcelaborg/kafka-webview:2.2.VERSIONHERE`
-    - `docker push sourcelaborg/kafka-webview:2.2.VERSIONHERE`
-    - Commit updated docker files.
-7. Create release on Github project.
+5. Build a Docker image from source: `docker build -t kafka-webview:X.Y.Z .`
+6. Create release on Github project.
 
 
 # Changelog

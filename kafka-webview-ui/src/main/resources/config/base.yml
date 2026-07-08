@@ -1,10 +1,15 @@
 server:
   port: ${PORT:8080}
   tomcat:
-    remote_ip_header: x-forwarded-for
-    protocol_header: x-forwarded-proto
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-proto
     mbeanregistry:
       enabled: true
+    ## Tomcat 10.1.42+ limits multipart requests to 10 parts by default (CVE-2025-48976
+    ## mitigation). Configuration forms (cluster, filter, message format) submit more
+    ## fields than that, which breaks multipart parsing and fails CSRF validation with a 403.
+    max-part-count: 100
   servlet:
     session:
       ## User sessions should not be persistent across service restarts by default.
@@ -16,7 +21,7 @@ spring:
   application:
     name: Kafka Webview
   datasource:
-    url: "jdbc:h2:file:./data/db"
+    url: "jdbc:h2:file:./data/db;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=USER,VALUE,KEY"
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -65,9 +70,6 @@ management:
     ## See https://spring.io/blog/2020/03/25/liveness-and-readiness-probes-with-spring-boot
     probes:
       enabled: false
-    ## Disable LDAP by default
-    ldap:
-      enabled: false
 
 # Spring Actuator - Info endpoint
 info:
@@ -83,25 +85,7 @@ app:
   maxConcurrentWebConsumers: 32
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"
-  requireSsl: true
   user:
     ## By default, require user authentication.
     enabled: true
-
-    ## Example Ldap auth settings, disabled by default.
-    ldap:
-      enabled: false
-      userDnPattern: "uid={0},ou=people"
-      groupSearchBase: "ou=groups"
-      groupRoleAttribute: "cn"
-      groupSearchFilter: "(uniqueMember={0})"
-      passwordAttribute: "userPassword"
-      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
-      adminGroups: ""
-      userGroups: ""
-      url: "ldap://localhost:63182/dc=example,dc=org"
-      ## If LDAP does not allow anonymous access, define the user/password to connect using.
-      ## If not required, leave both fields empty
-      bindUser:
-      bindUserPassword:
 

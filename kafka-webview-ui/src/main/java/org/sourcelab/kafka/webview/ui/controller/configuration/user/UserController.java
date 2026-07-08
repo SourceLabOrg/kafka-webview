@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -83,11 +83,6 @@ public class UserController extends BaseController {
     ) {
         // Setup breadcrumbs
         setupBreadCrumbs(model, null, null);
-
-        // Check for LDAP auth method and restrict access.
-        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
-            return "redirect:/";
-        }
 
         final Datatable.Builder<User> builder = Datatable.newBuilder(User.class)
             .withRepository(userRepository)
@@ -162,11 +157,6 @@ public class UserController extends BaseController {
      */
     @RequestMapping(path = "/create", method = RequestMethod.GET)
     public String createUser(final UserForm userForm, final Model model, final RedirectAttributes redirectAttributes) {
-        // Check for LDAP auth method and restrict access.
-        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
-            return "redirect:/";
-        }
-
         // Setup breadcrumbs
         setupBreadCrumbs(model, "Create", "/configuration/user/create");
 
@@ -199,11 +189,6 @@ public class UserController extends BaseController {
         // If user doesn't have admin role, and Id isn't their own
         if (!isAdmin && !id.equals(getLoggedInUserId())) {
             // Cant edit this user.
-            return "redirect:/";
-        }
-
-        // Check for LDAP auth method and restrict access.
-        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
             return "redirect:/";
         }
 
@@ -256,11 +241,6 @@ public class UserController extends BaseController {
         // If user doesn't have admin role, and Id isn't their own
         if (!isAdmin && !userForm.getId().equals(getLoggedInUserId())) {
             // Can't modify this user.
-            return "redirect:/";
-        }
-
-        // Check for LDAP auth method and restrict access.
-        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
             return "redirect:/";
         }
 
@@ -394,11 +374,6 @@ public class UserController extends BaseController {
      */
     @RequestMapping(path = "/delete/{id}", method = RequestMethod.POST)
     public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
-        // Check for LDAP auth method and restrict access.
-        if (redirectIfUsingLdapAuthentication(redirectAttributes)) {
-            return "redirect:/";
-        }
-
         // Retrieve it
         final Optional<User> userOptional = userRepository.findById(id);
         if (!userOptional.isPresent()) {
@@ -437,23 +412,4 @@ public class UserController extends BaseController {
         }
     }
 
-    /**
-     * If app is configured to use LDAP authentication, restrict access to User configuration.
-     * @param redirectAttributes for applying flash messages.
-     * @return true if we're using ldap and should restrict access, false if not.
-     */
-    private boolean redirectIfUsingLdapAuthentication(final RedirectAttributes redirectAttributes) {
-        // If user auth is disabled.
-        if (!appProperties.isUserAuthEnabled()) {
-            return false;
-        }
-
-        if (!appProperties.getLdapProperties().isEnabled()) {
-            return false;
-        }
-
-        final FlashMessage flashMessage = FlashMessage.newWarning("User management disabled when using LDAP authentication.");
-        redirectAttributes.addFlashAttribute("FlashMessage", flashMessage);
-        return true;
-    }
 }

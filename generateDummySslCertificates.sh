@@ -16,7 +16,6 @@ KEYSTORE_SIGN_REQUEST="cert-file"
 KEYSTORE_SIGN_REQUEST_SRL="ca-cert.srl"
 KEYSTORE_SIGNED_CERT="cert-signed"
 WEBVIEW_UI_DEST_DIRECTORY="kafka-webview-ui/src/test/resources/"
-DEV_CLUSTER_DEST_DIRECTORY="dev-cluster/src/main/resources/"
 
 rm -rf generated
 mkdir -p $TRUSTSTORE_WORKING_DIRECTORY
@@ -66,8 +65,6 @@ rm $KEYSTORE_SIGNED_CERT
 rm $trust_store_private_key_file
 
 cp -rp $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME $WEBVIEW_UI_DEST_DIRECTORY
-cp -rp $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME $DEV_CLUSTER_DEST_DIRECTORY
 cp -rp $trust_store_file $WEBVIEW_UI_DEST_DIRECTORY
-cp -rp $trust_store_file $DEV_CLUSTER_DEST_DIRECTORY
 
 rm -rf generated

@@ -29,12 +29,10 @@ import org.sourcelab.kafka.webview.ui.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
 
 /**
  * Custom User Details Service.  Create Custom User Details implementation.
  */
-@Service
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 

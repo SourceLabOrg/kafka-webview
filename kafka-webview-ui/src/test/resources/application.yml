@@ -3,14 +3,15 @@
 server:
   port: ${PORT:8080}
   tomcat:
-    remote_ip_header: x-forwarded-for
-    protocol_header: x-forwarded-proto
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-proto
 
 spring:
   application:
     name: Kafka Webview
   datasource:
-    url: "jdbc:h2:mem:test"
+    url: "jdbc:h2:mem:test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=USER,VALUE,KEY"
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -44,20 +45,5 @@ app:
   key: "SuperSecretKey"
   maxConcurrentWebSocketConsumers: 64
   consumerIdPrefix: "KafkaWebViewConsumer"
-  requireSsl: false
   user:
     enabled: true
-
-    ## Test LDAP settings
-    ldap:
-      enabled: false
-      userDnPattern: "uid={0},ou=people"
-      groupSearchBase: "ou=groups"
-      groupRoleAttribute: "cn"
-      url: "ldap://localhost:55555/dc=example,dc=com"
-      passwordAttribute: "userPassword"
-      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
-      adminGroups: "MANAGERS,SUBMANAGERS"
-      userGroups: "DEVELOPERS"
-      bindUser:
-      bindUserPassword:

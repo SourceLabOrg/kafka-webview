@@ -32,7 +32,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * Test coverage for stream controller using normal user login/authentication.
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, value = {"app.user.enabled=true", "app.user.ldap.enabled=false"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, value = {"app.user.enabled=true"})
 public class StreamControllerLocalUserAuthenticationTest extends AbstractStreamControllerTest {
 
     @Override

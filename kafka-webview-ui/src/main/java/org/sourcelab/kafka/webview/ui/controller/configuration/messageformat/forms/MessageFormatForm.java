@@ -26,8 +26,8 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.messageformat.fo
 
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

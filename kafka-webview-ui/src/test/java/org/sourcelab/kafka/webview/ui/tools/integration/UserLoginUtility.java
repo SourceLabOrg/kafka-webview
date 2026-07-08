@@ -26,14 +26,15 @@ package org.sourcelab.kafka.webview.ui.tools.integration;
 
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -77,22 +78,51 @@ public class UserLoginUtility {
      * @return http session headers.
      */
     public HttpHeaders login(final String user, final String password) {
-        final HttpHeaders httpHeaders = new HttpHeaders();
+        // Grab an anonymous session + csrf token from the login page.
+        final HttpHeaders loginHeaders = getLoginHeaders();
 
-        restTemplate.execute(loginPath, HttpMethod.POST,
-            request -> {
-                request.getHeaders().addAll(getLoginHeaders());
-                MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-                map.add("email", user);
-                map.add("password", password);
-                new FormHttpMessageConverter().write(map, MediaType.APPLICATION_FORM_URLENCODED, request);
-            },
-            response -> {
-                httpHeaders.add("Cookie", response.getHeaders().getFirst("Set-Cookie"));
-                return null;
-            });
+        // Submit the login form without following the resulting redirect, so we can
+        // capture the authenticated session cookie from the 302 response.
+        final String formBody =
+            "email=" + URLEncoder.encode(user, StandardCharsets.UTF_8)
+            + "&password=" + URLEncoder.encode(password, StandardCharsets.UTF_8)
+            + "&_csrf=" + URLEncoder.encode(loginHeaders.getFirst("X-CSRF-TOKEN"), StandardCharsets.UTF_8);
 
-        return httpHeaders;
+        try (HttpClient httpClient = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build()) {
+            final HttpRequest request = HttpRequest.newBuilder(URI.create(loginPath))
+                .header("Cookie", loginHeaders.getFirst("Cookie"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(formBody))
+                .build();
+
+            final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // A successful login redirects to the default success url "/".
+            assertEquals("Login should respond with a redirect", 302, response.statusCode());
+            final String location = response.headers().firstValue("Location").orElse("");
+            assertTrue("Login should not redirect back to the login page: " + location, !location.contains("/login"));
+
+            final String sessionCookie = response.headers()
+                .firstValue("Set-Cookie")
+                .map(UserLoginUtility::extractCookie)
+                .orElseThrow(() -> new IllegalStateException("No session cookie returned from login."));
+
+            final HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.add("Cookie", sessionCookie);
+            return httpHeaders;
+        } catch (final java.io.IOException | InterruptedException exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
+    }
+
+    /**
+     * Strip cookie attributes (Path, HttpOnly, ...) from a Set-Cookie header value.
+     * Tomcat 10 rejects Cookie headers that include them.
+     */
+    private static String extractCookie(final String setCookieValue) {
+        return setCookieValue.split(";", 2)[0];
     }
 
     private HttpHeaders getLoginHeaders() {
@@ -102,7 +132,7 @@ public class UserLoginUtility {
         // Should be 200 OK
         assertEquals(HttpStatus.OK, page.getStatusCode());
 
-        final String cookie = page.getHeaders().getFirst("Set-Cookie");
+        final String cookie = extractCookie(page.getHeaders().getFirst("Set-Cookie"));
         headers.set("Cookie", cookie);
         final Pattern pattern = Pattern.compile("(?s).*name=\"_csrf\".*?value=\"([^\"]+).*");
         final Matcher matcher = pattern.matcher(page.getBody());

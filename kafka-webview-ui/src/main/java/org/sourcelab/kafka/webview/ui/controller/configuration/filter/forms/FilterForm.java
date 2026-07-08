@@ -26,8 +26,8 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.filter.forms;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Represents create/update a Filter form.

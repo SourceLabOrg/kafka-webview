@@ -31,14 +31,18 @@ import org.sourcelab.kafka.webview.ui.repository.FilterRepository;
 import org.sourcelab.kafka.webview.ui.repository.MessageFormatRepository;
 import org.sourcelab.kafka.webview.ui.repository.ViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.sql.Timestamp;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
+// Use the datasource from the test application.yml (needs its MySQL compatibility mode
+// flags for the flyway migrations) rather than a plain replacement embedded database.
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class ModelsTest {
 
     @Autowired

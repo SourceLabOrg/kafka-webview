@@ -26,8 +26,8 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.user.forms;
 
 import org.sourcelab.kafka.webview.ui.model.UserRole;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Represents the User create/update form.

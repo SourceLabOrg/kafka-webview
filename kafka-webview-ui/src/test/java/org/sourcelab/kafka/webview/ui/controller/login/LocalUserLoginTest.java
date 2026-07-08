@@ -42,7 +42,7 @@ import java.util.List;
  * Verifies user login using locally defined users from the database.
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(value = {"app.user.enabled=true", "app.user.ldap.enabled=false"})
+@SpringBootTest(value = {"app.user.enabled=true"})
 @AutoConfigureMockMvc
 public class LocalUserLoginTest extends AbstractLoginTest {
 

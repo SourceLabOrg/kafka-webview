@@ -29,11 +29,13 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import org.apache.avro.generic.GenericData;
 import org.sourcelab.kafka.webview.ui.manager.jackson.SimpleAvroDataSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.filter.UrlHandlerFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -48,6 +50,17 @@ import java.util.List;
 public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private AppProperties appProperties;
+
+    /**
+     * Spring 6 no longer matches trailing-slash URLs (e.g. "/cluster/") to their
+     * handler mappings.  Transparently treat them as their non-slashed equivalent.
+     */
+    @Bean
+    public UrlHandlerFilter urlHandlerFilter() {
+        return UrlHandlerFilter
+            .trailingSlashHandler("/**").wrapRequest()
+            .build();
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

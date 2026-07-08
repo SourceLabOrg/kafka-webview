@@ -26,7 +26,7 @@ package org.sourcelab.kafka.webview.ui.manager.kafka;
 
 import org.sourcelab.kafka.webview.ui.manager.encryption.Sha1Tools;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
 /**

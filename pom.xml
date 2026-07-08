@@ -13,13 +13,7 @@
     <modules>
         <module>kafka-webview-plugin</module>
         <module>kafka-webview-ui</module>
-        <module>dev-cluster</module>
     </modules>
-
-    <!-- Require Maven 3.3.9 -->
-    <prerequisites>
-        <maven>3.3.9</maven>
-    </prerequisites>
 
     <!-- Module Description and Ownership -->
     <name>Kafka WebView</name>
@@ -55,176 +49,20 @@
     <!-- Module Properties -->
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>1.8</java.version>
+        <java.version>21</java.version>
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
-        <skipCheckStyle>false</skipCheckStyle>
-        <skipLicenseCheck>false</skipLicenseCheck>
     </properties>
 
     <!-- Use Spring Boot Starter as Parent -->
-    <!-- https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.18.RELEASE/spring-boot-dependencies-2.1.18.RELEASE.pom -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.6.13</version>
+        <version>3.5.3</version>
     </parent>
 
     <dependencies>
         <!-- No Parent Dependencies! -->
     </dependencies>
-
-    <build>
-        <plugins>
-            <!-- Set Source & Target JRE Version -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-
-            <!-- Release plugin -->
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-
-            <!-- Enforce Checkstyles Validation -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>checkstyle-validate</id>
-                        <phase>validate</phase><!-- when we need to run checkstyle::check -->
-                        <configuration>
-                            <configLocation>checkstyle.xml</configLocation>
-                            <includeTestSourceDirectory>false</includeTestSourceDirectory>
-                            <encoding>utf-8</encoding>
-                            <consoleOutput>true</consoleOutput>
-                            <violationSeverity>warning</violationSeverity>
-                            <failsOnError>true</failsOnError>
-                            <enableRSS>false</enableRSS>
-
-                            <!-- By default we enable checkstyle validation -->
-                            <skip>${skipCheckStyle}</skip>
-                        </configuration>
-                        <goals>
-                            <!-- Generate site/html report -->
-                            <goal>checkstyle</goal>
-
-                            <!-- Enforce failing build on checkstyle failure -->
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- License Auditing -->
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>3.0</version>
-                <configuration>
-                    <header>LICENSE.txt</header>
-                    <includes>
-                        <include>**/**.java</include>
-                    </includes>
-                    <skip>${skipLicenseCheck}</skip>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
-    <!-- For deploying to maven central -->
-    <distributionManagement>
-        <!-- Snapshot repository -->
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
-
-    <!-- release profile for deploying -->
-    <profiles>
-        <profile>
-            <id>release-kafka-webview</id>
-            <build>
-                <plugins>
-                    <!-- Build Sources Jar -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Build Javadoc Jar -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <failOnWarnings>false</failOnWarnings>
-                                    <show>public</show>
-                                    <source>8</source>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- GPG Signing of Artifacts -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                                <configuration>
-                                    <keyname>SourceLab.org</keyname>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

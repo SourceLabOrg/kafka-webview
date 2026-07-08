@@ -113,7 +113,7 @@ public abstract class BaseController {
         model.addAttribute("MenuViews", views);
         model.addAttribute("UserId", getLoggedInUserId());
 
-        if (!appProperties.isUserAuthEnabled() || appProperties.getLdapProperties().isEnabled()) {
+        if (!appProperties.isUserAuthEnabled()) {
             model.addAttribute("MenuShowUserConfig", false);
         } else {
             model.addAttribute("MenuShowUserConfig", true);

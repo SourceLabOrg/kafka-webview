@@ -150,7 +150,7 @@ public class ApiControllerTest extends AbstractMvcTest {
 
         // Define the values we want to modify
         final String configName1 = "flush.messages";
-        final String newConfigValue1 = "0";
+        final String newConfigValue1 = "1";
 
         final String configName2 = "max.message.bytes";
         final String newConfigValue2 = "1024";

@@ -24,8 +24,8 @@
 
 package org.sourcelab.kafka.webview.ui.controller.login.forms;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Represents the Lost Password Form.

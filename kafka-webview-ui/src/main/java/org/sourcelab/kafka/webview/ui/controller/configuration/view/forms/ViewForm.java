@@ -26,8 +26,8 @@ package org.sourcelab.kafka.webview.ui.controller.configuration.view.forms;
 
 import org.hibernate.validator.constraints.Range;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 

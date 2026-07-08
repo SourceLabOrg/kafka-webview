@@ -30,7 +30,6 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
@@ -92,7 +91,7 @@ public class SecretManager {
             outputStream.write(encryptedText);
 
             // properly encode the complete cipher text
-            return DatatypeConverter.printBase64Binary(outputStream.toByteArray());
+            return java.util.Base64.getEncoder().encodeToString(outputStream.toByteArray());
         } catch (final Exception exception) {
             throw new RuntimeException(exception.getMessage(), exception);
         }
@@ -110,7 +109,7 @@ public class SecretManager {
         }
 
         try {
-            final byte[] ciphertext = DatatypeConverter.parseBase64Binary(str);
+            final byte[] ciphertext = java.util.Base64.getDecoder().decode(str);
             if (ciphertext.length < 48) {
                 return null;
             }

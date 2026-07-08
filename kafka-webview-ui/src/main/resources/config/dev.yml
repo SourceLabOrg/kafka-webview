@@ -14,12 +14,5 @@ spring:
       path: /h2
 
 app:
-  requireSsl: false
   user:
     enabled: true
-    ## Development server Ldap auth settings
-    ldap:
-      enabled: false
-      url: "ldap://localhost:55555/dc=springframework,dc=org"
-      adminGroups: "MANAGERS"
-      userGroups: "DEVELOPERS"

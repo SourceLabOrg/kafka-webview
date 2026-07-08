@@ -31,50 +31,8 @@ app:
   ## Sets upper limit on the number of concurrent web socket consumers supported.
   maxConcurrentWebSocketConsumers: 64
 
-  ## Require SSL
-  requireSsl: false
-
   ## User authentication options
   user:
     ## Require user authentication
     ## Setting to false will disable login requirement.
     enabled: true
-
-    ## Optional: if you want to use LDAP for user authentication instead of locally defined users.
-    ldap:
-      ## Disabled by default.
-      enabled: false
-
-      ## URL/Hostname for your LDAP server
-      url: "ldap://localhost:8389/dc=example,dc=org"
-
-      ## Example values defined below, adjust as needed.
-      ## How to find user records
-      userDnPattern: "uid={0},ou=people"
-
-      ## The attribute in which the password is stored.
-      passwordAttribute: "userPassword"
-
-      ## Where to find user group membership
-      groupSearchBase: "ou=groups"
-      groupRoleAttribute: "cn"
-      groupSearchFilter: "(uniqueMember={0})"
-
-      ## How passwords are validated, must implement PasswordEncoder interface
-      passwordEncoderClass: "org.springframework.security.crypto.password.LdapShaPasswordEncoder"
-
-      ## Comma separated list of groups. A user which is a member of this group will be granted
-      ## administrator access to Kafka WebView.
-      adminGroups: "ADMINGROUP1,ADMINGROUP2"
-
-      ## Comma separated list of groups. A user which is a member of this group will be granted
-      ## standard user level access to Kafka WebView.
-      userGroups: "USERGROUP1,USERGROUP2"
-
-      ## Any user who is not a member of at least one of the above groups will be denied access
-      ## to Kafka WebView.
-
-      ## If LDAP does not allow anonymous access, define the user/password to connect using.
-      ## If not required, leave both fields empty
-      bindUser: "cn=ManagementUser"
-      bindUserPassword: "password-here"

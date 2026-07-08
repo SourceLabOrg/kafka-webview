@@ -24,7 +24,6 @@
 
 package org.sourcelab.kafka.webview.ui.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -55,9 +54,6 @@ public class AppProperties {
     @Value("${app.consumerIdPrefix}")
     private String consumerIdPrefix;
 
-    @Value("${app.requireSsl:false}")
-    private boolean requireSsl = false;
-
     @Value("${app.avro.includeSchema:true}")
     private boolean avroIncludeSchema = true;
 
@@ -67,12 +63,6 @@ public class AppProperties {
      */
     @Value("${app.user.enabled:true}")
     private boolean userAuthEnabled = true;
-
-    /**
-     * Contains LDAP related properties.
-     */
-    @Autowired
-    private LdapAppProperties ldapProperties;
 
     public String getName() {
         return name;
@@ -94,16 +84,8 @@ public class AppProperties {
         return consumerIdPrefix;
     }
 
-    public boolean isRequireSsl() {
-        return requireSsl;
-    }
-
     public boolean isUserAuthEnabled() {
         return userAuthEnabled;
-    }
-
-    public LdapAppProperties getLdapProperties() {
-        return ldapProperties;
     }
 
     public boolean isAvroIncludeSchema() {
@@ -126,7 +108,6 @@ public class AppProperties {
             + ", appKey='XXXXXX'"
             + ", maxConcurrentWebSocketConsumers=" + maxConcurrentWebSocketConsumers
             + ", consumerIdPrefix='" + consumerIdPrefix + '\''
-            + ", requireSsl='" + requireSsl + '\''
             + ", userAuthEnabled='" + userAuthEnabled + '\''
             + '}';
     }
